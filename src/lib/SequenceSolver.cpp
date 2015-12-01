@@ -9,8 +9,9 @@ void SequenceSolver::calculate() {
 	real currentTime = 0.0; uint step = 0;
 	if (makeSnapshots) mesh->snapshot(step);
 	while(currentTime < mesh->T) {
+		stage(0, mesh->tau);// / 2);
 		stage(1, mesh->tau);
-		stage(0, mesh->tau);
+//		stage(0, mesh->tau / 2);
 		currentTime += mesh->tau; step += 1;
 		if (makeSnapshots) mesh->snapshot(step);
 	}

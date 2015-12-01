@@ -5,7 +5,7 @@ Task::Task() {
 	xLength = 1.0;
 	yLength = 1.0;
 
-	accuracyOrder = 3; // order of accuracy of spatial interpolation
+	accuracyOrder = 2; // order of accuracy of spatial interpolation
 
 	X = 50; // number of nodes along x direction
 	Y = 50; // number of nodes along y direction
@@ -17,5 +17,5 @@ Task::Task() {
 	CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 	numberOfSnaps = 100;
 
-	initialConditions = InitialConditions::PWaveX;
+	initialConditions = InitialConditions::Explosion;
 }

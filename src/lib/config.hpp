@@ -1,10 +1,15 @@
 #ifndef ELASTIC2D_CONFIG_HPP
 #define ELASTIC2D_CONFIG_HPP
 
-#include <cmath>
+#define ELASTIC2D_DOUBLE_PRECISION 1
 
+#if ELASTIC2D_DOUBLE_PRECISION
 typedef double real;
 const real EQUALITY_TOLERANCE = 1e-9;
+#else
+typedef float real;
+const real EQUALITY_TOLERANCE = 1e-4;
+#endif
 
 typedef unsigned int uint;
 

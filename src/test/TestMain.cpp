@@ -5,6 +5,7 @@
 #include "test/TestInterpolator.cpp"
 #include "test/TestMesh.cpp"
 #include "test/TestSolver.cpp"
+#include "test/TestMPI.cpp"
 
 
 int main(int argc, char **argv) {

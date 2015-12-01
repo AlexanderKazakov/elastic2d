@@ -181,8 +181,9 @@ TEST(Solver, calculate)
 	newMesh->initialize(task);
 	Vector sWave = mesh->getNodeForTest(3, task.X / 2).u;
 	SequenceSolver sequenceSolver(mesh, newMesh);
+	sequenceSolver.makeSnapshots = true;
 	sequenceSolver.calculate();
-	ASSERT_EQ(sWave, mesh->getNodeForTest(21, task.X / 2).u);
+	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2).u);
 }
 
 
@@ -243,17 +244,17 @@ TEST(Solver, TwoLayersDifferentRho)
 
 		ASSERT_NEAR(reflect.get(NodeMap::Syy) / init.get(NodeMap::Syy),
 		            (Z - Z0) / (Z + Z0),
-		            1e-3);
+		            1e-2);
 		ASSERT_NEAR(reflect.get(NodeMap::Vy) / init.get(NodeMap::Vy),
 		            (Z0 - Z) / (Z + Z0),
-		            1e-3);
+		            1e-2);
 
 		ASSERT_NEAR(transfer.get(NodeMap::Syy) / init.get(NodeMap::Syy),
 		            2 * Z / (Z + Z0),
-		            1e-3);
+		            1e-2);
 		ASSERT_NEAR(transfer.get(NodeMap::Vy) / init.get(NodeMap::Vy),
 		            2 * Z0 / (Z + Z0),
-		            1e-3);
+		            1e-2);
 
 
 	}

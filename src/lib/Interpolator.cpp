@@ -1,5 +1,6 @@
 #include "Interpolator.hpp"
 
+#include <cmath>
 
 void Interpolator::minMaxInterpolate(Vector &res, std::vector<Vector> &src, const real &q) const {
 	// where is the point to interpolate
