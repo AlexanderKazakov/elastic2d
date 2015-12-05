@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "lib/SequenceSolver.hpp"
+#include "lib/MPISolver.hpp"
 
 
 TEST(Solver, StageXForward)
@@ -26,7 +26,7 @@ TEST(Solver, StageXForward)
 		newMesh->initialize(task);
 		Vector pWave = mesh->getNodeForTest(0, 2).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		SequenceSolver sequenceSolver(mesh, newMesh);
+		MPISolver solver(mesh, newMesh);
 		for (uint i = 0; i < 7; i++) {
 			for (uint y = 0; y < task.Y; y++) {
 				for (uint x = 0; x < task.X; x++) {
@@ -35,7 +35,7 @@ TEST(Solver, StageXForward)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			sequenceSolver.stage(0, mesh->getTauForTest());
+			solver.stage(0, mesh->getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
@@ -65,7 +65,7 @@ TEST(Solver, StageXBackward)
 		newMesh->initialize(task);
 		Vector pWave = mesh->getNodeForTest(0, task.X - 3).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		SequenceSolver sequenceSolver(mesh, newMesh);
+		MPISolver solver(mesh, newMesh);
 		for (uint i = 0; i < 7; i++) {
 			for (uint y = 0; y < task.Y; y++) {
 				for (uint x = 0; x < task.X; x++) {
@@ -74,7 +74,7 @@ TEST(Solver, StageXBackward)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			sequenceSolver.stage(0, mesh->getTauForTest());
+			solver.stage(0, mesh->getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
@@ -104,7 +104,7 @@ TEST(Solver, StageY)
 		newMesh->initialize(task);
 		Vector pWave = mesh->getNodeForTest(2, 0).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		SequenceSolver sequenceSolver(mesh, newMesh);
+		MPISolver solver(mesh, newMesh);
 		for (uint i = 0; i < 2; i++) {
 			for (uint y = 0; y < task.Y; y++) {
 				for (uint x = 0; x < task.X; x++) {
@@ -113,7 +113,7 @@ TEST(Solver, StageY)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			sequenceSolver.stage(1, mesh->getTauForTest());
+			solver.stage(1, mesh->getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
@@ -143,7 +143,7 @@ TEST(Solver, StageYSxx)
 		newMesh->initialize(task);
 		Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		SequenceSolver sequenceSolver(mesh, newMesh);
+		MPISolver solver(mesh, newMesh);
 		for (uint i = 0; i < 7; i++) {
 			for (uint y = 0; y < task.Y; y++) {
 				for (uint x = 0; x < task.X; x++) {
@@ -152,7 +152,7 @@ TEST(Solver, StageYSxx)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			sequenceSolver.stage(1, mesh->getTauForTest());
+			solver.stage(1, mesh->getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
@@ -180,9 +180,9 @@ TEST(Solver, calculate)
 	mesh->initialize(task);
 	newMesh->initialize(task);
 	Vector sWave = mesh->getNodeForTest(3, task.X / 2).u;
-	SequenceSolver sequenceSolver(mesh, newMesh);
-	sequenceSolver.makeSnapshots = true;
-	sequenceSolver.calculate();
+	MPISolver solver(mesh, newMesh);
+	solver.makeSnapshots = true;
+	solver.calculate();
 	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2).u);
 }
 
@@ -221,8 +221,8 @@ TEST(Solver, TwoLayersDifferentRho)
 		uint leftNodeIndex = task.Y * 0.25;
 		Node init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
-		SequenceSolver sequenceSolver(mesh, newMesh);
-		sequenceSolver.calculate();
+		MPISolver solver(mesh, newMesh);
+		solver.calculate();
 
 		uint rightNodeIndex = task.Y * 0.7;
 		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
@@ -295,8 +295,8 @@ TEST(Solver, TwoLayersDifferentE)
 		uint leftNodeIndex = task.Y * 0.25;
 		Node init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
-		SequenceSolver sequenceSolver(mesh, newMesh);
-		sequenceSolver.calculate();
+		MPISolver solver(mesh, newMesh);
+		solver.calculate();
 
 		uint rightNodeIndex = task.Y * 0.7;
 		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);

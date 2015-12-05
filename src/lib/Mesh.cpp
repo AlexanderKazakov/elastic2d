@@ -1,19 +1,31 @@
 #include <fstream>
 #include <algorithm>
+#include <openmpi/ompi/mpi/cxx/mpicxx.h>
 #include "lib/Mesh.hpp"
 
 
-void Mesh::initialize(const Task &task) {
+void Mesh::initialize(const Task &task, const bool forceSequence) {
+
+	rank = MPI::COMM_WORLD.Get_rank();
+	numberOfWorkers = MPI::COMM_WORLD.Get_size();
+
+	if (forceSequence) {rank = 0; numberOfWorkers = 1;}
 
 	/* ------------------ Properties and conditions ------------------ */
 
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 
 	X = task.X; // number of nodes along x direction
-	Y = task.Y; // number of nodes along y direction
+
+	// we divide the mesh among processes equally along y-axis
+	uint numberOfNodesAlongYPerOneCore = (uint)std::round((real)task.Y / numberOfWorkers);
+	Y = numberOfNodesAlongYPerOneCore; // number of nodes along y direction
+	if (rank == numberOfWorkers - 1) Y = task.Y - numberOfNodesAlongYPerOneCore * (numberOfWorkers - 1);
+
+	globalY = task.Y;
 
 	h[0] = task.xLength / (X - 1); /* x spatial step */
-	h[1] = task.yLength / (Y - 1); /* y spatial step */
+	h[1] = task.yLength / (task.Y - 1); /* y spatial step */
 
 	real c0 = sqrt((task.lambda0 + 2 * task.mu0) / task.rho0); // default acoustic velocity
 
@@ -26,6 +38,7 @@ void Mesh::initialize(const Task &task) {
 
 	/* ------------------ Properties and conditions (end) ------------------ */
 
+	startY = rank * numberOfNodesAlongYPerOneCore;
 
 	nodes = new Node[(Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder)];
 
@@ -75,6 +88,57 @@ void Mesh::findSourcesForInterpolation(const uint stage, const uint y, const uin
 }
 
 
+void Mesh::snapshot(uint step) const {
+	char buffer[50];
+	sprintf(buffer, "%s%02d%s%05d.vtk", "core", rank, "_snapshot", step);
+	std::fstream f(buffer, std::ios::out);
+	if (!f) {
+		std::cerr << "Unable to open file " << buffer << std::endl;
+		return;
+	}
+	f << "# vtk DataFile Version 3.0" << std::endl;
+	f << "U data" << std::endl;
+	f << "ASCII" << std::endl;
+	f << "DATASET STRUCTURED_POINTS" << std::endl;
+	f << "DIMENSIONS " << X << " " << Y << " 1" << std::endl;
+	f << "SPACING " << h[0] << " " << h[1] << " 1" << std::endl;
+	f << "ORIGIN " << "0 " << startY * h[1] << " 0" << std::endl;
+	f << "POINT_DATA " << X * Y << std::endl;
+
+	// TODO - will it works with floats?
+	f << "VECTORS V double" << std::endl;
+	for (uint y = 0; y < Y; y++)
+		for (uint x = 0; x < X; x++)
+			f << get(y, x).get(NodeMap::Vx) << " " << get(y, x).get(NodeMap::Vy) << " 0" << std::endl;
+
+	f << "SCALARS Sxx double" << std::endl;
+	f << "LOOKUP_TABLE default" << std::endl;
+	for (uint y = 0; y < Y; y++)
+		for (uint x = 0; x < X; x++)
+			f << get(y, x).get(NodeMap::Sxx) << std::endl;
+
+	f << "SCALARS Sxy double" << std::endl;
+	f << "LOOKUP_TABLE default" << std::endl;
+	for (uint y = 0; y < Y; y++)
+		for (uint x = 0; x < X; x++)
+			f << get(y, x).get(NodeMap::Sxy) << std::endl;
+
+	f << "SCALARS Syy double" << std::endl;
+	f << "LOOKUP_TABLE default" << std::endl;
+	for (uint y = 0; y < Y; y++)
+		for (uint x = 0; x < X; x++)
+			f << get(y, x).get(NodeMap::Syy) << std::endl;
+
+	f << "SCALARS pressure double" << std::endl;
+	f << "LOOKUP_TABLE default" << std::endl;
+	for (uint y = 0; y < Y; y++)
+		for (uint x = 0; x < X; x++)
+			f << - (get(y, x).get(NodeMap::Sxx) + get(y, x).get(NodeMap::Syy)) / 2 << std::endl;
+
+	f.close();
+}
+
+
 template<typename T>
 static void put(std::fstream &f, const T value) {
 	union {
@@ -86,9 +150,9 @@ static void put(std::fstream &f, const T value) {
 	f.write(helper.buf, sizeof(T));
 }
 
-void Mesh::snapshot(uint step) const {
+void Mesh::_snapshot(uint step) const {
 	char buffer[50];
-	sprintf(buffer, "%s%05d.vtk", "snapshot", step);
+	sprintf(buffer, "%s%02d%s%05d.vtk", "core", rank, "_snapshot", step);
 	std::fstream f(buffer, std::ios::out);
 	if (!f) {
 		std::cerr << "Unable to open file " << buffer << std::endl;
@@ -100,7 +164,9 @@ void Mesh::snapshot(uint step) const {
 	f << "DATASET STRUCTURED_POINTS" << std::endl;
 	f << "DIMENSIONS " << X + 2 * accuracyOrder << " " << Y + 2 * accuracyOrder << " 1" << std::endl;
 	f << "SPACING " << h[0] << " " << h[1] << " 1" << std::endl;
-	f << "ORIGIN 0 0 0" << std::endl;
+	f << "ORIGIN " << - (int)accuracyOrder * h[0] << " "
+	<< (rank * (int)(globalY / numberOfWorkers + 2 * accuracyOrder) - (int)accuracyOrder) * h[1]
+	<< " 0" << std::endl;
 	f << "POINT_DATA " << (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) << std::endl;
 
 	f << "SCALARS Vx double" << std::endl;
@@ -145,7 +211,7 @@ void Mesh::changeRheology(const real& rho2rho0, const real& lambda2lambda0, cons
 
 	for (uint x = 0; x < X; x++) {
 		for (uint y = 0; y < Y; y++) {
-			if (y * h[1] >= 0.5) {
+			if ((y + startY) * h[1] >= 0.5) {
 				(*this)(y, x).matrix = newRheologyMatrix;
 			}
 		}
@@ -168,23 +234,24 @@ void Mesh::applyInitialConditions() {
 		return;
 
 	} else if (initialConditions == InitialConditions::TestExplosion) {
+		if (numberOfWorkers != 1) throw "This condition only for sequence version";
 		uint xTo = (X % 2 /* X is odd? */) ? X / 2 : X / 2 + 1;
 		uint xFrom = X / 2;
 		uint yTo = (Y % 2 /* Y is odd? */) ? Y / 2 : Y / 2 + 1;
 		uint yFrom = Y / 2;
 		for (uint x = xFrom; x <= xTo; x++) {
 			for (uint y = yFrom; y <= yTo; y++) {
-				(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy)  = 1.0;
+				(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy) = 1.0;
 			}
 		}
 		return;
 
 	} else if(initialConditions == InitialConditions::Explosion) {
-		real R = 0.1 * fmin(X, Y);
+		real R = 0.1 * fmin(X, globalY);
 		for (uint x = 0; x <= X; x++) {
 			for (uint y = 0; y <= Y; y++) {
-				if ( (x - X / 2)*(x - X / 2) + (y - Y / 2)*(y - Y / 2) <= R*R )
-					(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy)  = 1.0;
+				if ( (x - X / 2)*(x - X / 2) + (y + startY - globalY / 2)*(y + startY - globalY / 2) <= R*R )
+					(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy)  = - 1.0;
 			}
 		}
 		return;
@@ -198,12 +265,13 @@ void Mesh::applyInitialConditions() {
 
 	} else if (initialConditions == InitialConditions::PWaveY) {
 		for (uint x = 0; x < X; x++) {
-			for (uint y = 2; y < 0.45 * Y + 2; y++) {
-				(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(0);
+			for (uint y = 0; y < Y; y++) {
+				if (y + startY >= 2 && y + startY < 0.45 * globalY + 2)
+					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(0);
 			}
 		}
 
-	}  else if (initialConditions == InitialConditions::SWaveX) {
+	} else if (initialConditions == InitialConditions::SWaveX) {
 		for (uint x = 2; x < 0.15 * X + 2; x++) {
 			for (uint y = 0; y < Y; y++) {
 				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(2);
@@ -212,8 +280,9 @@ void Mesh::applyInitialConditions() {
 
 	} else if (initialConditions == InitialConditions::SWaveY) {
 		for (uint x = 0; x < X; x++) {
-			for (uint y = 2; y < 0.15 * Y + 2; y++) {
-				(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(2);
+			for (uint y = 0; y < Y; y++) {
+				if (y + startY >= 2 && y + startY < 0.15 * globalY + 2)
+					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(2);
 			}
 		}
 
@@ -225,6 +294,7 @@ void Mesh::applyInitialConditions() {
 		}
 
 	} else if (initialConditions == InitialConditions::SxxOnly) {
+		if (numberOfWorkers != 1) throw "This condition only for sequence version";
 		(*this)(Y / 2, X / 2)(NodeMap::Sxx) = 5.5;
 
 	} else {

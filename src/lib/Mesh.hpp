@@ -9,13 +9,16 @@
 
 class Mesh {
 private:
+	int rank = 0; // index of core
+	int numberOfWorkers = 0; // number of cores
 
 	/* ------------------ Properties and conditions ------------------ */
 	
 	uint accuracyOrder = 0; // order of accuracy of spatial interpolation
 
 	uint X = 0; // number of nodes along x direction
-	uint Y = 0; // number of nodes along y direction
+	uint Y = 0; // number of nodes along y direction of this mesh (on this core)
+	uint globalY = 0; // number of nodes along y direction of all meshes (all cores)
 
 	real h[2] = { 0.0, /* x spatial step */
 	              0.0  /* y spatial step */ };
@@ -26,6 +29,8 @@ private:
 	InitialConditions initialConditions = InitialConditions::Zero;
 	
 	/* ------------------ Properties and conditions (end) ------------------ */
+
+	uint startY = 0; // global y-index of first real node of the mesh
 
 	/* PDEMatrices that is common for majority of nodes */
 	std::shared_ptr<PDEMatrices> defaultMatrix;
@@ -57,8 +62,12 @@ private:
 	Interpolator interpolator;
 
 public:
-	/* Mesh factory */
-	void initialize(const Task& task);
+	/** Mesh factory
+	 * @param task properties and initial conditions etc
+	 * @param forceSequence (default false) if true make the mesh thinking that the number of
+	 * processes is one, even it's actually not so (for testing purposes)
+	 */
+	void initialize(const Task& task, const bool forceSequence = false);
 
 	/**
 	 * Interpolate nodal values in specified points.
@@ -80,11 +89,13 @@ public:
 	void findSourcesForInterpolation(const uint stage, const uint y, const uint x,
 	                                 const real& dx, std::vector<Vector>& src) const;
 
-	/* Write data to vtk file */
+	/* Write vtk snapshot */
 	void snapshot(uint step) const;
+	/* Write vtk snapshot with auxilliary nodes */
+	void _snapshot(uint step) const;
 
 
-friend class SequenceSolver;
+friend class MPISolver;
 
 	/* ---------------- For testing purposes ---------------- */
 public:
@@ -92,6 +103,9 @@ public:
 	const real& getH0ForTest() const { return h[0]; };
 	const real& getH1ForTest() const { return h[1]; };
 	const real& getTForTest() const { return T; };
+	const uint getYForTest() const { return Y; };
+	const uint getXForTest() const { return X; };
+	const uint getStartYForTest() const { return startY; };
 
 	const Node& getNodeForTest(const uint y, const uint x) const { return get(y, x); };
 	const std::shared_ptr<const PDEMatrices> getDefaultMatrixForTest() const { return defaultMatrix; };

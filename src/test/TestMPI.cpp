@@ -2,14 +2,13 @@
 
 #include "lib/config.hpp"
 #include "lib/DataBus.hpp"
-#include "lib/Node.hpp"
+#include <lib/Task.hpp>
+#include "lib/Mesh.hpp"
+#include "lib/MPISolver.hpp"
 
 
 TEST(MPI, CustomDatatype)
 {
-	MPI_Init(nullptr, nullptr);
-	DataBus::createStaticTypes();
-
 	int rank = MPI::COMM_WORLD.Get_rank();
 	int numberOfWorkers = MPI::COMM_WORLD.Get_size();
 
@@ -51,6 +50,57 @@ TEST(MPI, CustomDatatype)
 			}
 		}
 	}
+}
+
+
+TEST(MPI, MPISolverVsSequenceSolver)
+{
+	Task task;
+	task.accuracyOrder = 2;
+	task.CourantNumber = 1.8;
+	task.lambda0 = 2.0;
+	task.mu0 = 0.5;
+	task.rho0 = 4.0;
+	task.X = 50;
+	task.Y = 70;
+	task.xLength = 4.0;
+	task.yLength = 6.0;
+	task.numberOfSnaps = 50;
+	task.initialConditions = InitialConditions::Explosion;
+
+	// calculate in sequence
+	Mesh *meshSeq = new Mesh();
+	Mesh *newMeshSeq = new Mesh();
+	meshSeq->initialize(task, true);
+	newMeshSeq->initialize(task, true);
+	MPISolver sequenceSolver(meshSeq, newMeshSeq);
+	sequenceSolver.calculate();
+
+	// calculate in parallel
+	Mesh *mesh = new Mesh();
+	Mesh *newMesh = new Mesh();
+	mesh->initialize(task);
+	newMesh->initialize(task);
+	MPISolver mpiSolver(mesh, newMesh);
+	mpiSolver.calculate();
+
+	// check that parallel result is equal to sequence result
+	for (uint y = 0; y < mesh->getYForTest(); y++) {
+		for (uint x = 0; x < mesh->getXForTest(); x++) {
+			ASSERT_EQ(mesh->getNodeForTest(y, x).u,
+			          meshSeq->getNodeForTest(y + mesh->getStartYForTest(), x).u);
+		}
+	}
+}
+
+
+int main(int argc, char **argv) {
+	MPI_Init(&argc, &argv);
+	DataBus::createStaticTypes();
+
+	testing::InitGoogleTest(&argc, argv);
+	int allTestsResult = RUN_ALL_TESTS();
 
 	MPI_Finalize();
+	return allTestsResult;
 }

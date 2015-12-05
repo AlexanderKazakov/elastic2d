@@ -4,11 +4,6 @@
 
 MPI::Datatype DataBus::MPI_NODE; // zero initialization of static member
 
-DataBus::DataBus() {
-	rank = MPI::COMM_WORLD.Get_rank();
-	numberOfWorkers = MPI::COMM_WORLD.Get_size();
-}
-
 
 void DataBus::createStaticTypes() {
 	Node* nodes = new Node[2];

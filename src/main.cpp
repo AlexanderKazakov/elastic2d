@@ -1,21 +1,24 @@
-#include <iostream>
+#include <mpi.h>
 
-using namespace std;
+#include <lib/DataBus.hpp>
+#include "lib/MPISolver.hpp"
 
-#include "lib/SequenceSolver.hpp"
-#include "lib/Mesh.hpp"
-#include "lib/Task.hpp"
 
-int main() {
+int main(int argc, char** argv) {
+	MPI_Init(&argc, &argv);
+	DataBus::createStaticTypes();
+
 	Mesh mesh1;
 	Mesh mesh2;
 	Task task;
 	mesh1.initialize(task);
 	mesh2.initialize(task);
-	SequenceSolver sequenceSolver(&mesh1, &mesh2);
-	sequenceSolver.makeSnapshots = true;
+	MPISolver solver(&mesh1, &mesh2);
+	solver.splittingSecondOrder = true;
+	solver.makeSnapshots = true;
 
-	sequenceSolver.calculate();
+	solver.calculate();
 
+	MPI_Finalize();
 	return 0;
 }

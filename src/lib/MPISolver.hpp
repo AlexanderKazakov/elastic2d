@@ -1,12 +1,12 @@
-#ifndef ELASTIC2D_SEQUENCESOLVER_HPP
-#define ELASTIC2D_SEQUENCESOLVER_HPP
+#ifndef ELASTIC2D_MPISOLVER_HPP
+#define ELASTIC2D_MPISOLVER_HPP
 
 
 #include "lib/Mesh.hpp"
 
-class SequenceSolver {
+class MPISolver {
 public:
-	SequenceSolver(Mesh* mesh, Mesh* newMesh);
+	MPISolver(Mesh* mesh, Mesh* newMesh);
 	/**
 	 * Perform calculation of the task
 	 */
@@ -19,13 +19,16 @@ public:
 	void stage(const uint s, const real& timeStep);
 
 	bool makeSnapshots = false;
+	bool splittingSecondOrder = false;
 
 private:
 
 	Mesh* mesh;
 	Mesh* newMesh;
 
+	void exchangeNodesWithNeighbors();
+
 };
 
 
-#endif //ELASTIC2D_SEQUENCESOLVER_HPP
+#endif //ELASTIC2D_MPISOLVER_HPP
