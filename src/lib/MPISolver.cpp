@@ -34,7 +34,7 @@ void MPISolver::stage(const uint s, const real& timeStep) {
 		for (uint x = 0; x < mesh->X; x++) {
 
 			// points to interpolate values on previous time layer
-			Vector dx = (*mesh)(y, x).matrix->A(s).L.getDiagonalMultipliedBy(timeStep);
+			Vector dx = (*mesh)(y, x).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);
 
 			/* new values = U1 * Riemann solvers */
 			(*newMesh)(y, x).u = (*mesh)(y, x).matrix->A(s).U1 *
@@ -51,7 +51,6 @@ void MPISolver::stage(const uint s, const real& timeStep) {
 
 
 void MPISolver::exchangeNodesWithNeighbors() {
-	MPI_Barrier(MPI::COMM_WORLD);
 
 	int rank = mesh->rank;
 	int numberOfWorkers = mesh->numberOfWorkers;
@@ -77,5 +76,4 @@ void MPISolver::exchangeNodesWithNeighbors() {
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 
-	MPI_Barrier(MPI::COMM_WORLD);
 }

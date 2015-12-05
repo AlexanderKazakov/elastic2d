@@ -4,7 +4,7 @@ Two-dimensional simulation of wave processes in elastic body. Rectangular area, 
 
 ## Build
 
-# base build
+base build
 ```
 mkdir build
 cd build
@@ -12,7 +12,7 @@ cmake ..
 make
 ```
 
-# build with google tests, gprof profiling and in Debug mode (by default, all this options are disabled)
+build with google tests, gprof profiling and in Debug mode (by default, all this options are disabled)
 ```
 mkdir build
 cd build

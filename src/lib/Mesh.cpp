@@ -259,7 +259,7 @@ void Mesh::applyInitialConditions() {
 	} else if (initialConditions == InitialConditions::PWaveX) {
 		for (uint x = 2; x < 0.15 * X + 2; x++) {
 			for (uint y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(0);
+				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(1);
 			}
 		}
 
@@ -267,14 +267,14 @@ void Mesh::applyInitialConditions() {
 		for (uint x = 0; x < X; x++) {
 			for (uint y = 0; y < Y; y++) {
 				if (y + startY >= 2 && y + startY < 0.45 * globalY + 2)
-					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(0);
+					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(1);
 			}
 		}
 
 	} else if (initialConditions == InitialConditions::SWaveX) {
 		for (uint x = 2; x < 0.15 * X + 2; x++) {
 			for (uint y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(2);
+				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(3);
 			}
 		}
 
@@ -282,14 +282,14 @@ void Mesh::applyInitialConditions() {
 		for (uint x = 0; x < X; x++) {
 			for (uint y = 0; y < Y; y++) {
 				if (y + startY >= 2 && y + startY < 0.15 * globalY + 2)
-					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(2);
+					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(3);
 			}
 		}
 
 	} else if (initialConditions == InitialConditions::SWaveXBackward) {
 		for (uint x = (uint) (0.85 * X - 2); x < X - 2; x++) {
 			for (uint y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(3);
+				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(2);
 			}
 		}
 
