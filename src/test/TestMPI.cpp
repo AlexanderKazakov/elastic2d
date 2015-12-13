@@ -17,8 +17,8 @@ TEST(MPI, CustomDatatype)
 	Node leftNodes[testNumberOfNodes];
 	Node rightNodes[testNumberOfNodes];
 
-	for (uint k = 0; k < testNumberOfNodes; k++) {
-		for (uint i = 0; i < N; i++) {
+	for (int k = 0; k < testNumberOfNodes; k++) {
+		for (int i = 0; i < N; i++) {
 			leftNodes[k].u(i) = rightNodes[k].u(i) = rank;
 		}
 	}
@@ -37,8 +37,8 @@ TEST(MPI, CustomDatatype)
 			                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 
-		for (uint k = 0; k < testNumberOfNodes; k++) {
-			for (uint i = 0; i < N; i++) {
+		for (int k = 0; k < testNumberOfNodes; k++) {
+			for (int i = 0; i < N; i++) {
 				if (rank == 0) {
 					ASSERT_EQ(rightNodes[k].u(i), rank + 1);
 				} else if (rank == numberOfWorkers - 1) {
@@ -85,8 +85,8 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	mpiSolver.calculate();
 
 	// check that parallel result is equal to sequence result
-	for (uint y = 0; y < mesh->getYForTest(); y++) {
-		for (uint x = 0; x < mesh->getXForTest(); x++) {
+	for (int y = 0; y < mesh->getYForTest(); y++) {
+		for (int x = 0; x < mesh->getXForTest(); x++) {
 			ASSERT_EQ(mesh->getNodeForTest(y, x).u,
 			          meshSeq->getNodeForTest(y + mesh->getStartYForTest(), x).u);
 		}

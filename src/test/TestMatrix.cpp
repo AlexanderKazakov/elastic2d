@@ -40,8 +40,8 @@ TEST(Linal, MatrixMatrixMultiplication)
 	C(4, 0) = -38; C(4, 1) = 0;   C(4, 2) = 6;   C(4, 3) = 0;   C(4, 4) = 31;
 
 	Matrix AB = A * B;
-	for (uint i = 0; i < N; i++) {
-		for (uint j = 0; j < N; j++) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
 			ASSERT_NEAR(AB.get(i, j), C.get(i, j), EQUALITY_TOLERANCE);
 		}
 	}
@@ -63,7 +63,7 @@ TEST(Linal, MatrixVectorMultiplication)
 	c(0) = -26;    c(1) = -70;    c(2) = -12;    c(3) = -56;    c(4) = -94;
 
 	Vector Ab = A * b;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		ASSERT_NEAR(Ab.get(i), c.get(i), EQUALITY_TOLERANCE);
 	}
 }
@@ -86,7 +86,7 @@ TEST(Linal, TraceComparison)
 		<< "(y) A = " << matrix.A(1).A << "L = " << matrix.A(1).L;
 
 	srand(time(0));
-	for(uint i = 0; i < NUMBER_ITERATIONS; i++) {
+	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
 		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
 		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
 		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
@@ -105,21 +105,21 @@ TEST(Linal, LeftEigenVectors)
 	PDEMatrices matrix(rho0, lambda0, mu0);
 	Matrix AU1 = matrix.A(0).A * matrix.A(0).U1;
 	Matrix U1L = matrix.A(0).U1 * matrix.A(0).L;
-	for(uint i = 0; i < N; i++) {
-		for(uint j = 0; j < N; j++) {
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < N; j++) {
 			ASSERT_NEAR(AU1.get(i, j), U1L.get(i, j), EQUALITY_TOLERANCE) << "(x) U1 = " << matrix.A(0).U1;
 		}
 	}
 	AU1 = matrix.A(1).A * matrix.A(1).U1;
 	U1L = matrix.A(1).U1 * matrix.A(1).L;
-	for(uint i = 0; i < N; i++) {
-		for(uint j = 0; j < N; j++) {
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < N; j++) {
 			ASSERT_NEAR(AU1.get(i, j), U1L.get(i, j), EQUALITY_TOLERANCE) << "(y) U1 = " << matrix.A(1).U1;
 		}
 	}
 
 	srand(time(0));
-	for(uint i = 0; i < NUMBER_ITERATIONS; i++) {
+	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
 		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
 		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
 		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
@@ -127,15 +127,15 @@ TEST(Linal, LeftEigenVectors)
 
 		AU1 = matrix1.A(0).A * matrix1.A(0).U1;
 		U1L = matrix1.A(0).U1 * matrix1.A(0).L;
-		for(uint i = 0; i < N; i++) {
-			for(uint j = 0; j < N; j++) {
+		for(int i = 0; i < N; i++) {
+			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(AU1.get(i, j), U1L.get(i, j), EQUALITY_TOLERANCE) << "(x) U1 = " << matrix1.A(0).U1;
 			}
 		}
 		AU1 = matrix1.A(1).A * matrix1.A(1).U1;
 		U1L = matrix1.A(1).U1 * matrix1.A(1).L;
-		for(uint i = 0; i < N; i++) {
-			for(uint j = 0; j < N; j++) {
+		for(int i = 0; i < N; i++) {
+			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(AU1.get(i, j), U1L.get(i, j), EQUALITY_TOLERANCE) << "(y) U1 = " << matrix1.A(1).U1;
 			}
 		}
@@ -149,21 +149,21 @@ TEST(Linal, RightEigenVectors)
 	PDEMatrices matrix(rho0, lambda0, mu0);
 	Matrix UA = matrix.A(0).U * matrix.A(0).A;
 	Matrix LU = matrix.A(0).L * matrix.A(0).U;
-	for(uint i = 0; i < N; i++) {
-		for(uint j = 0; j < N; j++) {
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < N; j++) {
 			ASSERT_NEAR(UA.get(i, j), LU.get(i, j), EQUALITY_TOLERANCE) << "(x) U = " << matrix.A(0).U;
 		}
 	}
 	UA = matrix.A(0).U * matrix.A(0).A;
 	LU = matrix.A(0).L * matrix.A(0).U;
-	for(uint i = 0; i < N; i++) {
-		for(uint j = 0; j < N; j++) {
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < N; j++) {
 			ASSERT_NEAR(UA.get(i, j), LU.get(i, j), EQUALITY_TOLERANCE) << "(y) U = " << matrix.A(1).U;
 		}
 	}
 
 	srand(time(0));
-	for(uint i = 0; i < NUMBER_ITERATIONS; i++) {
+	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
 		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
 		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
 		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
@@ -171,15 +171,15 @@ TEST(Linal, RightEigenVectors)
 
 		UA = matrix1.A(0).U * matrix1.A(0).A;
 		LU = matrix1.A(0).L * matrix1.A(0).U;
-		for(uint i = 0; i < N; i++) {
-			for(uint j = 0; j < N; j++) {
+		for(int i = 0; i < N; i++) {
+			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(UA.get(i, j), LU.get(i, j), EQUALITY_TOLERANCE) << "(x) U = " << matrix1.A(0).U;
 			}
 		}
 		UA = matrix1.A(0).U * matrix1.A(0).A;
 		LU = matrix1.A(0).L * matrix1.A(0).U;
-		for(uint i = 0; i < N; i++) {
-			for(uint j = 0; j < N; j++) {
+		for(int i = 0; i < N; i++) {
+			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(UA.get(i, j), LU.get(i, j), EQUALITY_TOLERANCE) << "(y) U = " << matrix1.A(1).U;
 			}
 		}
@@ -192,34 +192,34 @@ TEST(Linal, InverseMatrix)
 {
 	PDEMatrices matrix(rho0, lambda0, mu0);
 	Matrix UU1 = matrix.A(0).U * matrix.A(0).U1;
-	for(uint i = 0; i < N; i++) {
-		for(uint j = 0; j < N; j++) {
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < N; j++) {
 			ASSERT_NEAR(UU1.get(i, j), (i == j), EQUALITY_TOLERANCE) << "(x) UU1 = " << UU1;
 		}
 	}
 	UU1 = matrix.A(1).U * matrix.A(1).U1;
-	for(uint i = 0; i < N; i++) {
-		for(uint j = 0; j < N; j++) {
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < N; j++) {
 			ASSERT_NEAR(UU1.get(i, j), (i == j), EQUALITY_TOLERANCE) << "(y) UU1 = " << UU1;
 		}
 	}
 
 	srand(time(0));
-	for(uint i = 0; i < NUMBER_ITERATIONS; i++) {
+	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
 		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
 		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
 		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
 		PDEMatrices matrix1(rho, lambda, mu);
 
 		UU1 = matrix1.A(0).U * matrix1.A(0).U1;
-		for(uint i = 0; i < N; i++) {
-			for(uint j = 0; j < N; j++) {
+		for(int i = 0; i < N; i++) {
+			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(UU1.get(i, j), (i == j), EQUALITY_TOLERANCE) << "(x) UU1 = " << UU1;
 			}
 		}
 		UU1 = matrix1.A(1).U * matrix1.A(1).U1;
-		for(uint i = 0; i < N; i++) {
-			for(uint j = 0; j < N; j++) {
+		for(int i = 0; i < N; i++) {
+			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(UU1.get(i, j), (i == j), EQUALITY_TOLERANCE) << "(y) UU1 = " << UU1;
 			}
 		}
@@ -231,16 +231,16 @@ TEST(Linal, InverseMatrix)
 TEST(Linal, setColumn)
 {
 	Matrix matrix;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		Vector vector;
-		for (uint j = 0; j < N; j++) {
+		for (int j = 0; j < N; j++) {
 			vector(j) = i;
 		}
 		matrix.setColumn(i, vector);
 	}
 
-	for (uint i = 0; i < N; i++) {
-		for (uint j = 0; j < N; j++) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
 			ASSERT_EQ(matrix.get(i, j), j);
 		}
 	}
@@ -250,15 +250,15 @@ TEST(Linal, setColumn)
 TEST(Linal, getColumn)
 {
 	Matrix matrix;
-	for (uint i = 0; i < N; i++) {
-		for (uint j = 0; j < N; j++) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
 			matrix(i, j) = j;
 		}
 	}
 
-	for (uint k = 0; k < N; k++) {
+	for (int k = 0; k < N; k++) {
 		Vector column = matrix.getColumn(k);
-		for (uint i = 0; i < N; i++) {
+		for (int i = 0; i < N; i++) {
 			ASSERT_EQ(column.get(i), k);
 		}
 	}
@@ -270,10 +270,10 @@ TEST(Linal, diagonalMultiply)
 	Matrix A, B;
 	srand(time(0));
 
-	for (uint l = 0; l < NUMBER_ITERATIONS; l++) {
+	for (int l = 0; l < NUMBER_ITERATIONS; l++) {
 
-		for (uint i = 0; i < N; i++) {
-			for (uint j = 0; j < N; j++) {
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
 				A(i, j) = rand() - RAND_MAX / 2.0;
 				B(i, j) = rand() - RAND_MAX / 2.0;
 			}
@@ -282,7 +282,7 @@ TEST(Linal, diagonalMultiply)
 		Matrix C = A * B;
 		Vector d = A.diagonalMultiply(B);
 
-		for (uint k = 0; k < N; k++) {
+		for (int k = 0; k < N; k++) {
 			ASSERT_EQ(C.get(k, k), d.get(k));
 		}
 
@@ -293,13 +293,13 @@ TEST(Linal, diagonalMultiply)
 TEST(Linal, getDiagonalMultipliedBy)
 {
 	Matrix matrix;
-	for (uint i = 0; i < N; i++) {
-		for (uint j = 0; j < N; j++) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
 			matrix(i, j) = (real) i;
 		}
 	}
 	Vector vector = matrix.getDiagonalMultipliedBy(- 5.0);
-	for (uint k = 0; k < N; k++) {
+	for (int k = 0; k < N; k++) {
 		ASSERT_EQ(vector.get(k), - 5.0 * k);
 	}
 }
@@ -308,22 +308,22 @@ TEST(Linal, getDiagonalMultipliedBy)
 TEST(Linal, VectorOperators)
 {
 	Vector vector;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		vector(i) = (real) i - 3;
 	}
 
 	vector = vector * 2;
-	for (uint j = 0; j < N; j++) {
+	for (int j = 0; j < N; j++) {
 		ASSERT_EQ(vector.get(j), 2 * ((real) j - 3));
 	}
 
 	vector += vector;
-	for (uint j = 0; j < N; j++) {
+	for (int j = 0; j < N; j++) {
 		ASSERT_EQ(vector.get(j), 4 * ((real) j - 3));
 	}
 
 	vector = vector - vector * 0.5;
-	for (uint j = 0; j < N; j++) {
+	for (int j = 0; j < N; j++) {
 		ASSERT_EQ(vector.get(j), 2 * ((real) j - 3));
 	}
 }

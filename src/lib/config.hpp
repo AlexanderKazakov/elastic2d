@@ -11,13 +11,13 @@ typedef float real;
 const real EQUALITY_TOLERANCE = 1e-4;
 #endif
 
-typedef unsigned int uint;
-
-const uint N = 5; // number of variables in PDE
+const int N = 5; // number of variables in PDE
 enum class NodeMap {Vx, Vy, Sxx, Sxy, Syy}; // order of physical quantities in the vector in Node
 
-enum class InitialConditions {Zero, TestExplosion, Explosion, PWaveX, SWaveX, PWaveY, SWaveY,
-	SWaveXBackward, SxxOnly};
+enum class InitialConditions {Zero, TestExplosion, Explosion, ExplosionAtTheLeft, PWaveXBackward, PWaveYBackward,
+	PWaveX, SWaveX, PWaveY, SWaveY, SWaveXBackward, SxxOnly};
+
+enum class BorderConditions {NonReflection, FreeBorder};
 
 
 #endif //ELASTIC2D_CONFIG_HPP

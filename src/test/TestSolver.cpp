@@ -5,7 +5,7 @@
 
 TEST(Solver, StageXForward)
 {
-	for (uint accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
@@ -27,9 +27,9 @@ TEST(Solver, StageXForward)
 		Vector pWave = mesh->getNodeForTest(0, 2).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
-		for (uint i = 0; i < 7; i++) {
-			for (uint y = 0; y < task.Y; y++) {
-				for (uint x = 0; x < task.X; x++) {
+		for (int i = 0; i < 7; i++) {
+			for (int y = 0; y < task.Y; y++) {
+				for (int x = 0; x < task.X; x++) {
 					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
 					          (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
@@ -44,7 +44,7 @@ TEST(Solver, StageXForward)
 
 TEST(Solver, StageXBackward)
 {
-	for (uint accuracyOrder = 2; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 2; accuracyOrder < 20; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.lambda0 = 2.0;
@@ -66,9 +66,9 @@ TEST(Solver, StageXBackward)
 		Vector pWave = mesh->getNodeForTest(0, task.X - 3).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
-		for (uint i = 0; i < 7; i++) {
-			for (uint y = 0; y < task.Y; y++) {
-				for (uint x = 0; x < task.X; x++) {
+		for (int i = 0; i < 7; i++) {
+			for (int y = 0; y < task.Y; y++) {
+				for (int x = 0; x < task.X; x++) {
 					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
 					          (x == task.X - 4 - i || x == task.X - 3 - i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
@@ -83,7 +83,7 @@ TEST(Solver, StageXBackward)
 
 TEST(Solver, StageY)
 {
-	for (uint accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
@@ -105,9 +105,9 @@ TEST(Solver, StageY)
 		Vector pWave = mesh->getNodeForTest(2, 0).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
-		for (uint i = 0; i < 2; i++) {
-			for (uint y = 0; y < task.Y; y++) {
-				for (uint x = 0; x < task.X; x++) {
+		for (int i = 0; i < 2; i++) {
+			for (int y = 0; y < task.Y; y++) {
+				for (int x = 0; x < task.X; x++) {
 					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
 					          (y == 2 + i || y == 3 + i || y == 4 + i || y == 5 + i || y == 6 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
@@ -122,7 +122,7 @@ TEST(Solver, StageY)
 
 TEST(Solver, StageYSxx)
 {
-	for (uint accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 0.7;
@@ -144,9 +144,9 @@ TEST(Solver, StageYSxx)
 		Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2).u;
 		Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
-		for (uint i = 0; i < 7; i++) {
-			for (uint y = 0; y < task.Y; y++) {
-				for (uint x = 0; x < task.X; x++) {
+		for (int i = 0; i < 7; i++) {
+			for (int y = 0; y < task.Y; y++) {
+				for (int x = 0; x < task.X; x++) {
 					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
 					          (x == task.X / 2 && y == task.Y / 2 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
@@ -181,7 +181,6 @@ TEST(Solver, calculate)
 	newMesh->initialize(task);
 	Vector sWave = mesh->getNodeForTest(3, task.X / 2).u;
 	MPISolver solver(mesh, newMesh);
-	solver.makeSnapshots = true;
 	solver.calculate();
 	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2).u);
 }
@@ -190,8 +189,8 @@ TEST(Solver, calculate)
 TEST(Solver, TwoLayersDifferentRho)
 {
 	real rho2rho0Initial = 0.25;
-	uint numberOfSnapsInitial = 30;
-	for (uint i = 0; i < 5; i++) {
+	int numberOfSnapsInitial = 30;
+	for (int i = 0; i < 5; i++) {
 
 		Task task;
 		task.accuracyOrder = 3;
@@ -218,13 +217,13 @@ TEST(Solver, TwoLayersDifferentRho)
 		newMesh->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 
-		uint leftNodeIndex = task.Y * 0.25;
+		int leftNodeIndex = task.Y * 0.25;
 		Node init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
 		MPISolver solver(mesh, newMesh);
 		solver.calculate();
 
-		uint rightNodeIndex = task.Y * 0.7;
+		int rightNodeIndex = task.Y * 0.7;
 		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 		Node transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
 
@@ -264,8 +263,8 @@ TEST(Solver, TwoLayersDifferentRho)
 TEST(Solver, TwoLayersDifferentE)
 {
 	real E2E0Initial = 0.25;
-	uint numberOfSnapsInitial = 40;
-	for (uint i = 0; i < 5; i++) {
+	int numberOfSnapsInitial = 40;
+	for (int i = 0; i < 5; i++) {
 
 		Task task;
 		task.accuracyOrder = 3;
@@ -292,13 +291,13 @@ TEST(Solver, TwoLayersDifferentE)
 		newMesh->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 
-		uint leftNodeIndex = task.Y * 0.25;
+		int leftNodeIndex = task.Y * 0.25;
 		Node init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
 		MPISolver solver(mesh, newMesh);
 		solver.calculate();
 
-		uint rightNodeIndex = task.Y * 0.7;
+		int rightNodeIndex = task.Y * 0.7;
 		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 		Node transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
 

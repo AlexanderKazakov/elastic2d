@@ -1,6 +1,7 @@
 #ifndef ELASTIC2D_TASK_HPP
 #define ELASTIC2D_TASK_HPP
 
+#include <map>
 #include "lib/config.hpp"
 
 
@@ -11,10 +12,10 @@ public:
 	real xLength = 0.0;
 	real yLength = 0.0;
 
-	uint accuracyOrder = 0; // order of accuracy of spatial interpolation
+	int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
-	uint X = 0; // number of nodes along x direction
-	uint Y = 0; // number of nodes along y direction
+	int X = 0; // number of nodes along x direction
+	int Y = 0; // number of nodes along y direction
 
 	real rho0 = 0.0; // default density
 	real lambda0 = 0.0; // default Lame parameter
@@ -22,10 +23,15 @@ public:
 
 	real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
 
-	uint numberOfSnaps = 0; // how many snaps to calculate
-	real T = -1.0; // optional, required time if (numberOfSnaps == 0)
+	int numberOfSnaps = 0; // how many snaps to calculate
+	real T = 0.0; // optional, required time if (numberOfSnaps == 0)
 
 	InitialConditions initialConditions = InitialConditions::Zero;
+
+	std::map<std::string, BorderConditions> borderConditions = {{"left", BorderConditions::NonReflection},
+	                                                            {"right", BorderConditions::NonReflection},
+	                                                            {"bottom", BorderConditions::NonReflection},
+	                                                            {"up", BorderConditions::NonReflection}};
 
 	/* ------------------ Properties and conditions (end) ------------------ */
 

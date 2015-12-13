@@ -10,18 +10,18 @@
 TEST(Interpolator, Const)
 {
 	Interpolator interpolator;
-	for (uint i = 0; i <= MAX_ACCURACY_ORDER; i++) {
+	for (int i = 0; i <= MAX_ACCURACY_ORDER; i++) {
 		Vector res;
 		std::vector<Vector> src(i + 1);
 		for(real q = 0; q <= (real) i; q+= 0.2) {
 			for (auto &item : src) {
-				for (uint j = 0; j < N; j++) {
+				for (int j = 0; j < N; j++) {
 					item(j) = sinh(j - (real) (N) / 2);
 				}
 			}
 
 			interpolator.interpolate(res, src, q);
-			for (uint j = 0; j < N; j++) {
+			for (int j = 0; j < N; j++) {
 				ASSERT_NEAR(res.get(j), sinh(j - (real) (N) / 2), EQUALITY_TOLERANCE);
 			}
 		}
@@ -32,18 +32,18 @@ TEST(Interpolator, Const)
 TEST(Interpolator, Linear)
 {
 	Interpolator interpolator;
-	for (uint k = 0; k <= MAX_ACCURACY_ORDER; k++) {
+	for (int k = 0; k <= MAX_ACCURACY_ORDER; k++) {
 		Vector res;
 		std::vector<Vector> src(k + 1);
 		for(real q = 0; q <= (real) k; q+= 0.2) {
-			for (uint i = 0; i < src.size(); i++) {
-				for (uint j = 0; j < N; j++) {
+			for (int i = 0; i < src.size(); i++) {
+				for (int j = 0; j < N; j++) {
 					src[i](j) = (j - (real) (N) / 2) * i + 2 * (j - (real) (N) / 2);
 				}
 			}
 
 			interpolator.interpolate(res, src, q);
-			for (uint j = 0; j < N; j++) {
+			for (int j = 0; j < N; j++) {
 				ASSERT_NEAR(res.get(j),
 				            (j - (real) (N) / 2) * q + 2 * (j - (real) (N) / 2),
 				            EQUALITY_TOLERANCE);
@@ -119,7 +119,7 @@ TEST(Interpolator, TenthOrder)
 	Vector res;
 	std::vector<Vector> src(11);
 	for (real q = 0; q < 11.0; q += 0.1) {
-		for (uint i = 0; i < 11; i++) {
+		for (int i = 0; i < 11; i++) {
 			real x = i - 5;
 			src[i](0) = func(i);
 		}

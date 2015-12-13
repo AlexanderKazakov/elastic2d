@@ -2,6 +2,7 @@
 #define ELASTIC2D_MESH_HPP
 
 #include <memory>
+#include <mpi.h>
 
 #include "lib/Node.hpp"
 #include "lib/Interpolator.hpp"
@@ -14,11 +15,11 @@ private:
 
 	/* ------------------ Properties and conditions ------------------ */
 	
-	uint accuracyOrder = 0; // order of accuracy of spatial interpolation
+	int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
-	uint X = 0; // number of nodes along x direction
-	uint Y = 0; // number of nodes along y direction of this mesh (on this core)
-	uint globalY = 0; // number of nodes along y direction of all meshes (all cores)
+	int X = 0; // number of nodes along x direction
+	int Y = 0; // number of nodes along y direction of this mesh (on this core)
+	int globalY = 0; // number of nodes along y direction of all meshes (all cores)
 
 	real h[2] = { 0.0, /* x spatial step */
 	              0.0  /* y spatial step */ };
@@ -27,10 +28,11 @@ private:
 	real T = 0.0; // required time
 
 	InitialConditions initialConditions = InitialConditions::Zero;
+	std::map<std::string, BorderConditions> borderConditions;
 	
 	/* ------------------ Properties and conditions (end) ------------------ */
 
-	uint startY = 0; // global y-index of first real node of the mesh
+	int startY = 0; // global y-index of first real node of the mesh
 
 	/* PDEMatrices that is common for majority of nodes */
 	std::shared_ptr<PDEMatrices> defaultMatrix;
@@ -44,7 +46,7 @@ private:
 	 * @param y y index < %Y
 	 * @param x x index < %X
 	 */
-	inline Node& operator()(const uint y, const uint x) {
+	inline Node& operator()(const int y, const int x) {
 		return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
 	};
 	/**
@@ -53,7 +55,7 @@ private:
 	 * @param y y index < %Y
 	 * @param x x index < %X
 	 */
-	inline const Node& get(const uint y, const uint x) const {
+	inline const Node& get(const int y, const int x) const {
 		return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
 	};
 
@@ -80,19 +82,19 @@ public:
 	 * values should be interpolated
 	 * @return Matrix with interpolated nodal values in columns
 	 */
-	Matrix interpolateValuesAround(const uint stage, const uint y, const uint x,
+	Matrix interpolateValuesAround(const int stage, const int y, const int x,
 	                               const Vector& dx) const;
 	/* Place in %src nodal values which are necessary for
 	 * interpolation in specified point. The number of placed
 	 * in values is equal to src.size()
 	 */
-	void findSourcesForInterpolation(const uint stage, const uint y, const uint x,
+	void findSourcesForInterpolation(const int stage, const int y, const int x,
 	                                 const real& dx, std::vector<Vector>& src) const;
 
 	/* Write vtk snapshot */
-	void snapshot(uint step) const;
+	void snapshot(int step) const;
 	/* Write vtk snapshot with auxilliary nodes */
-	void _snapshot(uint step) const;
+	void _snapshot(int step) const;
 
 
 friend class MPISolver;
@@ -103,11 +105,11 @@ public:
 	const real& getH0ForTest() const { return h[0]; };
 	const real& getH1ForTest() const { return h[1]; };
 	const real& getTForTest() const { return T; };
-	const uint getYForTest() const { return Y; };
-	const uint getXForTest() const { return X; };
-	const uint getStartYForTest() const { return startY; };
+	const int getYForTest() const { return Y; };
+	const int getXForTest() const { return X; };
+	const int getStartYForTest() const { return startY; };
 
-	const Node& getNodeForTest(const uint y, const uint x) const { return get(y, x); };
+	const Node& getNodeForTest(const int y, const int x) const { return get(y, x); };
 	const std::shared_ptr<const PDEMatrices> getDefaultMatrixForTest() const { return defaultMatrix; };
 
 	/* Change rheology in some area
@@ -117,10 +119,12 @@ public:
 	 * @param mu2mu0 = (mu in the area) / (default mu)
 	 */
 	void changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0);
+	void changeRheology2(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0);
 
 	/* ---------------- For testing purposes (end) ---------------- */
 
 private:
+	void applyBorderConditions();
 	void applyInitialConditions();
 };
 

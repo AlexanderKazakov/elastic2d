@@ -1,6 +1,5 @@
 #include "lib/MPISolver.hpp"
 
-#include <mpi.h>
 #include "lib/DataBus.hpp"
 
 MPISolver::MPISolver(Mesh *mesh, Mesh *newMesh) :
@@ -9,7 +8,7 @@ MPISolver::MPISolver(Mesh *mesh, Mesh *newMesh) :
 
 void MPISolver::calculate() {
 	exchangeNodesWithNeighbors();
-	real currentTime = 0.0; uint step = 0;
+	real currentTime = 0.0; int step = 0;
 	if (makeSnapshots) mesh->snapshot(step);
 	while(currentTime < mesh->T) {
 	if (splittingSecondOrder) {
@@ -26,12 +25,12 @@ void MPISolver::calculate() {
 }
 
 
-void MPISolver::stage(const uint s, const real& timeStep) {
+void MPISolver::stage(const int s, const real& timeStep) {
 
+	mesh->applyBorderConditions();
 
-	for (uint y = 0; y < mesh->Y; y++) {
-		// TODO - make all this linal operations faster
-		for (uint x = 0; x < mesh->X; x++) {
+	for (int y = 0; y < mesh->Y; y++) {
+		for (int x = 0; x < mesh->X; x++) {
 
 			// points to interpolate values on previous time layer
 			Vector dx = (*mesh)(y, x).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);

@@ -24,9 +24,9 @@ TEST(Mesh, initialize) {
 	ASSERT_NEAR(mesh.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(mesh.getTauForTest(), 0.808290377, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(mesh.getTForTest(), 4.0414518843, EQUALITY_TOLERANCE);
-	for (uint x = 0; x < task.X; x++) {
-		for (uint y = 0; y < task.Y; y++) {
-			for (uint i = 0; i < N; i++) {
+	for (int x = 0; x < task.X; x++) {
+		for (int y = 0; y < task.Y; y++) {
+			for (int i = 0; i < N; i++) {
 				ASSERT_EQ(mesh.getNodeForTest(y, x).u.get(i), 0.0);
 			}
 		}
@@ -46,12 +46,12 @@ TEST(Mesh, findSourcesForInterpolation)
 	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
 	task.initialConditions = InitialConditions::TestExplosion;
 
-	for (uint stage = 0; stage <= 1; stage++) {
+	for (int stage = 0; stage <= 1; stage++) {
 
 		Mesh mesh;
 		mesh.initialize(task);
-		for (uint x = 0; x < task.X; x++) {
-			for (uint y = 0; y < task.Y; y++) {
+		for (int x = 0; x < task.X; x++) {
+			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
 				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vx), 0.0);
 				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vy), 0.0);
@@ -64,7 +64,7 @@ TEST(Mesh, findSourcesForInterpolation)
 		std::vector<Vector> src(task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
 			mesh.findSourcesForInterpolation(stage, 1, 1, dx, src);
-			for (uint i = 0; i < N; i++) {
+			for (int i = 0; i < N; i++) {
 				ASSERT_EQ(src[0].get(i), (i == 2 || i == 4) ? 1.0 : 0.0);
 				ASSERT_EQ(src[1].get(i), 0.0);
 			}
@@ -86,12 +86,12 @@ TEST(Mesh, interpolateValuesAround)
 	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
 	task.initialConditions = InitialConditions::TestExplosion;
 
-	for (uint stage = 0; stage <= 1; stage++) {
+	for (int stage = 0; stage <= 1; stage++) {
 
 		Mesh mesh;
 		mesh.initialize(task);
-		for (uint x = 0; x < task.X; x++) {
-			for (uint y = 0; y < task.Y; y++) {
+		for (int x = 0; x < task.X; x++) {
+			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
 				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vx), 0.0);
 				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vy), 0.0);
@@ -105,7 +105,7 @@ TEST(Mesh, interpolateValuesAround)
 		dx.createVector({-1, 1, -0.5, 0.5, 0});
 		Matrix matrix = mesh.interpolateValuesAround(stage, 1, 1, dx);
 
-		for (uint i = 0; i < N; i++) {
+		for (int i = 0; i < N; i++) {
 			ASSERT_EQ(matrix.get(i, 0), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix.get(i, 1), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix.get(0, i), 0.0) << "i = " << i; // Vx

@@ -1,0 +1,14 @@
+reset
+set term pngcairo enhanced
+set output "time.png"
+set ylabel "time, sec"
+set xlabel "number of cores"
+plot "speedup.txt" u 1:2 title "time" w l
+
+reset
+set term pngcairo enhanced
+set output "speedup.png"
+set ylabel "time(1) / time(np)"
+set xlabel "number of cores"
+max_time = GPVAL_DATA_Y_MAX
+plot "speedup.txt" u 1:(max_time/$2) title "speedup" w l

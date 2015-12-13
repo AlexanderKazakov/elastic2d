@@ -8,10 +8,10 @@
 class Vector {
 	real v[N];
 public:
-	inline real& operator()(const uint i) {
+	inline real& operator()(const int i) {
 		return v[i];
 	};
-	inline const real& get(const uint i) const {
+	inline const real& get(const int i) const {
 		return v[i];
 	};
 	/**
@@ -27,10 +27,10 @@ public:
 class Matrix {
 	real m[N * N];
 public:
-	inline real& operator()(const uint i, const uint j) {
+	inline real& operator()(const int i, const int j) {
 		return m[i * N + j];
 	};
-	inline const real& get(const uint i, const uint j) const {
+	inline const real& get(const int i, const int j) const {
 		return m[i * N + j];
 	};
 	/**
@@ -44,11 +44,11 @@ public:
 	/**
 	 * Fill in the i-th column with %columns' values
 	 */
-	void setColumn(const uint i, const Vector& column);
+	void setColumn(const int i, const Vector& column);
 	/**
 	 * @return i-th column
 	 */
-	Vector getColumn(const uint i) const;
+	Vector getColumn(const int i) const;
 	/**
 	 * @return Vector with values from matrix diagonal,
 	 * multiplied by %c
@@ -95,15 +95,15 @@ public:
 	/**
 	 * @return PDEMatrix along stage direction
 	 */
-	const PDEMatrix& A(const uint stage) const;
+	const PDEMatrix& A(const int stage) const;
 
 };
 
-namespace std{
+namespace std {
 	inline ostream& operator<<(std::ostream &os, const Vector& vector) {
 
 		os << "Vector:\n";
-		for (uint i = 0; i < N; i++) {
+		for (int i = 0; i < N; i++) {
 				os << vector.get(i) << "\n";
 		}
 
@@ -113,8 +113,8 @@ namespace std{
 	inline ostream& operator<<(std::ostream &os, const Matrix& matrix) {
 
 		os << "Matrix:\n";
-		for (uint i = 0; i < N; i++) {
-			for (uint j = 0; j < N; j++) {
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
 				os << matrix.get(i, j) << "\t";
 			}
 			os << "\n";

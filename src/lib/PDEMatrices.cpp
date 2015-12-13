@@ -8,11 +8,11 @@ PDEMatrices::PDEMatrices(const real& rho, const real& lambda, const real& mu) :
 		rho(rho), lambda(lambda), mu(mu) {
 
 	bool variablesOrderIsCorrect = (
-			static_cast<uint>(NodeMap::Vx) == 0 &&
-			static_cast<uint>(NodeMap::Vy) == 1 &&
-			static_cast<uint>(NodeMap::Sxx) == 2 &&
-			static_cast<uint>(NodeMap::Sxy) == 3 &&
-			static_cast<uint>(NodeMap::Syy) == 4 );
+			static_cast<int>(NodeMap::Vx) == 0 &&
+			static_cast<int>(NodeMap::Vy) == 1 &&
+			static_cast<int>(NodeMap::Sxx) == 2 &&
+			static_cast<int>(NodeMap::Sxy) == 3 &&
+			static_cast<int>(NodeMap::Syy) == 4 );
 
 	if ( !variablesOrderIsCorrect ) throw "Variables order is not correct";
 
@@ -59,7 +59,7 @@ PDEMatrices::PDEMatrices(const real& rho, const real& lambda, const real& mu) :
 }
 
 
-const PDEMatrix &PDEMatrices::A(const uint stage) const {
+const PDEMatrix &PDEMatrices::A(const int stage) const {
 	if      (stage == 0) return Ax;
 	else if (stage == 1) return Ay;
 	else throw "Invalid stage number";
@@ -69,7 +69,7 @@ const PDEMatrix &PDEMatrices::A(const uint stage) const {
 void Vector::createVector(const std::initializer_list<real> &list) {
 	if(list.size() != N) throw "Size of initializer_list isn't equal to N";
 
-	uint i = 0;
+	int i = 0;
 	for (auto& value : list) {
 		(*this)(i) = value;
 		i++;
@@ -79,7 +79,7 @@ void Vector::createVector(const std::initializer_list<real> &list) {
 
 Vector Vector::operator*(const real &b) const {
 	Vector ans;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		ans(i) = get(i) * b;
 	}
 	return ans;
@@ -88,7 +88,7 @@ Vector Vector::operator*(const real &b) const {
 
 Vector Vector::operator-(const Vector &b) const {
 	Vector ans;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		ans(i) = get(i) - b.get(i);
 	}
 	return ans;
@@ -96,14 +96,14 @@ Vector Vector::operator-(const Vector &b) const {
 
 
 void Vector::operator+=(const Vector &b) {
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		(*this)(i) += b.get(i);
 	}
 }
 
 
 bool Vector::operator==(const Vector &b) const {
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		if (fabs(get(i) - b.get(i)) > EQUALITY_TOLERANCE) return false;
 	}
 	return true;
@@ -113,11 +113,11 @@ bool Vector::operator==(const Vector &b) const {
 void Matrix::createMatrix(const std::initializer_list<std::initializer_list<real>> &list) {
 	if(list.size() != N) throw "Size of initializer_list isn't equal to N";
 
-	uint i = 0;
+	int i = 0;
 	for(auto& str : list) {
 		if(str.size() != N) throw "Size of initializer_list isn't equal to N";
 
-		uint j = 0;
+		int j = 0;
 		for (auto &value : str) {
 			(*this)(i, j) = value;
 			j++;
@@ -131,7 +131,7 @@ void Matrix::createDiagonal(const std::initializer_list<real>& list) {
 	memset(m, 0, N * N * sizeof(real));
 	if(list.size() != N) throw "Size of initializer_list isn't equal to N";
 
-	uint i = 0;
+	int i = 0;
 	for (auto& value : list) {
 		(*this)(i, i) = value;
 		i++;
@@ -139,16 +139,16 @@ void Matrix::createDiagonal(const std::initializer_list<real>& list) {
 }
 
 
-void Matrix::setColumn(const uint i, const Vector &column) {
-	for (uint j = 0; j < N; j++) {
+void Matrix::setColumn(const int i, const Vector &column) {
+	for (int j = 0; j < N; j++) {
 		(*this)(j, i) = column.get(j);
 	}
 }
 
 
-Vector Matrix::getColumn(const uint i) const {
+Vector Matrix::getColumn(const int i) const {
 	Vector ans;
-	for (uint j = 0; j < N; j++) {
+	for (int j = 0; j < N; j++) {
 		ans(j) = get(j, i);
 	}
 	return ans;
@@ -157,7 +157,7 @@ Vector Matrix::getColumn(const uint i) const {
 
 Vector Matrix::getDiagonalMultipliedBy(const real &c) const {
 	Vector ans;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		ans(i) = get(i, i) * c;
 	}
 	return ans;
@@ -166,9 +166,9 @@ Vector Matrix::getDiagonalMultipliedBy(const real &c) const {
 
 Vector Matrix::diagonalMultiply(const Matrix &B) const {
 	Vector ans;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		ans(i) = 0;
-		for (uint j = 0; j < N; j++) {
+		for (int j = 0; j < N; j++) {
 			ans(i) += get(i, j) * B.get(j, i);
 		}
 	}
@@ -178,10 +178,10 @@ Vector Matrix::diagonalMultiply(const Matrix &B) const {
 
 Matrix Matrix::operator*(const Matrix &B) const {
 	Matrix C; // C = this * B
-	for (uint i = 0; i < N; i++) {
-		for (uint j = 0; j < N; j++) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
 			C(i, j) = 0.0;
-			for (uint k = 0; k < N; k++) {
+			for (int k = 0; k < N; k++) {
 				C(i, j) += get(i, k) * B.get(k, j);
 			}
 		}
@@ -192,9 +192,9 @@ Matrix Matrix::operator*(const Matrix &B) const {
 
 Vector Matrix::operator*(const Vector &b) const {
 	Vector c; // c = this * b
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		c(i) = 0.0;
-		for (uint j = 0; j < N; j++) {
+		for (int j = 0; j < N; j++) {
 			c(i) += get(i, j) * b.get(j);
 		}
 	}
@@ -204,7 +204,7 @@ Vector Matrix::operator*(const Vector &b) const {
 
 real Matrix::getTrace() const {
 	real tr = 0.0;
-	for (uint i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		tr += get(i, i);
 	}
 	return tr;

@@ -16,7 +16,7 @@ public:
 	 * @param s 0 - along X-axis, 1 - along Y-axis
 	 * @param timeStep time step
 	 */
-	void stage(const uint s, const real& timeStep);
+	void stage(const int s, const real& timeStep);
 
 	bool makeSnapshots = false;
 	bool splittingSecondOrder = false;

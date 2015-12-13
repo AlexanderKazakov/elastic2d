@@ -11,10 +11,10 @@ public:
 	std::shared_ptr<PDEMatrices> matrix;
 
 	inline const real& get(const NodeMap nodeMap) const {
-		return u.get(static_cast<uint>(nodeMap));
+		return u.get(static_cast<int>(nodeMap));
 	};
 	inline real& operator()(const NodeMap nodeMap) {
-		return u(static_cast<uint>(nodeMap));
+		return u(static_cast<int>(nodeMap));
 	};
 };
 
