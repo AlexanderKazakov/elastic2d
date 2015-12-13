@@ -22,7 +22,8 @@ while getopts ":n:p" o; do
     esac
 done
 
-rm -f snaps/*
+rm -rf snaps
+mkdir snaps
 echo "running calculation with $np processes"
 mpirun -np $np ./build/elastic2d
 

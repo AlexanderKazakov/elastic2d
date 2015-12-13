@@ -11,14 +11,15 @@ void MPISolver::calculate() {
 	real currentTime = 0.0; int step = 0;
 	if (makeSnapshots) mesh->snapshot(step);
 	while(currentTime < mesh->T) {
-	if (splittingSecondOrder) {
-		stage(0, mesh->tau / 2);
-		stage(1, mesh->tau);
-		stage(0, mesh->tau / 2);
-	} else {
-		stage(0, mesh->tau);
-		stage(1, mesh->tau);
-	}
+		std::cout << "Doing step " << step << " ...\n";
+		if (splittingSecondOrder) {
+			stage(0, mesh->tau / 2);
+			stage(1, mesh->tau);
+			stage(0, mesh->tau / 2);
+		} else {
+			stage(0, mesh->tau);
+			stage(1, mesh->tau);
+		}
 		currentTime += mesh->tau; step += 1;
 		if (makeSnapshots) mesh->snapshot(step);
 	}
