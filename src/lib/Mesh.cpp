@@ -236,8 +236,8 @@ void Mesh::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, con
 	                                                       mu2mu0 * defaultMatrix->mu);
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
-			if ((y + startY) > 0.2 * globalY && (y + startY) < 0.6 * globalY &&
-					x > 0.4 * X && x < 0.6 * X) {
+			if ((y + startY) > 0.2 * globalY && (y + startY) < 0.5 * globalY &&
+					x > 0.5 * X && x < 0.7 * X) {
 				(*this)(y, x).matrix = newRheologyMatrix;
 			}
 		}

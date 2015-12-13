@@ -15,7 +15,7 @@ Task::Task() {
 	mu0 = 77e+3; // default Lame parameter
 
 	CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
-	numberOfSnaps = 250;
+	numberOfSnaps = 400;
 
 	initialConditions = InitialConditions::ExplosionAtTheLeft;
 
