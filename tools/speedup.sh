@@ -5,7 +5,8 @@ cpus=`cat /proc/cpuinfo | grep processor | wc -l`
 
 for np in $(seq 1 $((2*$cpus)))
 do
-    rm -f snaps/*.vtk;
+    rm -rf snaps;
+    mkdir snaps;
     echo "Running with" $np "processes";
     /usr/bin/time -f "$np %e" -o speedup.txt -a mpirun -np $np ./build/elastic2d;
 done

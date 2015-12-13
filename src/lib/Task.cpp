@@ -7,8 +7,8 @@ Task::Task() {
 
 	accuracyOrder = 2; // order of accuracy of spatial interpolation
 
-	X = 2001; // number of nodes along x direction
-	Y = 3001; // number of nodes along y direction
+	X = 4001; // number of nodes along x direction
+	Y = 8001; // number of nodes along y direction
 
 	rho0 = 8.0; // default density
 	lambda0 = 12e+4; // default Lame parameter
@@ -17,7 +17,7 @@ Task::Task() {
 	CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
 	numberOfSnaps = 40;
 
-	initialConditions = InitialConditions::ExplosionAtTheLeft;
+	initialConditions = InitialConditions::PWaveX;
 
 	borderConditions.at("left") = BorderConditions::FreeBorder;
 	/*borderConditions.at("right") = BorderConditions::FreeBorder;
