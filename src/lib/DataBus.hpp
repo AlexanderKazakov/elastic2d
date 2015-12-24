@@ -1,16 +1,18 @@
-#ifndef ELASTIC2D_DATABUS_HPP
-#define ELASTIC2D_DATABUS_HPP
+#ifndef LIBGCM_DATABUS_HPP
+#define LIBGCM_DATABUS_HPP
 
 #include <mpi.h>
 
+namespace gcm {
+	class DataBus {
+	public:
+		// Special type for node for MPI connection
+		static MPI::Datatype MPI_NODE;
 
-class DataBus {
-public:
-	// Special type for node for MPI connection
-	static MPI::Datatype MPI_NODE;
-	// Creates MPI::Datatype for node - MPI_NODE
-	static void createStaticTypes();
+		// Creates MPI::Datatype for node - MPI_NODE
+		static void createStaticTypes();
 
-};
+	};
+}
 
-#endif /* ELASTIC2D_DATABUS_HPP */
+#endif /* LIBGCM_DATABUS_HPP */

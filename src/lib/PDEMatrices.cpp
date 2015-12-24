@@ -3,6 +3,7 @@
 
 #include "lib/PDEMatrices.hpp"
 
+using namespace gcm;
 
 PDEMatrices::PDEMatrices(const real& rho, const real& lambda, const real& mu) :
 		rho(rho), lambda(lambda), mu(mu) {

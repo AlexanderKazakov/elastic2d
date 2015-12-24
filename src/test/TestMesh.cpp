@@ -2,6 +2,7 @@
 
 #include "lib/Mesh.hpp"
 
+using namespace gcm;
 
 TEST(Mesh, initialize) {
 	Task task;

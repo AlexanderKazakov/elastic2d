@@ -3,6 +3,8 @@
 #include "lib/config.hpp"
 #include "lib/PDEMatrices.hpp"
 
+using namespace gcm;
+
 const int NUMBER_ITERATIONS = 1000;
 
 const real RHO_MAX = 100.0;
@@ -88,8 +90,8 @@ TEST(Linal, TraceComparison)
 	srand(time(0));
 	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
 		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
-		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
-		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
+		real lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
+		real mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
 		PDEMatrices matrix1(rho, lambda, mu);
 		ASSERT_NEAR(matrix1.A(0).A.getTrace(), matrix1.A(0).L.getTrace(), EQUALITY_TOLERANCE)
 			<< "(x) A = " << matrix1.A(0).A << "L = " << matrix1.A(0).L;
@@ -120,9 +122,9 @@ TEST(Linal, LeftEigenVectors)
 
 	srand(time(0));
 	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
-		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
-		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
-		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
+		real rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
+		real lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
+		real mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
 		PDEMatrices matrix1(rho, lambda, mu);
 
 		AU1 = matrix1.A(0).A * matrix1.A(0).U1;
@@ -164,9 +166,9 @@ TEST(Linal, RightEigenVectors)
 
 	srand(time(0));
 	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
-		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
-		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
-		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
+		real rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
+		real lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
+		real mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
 		PDEMatrices matrix1(rho, lambda, mu);
 
 		UA = matrix1.A(0).U * matrix1.A(0).A;
@@ -206,9 +208,9 @@ TEST(Linal, InverseMatrix)
 
 	srand(time(0));
 	for(int i = 0; i < NUMBER_ITERATIONS; i++) {
-		double rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
-		double lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
-		double mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
+		real rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
+		real lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
+		real mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
 		PDEMatrices matrix1(rho, lambda, mu);
 
 		UU1 = matrix1.A(0).U * matrix1.A(0).U1;

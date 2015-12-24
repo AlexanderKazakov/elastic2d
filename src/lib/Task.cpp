@@ -1,5 +1,6 @@
 #include "Task.hpp"
 
+using namespace gcm;
 
 Task::Task() {
 	xLength = 2.0;

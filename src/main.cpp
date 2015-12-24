@@ -1,6 +1,7 @@
 #include <lib/DataBus.hpp>
 #include "lib/MPISolver.hpp"
 
+using namespace gcm;
 
 int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);

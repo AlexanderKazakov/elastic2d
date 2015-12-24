@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+using namespace gcm;
+
 void Interpolator::minMaxInterpolate(Vector &res, std::vector<Vector> &src, const real &q) const {
 	// where is the point to interpolate
 	int k = (int) q;

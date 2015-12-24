@@ -23,13 +23,13 @@ make
 ## Run
 
 ```
-mpirun -np <NUMBER OF PROCESSES> ./elastic2d
+mpirun -np <NUMBER OF PROCESSES> ./gcm
 ```
 
 ## Run tests
 
 ```
-mpirun -np <NUMBER OF PROCESSES> ./elastic2d_mpi_tests
-mpirun -np 1 ./elastic2d_tests
+mpirun -np <NUMBER OF PROCESSES> ./gcm_mpi_tests
+mpirun -np 1 ./gcm_tests
 ```
 

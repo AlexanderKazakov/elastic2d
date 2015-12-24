@@ -24,7 +24,7 @@ done
 
 rm -f snaps/*
 echo "running calculation with $np processes"
-mpirun -np $np ./build/elastic2d
+mpirun -np $np ./build/gcm
 
 if (($np == 1 && run_paraview)); then
     echo "running paraview"

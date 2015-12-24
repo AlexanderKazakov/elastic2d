@@ -2,6 +2,8 @@
 
 #include "lib/DataBus.hpp"
 
+using namespace gcm;
+
 MPISolver::MPISolver(Mesh *mesh, Mesh *newMesh) :
 		mesh(mesh), newMesh(newMesh) {}
 

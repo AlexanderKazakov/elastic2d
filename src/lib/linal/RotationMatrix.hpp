@@ -1,7 +1,7 @@
-#ifndef LIBGCM_LINAL_ROTATION_MATRIX_HPP
-#define LIBGCM_LINAL_ROTATION_MATRIX_HPP
+#ifndef LIBLIBGCM_LINAL_ROTATION_MATRIX_HPP
+#define LIBLIBGCM_LINAL_ROTATION_MATRIX_HPP
 
-#include "libgcm/linal/Matrix33.hpp"
+#include "lib/linal/Matrix33.hpp"
 
 namespace gcm
 {

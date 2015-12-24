@@ -13,7 +13,7 @@
 #include <gsl/gsl_vector.h>
 
 
-namespace gcmc
+namespace gcm
 {
     namespace linal
     {
@@ -23,7 +23,7 @@ namespace gcmc
          * @tparam M First matrix dimension.
          * @tparam N Second matrix dimension.
          */
-        template<uint M, uint N>
+        template<int M, int N>
         class DefaultMatrixContainer
         {
             public:
@@ -46,13 +46,13 @@ namespace gcmc
         };
 
         /**
-         * Genereic matrix class.
+         * Generic matrix class.
          *
          * @tparam M First matrix dimension.
          * @tparam N Second matrix dimension.
          * @tparam Container Container class to hold values.
          */
-        template<uint M, uint N, typename Container=DefaultMatrixContainer<M, N>>
+        template<int M, int N, typename Container=DefaultMatrixContainer<M, N>>
         class Matrix: public Container
         {
             protected:
@@ -64,7 +64,7 @@ namespace gcmc
                  *
                  * @return Values array index.
                  */
-                uint getIndex(const uint i, const uint j) const;
+                int getIndex(const int i, const int j) const;
             public:
                 /**
                  * Default constructor.
@@ -102,7 +102,7 @@ namespace gcmc
                  *
                  * @return Corresponding matrix component.
                  */
-                real operator()(const uint i, const uint j) const;
+                real operator()(const int i, const int j) const;
                 
                 /**
                  * Returns reference to matrix component, used to modify matrix content.
@@ -112,7 +112,7 @@ namespace gcmc
                  *
                  * @return Reference to corresponding matrix component.
                  */
-                real& operator()(const uint i, const uint j);
+                real& operator()(const int i, const int j);
 
                 /**
                  * Transposes matrix.
@@ -140,13 +140,13 @@ namespace gcmc
                 void invertInplace();
         };
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container>::Matrix()
         {
             static_assert(sizeof(this->values) >= sizeof(real)*M*N, "Container must have enough memory to store values");
         }
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container>::Matrix(std::initializer_list<real> values): Matrix()
         {
             int i = 0;
@@ -154,25 +154,25 @@ namespace gcmc
                 this->values[i++] = value;
         }
         
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container>::Matrix(const Matrix<M, N, Container>& m)
         {
             (*this) = m;
         }
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container>& Matrix<M, N, Container>::operator=(const Matrix<M, N, Container>& m)
         {
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     (*this)(i, j) = m(i, j);
 
             return *this;
         }
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         inline
-        uint Matrix<M, N, Container>::getIndex(uint i, uint j) const
+        int Matrix<M, N, Container>::getIndex(int i, int j) const
         {
             assert_lt(i, M);
             assert_lt(j, N);
@@ -180,39 +180,39 @@ namespace gcmc
             return i*N+j;
         }
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         inline
-        gcm::real Matrix<M, N, Container>::operator()(const uint i, const uint j) const
+        gcm::real Matrix<M, N, Container>::operator()(const int i, const int j) const
         {
             return this->values[getIndex(i, j)];
         }
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         inline
-        gcm::real& Matrix<M, N, Container>::operator()(const uint i, const uint j)
+        gcm::real& Matrix<M, N, Container>::operator()(const int i, const int j)
         {
             return this->values[getIndex(i, j)];
         }
 
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<N, M, Container> Matrix<M, N, Container>::transpose() const
         {
             Matrix<N, M, Container> result;
 
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     result(j, i) = (*this)(i, j);
 
             return result;
         }
         
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         void Matrix<M, N, Container>::transposeInplace()
         {
             (*this) = transpose();
         }
         
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<N, M, Container> Matrix<M, N, Container>::invert() const
         {
             Matrix<N, M, Container> result;
@@ -222,8 +222,8 @@ namespace gcmc
             gsl_permutation* perm = gsl_permutation_alloc(M);
             int k;
 
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < M; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < M; j++)
                     gsl_matrix_set(Z1, i, j, (*this)(i, j));
 
             if (gsl_linalg_LU_decomp(Z1, perm, &k))
@@ -232,8 +232,8 @@ namespace gcmc
             if (gsl_linalg_LU_invert(Z1, perm, Z))
                 THROW_INVALID_ARG("gsl_linalg_LU_invert failed");
             
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < M; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < M; j++)
                     result(i, j) = gsl_matrix_get(Z, i, j);
 
             gsl_permutation_free(perm);
@@ -243,7 +243,7 @@ namespace gcmc
             return result;
         }
         
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         void Matrix<M, N, Container>::invertInplace()
         {
             (*this) = invert();
@@ -259,13 +259,13 @@ namespace gcmc
          *
          * @return Negative of matrix
          */
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container> operator-(const Matrix<M, N, Container>& m)
         {
             Matrix<M, N, Container> result;
 
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     result(i, j) = -m(i, j);
 
             return result;
@@ -284,13 +284,13 @@ namespace gcmc
          *
          * @return Matrix summ (m1+m2).
          */
-        template<uint M, uint N, typename Container1, typename Container2, typename Container3>
+        template<int M, int N, typename Container1, typename Container2, typename Container3>
         Matrix<M, N, Container3> operator+(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
         {
             Matrix<M, N, Container3> result;
 
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     result(i, j) = m1(i, j) + m2(i, j);
 
             return result;
@@ -309,7 +309,7 @@ namespace gcmc
          *
          * @return Matrix summ (m1+m2).
          */
-        template<uint M, uint N, typename Container1, typename Container2>
+        template<int M, int N, typename Container1, typename Container2>
         Matrix<M, N, DefaultMatrixContainer<M, N>> operator+(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
         {
             return operator+<M, N, Container1, Container2, DefaultMatrixContainer<M, N>>(m1, m2);
@@ -327,7 +327,7 @@ namespace gcmc
          *
          * @return Matrix summ (m1+m2).
          */
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container> operator+(const Matrix<M, N, Container>& m1, const Matrix<M, N, Container>& m2)
         {
             return operator+<M, N, Container, Container, Container>(m1, m2);
@@ -346,13 +346,13 @@ namespace gcmc
          *
          * @return Matrix difference (m1-m2).
          */
-        template<uint M, uint N, typename Container1, typename Container2, typename Container3>
+        template<int M, int N, typename Container1, typename Container2, typename Container3>
         Matrix<M, N, Container3> operator-(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
         {
             Matrix<M, N, Container3> result;
 
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     result(i, j) = m1(i, j) - m2(i, j);
 
             return result;
@@ -371,7 +371,7 @@ namespace gcmc
          *
          * @return Matrix difference (m1-m2).
          */
-        template<uint M, uint N, typename Container1, typename Container2>
+        template<int M, int N, typename Container1, typename Container2>
         Matrix<M, N, DefaultMatrixContainer<M, N>> operator-(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
         {
             return operator-<M, N, Container1, Container2, DefaultMatrixContainer<M, N>>(m1, m2);
@@ -389,7 +389,7 @@ namespace gcmc
          *
          * @return Matrix difference (m1-m2).
          */
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container> operator-(const Matrix<M, N, Container>& m1, const Matrix<M, N, Container>& m2)
         {
             return operator-<M, N, Container, Container, Container>(m1, m2);
@@ -409,17 +409,17 @@ namespace gcmc
          *
          * @return Matrix product (m1*m2).
          */
-        template<uint M, uint N, uint K, typename Container1, typename Container2, typename Container3>
+        template<int M, int N, int K, typename Container1, typename Container2, typename Container3>
         Matrix<M, K, Container3> operator*(const Matrix<M, N, Container1>& m1, const Matrix<N, K, Container2>& m2)
         {
             Matrix<M, K, Container3> result;
 
-            for (uint i = 0; i < M; i++)
+            for (int i = 0; i < M; i++)
                 
-                for (uint j = 0; j < K; j++)
+                for (int j = 0; j < K; j++)
                 {
                     result(i, j) = 0;
-                    for (uint n = 0; n < N; n++)
+                    for (int n = 0; n < N; n++)
                         result(i, j) += m1(i, n) * m2(n, j);
                 }
 
@@ -440,7 +440,7 @@ namespace gcmc
          *
          * @return Matrix product (m1*m2).
          */
-        template<uint M, uint N, uint K, typename Container1, typename Container2>
+        template<int M, int N, int K, typename Container1, typename Container2>
         Matrix<M, K, DefaultMatrixContainer<M, K>> operator*(const Matrix<M, N, Container1>& m1, const Matrix<N, K, Container2>& m2)
         {
             return operator*<M, N, K, Container1, Container2, DefaultMatrixContainer<M, K>>(m1, m2);
@@ -457,7 +457,7 @@ namespace gcmc
          *
          * @return Matrix product (m1*m2).
          */
-        template<uint M, typename Container>
+        template<int M, typename Container>
         Matrix<M, M, Container> operator*(const Matrix<M, M, Container>& m1, const Matrix<M, M, Container>& m2)
         {
             return operator*<M, M, M, Container, Container, Container>(m1, m2);
@@ -474,13 +474,13 @@ namespace gcmc
          *
          * @return Result of scalar multiplication.
          */
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container> operator*(const Matrix<M, N, Container>& m, const real x)
         {
             Matrix<M, N, Container> result;
 
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     result(i, j) = m(i, j) * x;
 
             return result;
@@ -497,7 +497,7 @@ namespace gcmc
          *
          * @return Result of scalar multiplication.
          */
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container> operator*(const real x, const Matrix<M, N, Container>& m)
         {
             return m * x;
@@ -514,17 +514,17 @@ namespace gcmc
          *
          * @return Result of scalar division.
          */
-        template<uint M, uint N, typename Container>
+        template<int M, int N, typename Container>
         Matrix<M, N, Container> operator/(const Matrix<M, N, Container>& m, const real x)
         {
             return m * (1/x);
         }
 
-        template<uint M, uint N, typename Container1, typename Container2>
+        template<int M, int N, typename Container1, typename Container2>
         bool operator==(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
         {
-            for (uint i = 0; i < M; i++)
-                for (uint j = 0; j < N; j++)
+            for (int i = 0; i < M; i++)
+                for (int j = 0; j < N; j++)
                     // FIXME Should this constant be replaced by something context-specific?
                     if (fabs(m1(i, j) - m2(i, j)) > EQUALITY_TOLERANCE)
                         return false;
@@ -532,7 +532,7 @@ namespace gcmc
             return true;
         }
         
-        template<uint M, uint N, typename Container1, typename Container2>
+        template<int M, int N, typename Container1, typename Container2>
         bool operator!=(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
         {
             return !(m1 == m2);
@@ -540,4 +540,4 @@ namespace gcmc
     };
 };
 
-#endif
+#endif // LIBGCM_LINAL_MATRIX_HPP

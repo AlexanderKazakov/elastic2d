@@ -1,5 +1,5 @@
-#ifndef GCM_EXCEPTION_H_
-#define GCM_EXCEPTION_H_
+#ifndef LIBGCM_EXCEPTION_HPP
+#define LIBGCM_EXCEPTION_HPP
 
 #include <string>
 #include <sstream>
@@ -127,4 +127,4 @@ namespace gcm {
 #define THROW_BAD_METHOD(msg) THROW(gcm::Exception::BAD_METHOD, msg)
 #define THROW_GSL_ERROR(msg) THROW(gcm::Exception::GSL_ERROR, msg)
 
-#endif
+#endif // LIBGCM_EXCEPTION_HPP

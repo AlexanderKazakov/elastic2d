@@ -3,6 +3,7 @@
 #include "lib/config.hpp"
 #include "lib/Node.hpp"
 
+using namespace gcm;
 
 TEST(Node, Access)
 {

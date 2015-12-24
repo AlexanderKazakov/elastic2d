@@ -1,8 +1,8 @@
-#ifndef LIBGCM_LINAL_VECTOR3_HPP
-#define LIBGCM_LINAL_VECTOR3_HPP
+#ifndef LIBLIBGCM_LINAL_VECTOR3_HPP
+#define LIBLIBGCM_LINAL_VECTOR3_HPP
 
-#include "libgcm/linal/Matrix.hpp"
-#include "libgcm/linal/Matrix33.hpp"
+#include "lib/linal/Matrix.hpp"
+#include "lib/linal/Matrix33.hpp"
 
 namespace gcm
 {

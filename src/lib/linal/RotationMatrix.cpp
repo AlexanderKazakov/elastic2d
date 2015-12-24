@@ -1,6 +1,5 @@
-#include "libgcm/linal/RotationMatrix.hpp"
+#include "lib/linal/RotationMatrix.hpp"
 
-#include <cmath>
 
 using namespace gcm;
 using namespace gcm::linal;

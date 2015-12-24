@@ -1,8 +1,8 @@
-#ifndef GCM_LOGGING_H_
-#define GCM_LOGGING_H_
+#ifndef LIBGCM_LOGGING_HPP
+#define LIBGCM_LOGGING_HPP
 
-#include "libgcm/util/Macros.hpp"
-#include "libgcm/config.hpp"
+#include "lib/util/Macros.hpp"
+#include "lib/config.hpp"
 
 #if CONFIG_ENABLE_LOGGING
     #include <log4cxx/logger.h>
@@ -68,4 +68,4 @@
     #define LOG_DEBUG(message)  DO_ONCE(;)
 #endif
 
-#endif
+#endif // LIBGCM_LOGGING_HPP

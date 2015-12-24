@@ -6,6 +6,7 @@
 #include "lib/Mesh.hpp"
 #include "lib/MPISolver.hpp"
 
+using namespace gcm;
 
 TEST(MPI, CustomDatatype)
 {

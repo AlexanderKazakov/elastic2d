@@ -1,6 +1,7 @@
 #include "lib/DataBus.hpp"
 #include "lib/Node.hpp"
 
+using namespace gcm;
 
 MPI::Datatype DataBus::MPI_NODE; // zero initialization of static member
 
@@ -11,7 +12,7 @@ void DataBus::createStaticTypes() {
 	// Node
 	MPI::Datatype node_types[] = {
 			MPI::LB,
-#if ELASTIC2D_DOUBLE_PRECISION
+#if LIBGCM_DOUBLE_PRECISION
 			MPI::DOUBLE,
 #else
 			MPI::FLOAT

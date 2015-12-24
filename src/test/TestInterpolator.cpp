@@ -6,6 +6,7 @@
 
 #define MAX_ACCURACY_ORDER 20
 
+using namespace gcm;
 
 TEST(Interpolator, Const)
 {

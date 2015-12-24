@@ -2,6 +2,8 @@
 #include <algorithm>
 #include "lib/Mesh.hpp"
 
+using namespace gcm;
+
 
 void Mesh::initialize(const Task &task, const bool forceSequence) {
 

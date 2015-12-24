@@ -1,5 +1,5 @@
-#include "libgcm/linal/Matrix33.hpp"
-#include "libgcm/util/Assertion.hpp"
+#include "lib/linal/Matrix33.hpp"
+#include "lib/util/Assertion.hpp"
 
 using namespace gcm;
 using namespace gcm::linal;

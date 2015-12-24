@@ -7,7 +7,7 @@ for np in $(seq 1 $((2*$cpus)))
 do
     rm -f snaps/*.vtk;
     echo "Running with" $np "processes";
-    /usr/bin/time -f "$np %e" -o speedup.txt -a mpirun -np $np ./build/elastic2d;
+    /usr/bin/time -f "$np %e" -o speedup.txt -a mpirun -np $np ./build/gcm;
 done
 
 gnuplot tools/plotter

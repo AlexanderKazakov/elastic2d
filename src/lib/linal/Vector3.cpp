@@ -1,4 +1,4 @@
-#include "libgcm/linal/Vector3.hpp"
+#include "lib/linal/Vector3.hpp"
 
 using namespace gcm;
 using namespace gcm::linal;
