@@ -1,16 +1,20 @@
 #include <fstream>
 #include <algorithm>
-#include "lib/Mesh.hpp"
+#include "lib/model/IdealElastic2DModel.hpp"
+#include "lib/mesh/Mesh.hpp"
 
 using namespace gcm;
 
-
-void Mesh::initialize(const Task &task, const bool forceSequence) {
+template<class TModel>
+void Mesh<TModel>::initialize(const Task &task, const bool forceSequence) {
 
 	rank = MPI::COMM_WORLD.Get_rank();
 	numberOfWorkers = MPI::COMM_WORLD.Get_size();
 
-	if (forceSequence) {rank = 0; numberOfWorkers = 1;}
+	if (forceSequence) {
+		rank = 0;
+		numberOfWorkers = 1;
+	}
 
 	/* ------------------ Properties and conditions ------------------ */
 
@@ -19,7 +23,7 @@ void Mesh::initialize(const Task &task, const bool forceSequence) {
 	X = task.X; // number of nodes along x direction
 
 	// we divide the mesh among processes equally along y-axis
-	int numberOfNodesAlongYPerOneCore = (int)std::round((real)task.Y / numberOfWorkers);
+	int numberOfNodesAlongYPerOneCore = (int) std::round((real) task.Y / numberOfWorkers);
 	Y = numberOfNodesAlongYPerOneCore; // number of nodes along y direction
 	if (rank == numberOfWorkers - 1) Y = task.Y - numberOfNodesAlongYPerOneCore * (numberOfWorkers - 1);
 
@@ -42,16 +46,14 @@ void Mesh::initialize(const Task &task, const bool forceSequence) {
 
 	startY = rank * numberOfNodesAlongYPerOneCore;
 
-	nodes = new Node[(Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder)];
+	nodes = new TModel::Node[(Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder)];
 
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		for (int k = 0; k < N; ++k) {
-			nodes[i].u(k) = 0;
-		}
+		nodes[i].clear();
 		nodes[i].matrix = nullptr;
 	}
 
-	defaultMatrix = std::make_shared<PDEMatrices>(task.rho0, task.lambda0, task.mu0);
+	defaultMatrix = std::make_shared<GcmMatrices2D>(task.rho0, task.lambda0, task.mu0);
 	for (int y = 0; y < Y; ++y) {
 		for (int x = 0; x < X; ++x) {
 			(*this)(y, x).matrix = defaultMatrix;
@@ -61,36 +63,34 @@ void Mesh::initialize(const Task &task, const bool forceSequence) {
 	applyInitialConditions();
 }
 
+template<class TModel>
+linal::Matrix<TModel::Node::M, TModel::Node::M> Mesh<TModel>::interpolateValuesAround
+		(const int stage, const int y, const int x, const TModel::Node::Vector& dx) const {
 
-Matrix Mesh::interpolateValuesAround(const int stage, const int y, const int x,
-                                     const Vector &dx) const {
-
-	Matrix ans;
-	std::vector<Vector> src(accuracyOrder + 1);
-	Vector res;
-	for (int k = 0; k < N; k++) {
-		findSourcesForInterpolation(stage, y, x, dx.get(k), src);
-		interpolator.minMaxInterpolate(res, src, fabs(dx.get(k)) / h[stage]);
+	linal::Matrix<TModel::Node::M, TModel::Node::M> ans;
+	std::vector<TModel::Node::Vector> src(accuracyOrder + 1);
+	TModel::Node::Vector res;
+	for (int k = 0; k < TModel::Node::M; k++) {
+		findSourcesForInterpolation(stage, y, x, dx(k), src);
+		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h[stage]);
 		ans.setColumn(k, res);
 	}
 
 	return ans;
 }
 
-
-void Mesh::findSourcesForInterpolation(const int stage, const int y, const int x,
-                                       const real &dx, std::vector<Vector>& src) const {
-
+template<class TModel>
+void Mesh<TModel>::findSourcesForInterpolation(const int stage, const int y, const int x,
+                                               const real &dx, std::vector<TModel::Node::Vector>& src) const {
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
-		src[k] = get(y + alongY * k, x + alongX * k).u;
+		src[k] = get(y + alongY * k, x + alongX * k);
 	}
-
 }
 
-
-void Mesh::snapshot(int step) const {
+template<class TModel>
+void Mesh<TModel>::snapshot(int step) const {
 	char buffer[50];
 	sprintf(buffer, "%s%02d%s%05d.vtk", "snaps/core", rank, "_snapshot", step);
 	std::fstream f(buffer, std::ios::out);
@@ -107,35 +107,35 @@ void Mesh::snapshot(int step) const {
 	f << "ORIGIN " << "0 " << startY * h[1] << " 0" << std::endl;
 	f << "POINT_DATA " << X * Y << std::endl;
 
-	// TODO - will it works with floats?
+	// TODO - will it work with floats? - No
 	f << "VECTORS V double" << std::endl;
 	for (int y = 0; y < Y; y++)
 		for (int x = 0; x < X; x++)
-			f << get(y, x).get(NodeMap::Vx) << " " << get(y, x).get(NodeMap::Vy) << " 0" << std::endl;
+			f << get(y, x).Vx << " " << get(y, x).Vy << " 0" << std::endl;
 
 	f << "SCALARS Sxx double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int y = 0; y < Y; y++)
 		for (int x = 0; x < X; x++)
-			f << get(y, x).get(NodeMap::Sxx) << std::endl;
+			f << get(y, x).Sxx << std::endl;
 
 	f << "SCALARS Sxy double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int y = 0; y < Y; y++)
 		for (int x = 0; x < X; x++)
-			f << get(y, x).get(NodeMap::Sxy) << std::endl;
+			f << get(y, x).Sxy << std::endl;
 
 	f << "SCALARS Syy double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int y = 0; y < Y; y++)
 		for (int x = 0; x < X; x++)
-			f << get(y, x).get(NodeMap::Syy) << std::endl;
+			f << get(y, x).Syy << std::endl;
 
 	f << "SCALARS pressure double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int y = 0; y < Y; y++)
 		for (int x = 0; x < X; x++)
-			f << - (get(y, x).get(NodeMap::Sxx) + get(y, x).get(NodeMap::Syy)) / 2 << std::endl;
+			f << - (get(y, x).Sxx + get(y, x).Syy) / 2 << std::endl;
 
 	f.close();
 }
@@ -152,7 +152,8 @@ static void put(std::fstream &f, const T value) {
 	f.write(helper.buf, sizeof(T));
 }
 
-void Mesh::_snapshot(int step) const {
+template<class TModel>
+void Mesh<TModel>::_snapshot(int step) const {
 	char buffer[50];
 	sprintf(buffer, "%s%02d%s%05d.vtk", "snaps/core", rank, "_snapshot", step);
 	std::fstream f(buffer, std::ios::out);
@@ -174,40 +175,40 @@ void Mesh::_snapshot(int step) const {
 	f << "SCALARS Vx double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].get(NodeMap::Vx));
+		put(f, nodes[i].Vx);
 	}
 
 	f << "SCALARS Vy double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].get(NodeMap::Vy));
+		put(f, nodes[i].Vy);
 	}
 
 	f << "SCALARS Sxx double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].get(NodeMap::Sxx));
+		put(f, nodes[i].Sxx);
 	}
 
 	f << "SCALARS Sxy double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].get(NodeMap::Sxy));
+		put(f, nodes[i].Sxy);
 	}
 
 	f << "SCALARS Syy double" << std::endl;
 	f << "LOOKUP_TABLE default" << std::endl;
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].get(NodeMap::Syy));
+		put(f, nodes[i].Syy);
 	}
 
 	f.close();
 }
 
+template<class TModel>
+void Mesh<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-void Mesh::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
-
-	auto newRheologyMatrix = std::make_shared<PDEMatrices>(rho2rho0 * defaultMatrix->rho,
+	auto newRheologyMatrix = std::make_shared<GcmMatrices2D>(rho2rho0 * defaultMatrix->rho,
 	                                                       lambda2lambda0 * defaultMatrix->lambda,
 	                                                       mu2mu0 * defaultMatrix->mu);
 
@@ -230,10 +231,10 @@ void Mesh::changeRheology(const real& rho2rho0, const real& lambda2lambda0, cons
 
 }
 
+template<class TModel>
+void Mesh<TModel>::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-void Mesh::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
-
-	auto newRheologyMatrix = std::make_shared<PDEMatrices>(rho2rho0 * defaultMatrix->rho,
+	auto newRheologyMatrix = std::make_shared<GcmMatrices2D>(rho2rho0 * defaultMatrix->rho,
 	                                                       lambda2lambda0 * defaultMatrix->lambda,
 	                                                       mu2mu0 * defaultMatrix->mu);
 	for (int x = 0; x < X; x++) {
@@ -256,27 +257,27 @@ void Mesh::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, con
 
 }
 
-
-void Mesh::applyBorderConditions() {
+template<class TModel>
+void Mesh<TModel>::applyBorderConditions() {
 	if (borderConditions.at("left") == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(y, -i)(NodeMap::Vx)  =   get(y, i).get(NodeMap::Vx);
-				(*this)(y, -i)(NodeMap::Vy)  =   get(y, i).get(NodeMap::Vy);
-				(*this)(y, -i)(NodeMap::Sxx) = - get(y, i).get(NodeMap::Sxx);
-				(*this)(y, -i)(NodeMap::Sxy) = - get(y, i).get(NodeMap::Sxy);
-				(*this)(y, -i)(NodeMap::Syy) = - get(y, i).get(NodeMap::Syy);
+				(*this)(y, -i).Vx  =   get(y, i).Vx;
+				(*this)(y, -i).Vy  =   get(y, i).Vy;
+				(*this)(y, -i).Sxx = - get(y, i).Sxx;
+				(*this)(y, -i).Sxy = - get(y, i).Sxy;
+				(*this)(y, -i).Syy = - get(y, i).Syy;
 			}
 		}
 	}
 	if (borderConditions.at("right") == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(y, X - 1 + i)(NodeMap::Vx)  =   get(y, X - 1 - i).get(NodeMap::Vx);
-				(*this)(y, X - 1 + i)(NodeMap::Vy)  =   get(y, X - 1 - i).get(NodeMap::Vy);
-				(*this)(y, X - 1 + i)(NodeMap::Sxx) = - get(y, X - 1 - i).get(NodeMap::Sxx);
-				(*this)(y, X - 1 + i)(NodeMap::Sxy) = - get(y, X - 1 - i).get(NodeMap::Sxy);
-				(*this)(y, X - 1 + i)(NodeMap::Syy) = - get(y, X - 1 - i).get(NodeMap::Syy);
+				(*this)(y, X - 1 + i).Vx  =   get(y, X - 1 - i).Vx;
+				(*this)(y, X - 1 + i).Vy  =   get(y, X - 1 - i).Vy;
+				(*this)(y, X - 1 + i).Sxx = - get(y, X - 1 - i).Sxx;
+				(*this)(y, X - 1 + i).Sxy = - get(y, X - 1 - i).Sxy;
+				(*this)(y, X - 1 + i).Syy = - get(y, X - 1 - i).Syy;
 			}
 		}
 	}
@@ -284,29 +285,29 @@ void Mesh::applyBorderConditions() {
 	if (rank == 0 && borderConditions.at("bottom") == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(-i, x)(NodeMap::Vx)  =   get(i, x).get(NodeMap::Vx);
-				(*this)(-i, x)(NodeMap::Vy)  =   get(i, x).get(NodeMap::Vy);
-				(*this)(-i, x)(NodeMap::Sxx) = - get(i, x).get(NodeMap::Sxx);
-				(*this)(-i, x)(NodeMap::Sxy) = - get(i, x).get(NodeMap::Sxy);
-				(*this)(-i, x)(NodeMap::Syy) = - get(i, x).get(NodeMap::Syy);
+				(*this)(-i, x).Vx  =   get(i, x).Vx;
+				(*this)(-i, x).Vy  =   get(i, x).Vy;
+				(*this)(-i, x).Sxx = - get(i, x).Sxx;
+				(*this)(-i, x).Sxy = - get(i, x).Sxy;
+				(*this)(-i, x).Syy = - get(i, x).Syy;
 			}
 		}
 	}
 	if (rank == numberOfWorkers - 1 && borderConditions.at("up") == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(Y - 1 + i, x)(NodeMap::Vx)  =   get(Y - 1 - i, x).get(NodeMap::Vx);
-				(*this)(Y - 1 + i, x)(NodeMap::Vy)  =   get(Y - 1 - i, x).get(NodeMap::Vy);
-				(*this)(Y - 1 + i, x)(NodeMap::Sxx) = - get(Y - 1 - i, x).get(NodeMap::Sxx);
-				(*this)(Y - 1 + i, x)(NodeMap::Sxy) = - get(Y - 1 - i, x).get(NodeMap::Sxy);
-				(*this)(Y - 1 + i, x)(NodeMap::Syy) = - get(Y - 1 - i, x).get(NodeMap::Syy);
+				(*this)(Y - 1 + i, x).Vx  =   get(Y - 1 - i, x).Vx;
+				(*this)(Y - 1 + i, x).Vy  =   get(Y - 1 - i, x).Vy;
+				(*this)(Y - 1 + i, x).Sxx = - get(Y - 1 - i, x).Sxx;
+				(*this)(Y - 1 + i, x).Sxy = - get(Y - 1 - i, x).Sxy;
+				(*this)(Y - 1 + i, x).Syy = - get(Y - 1 - i, x).Syy;
 			}
 		}
 	}
 }
 
-
-void Mesh::applyInitialConditions() {
+template<class TModel>
+void Mesh<TModel>::applyInitialConditions() {
 	if (initialConditions == InitialConditions::Zero) {
 		return;
 
@@ -318,7 +319,7 @@ void Mesh::applyInitialConditions() {
 		int yFrom = Y / 2;
 		for (int x = xFrom; x <= xTo; x++) {
 			for (int y = yFrom; y <= yTo; y++) {
-				(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy) = 1.0;
+				(*this)(y, x).Sxx = (*this)(y, x).Syy = 1.0;
 			}
 		}
 		return;
@@ -328,7 +329,7 @@ void Mesh::applyInitialConditions() {
 		for (int x = 0; x <= X; x++) {
 			for (int y = 0; y <= Y; y++) {
 				if ( (x - X / 2)*(x - X / 2) + (y + startY - globalY / 2)*(y + startY - globalY / 2) <= R*R )
-					(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy)  = - 1.0;
+					(*this)(y, x).Sxx = (*this)(y, x).Syy  = - 1.0;
 			}
 		}
 		return;
@@ -336,7 +337,7 @@ void Mesh::applyInitialConditions() {
 	} else if (initialConditions == InitialConditions::PWaveX) {
 		for (int x = 2; x < 0.15 * X + 2; x++) {
 			for (int y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(1);
+				(*this)(y, x) = defaultMatrix->A(0).U1.getColumn(1);
 			}
 		}
 
@@ -344,14 +345,14 @@ void Mesh::applyInitialConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				if (y + startY >= 2 && y + startY < 0.45 * globalY + 2)
-					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(1);
+					(*this)(y, x) = defaultMatrix->A(1).U1.getColumn(1);
 			}
 		}
 
 	} else if (initialConditions == InitialConditions::SWaveX) {
 		for (int x = 2; x < 0.15 * X + 2; x++) {
 			for (int y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(3);
+				(*this)(y, x) = defaultMatrix->A(0).U1.getColumn(3);
 			}
 		}
 
@@ -359,32 +360,32 @@ void Mesh::applyInitialConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				if (y + startY >= 2 && y + startY < 0.15 * globalY + 2)
-					(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(3);
+					(*this)(y, x) = defaultMatrix->A(1).U1.getColumn(3);
 			}
 		}
 
 	} else if (initialConditions == InitialConditions::SWaveXBackward) {
 		for (int x = (int) (0.85 * X - 2); x < X - 2; x++) {
 			for (int y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(2);
+				(*this)(y, x) = defaultMatrix->A(0).U1.getColumn(2);
 			}
 		}
 
 	} else if (initialConditions == InitialConditions::SxxOnly) {
 		if (numberOfWorkers != 1) throw "This condition only for sequence version";
-		(*this)(Y / 2, X / 2)(NodeMap::Sxx) = 5.5;
+		(*this)(Y / 2, X / 2).Sxx = 5.5;
 
 	} else if (initialConditions == InitialConditions::PWaveXBackward) {
 		for (int x = (int)(0.15 * X); x < 0.3 * X; x++) {
 			for (int y = 0; y < Y; y++) {
-				(*this)(y, x).u = defaultMatrix->A(0).U1.getColumn(0);
+				(*this)(y, x) = defaultMatrix->A(0).U1.getColumn(0);
 			}
 		}
 
 	} else if (initialConditions == InitialConditions::PWaveYBackward) {
 		for (int y = (int)(0.15 * Y); y < 0.3 * Y; y++) {
 			for (int x = 0; x < X; x++) {
-				(*this)(y, x).u = defaultMatrix->A(1).U1.getColumn(1);
+				(*this)(y, x) = defaultMatrix->A(1).U1.getColumn(1);
 			}
 		}
 
@@ -393,7 +394,7 @@ void Mesh::applyInitialConditions() {
 		for (int y = 0; y < Y; y++) {
 			for (int x = 0; x < X; x++) {
 				if ( (x - X / 6)*(x - X / 6) + (y + startY - globalY / 2)*(y + startY - globalY / 2) <= R*R )
-					(*this)(y, x)(NodeMap::Sxx) = (*this)(y, x)(NodeMap::Syy)  = - 1.0;
+					(*this)(y, x).Sxx = (*this)(y, x).Syy  = - 1.0;
 			}
 		}
 
@@ -401,3 +402,6 @@ void Mesh::applyInitialConditions() {
 		throw("Unknown initial condition");
 	}
 }
+
+
+template class Mesh<IdealElastic2DModel>;

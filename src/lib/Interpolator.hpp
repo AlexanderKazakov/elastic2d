@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "lib/PDEMatrices.hpp"
+#include "GcmMatrices2D.hpp"
 
 namespace gcm {
 	class Interpolator {

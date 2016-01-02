@@ -2,7 +2,7 @@
 #define LIBGCM_MPISOLVER_HPP
 
 
-#include "lib/Mesh.hpp"
+#include "lib/mesh/Mesh.hpp"
 
 namespace gcm {
 	class MPISolver {

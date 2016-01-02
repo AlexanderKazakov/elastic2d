@@ -15,12 +15,9 @@
 #define CONFIG_ENABLE_LOGGING_DEBUG 1
 
 
-const int N = 5; // number of variables in PDE
-enum class NodeMap {Vx, Vy, Sxx, Sxy, Syy}; // order of physical quantities in the vector in Node
 
 enum class InitialConditions {Zero, TestExplosion, Explosion, ExplosionAtTheLeft, PWaveXBackward, PWaveYBackward,
 	PWaveX, SWaveX, PWaveY, SWaveY, SWaveXBackward, SxxOnly};
-
 enum class BorderConditions {NonReflection, FreeBorder};
 
 

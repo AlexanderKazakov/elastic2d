@@ -1,5 +1,5 @@
 #include "lib/DataBus.hpp"
-#include "lib/Node.hpp"
+#include "lib/nodes/Node.hpp"
 
 using namespace gcm;
 

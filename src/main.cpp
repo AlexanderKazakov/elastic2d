@@ -1,4 +1,6 @@
-#include <lib/DataBus.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include "lib/mesh/Mesh.hpp"
+#include "lib/DataBus.hpp"
 #include "lib/MPISolver.hpp"
 
 using namespace gcm;
@@ -7,8 +9,8 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	DataBus::createStaticTypes();
 
-	Mesh mesh1;
-	Mesh mesh2;
+	Mesh<IdealElastic2DModel> mesh1;
+	Mesh<IdealElastic2DModel> mesh2;
 	Task task;
 	mesh1.initialize(task);
 	mesh1.changeRheology2(4, 1, 1);

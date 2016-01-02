@@ -4,11 +4,13 @@
 #include <memory>
 #include <mpi.h>
 
-#include "lib/Node.hpp"
+#include "lib/linal/Vector.hpp"
+#include "lib/nodes/Node.hpp"
 #include "lib/Interpolator.hpp"
 #include "lib/Task.hpp"
 
 namespace gcm {
+	template <class TModel>
 	class Mesh {
 	private:
 		int rank = 0; // index of core
@@ -35,11 +37,11 @@ namespace gcm {
 
 		int startY = 0; // global y-index of first real node of the mesh
 
-		/* PDEMatrices that is common for majority of nodes */
-		std::shared_ptr <PDEMatrices> defaultMatrix;
+		/* GcmMatrices2D that is common for majority of nodes */
+		std::shared_ptr <GcmMatrices2D> defaultMatrix;
 
 		/* Data storage. Real nodes with assistant nodes on borders */
-		Node *nodes = nullptr;
+		TModel::Node *nodes = nullptr;
 
 		/**
 		 * Operator to iterate relatively to real nodes.
@@ -47,7 +49,7 @@ namespace gcm {
 		 * @param y y index < %Y
 		 * @param x x index < %X
 		 */
-		inline Node &operator()(const int y, const int x) {
+		inline TModel::Node &operator()(const int y, const int x) {
 			return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
 		};
 
@@ -57,7 +59,7 @@ namespace gcm {
 		 * @param y y index < %Y
 		 * @param x x index < %X
 		 */
-		inline const Node &get(const int y, const int x) const {
+		inline const TModel::Node &get(const int y, const int x) const {
 			return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
 		};
 
@@ -84,15 +86,15 @@ namespace gcm {
 		 * values should be interpolated
 		 * @return Matrix with interpolated nodal values in columns
 		 */
-		Matrix interpolateValuesAround(const int stage, const int y, const int x,
-		                               const Vector &dx) const;
+		linal::Matrix<TModel::Node::M, TModel::Node::M> Mesh<TModel>::interpolateValuesAround
+				(const int stage, const int y, const int x, const TModel::Node::Vector& dx) const;
 
 		/* Place in %src nodal values which are necessary for
 		 * interpolation in specified point. The number of placed
 		 * in values is equal to src.size()
 		 */
 		void findSourcesForInterpolation(const int stage, const int y, const int x,
-		                                 const real &dx, std::vector <Vector> &src) const;
+		                                 const real &dx, std::vector<TModel::Node::Vector>& src) const;
 
 		/* Write vtk snapshot */
 		void snapshot(int step) const;
@@ -119,9 +121,9 @@ namespace gcm {
 
 		const int getStartYForTest() const { return startY; };
 
-		const Node &getNodeForTest(const int y, const int x) const { return get(y, x); };
+		const TModel::Node &getNodeForTest(const int y, const int x) const { return get(y, x); };
 
-		const std::shared_ptr<const PDEMatrices> getDefaultMatrixForTest() const { return defaultMatrix; };
+		const std::shared_ptr<const GcmMatrices2D> getDefaultMatrixForTest() const { return defaultMatrix; };
 
 		/* Change rheology in some area
 		 *

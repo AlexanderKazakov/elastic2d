@@ -2,8 +2,8 @@
 
 #include "lib/config.hpp"
 #include "lib/DataBus.hpp"
-#include <lib/Task.hpp>
-#include "lib/Mesh.hpp"
+#include "lib/Task.hpp"
+#include "lib/mesh/Mesh.hpp"
 #include "lib/MPISolver.hpp"
 
 using namespace gcm;

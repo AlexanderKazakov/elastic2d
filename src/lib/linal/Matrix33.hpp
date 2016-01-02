@@ -1,6 +1,7 @@
 #ifndef LIBLIBGCM_LINAL_MATRIX33_HPP
 #define LIBLIBGCM_LINAL_MATRIX33_HPP
 
+#include <string.h>
 #include "lib/linal/Matrix.hpp"
 
 namespace gcm
@@ -65,7 +66,13 @@ namespace gcm
                         };
                     };
                 };
+
+            void clear()
+            {
+                memset(values, 0, 9 * sizeof(real));
+            };
         };
+
         /**
          * Specialized 3x3 matrix implementation.
          */
