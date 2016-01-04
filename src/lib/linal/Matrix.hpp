@@ -21,15 +21,15 @@ namespace gcm
     {
         /**
          * Default implementation for matrix values container.
-         * We differ SIZE from M * N, because SIZE can be bigger in some cases.
+         * We differ SIZE from TM * TN, because SIZE can be bigger in some cases.
          *
-         * @tparam M First matrix dimension (number of strings).
-         * @tparam N Second matrix dimension (number of columns).
+         * @tparam TM First matrix dimension (number of strings).
+         * @tparam TN Second matrix dimension (number of columns).
          */
-        template<int M, int N>
+        template<int TM, int TN>
         class DefaultMatrixContainer {
         public:
-            static const int SIZE = M * N; /// size of storage in units of gcm::real
+            static const int SIZE = TM * TN; /// size of storage in units of gcm::real
             real values[SIZE];
         };
 
@@ -46,6 +46,8 @@ namespace gcm
             };
         };
 
+        template<int TM, typename Container=DefaultMatrixContainer<TM, 1>> class Vector;
+
         template<class TContainer>
         void clear(TContainer& container) {
             memset(container.values, 0, TContainer::SIZE * sizeof(real));
@@ -55,11 +57,11 @@ namespace gcm
         /**
          * Generic matrix class.
          *
-         * @tparam M First matrix dimension (number of strings).
-         * @tparam N Second matrix dimension (number of columns).
+         * @tparam TM First matrix dimension (number of strings).
+         * @tparam TN Second matrix dimension (number of columns).
          * @tparam Container Container class to hold values.
          */
-        template<int M, int N, typename Container=DefaultMatrixContainer<M, N>>
+        template<int TM, int TN, typename Container=DefaultMatrixContainer<TM, TN>>
         class Matrix: public Container
         {
         protected:
@@ -73,8 +75,8 @@ namespace gcm
              */
             int getIndex(const int i, const int j) const;
         public:
-            static const int M = M; /// number of strings
-            static const int N = N; /// number of columns
+            static const int M = TM; /// number of strings
+            static const int N = TN; /// number of columns
             /** Default constructor. */
             Matrix();
 
@@ -83,7 +85,7 @@ namespace gcm
              *
              * @param m Matrix to construct from.
              */
-            Matrix(const Matrix<M, N, Container>& m);
+            Matrix(const Matrix<TM, TN, Container>& m);
 
             /**
              * Assignment operator.
@@ -92,7 +94,7 @@ namespace gcm
              *
              * @return Reference to modified matrix instance.
              */
-            Matrix<M, N, Container>& operator=(const Matrix<M, N, Container>& m);
+            Matrix<TM, TN, Container>& operator=(const Matrix<TM, TN, Container>& m);
 
             /**
              * Constructor that initializes matrix with specified values.
@@ -126,18 +128,18 @@ namespace gcm
              *
              * @return Transposed matrix.
              */
-            Matrix<N, M, Container> transpose() const;
+            Matrix<TN, TM, Container> transpose() const;
 
             /** Transposes square matrix (modifies matrix contents). */
             void transposeInplace();
 
             /**
-             * Inverses matrix. Note this method returns Matrix<N, M> (not Matrix<M, N>) to make compilation fail
+             * Inverses matrix. Note this method returns Matrix<TN, TM> (not Matrix<TM, TN>) to make compilation fail
              * if matrix is not square.
              *
              * @return Inversed matrix.
              */
-            Matrix<N, M, Container> invert() const;
+            Matrix<TN, TM, Container> invert() const;
 
             /** Inverses matrix modifying its contents. */
             void invertInplace();
@@ -146,105 +148,105 @@ namespace gcm
             void createDiagonal(const std::initializer_list <real> &list);
 
             /** Fill in the i-th column. */
-            void setColumn(const int i, const Vector<M, VectorContainer> &column);
+            void setColumn(const int i, const Vector<TM> &column);
 
             /** @return i-th column. */
-            Vector<M, VectorContainer> getColumn(const int i) const;
+            Vector<TM> getColumn(const int i) const;
 
             /** @return values from diagonal multiplied by c in vector */
-            Vector<N, VectorContainer> getDiagonalMultipliedBy(const real &c) const;
+            Vector<TN> getDiagonalMultipliedBy(const real &c) const;
 
             /** @return diagonal of this multiplied by B in vector */
-            Vector<N, VectorContainer> diagonalMultiply(const Matrix<N, N> &B) const;
+            Vector<TM> diagonalMultiply(const Matrix<TN, TM> &B) const;
 
             /** @return trace of the matrix */
             real trace() const;
         };
 
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container>::Matrix()
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container>::Matrix()
         {
-            static_assert(sizeof(this->values) >= sizeof(real)*M*N, "Container must have enough memory to store values");
+            static_assert(sizeof(this->values) >= sizeof(real)*TM*TN, "Container must have enough memory to store values");
         }
 
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container>::Matrix(std::initializer_list<real> values): Matrix()
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container>::Matrix(std::initializer_list<real> values): Matrix()
         {
             int i = 0;
             for (auto value: values)
                 this->values[i++] = value;
         }
         
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container>::Matrix(const Matrix<M, N, Container>& m)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container>::Matrix(const Matrix<TM, TN, Container>& m)
         {
             (*this) = m;
         }
 
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container>& Matrix<M, N, Container>::operator=(const Matrix<M, N, Container>& m)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container>& Matrix<TM, TN, Container>::operator=(const Matrix<TM, TN, Container>& m)
         {
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     (*this)(i, j) = m(i, j);
 
             return *this;
         }
 
-        template<int M, int N, typename Container>
+        template<int TM, int TN, typename Container>
         inline
-        int Matrix<M, N, Container>::getIndex(int i, int j) const
+        int Matrix<TM, TN, Container>::getIndex(int i, int j) const
         {
-            assert_lt(i, M);
-            assert_lt(j, N);
+            assert_lt(i, TM);
+            assert_lt(j, TN);
 
-            return i*N+j;
+            return i*TN+j;
         }
 
-        template<int M, int N, typename Container>
+        template<int TM, int TN, typename Container>
         inline
-        real Matrix<M, N, Container>::operator()(const int i, const int j) const
+        real Matrix<TM, TN, Container>::operator()(const int i, const int j) const
         {
             return this->values[getIndex(i, j)];
         }
 
-        template<int M, int N, typename Container>
+        template<int TM, int TN, typename Container>
         inline
-        real& Matrix<M, N, Container>::operator()(const int i, const int j)
+        real& Matrix<TM, TN, Container>::operator()(const int i, const int j)
         {
             return this->values[getIndex(i, j)];
         }
 
-        template<int M, int N, typename Container>
-        Matrix<N, M, Container> Matrix<M, N, Container>::transpose() const
+        template<int TM, int TN, typename Container>
+        Matrix<TN, TM, Container> Matrix<TM, TN, Container>::transpose() const
         {
-            Matrix<N, M, Container> result;
+            Matrix<TN, TM, Container> result;
 
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     result(j, i) = (*this)(i, j);
 
             return result;
         }
         
-        template<int M, int N, typename Container>
-        void Matrix<M, N, Container>::transposeInplace()
+        template<int TM, int TN, typename Container>
+        void Matrix<TM, TN, Container>::transposeInplace()
         {
             (*this) = transpose();
         }
         
-        template<int M, int N, typename Container>
-        Matrix<N, M, Container> Matrix<M, N, Container>::invert() const
+        template<int TM, int TN, typename Container>
+        Matrix<TN, TM, Container> Matrix<TM, TN, Container>::invert() const
         {
-            Matrix<N, M, Container> result;
+            Matrix<TN, TM, Container> result;
 
-            gsl_matrix* Z1 = gsl_matrix_alloc(M, M);
-            gsl_matrix* Z = gsl_matrix_alloc(M, M);
-            gsl_permutation* perm = gsl_permutation_alloc(M);
+            gsl_matrix* Z1 = gsl_matrix_alloc(TM, TM);
+            gsl_matrix* Z = gsl_matrix_alloc(TM, TM);
+            gsl_permutation* perm = gsl_permutation_alloc(TM);
             int k;
 
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < M; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TM; j++)
                     gsl_matrix_set(Z1, i, j, (*this)(i, j));
 
             if (gsl_linalg_LU_decomp(Z1, perm, &k))
@@ -253,8 +255,8 @@ namespace gcm
             if (gsl_linalg_LU_invert(Z1, perm, Z))
                 THROW_INVALID_ARG("gsl_linalg_LU_invert failed");
             
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < M; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TM; j++)
                     result(i, j) = gsl_matrix_get(Z, i, j);
 
             gsl_permutation_free(perm);
@@ -264,14 +266,14 @@ namespace gcm
             return result;
         }
         
-        template<int M, int N, typename Container>
-        void Matrix<M, N, Container>::invertInplace()
+        template<int TM, int TN, typename Container>
+        void Matrix<TM, TN, Container>::invertInplace()
         {
             (*this) = invert();
         }
 
-        template<int M, int N, typename Container>
-        void Matrix<M, N, Container>::createDiagonal(const std::initializer_list<real>& list) {
+        template<int TM, int TN, typename Container>
+        void Matrix<TM, TN, Container>::createDiagonal(const std::initializer_list<real>& list) {
             clear(*this);
             int i = 0;
             for (auto& value : list) {
@@ -279,59 +281,59 @@ namespace gcm
             }
         }
 
-        template<int M, int N, typename Container, typename VectorContainer>
-        void Matrix<M, N, Container>::setColumn(const int i, const Vector<M, VectorContainer>& column) {
-            for (int j = 0; j < M; j++) {
+        template<int TM, int TN, typename Container>
+        void Matrix<TM, TN, Container>::setColumn(const int i, const Vector<TM>& column) {
+            for (int j = 0; j < TM; j++) {
                 (*this)(j, i) = column(j);
             }
         }
 
-        template<int M, int N, typename Container, typename VectorContainer>
-        Vector<M, VectorContainer> Matrix<M, N, Container>::getColumn(const int i) const {
-            Vector<M, VectorContainer> ans;
-            for (int j = 0; j < M; j++) {
+        template<int TM, int TN, typename Container>
+        Vector<TM> Matrix<TM, TN, Container>::getColumn(const int i) const {
+            Vector<TM> ans;
+            for (int j = 0; j < TM; j++) {
                 ans(j) = (*this)(j, i);
             }
             return ans;
         }
 
-        template<int N, int N, typename Container, typename VectorContainer>
-        Vector<N, VectorContainer> Matrix<N, N, Container>::getDiagonalMultipliedBy(const real &c) const {
-            Vector<N, VectorContainer> ans;
-            for (int i = 0; i < N; i++) {
+        template<int TM, int TN, typename Container>
+        Vector<TN> Matrix<TM, TN, Container>::getDiagonalMultipliedBy(const real &c) const {
+            Vector<TN> ans;
+            for (int i = 0; i < TN; i++) {
                 ans(i) = (*this)(i, i) * c;
             }
             return ans;
         }
 
-        template<int N, int N, typename Container, typename VectorContainer>
-        Vector<N, typename VectorContainer> Matrix<N, N, Container>::diagonalMultiply(const Matrix<N, N> &B) const {
-            Vector<N, VectorContainer> ans;
-            for (int i = 0; i < N; i++) {
+        template<int TM, int TN, typename Container>
+        Vector<TM> Matrix<TM, TN, Container>::diagonalMultiply(const Matrix<TN, TM> &B) const {
+            Vector<TM> ans;
+            for (int i = 0; i < TM; i++) {
                 ans(i) = 0;
-                for (int j = 0; j < N; j++) {
-                    ans(i) += get(i, j) * B(j, i);
+                for (int j = 0; j < TM; j++) {
+                    ans(i) += (*this)(i, j) * B(j, i);
                 }
             }
             return ans;
         }
 
-        template<int M, int N, typename Container, typename VectorContainer>
-        Vector<M, VectorContainer> Matrix<M, N, Container>::operator*(const Vector<N, VectorContainer> &b) const {
-            Vector<N, VectorContainer> c; // c = this * b
-            for (int i = 0; i < N; i++) {
+        /*template<int TM, int TN, typename Container>
+        Vector<TM> Matrix<TM, TN, Container>::operator*(const Vector<TN> &b) const {
+            Vector<TN> c; // c = this * b
+            for (int i = 0; i < TN; i++) {
                 c(i) = 0.0;
-                for (int j = 0; j < M; j++) {
+                for (int j = 0; j < TM; j++) {
                     c(i) += (*this)(i, j) * b(j);
                 }
             }
             return c;
-        }
+        }*/
 
-        template<int N, int N, typename Container>
-        real Matrix<N, N, Container>::trace() const {
+        template<int TM, int TN, typename Container>
+        real Matrix<TM, TN, Container>::trace() const {
             real trace = 0.0;
-            for (int i = 0; i < N; i++) {
+            for (int i = 0; i < TN; i++) {
                 trace += (*this)(i, i);
             }
             return trace;
@@ -340,20 +342,20 @@ namespace gcm
         /**
          * Computes negative of matrix B
          *
-         * @tparam M First matrix dimension
-         * @tparam N Second matrix dimension
+         * @tparam TM First matrix dimension
+         * @tparam TN Second matrix dimension
          * @tparam Container Matrix container type
          * @param m Matrix to compute negative for.
          *
          * @return Negative of matrix
          */
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container> operator-(const Matrix<M, N, Container>& m)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container> operator-(const Matrix<TM, TN, Container>& m)
         {
-            Matrix<M, N, Container> result;
+            Matrix<TM, TN, Container> result;
 
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     result(i, j) = -m(i, j);
 
             return result;
@@ -362,8 +364,8 @@ namespace gcm
         /**
          * Computes summ of two matrixes. Generic implementation.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container1 Container type for first summ item.
          * @tparam Container2 Container type for second  summ item.
          * @tparam Container3 Container type for result.
@@ -372,13 +374,13 @@ namespace gcm
          *
          * @return Matrix summ (m1+m2).
          */
-        template<int M, int N, typename Container1, typename Container2, typename Container3>
-        Matrix<M, N, Container3> operator+(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2, typename Container3>
+        Matrix<TM, TN, Container3> operator+(const Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
-            Matrix<M, N, Container3> result;
+            Matrix<TM, TN, Container3> result;
 
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     result(i, j) = m1(i, j) + m2(i, j);
 
             return result;
@@ -388,8 +390,8 @@ namespace gcm
          * Computes summ of two matrixes. Most useful specialization, made in assumption that result matrix should
          * use default matrix container.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container1 Container type for first summ item.
          * @tparam Container2 Container type for second  summ item.
          * @param m1 First summ item.
@@ -397,35 +399,35 @@ namespace gcm
          *
          * @return Matrix summ (m1+m2).
          */
-        template<int M, int N, typename Container1, typename Container2>
-        Matrix<M, N, DefaultMatrixContainer<M, N>> operator+(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2>
+        Matrix<TM, TN, DefaultMatrixContainer<TM, TN>> operator+(const Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
-            return operator+<M, N, Container1, Container2, DefaultMatrixContainer<M, N>>(m1, m2);
+            return operator+<TM, TN, Container1, Container2, DefaultMatrixContainer<TM, TN>>(m1, m2);
         }
 
         /**
          * Computes summ of two matrixes. Specialized implementation, made in assumption that all matrixes
          * use default matrix container.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container Container type for all matrixes.
          * @param m1 First summ item.
          * @param m2 Second summ item.
          *
          * @return Matrix summ (m1+m2).
          */
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container> operator+(const Matrix<M, N, Container>& m1, const Matrix<M, N, Container>& m2)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container> operator+(const Matrix<TM, TN, Container>& m1, const Matrix<TM, TN, Container>& m2)
         {
-            return operator+<M, N, Container, Container, Container>(m1, m2);
+            return operator+<TM, TN, Container, Container, Container>(m1, m2);
         }
         
         /**
          * Computes difference of two matrixes. Generic implementation.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container1 Container type for first difference item.
          * @tparam Container2 Container type for second  difference item.
          * @tparam Container3 Container type for result.
@@ -434,13 +436,13 @@ namespace gcm
          *
          * @return Matrix difference (m1-m2).
          */
-        template<int M, int N, typename Container1, typename Container2, typename Container3>
-        Matrix<M, N, Container3> operator-(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2, typename Container3>
+        Matrix<TM, TN, Container3> operator-(const Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
-            Matrix<M, N, Container3> result;
+            Matrix<TM, TN, Container3> result;
 
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     result(i, j) = m1(i, j) - m2(i, j);
 
             return result;
@@ -450,8 +452,8 @@ namespace gcm
          * Computes difference of two matrixes. Most useful specialization, made in assumption that result matrix should
          * use default matrix container.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container1 Container type for first difference item.
          * @tparam Container2 Container type for second  difference item.
          * @param m1 First difference item.
@@ -459,36 +461,36 @@ namespace gcm
          *
          * @return Matrix difference (m1-m2).
          */
-        template<int M, int N, typename Container1, typename Container2>
-        Matrix<M, N, DefaultMatrixContainer<M, N>> operator-(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2>
+        Matrix<TM, TN, DefaultMatrixContainer<TM, TN>> operator-(const Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
-            return operator-<M, N, Container1, Container2, DefaultMatrixContainer<M, N>>(m1, m2);
+            return operator-<TM, TN, Container1, Container2, DefaultMatrixContainer<TM, TN>>(m1, m2);
         }
 
         /**
          * Computes difference of two matrixes. Specialized implementation, made in assumption that all matrixes
          * use default matrix container.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container Container type for all matrixes.
          * @param m1 First difference item.
          * @param m2 Second difference item.
          *
          * @return Matrix difference (m1-m2).
          */
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container> operator-(const Matrix<M, N, Container>& m1, const Matrix<M, N, Container>& m2)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container> operator-(const Matrix<TM, TN, Container>& m1, const Matrix<TM, TN, Container>& m2)
         {
-            return operator-<M, N, Container, Container, Container>(m1, m2);
+            return operator-<TM, TN, Container, Container, Container>(m1, m2);
         }
         
         /**
          * Computes product of two matrixes. Generic implementation.
          *
-         * @tparam M First dimension of first matrix (M x N).
-         * @tparam N First (second) dimension of second (first) matrix (M x N or N x K respectively).
-         * @tparam K Second dimension of second matrix (N x K).
+         * @tparam TM First dimension of first matrix (TM x TN).
+         * @tparam TN First (second) dimension of second (first) matrix (TM x TN or TN x TK respectively).
+         * @tparam TK Second dimension of second matrix (TN x TK).
          * @tparam Container1 Container type for first product item.
          * @tparam Container2 Container type for second  product item.
          * @tparam Container3 Container type for result.
@@ -497,17 +499,17 @@ namespace gcm
          *
          * @return Matrix product (m1*m2).
          */
-        template<int M, int N, int K, typename Container1, typename Container2, typename Container3>
-        Matrix<M, K, Container3> operator*(const Matrix<M, N, Container1>& m1, const Matrix<N, K, Container2>& m2)
+        template<int TM, int TN, int TK, typename Container1, typename Container2, typename Container3>
+        Matrix<TM, TK, Container3> operator*(const Matrix<TM, TN, Container1>& m1, const Matrix<TN, TK, Container2>& m2)
         {
-            Matrix<M, K, Container3> result;
+            Matrix<TM, TK, Container3> result;
 
-            for (int i = 0; i < M; i++)
+            for (int i = 0; i < TM; i++)
                 
-                for (int j = 0; j < K; j++)
+                for (int j = 0; j < TK; j++)
                 {
                     result(i, j) = 0;
-                    for (int n = 0; n < N; n++)
+                    for (int n = 0; n < TN; n++)
                         result(i, j) += m1(i, n) * m2(n, j);
                 }
 
@@ -518,9 +520,9 @@ namespace gcm
          * Computes product of two matrixes. Most useful specialization, made in assumption that result matrix should
          * use default matrix container.
          *
-         * @tparam M First dimension of first matrix (M x N).
-         * @tparam N First (second) dimension of second (first) matrix (M x N or N x K respectively).
-         * @tparam K Second dimension of second matrix (N x K).
+         * @tparam TM First dimension of first matrix (TM x TN).
+         * @tparam TN First (second) dimension of second (first) matrix (TM x TN or TN x TK respectively).
+         * @tparam TK Second dimension of second matrix (TN x TK).
          * @tparam Container1 Container type for first product item.
          * @tparam Container2 Container type for second  product item.
          * @param m1 First product item.
@@ -528,47 +530,47 @@ namespace gcm
          *
          * @return Matrix product (m1*m2).
          */
-        template<int M, int N, int K, typename Container1, typename Container2>
-        Matrix<M, K, DefaultMatrixContainer<M, K>> operator*(const Matrix<M, N, Container1>& m1, const Matrix<N, K, Container2>& m2)
+        template<int TM, int TN, int TK, typename Container1, typename Container2>
+        Matrix<TM, TK, DefaultMatrixContainer<TM, TK>> operator*(const Matrix<TM, TN, Container1>& m1, const Matrix<TN, TK, Container2>& m2)
         {
-            return operator*<M, N, K, Container1, Container2, DefaultMatrixContainer<M, K>>(m1, m2);
+            return operator*<TM, TN, TK, Container1, Container2, DefaultMatrixContainer<TM, TK>>(m1, m2);
         }
         
         /**
          * Computes product of two matrixes. Most useful specialization, made in assumption that both matrixes are
          * square and have the same container type.
          *
-         * @tparam M Matrix size.
+         * @tparam TM Matrix size.
          * @tparam Container Container type for first product item.
          * @param m1 First product item.
          * @param m2 Second product item.
          *
          * @return Matrix product (m1*m2).
          */
-        template<int M, typename Container>
-        Matrix<M, M, Container> operator*(const Matrix<M, M, Container>& m1, const Matrix<M, M, Container>& m2)
+        template<int TM, typename Container>
+        Matrix<TM, TM, Container> operator*(const Matrix<TM, TM, Container>& m1, const Matrix<TM, TM, Container>& m2)
         {
-            return operator*<M, M, M, Container, Container, Container>(m1, m2);
+            return operator*<TM, TM, TM, Container, Container, Container>(m1, m2);
         }
 
         /**
          * Performs scalar multiplication.
          *
-         * @tparam M First matrix dimesion.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimesion.
+         * @tparam TN Second matrix dimension.
          * @tparam Container Container type of matrix.
          * @param m Matrix to multiply.
          * @param x Scalar to multiply by.
          *
          * @return Result of scalar multiplication.
          */
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container> operator*(const Matrix<M, N, Container>& m, const real x)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container> operator*(const Matrix<TM, TN, Container>& m, const real x)
         {
-            Matrix<M, N, Container> result;
+            Matrix<TM, TN, Container> result;
 
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     result(i, j) = m(i, j) * x;
 
             return result;
@@ -577,16 +579,16 @@ namespace gcm
         /**
          * Performs scalar multiplication.
          *
-         * @tparam M First matrix dimesion.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimesion.
+         * @tparam TN Second matrix dimension.
          * @tparam Container Container type of matrix.
          * @param x Scalar to multiply by.
          * @param m Matrix to multiply.
          *
          * @return Result of scalar multiplication.
          */
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container> operator*(const real x, const Matrix<M, N, Container>& m)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container> operator*(const real x, const Matrix<TM, TN, Container>& m)
         {
             return m * x;
         }
@@ -594,16 +596,16 @@ namespace gcm
         /**
          * Performs scalar division.
          *
-         * @tparam M First matrix dimesion.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimesion.
+         * @tparam TN Second matrix dimension.
          * @tparam Container Container type of matrix.
          * @param m Matrix to divide.
          * @param x Scalar to divide by.
          *
          * @return Result of scalar division.
          */
-        template<int M, int N, typename Container>
-        Matrix<M, N, Container> operator/(const Matrix<M, N, Container>& m, const real x)
+        template<int TM, int TN, typename Container>
+        Matrix<TM, TN, Container> operator/(const Matrix<TM, TN, Container>& m, const real x)
         {
             return m * (1/x);
         }
@@ -611,26 +613,26 @@ namespace gcm
         /**
          * Add m2 to m1. Generic implementation.
          *
-         * @tparam M First matrix dimension.
-         * @tparam N Second matrix dimension.
+         * @tparam TM First matrix dimension.
+         * @tparam TN Second matrix dimension.
          * @tparam Container1 Container type for first summ item.
          * @tparam Container2 Container type for second  summ item.
          * @param m1 First summ item.
          * @param m2 Second summ item.
          */
-        template<int M, int N, typename Container1, typename Container2>
-        void operator+=(Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2>
+        void operator+=(Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     m1(i, j) = m1(i, j) + m2(i, j);
         }
 
-        template<int M, int N, typename Container1, typename Container2>
-        bool operator==(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2>
+        bool operator==(const Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
-            for (int i = 0; i < M; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < TM; i++)
+                for (int j = 0; j < TN; j++)
                     // FIXME Should this constant be replaced by something context-specific?
                     if (fabs(m1(i, j) - m2(i, j)) > EQUALITY_TOLERANCE)
                         return false;
@@ -638,8 +640,8 @@ namespace gcm
             return true;
         }
         
-        template<int M, int N, typename Container1, typename Container2>
-        bool operator!=(const Matrix<M, N, Container1>& m1, const Matrix<M, N, Container2>& m2)
+        template<int TM, int TN, typename Container1, typename Container2>
+        bool operator!=(const Matrix<TM, TN, Container1>& m1, const Matrix<TM, TN, Container2>& m2)
         {
             return !(m1 == m2);
         }
@@ -647,12 +649,12 @@ namespace gcm
 };
 
 namespace std {
-    template<int M, int N>
-    inline std::ostream& operator<<(std::ostream &os, const gcm::linal::Matrix<M, N>& matrix) {
+    template<int TM, int TN>
+    inline std::ostream& operator<<(std::ostream &os, const gcm::linal::Matrix<TM, TN>& matrix) {
 
         os << "Matrix:\n";
-        for (int i = 0; i < M; i++) {
-            for (int j = 0; j < N; j++) {
+        for (int i = 0; i < TM; i++) {
+            for (int j = 0; j < TN; j++) {
                 os << matrix(i, j) << "\t";
             }
             os << "\n";

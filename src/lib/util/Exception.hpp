@@ -97,7 +97,7 @@ namespace gcm {
              */
             static const int INVALID_OP    = 3;
             /**
-             * Bad mesh exception code.
+             * Bad grid exception code.
              */
             static const int BAD_MESH      = 4;
             /**

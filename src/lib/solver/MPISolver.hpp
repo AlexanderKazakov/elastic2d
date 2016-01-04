@@ -2,12 +2,13 @@
 #define LIBGCM_MPISOLVER_HPP
 
 
-#include "lib/mesh/Mesh.hpp"
+#include "lib/grid/StructuredGrid.hpp"
 
 namespace gcm {
+	template<class TModel>
 	class MPISolver {
 	public:
-		MPISolver(Mesh *mesh, Mesh *newMesh);
+		MPISolver(StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh);
 
 		/**
 		 * Perform calculation of the task
@@ -16,7 +17,7 @@ namespace gcm {
 
 		/**
 		 * Do next stage of splitting method
-		 * @param s 0 - along X-axis, 1 - along Y-axis
+		 * @param s direction
 		 * @param timeStep time step
 		 */
 		void stage(const int s, const real &timeStep);
@@ -26,8 +27,8 @@ namespace gcm {
 
 	private:
 
-		Mesh *mesh;
-		Mesh *newMesh;
+		StructuredGrid<TModel> *mesh;
+		StructuredGrid<TModel> *newMesh;
 
 		void exchangeNodesWithNeighbors();
 

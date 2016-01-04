@@ -1,12 +1,12 @@
 #include <fstream>
 #include <algorithm>
 #include "lib/model/IdealElastic2DModel.hpp"
-#include "lib/mesh/Mesh.hpp"
+#include "lib/grid/StructuredGrid.hpp"
 
 using namespace gcm;
 
 template<class TModel>
-void Mesh<TModel>::initialize(const Task &task, const bool forceSequence) {
+void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequence) {
 
 	rank = MPI::COMM_WORLD.Get_rank();
 	numberOfWorkers = MPI::COMM_WORLD.Get_size();
@@ -22,7 +22,7 @@ void Mesh<TModel>::initialize(const Task &task, const bool forceSequence) {
 
 	X = task.X; // number of nodes along x direction
 
-	// we divide the mesh among processes equally along y-axis
+	// we divide the grid among processes equally along y-axis
 	int numberOfNodesAlongYPerOneCore = (int) std::round((real) task.Y / numberOfWorkers);
 	Y = numberOfNodesAlongYPerOneCore; // number of nodes along y direction
 	if (rank == numberOfWorkers - 1) Y = task.Y - numberOfNodesAlongYPerOneCore * (numberOfWorkers - 1);
@@ -53,7 +53,7 @@ void Mesh<TModel>::initialize(const Task &task, const bool forceSequence) {
 		nodes[i].matrix = nullptr;
 	}
 
-	defaultMatrix = std::make_shared<GcmMatrices2D>(task.rho0, task.lambda0, task.mu0);
+	defaultMatrix = std::make_shared<TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
 	for (int y = 0; y < Y; ++y) {
 		for (int x = 0; x < X; ++x) {
 			(*this)(y, x).matrix = defaultMatrix;
@@ -64,10 +64,10 @@ void Mesh<TModel>::initialize(const Task &task, const bool forceSequence) {
 }
 
 template<class TModel>
-linal::Matrix<TModel::Node::M, TModel::Node::M> Mesh<TModel>::interpolateValuesAround
+TModel::Node::Matrix StructuredGrid<TModel>::interpolateValuesAround
 		(const int stage, const int y, const int x, const TModel::Node::Vector& dx) const {
 
-	linal::Matrix<TModel::Node::M, TModel::Node::M> ans;
+	TModel::Node::Matrix ans;
 	std::vector<TModel::Node::Vector> src(accuracyOrder + 1);
 	TModel::Node::Vector res;
 	for (int k = 0; k < TModel::Node::M; k++) {
@@ -80,8 +80,8 @@ linal::Matrix<TModel::Node::M, TModel::Node::M> Mesh<TModel>::interpolateValuesA
 }
 
 template<class TModel>
-void Mesh<TModel>::findSourcesForInterpolation(const int stage, const int y, const int x,
-                                               const real &dx, std::vector<TModel::Node::Vector>& src) const {
+void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const int y, const int x,
+                                                         const real &dx, std::vector<TModel::Node::Vector>& src) const {
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
@@ -90,7 +90,7 @@ void Mesh<TModel>::findSourcesForInterpolation(const int stage, const int y, con
 }
 
 template<class TModel>
-void Mesh<TModel>::snapshot(int step) const {
+void StructuredGrid<TModel>::snapshot(int step) const {
 	char buffer[50];
 	sprintf(buffer, "%s%02d%s%05d.vtk", "snaps/core", rank, "_snapshot", step);
 	std::fstream f(buffer, std::ios::out);
@@ -153,7 +153,7 @@ static void put(std::fstream &f, const T value) {
 }
 
 template<class TModel>
-void Mesh<TModel>::_snapshot(int step) const {
+void StructuredGrid<TModel>::_snapshot(int step) const {
 	char buffer[50];
 	sprintf(buffer, "%s%02d%s%05d.vtk", "snaps/core", rank, "_snapshot", step);
 	std::fstream f(buffer, std::ios::out);
@@ -206,9 +206,9 @@ void Mesh<TModel>::_snapshot(int step) const {
 }
 
 template<class TModel>
-void Mesh<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
+void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	auto newRheologyMatrix = std::make_shared<GcmMatrices2D>(rho2rho0 * defaultMatrix->rho,
+	auto newRheologyMatrix = std::make_shared<GcmMatrices>(rho2rho0 * defaultMatrix->rho,
 	                                                       lambda2lambda0 * defaultMatrix->lambda,
 	                                                       mu2mu0 * defaultMatrix->mu);
 
@@ -232,9 +232,9 @@ void Mesh<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambd
 }
 
 template<class TModel>
-void Mesh<TModel>::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
+void StructuredGrid<TModel>::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	auto newRheologyMatrix = std::make_shared<GcmMatrices2D>(rho2rho0 * defaultMatrix->rho,
+	auto newRheologyMatrix = std::make_shared<GcmMatrices>(rho2rho0 * defaultMatrix->rho,
 	                                                       lambda2lambda0 * defaultMatrix->lambda,
 	                                                       mu2mu0 * defaultMatrix->mu);
 	for (int x = 0; x < X; x++) {
@@ -258,7 +258,7 @@ void Mesh<TModel>::changeRheology2(const real& rho2rho0, const real& lambda2lamb
 }
 
 template<class TModel>
-void Mesh<TModel>::applyBorderConditions() {
+void StructuredGrid<TModel>::applyBorderConditions() {
 	if (borderConditions.at("left") == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
@@ -307,7 +307,7 @@ void Mesh<TModel>::applyBorderConditions() {
 }
 
 template<class TModel>
-void Mesh<TModel>::applyInitialConditions() {
+void StructuredGrid<TModel>::applyInitialConditions() {
 	if (initialConditions == InitialConditions::Zero) {
 		return;
 

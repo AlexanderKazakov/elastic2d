@@ -7,6 +7,8 @@
 #include <cmath>
 #include <iostream>
 
+const int NUMBER_ITERATIONS = 1000;
+
 using namespace gcm;
 using namespace gcm::linal;
 
@@ -595,4 +597,157 @@ TEST(Linal, RotationMatrix)
     ASSERT_EQ(getZRotationMatrix(M_PI/2)*x, -y);
     ASSERT_EQ(getZRotationMatrix(-M_PI/2)*y, -x);
     ASSERT_EQ(getZRotationMatrix(-M_PI/2)*x, y);
+}
+
+TEST(Linal, MatrixMatrixMultiplication)
+{
+    Matrix<5,5> A; Matrix<5,5> B; Matrix<5,5> C; // C = A * B
+
+    A(0, 0) = 0;   A(0, 1) = 1;   A(0, 2) = 2;   A(0, 3) = 3;   A(0, 4) = 0;
+    A(1, 0) = 4;   A(1, 1) = 5;   A(1, 2) = 6;   A(1, 3) = 0;   A(1, 4) = 0;
+    A(2, 0) = 0;   A(2, 1) = 0;   A(2, 2) = 1;   A(2, 3) = 0;   A(2, 4) = 1;
+    A(3, 0) = -2;  A(3, 1) = 5;   A(3, 2) = 4;   A(3, 3) = -7;  A(3, 4) = 0;
+    A(4, 0) = 5;   A(4, 1) = 6;   A(4, 2) = 8;   A(4, 3) = 0;   A(4, 4) = 0;
+
+    B(0, 0) = 2;   B(0, 1) = 0;   B(0, 2) = 0;   B(0, 3) = 0;   B(0, 4) = 5;
+    B(1, 0) = 0;   B(1, 1) = 0;   B(1, 2) = 1;   B(1, 3) = 0;   B(1, 4) = 1;
+    B(2, 0) = -6;  B(2, 1) = 0;   B(2, 2) = 0;   B(2, 3) = 0;   B(2, 4) = 0;
+    B(3, 0) = 0;   B(3, 1) = -7;  B(3, 2) = 0;   B(3, 3) = -8;  B(3, 4) = 0;
+    B(4, 0) = 0;   B(4, 1) = 0;   B(4, 2) = -11; B(4, 3) = 0;   B(4, 4) = 0;
+
+    C(0, 0) = -12; C(0, 1) = -21; C(0, 2) = 1;   C(0, 3) = -24; C(0, 4) = 1;
+    C(1, 0) = -28; C(1, 1) = 0;   C(1, 2) = 5;   C(1, 3) = 0;   C(1, 4) = 25;
+    C(2, 0) = -6;  C(2, 1) = 0;   C(2, 2) = -11; C(2, 3) = 0;   C(2, 4) = 0;
+    C(3, 0) = -28; C(3, 1) = 49;  C(3, 2) = 5;   C(3, 3) = 56;  C(3, 4) = -5;
+    C(4, 0) = -38; C(4, 1) = 0;   C(4, 2) = 6;   C(4, 3) = 0;   C(4, 4) = 31;
+
+    Matrix<5,5> AB = A * B;
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            ASSERT_NEAR(AB(i, j), C(i, j), EQUALITY_TOLERANCE);
+        }
+    }
+}
+
+TEST(Linal, MatrixVectorMultiplication)
+{
+    Matrix<5, 5> A; Vector<5> b; Vector<5> c; // c = A * b
+
+    A(0, 0) = 0;   A(0, 1) = 1;   A(0, 2) = 2;   A(0, 3) = 3;   A(0, 4) = 0;
+    A(1, 0) = 4;   A(1, 1) = 5;   A(1, 2) = 6;   A(1, 3) = 0;   A(1, 4) = 0;
+    A(2, 0) = 0;   A(2, 1) = 0;   A(2, 2) = 1;   A(2, 3) = 0;   A(2, 4) = 1;
+    A(3, 0) = -2;  A(3, 1) = 5;   A(3, 2) = 4;   A(3, 3) = -7;  A(3, 4) = 0;
+    A(4, 0) = 5;   A(4, 1) = 6;   A(4, 2) = 8;   A(4, 3) = 0;   A(4, 4) = 0;
+
+    b(0) = 2;      b(1) = 0;      b(2) = -13;    b(3) = 0;      b(4) = 1;
+
+    c(0) = -26;    c(1) = -70;    c(2) = -12;    c(3) = -56;    c(4) = -94;
+
+    Vector<5> Ab = A * b;
+    for (int i = 0; i < 5; i++) {
+        ASSERT_NEAR(Ab(i), c(i), EQUALITY_TOLERANCE);
+    }
+}
+
+TEST(Linal, TraceVerification)
+{
+    Matrix A;
+    A(0, 0) = 12; A(1, 1) = 56.333; A(2, 2) = 1; A(3, 3) = 0; A(4, 4) = -34.0022;
+    ASSERT_NEAR(A.trace(), 35.3308, EQUALITY_TOLERANCE);
+}
+
+TEST(Linal, setColumn)
+{
+    Matrix<15,33> matrix;
+    for (int i = 0; i < matrix.N; i++) {
+        Vector<15> vector;
+        for (int j = 0; j < matrix.M; j++) {
+            vector(j) = i;
+        }
+        matrix.setColumn(i, vector);
+    }
+
+    for (int i = 0; i < matrix.M; i++) {
+        for (int j = 0; j < matrix.N; j++) {
+            ASSERT_EQ(matrix(i, j), j);
+        }
+    }
+}
+
+TEST(Linal, getColumn)
+{
+    Matrix<22,13> matrix;
+    for (int i = 0; i < matrix.M; i++) {
+        for (int j = 0; j < matrix.N; j++) {
+            matrix(i, j) = j;
+        }
+    }
+
+    for (int k = 0; k < matrix.N; k++) {
+        Vector<22> column = matrix.getColumn(k);
+        for (int i = 0; i < column.M; i++) {
+            ASSERT_EQ(column(i), k);
+        }
+    }
+}
+
+TEST(Linal, diagonalMultiply)
+{
+    Matrix<9, 9> A, B;
+    srand(time(0));
+
+    for (int l = 0; l < NUMBER_ITERATIONS; l++) {
+
+        for (int i = 0; i < A.M; i++) {
+            for (int j = 0; j < A.N; j++) {
+                A(i, j) = rand() - RAND_MAX / 2.0;
+                B(i, j) = rand() - RAND_MAX / 2.0;
+            }
+        }
+
+        Matrix<9,9> C = A * B;
+        Vector<9> d = A.diagonalMultiply(B);
+
+        for (int k = 0; k < d.M; k++) {
+            ASSERT_EQ(C(k, k), d(k));
+        }
+
+    }
+}
+
+TEST(Linal, getDiagonalMultipliedBy)
+{
+    Matrix<11,11> matrix;
+    for (int i = 0; i < matrix.M; i++) {
+        for (int j = 0; j < matrix.N; j++) {
+            matrix(i, j) = (real) i;
+        }
+    }
+    Vector<11> vector = matrix.getDiagonalMultipliedBy(- 5.0);
+    for (int k = 0; k < vector.M; k++) {
+        ASSERT_EQ(vector(k), - 5.0 * k);
+    }
+}
+
+TEST(Linal, VectorOperators)
+{
+    Vector<7> vector;
+    for (int i = 0; i < vector.M; i++) {
+        vector(i) = (real) i - 3;
+    }
+
+    vector = vector * 2;
+    for (int j = 0; j < vector.M; j++) {
+        ASSERT_EQ(vector(j), 2 * ((real) j - 3));
+    }
+
+    vector += vector;
+    for (int j = 0; j < vector.M; j++) {
+        ASSERT_EQ(vector(j), 4 * ((real) j - 3));
+    }
+
+    vector = vector - vector * 0.5;
+    for (int j = 0; j < vector.M; j++) {
+        ASSERT_EQ(vector(j), 2 * ((real) j - 3));
+    }
 }

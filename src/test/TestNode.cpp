@@ -1,27 +1,27 @@
 #include <gtest/gtest.h>
 
 #include "lib/config.hpp"
-#include "lib/Node.hpp"
+#include "lib/nodes/IdealElastic2DNode.hpp"
 
 using namespace gcm;
 
-TEST(Node, Access)
+TEST(IdealElastic2DNode, Access)
 {
-	Node node;
-	node.u(0) = 0; node.u(1) = 1; node.u(2) = 2; node.u(3) = 3; node.u(4) = 4;
-	ASSERT_EQ(node.get(NodeMap::Vx), 0);
-	ASSERT_EQ(node.get(NodeMap::Vy), 1);
-	ASSERT_EQ(node.get(NodeMap::Sxx), 2);
-	ASSERT_EQ(node.get(NodeMap::Sxy), 3);
-	ASSERT_EQ(node.get(NodeMap::Syy), 4);
+	IdealElastic2DNode node;
+	node(0) = 0; node(1) = 1; node(2) = 2; node(3) = 3; node(4) = 4;
+	ASSERT_EQ(node.Vx, 0);
+	ASSERT_EQ(node.Vy, 1);
+	ASSERT_EQ(node.Sxx, 2);
+	ASSERT_EQ(node.Sxy, 3);
+	ASSERT_EQ(node.Syy, 4);
 
-	Node node2;
-	node2(NodeMap::Vx) = 0; node2(NodeMap::Vy) = 1;
-	node2(NodeMap::Sxx) = 2; node2(NodeMap::Sxy) = 3; node2(NodeMap::Syy) = 4;
-	ASSERT_EQ(node.u.get(0), 0);
-	ASSERT_EQ(node.u.get(1), 1);
-	ASSERT_EQ(node.u.get(2), 2);
-	ASSERT_EQ(node.u.get(3), 3);
-	ASSERT_EQ(node.u.get(4), 4);
+	IdealElastic2DNode node2;
+	node2.Vx = 0; node2.Vy = 1;
+	node2.Sxx = 2; node2.Sxy = 3; node2.Syy = 4;
+	ASSERT_EQ(node(0), 0);
+	ASSERT_EQ(node(1), 1);
+	ASSERT_EQ(node(2), 2);
+	ASSERT_EQ(node(3), 3);
+	ASSERT_EQ(node(4), 4);
 
 }

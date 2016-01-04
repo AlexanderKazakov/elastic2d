@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "lib/Mesh.hpp"
+#include "lib/grid/StructuredGrid.hpp"
 
 using namespace gcm;
 
-TEST(Mesh, initialize) {
+TEST(StructuredGrid, initialize) {
 	Task task;
 	task.accuracyOrder = 3;
 	task.CourantNumber = 0.7;
@@ -19,23 +19,23 @@ TEST(Mesh, initialize) {
 	task.T = 100.0;
 	task.initialConditions = InitialConditions::Zero;
 
-	Mesh mesh;
-	mesh.initialize(task);
-	ASSERT_NEAR(mesh.getH0ForTest(), 3.333333333, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(mesh.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(mesh.getTauForTest(), 0.808290377, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(mesh.getTForTest(), 4.0414518843, EQUALITY_TOLERANCE);
+	StructuredGrid<IdealElastic2DModel> structuredGrid;
+	structuredGrid.initialize(task);
+	ASSERT_NEAR(structuredGrid.getH0ForTest(), 3.333333333, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getTauForTest(), 0.808290377, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getTForTest(), 4.0414518843, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.X; x++) {
 		for (int y = 0; y < task.Y; y++) {
-			for (int i = 0; i < N; i++) {
-				ASSERT_EQ(mesh.getNodeForTest(y, x).u.get(i), 0.0);
+			for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x)(i), 0.0);
 			}
 		}
 	}
 }
 
 
-TEST(Mesh, findSourcesForInterpolation)
+TEST(StructuredGrid, findSourcesForInterpolation)
 {
 	Task task;
 	task.lambda0 = 2.0;
@@ -49,25 +49,25 @@ TEST(Mesh, findSourcesForInterpolation)
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		Mesh mesh;
-		mesh.initialize(task);
+		StructuredGrid<IdealElastic2DModel> structuredGrid;
+		structuredGrid.initialize(task);
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vx), 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vy), 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Sxx), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Sxy), 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Syy), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vx, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
-		std::vector<Vector> src(task.accuracyOrder + 1);
+		std::vector<IdealElastic2DModel::Node::Vector> src(task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
-			mesh.findSourcesForInterpolation(stage, 1, 1, dx, src);
-			for (int i = 0; i < N; i++) {
-				ASSERT_EQ(src[0].get(i), (i == 2 || i == 4) ? 1.0 : 0.0);
-				ASSERT_EQ(src[1].get(i), 0.0);
+			structuredGrid.findSourcesForInterpolation(stage, 1, 1, dx, src);
+			for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
+				ASSERT_EQ(src[0](i), (i == 2 || i == 4) ? 1.0 : 0.0);
+				ASSERT_EQ(src[1](i), 0.0);
 			}
 		}
 
@@ -75,7 +75,7 @@ TEST(Mesh, findSourcesForInterpolation)
 }
 
 
-TEST(Mesh, interpolateValuesAround)
+TEST(StructuredGrid, interpolateValuesAround)
 {
 	Task task;
 	task.lambda0 = 2.0;
@@ -89,38 +89,37 @@ TEST(Mesh, interpolateValuesAround)
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		Mesh mesh;
-		mesh.initialize(task);
+		StructuredGrid<IdealElastic2DModel> structuredGrid;
+		structuredGrid.initialize(task);
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vx), 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Vy), 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Sxx), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Sxy), 0.0);
-				ASSERT_EQ(mesh.getNodeForTest(y, x).get(NodeMap::Syy), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vx, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
-		Vector dx;
+		IdealElastic2DModel::Node::Vector dx;
 		dx.createVector({-1, 1, -0.5, 0.5, 0});
-		Matrix matrix = mesh.interpolateValuesAround(stage, 1, 1, dx);
+		IdealElastic2DModel::Node::Matrix matrix = structuredGrid.interpolateValuesAround(stage, 1, 1, dx);
 
-		for (int i = 0; i < N; i++) {
-			ASSERT_EQ(matrix.get(i, 0), 0.0) << "i = " << i; // Courant = 1
-			ASSERT_EQ(matrix.get(i, 1), 0.0) << "i = " << i; // Courant = 1
-			ASSERT_EQ(matrix.get(0, i), 0.0) << "i = " << i; // Vx
-			ASSERT_EQ(matrix.get(1, i), 0.0) << "i = " << i; // Vy
-			ASSERT_EQ(matrix.get(3, i), 0.0) << "i = " << i; // Sxy
+		for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
+			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
+			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
+			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx
+			ASSERT_EQ(matrix(1, i), 0.0) << "i = " << i; // Vy
+			ASSERT_EQ(matrix(3, i), 0.0) << "i = " << i; // Sxy
 		}
 
-		ASSERT_EQ(matrix.get(2, 2), 0.5); // Courant = 0.5
-		ASSERT_EQ(matrix.get(2, 3), 0.5); // Courant = 0.5
-		ASSERT_EQ(matrix.get(4, 2), 0.5); // Courant = 0.5
-		ASSERT_EQ(matrix.get(4, 3), 0.5); // Courant = 0.5
+		ASSERT_EQ(matrix(2, 2), 0.5); // Courant = 0.5
+		ASSERT_EQ(matrix(2, 3), 0.5); // Courant = 0.5
+		ASSERT_EQ(matrix(4, 2), 0.5); // Courant = 0.5
+		ASSERT_EQ(matrix(4, 3), 0.5); // Courant = 0.5
 
-		ASSERT_EQ(matrix.get(2, 4), 1.0); // Courant = 0
-		ASSERT_EQ(matrix.get(4, 4), 1.0); // Courant = 0
-
+		ASSERT_EQ(matrix(2, 4), 1.0); // Courant = 0
+		ASSERT_EQ(matrix(4, 4), 1.0); // Courant = 0
 	}
 }

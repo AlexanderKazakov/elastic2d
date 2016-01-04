@@ -4,14 +4,17 @@
 #include <memory>
 
 #include "lib/linal/Vector.hpp"
-#include "PDEMatrices2D.hpp"
+#include "lib/gcm_matrices/GcmMatrices.hpp"
 
 namespace gcm {
+
+	template<int TM, int TN> class DefaultMatrixContainer;
+
 	template<int M, typename Container=DefaultMatrixContainer<M, 1>>
 	class Node : public linal::Vector<M, Container> {
 	public:
 		typedef linal::Vector<M, Container> Vector;
-		std::shared_ptr<PDEMatrices2D> matrix;
+		typedef linal::Matrix<M, M> Matrix;
 	};
 }
 

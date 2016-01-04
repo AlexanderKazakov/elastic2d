@@ -1,19 +1,21 @@
 #include <gtest/gtest.h>
 #include <cmath>
 
-#include "lib/PDEMatrices.hpp"
-#include "lib/Interpolator.hpp"
+#include "lib/linal/Vector.hpp"
+#include "lib/interpolation/Interpolator.hpp"
 
 #define MAX_ACCURACY_ORDER 20
 
 using namespace gcm;
+using namespace gcm::linal;
 
 TEST(Interpolator, Const)
 {
-	Interpolator interpolator;
+	const int N = 7;
+	Interpolator<Vector<N>> interpolator;
 	for (int i = 0; i <= MAX_ACCURACY_ORDER; i++) {
-		Vector res;
-		std::vector<Vector> src(i + 1);
+		Vector<N> res;
+		std::vector<Vector<N>> src(i + 1);
 		for(real q = 0; q <= (real) i; q+= 0.2) {
 			for (auto &item : src) {
 				for (int j = 0; j < N; j++) {
@@ -23,7 +25,7 @@ TEST(Interpolator, Const)
 
 			interpolator.interpolate(res, src, q);
 			for (int j = 0; j < N; j++) {
-				ASSERT_NEAR(res.get(j), sinh(j - (real) (N) / 2), EQUALITY_TOLERANCE);
+				ASSERT_NEAR(res(j), sinh(j - (real) (N) / 2), EQUALITY_TOLERANCE);
 			}
 		}
 	}
@@ -32,10 +34,11 @@ TEST(Interpolator, Const)
 
 TEST(Interpolator, Linear)
 {
-	Interpolator interpolator;
+	const int N = 9;
+	Interpolator<Vector<N>> interpolator;
 	for (int k = 0; k <= MAX_ACCURACY_ORDER; k++) {
-		Vector res;
-		std::vector<Vector> src(k + 1);
+		Vector<N> res;
+		std::vector<Vector<N>> src(k + 1);
 		for(real q = 0; q <= (real) k; q+= 0.2) {
 			for (int i = 0; i < src.size(); i++) {
 				for (int j = 0; j < N; j++) {
@@ -45,9 +48,7 @@ TEST(Interpolator, Linear)
 
 			interpolator.interpolate(res, src, q);
 			for (int j = 0; j < N; j++) {
-				ASSERT_NEAR(res.get(j),
-				            (j - (real) (N) / 2) * q + 2 * (j - (real) (N) / 2),
-				            EQUALITY_TOLERANCE);
+				ASSERT_NEAR(res(j), (j - (real) (N) / 2) * q + 2 * (j - (real) (N) / 2), EQUALITY_TOLERANCE);
 			}
 		}
 	}
@@ -56,11 +57,12 @@ TEST(Interpolator, Linear)
 
 TEST(Interpolator, Quadratic)
 {
-	Interpolator interpolator;
+	const int N = 9;
+	Interpolator<Vector<N>> interpolator;
 
 	for(real q = 0.0; q <= 2.0; q+= 0.1) {
-		Vector res;
-		std::vector<Vector> src(3);
+		Vector<N> res;
+		std::vector<Vector<N>> src(3);
 		src[0](0) = 0; src[1](0) = 1; src[2](0) = 4;
 		src[0](1) = 0; src[1](1) = -1; src[2](1) = -4;
 		src[0](2) = -3; src[1](2) = 15; src[2](2) = 89;
@@ -74,9 +76,10 @@ TEST(Interpolator, Quadratic)
 
 TEST(Interpolator, MinMax)
 {
-	Interpolator interpolator;
-	Vector res;
-	std::vector<Vector> src(3);
+	const int N = 4;
+	Interpolator<Vector<N>> interpolator;
+	Vector<N> res;
+	std::vector<Vector<N>> src(3);
 	src[0](0) = -9.0; src[1](0) = -1.0; src[2](0) = -1.0;
 	src[0](1) = 9.0; src[1](1) = 1.0; src[2](1) = 1.0;
 	real q = 1.5;
@@ -88,12 +91,13 @@ TEST(Interpolator, MinMax)
 
 TEST(Interpolator, MinMaxFifthOrder)
 {
-	Interpolator interpolator;
+	const int N = 13;
+	Interpolator<Vector<N>> interpolator;
 
 	// minmax interpolation
 	for (real q = 0.0; q <= 5.0; q+= 0.1) {
-		Vector res;
-		std::vector<Vector> src(6);
+		Vector<N> res;
+		std::vector<Vector<N>> src(6);
 		src[0](0) = 0; src[1](0) = 0; src[2](0) = 0;
 		src[3](0) = 1; src[4](0) = 1; src[5](0) = 1;
 
@@ -112,13 +116,14 @@ TEST(Interpolator, MinMaxFifthOrder)
 
 TEST(Interpolator, TenthOrder)
 {
+	const int N = 3;
 	auto func = [](real x) {
 		return x * x * x * x * x * x * x * x * x * x + 4 * x * x * x * x * x * x * x * x * x -
 		       25 * x * x * x * x * x * x * x + 2 * x * x * x * x * x - 3 * x * x + 5;
 	};
-	Interpolator interpolator;
-	Vector res;
-	std::vector<Vector> src(11);
+	Interpolator<Vector<N>> interpolator;
+	Vector<N> res;
+	std::vector<Vector<N>> src(11);
 	for (real q = 0; q < 11.0; q += 0.1) {
 		for (int i = 0; i < 11; i++) {
 			real x = i - 5;
@@ -132,10 +137,10 @@ TEST(Interpolator, TenthOrder)
 
 TEST(Interpolator, Exceptions)
 {
-	Interpolator interpolator;
-	Vector res;
-	std::vector<Vector> src(2);
+	const int N = 11;
+	Interpolator<Vector<N>> interpolator;
+	Vector<N> res;
+	std::vector<Vector<N>> src(2);
 	ASSERT_ANY_THROW(interpolator.minMaxInterpolate(res, src, -0.3));
 	ASSERT_ANY_THROW(interpolator.minMaxInterpolate(res, src, 2.5));
-
 }

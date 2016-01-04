@@ -1,7 +1,7 @@
 #include <lib/model/IdealElastic2DModel.hpp>
-#include "lib/mesh/Mesh.hpp"
-#include "lib/DataBus.hpp"
-#include "lib/MPISolver.hpp"
+#include "lib/grid/StructuredGrid.hpp"
+#include "lib/util/DataBus.hpp"
+#include "lib/solver/MPISolver.hpp"
 
 using namespace gcm;
 
@@ -9,14 +9,14 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	DataBus::createStaticTypes();
 
-	Mesh<IdealElastic2DModel> mesh1;
-	Mesh<IdealElastic2DModel> mesh2;
+	StructuredGrid<IdealElastic2DModel> mesh1;
+	StructuredGrid<IdealElastic2DModel> mesh2;
 	Task task;
 	mesh1.initialize(task);
 	mesh1.changeRheology2(4, 1, 1);
 	mesh2.initialize(task);
 	mesh2.changeRheology2(4, 1, 1);
-	MPISolver solver(&mesh1, &mesh2);
+	MPISolver<IdealElastic2DModel> solver(&mesh1, &mesh2);
 	solver.splittingSecondOrder = true;
 	solver.makeSnapshots = true;
 

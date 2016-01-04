@@ -6,12 +6,17 @@
 
 #include "lib/linal/Vector.hpp"
 #include "lib/nodes/Node.hpp"
-#include "lib/Interpolator.hpp"
+#include "lib/interpolation/Interpolator.hpp"
 #include "lib/Task.hpp"
 
 namespace gcm {
+	template<class TModel> class MPISolver;
+
 	template <class TModel>
-	class Mesh {
+	class StructuredGrid {
+	public:
+		typedef typename TModel::Node Node;
+		typedef typename Node::Vector Vector;
 	private:
 		int rank = 0; // index of core
 		int numberOfWorkers = 0; // number of cores
@@ -21,7 +26,7 @@ namespace gcm {
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
 		int X = 0; // number of nodes along x direction
-		int Y = 0; // number of nodes along y direction of this mesh (on this core)
+		int Y = 0; // number of nodes along y direction of this grid (on this core)
 		int globalY = 0; // number of nodes along y direction of all meshes (all cores)
 
 		real h[2] = {0.0, /* x spatial step */
@@ -35,42 +40,41 @@ namespace gcm {
 
 		/* ------------------ Properties and conditions (end) ------------------ */
 
-		int startY = 0; // global y-index of first real node of the mesh
+		int startY = 0; // global y-index of first real node of the grid
 
-		/* GcmMatrices2D that is common for majority of nodes */
-		std::shared_ptr <GcmMatrices2D> defaultMatrix;
+		/* gcm_matrices that is common for majority of nodes */
+		std::shared_ptr<GcmMatrices<Node::M, TModel::GcmMatrices::DIMENSIONALITY>> defaultMatrix;
 
 		/* Data storage. Real nodes with assistant nodes on borders */
-		TModel::Node *nodes = nullptr;
+		Node *nodes = nullptr;
 
 		/**
 		 * Operator to iterate relatively to real nodes.
 		 * Read / write access
-		 * @param y y index < %Y
-		 * @param x x index < %X
+		 * @param y y index < Y
+		 * @param x x index < X
 		 */
-		inline TModel::Node &operator()(const int y, const int x) {
+		inline Node &operator()(const int y, const int x) {
 			return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
 		};
 
 		/**
 		 * Operator to iterate relatively real nodes.
 		 * Read only access
-		 * @param y y index < %Y
-		 * @param x x index < %X
+		 * @param y y index < Y
+		 * @param x x index < X
 		 */
-		inline const TModel::Node &get(const int y, const int x) const {
+		inline const Node &get(const int y, const int x) const {
 			return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
 		};
 
-
 		/* Spatial interpolator */
-		Interpolator interpolator;
+		Interpolator<Vector> interpolator;
 
 	public:
-		/** Mesh factory
+		/** StructuredGrid factory
 		 * @param task properties and initial conditions etc
-		 * @param forceSequence (default false) if true make the mesh thinking that the number of
+		 * @param forceSequence (default false) if true make the grid thinking that the number of
 		 * processes is one, even it's actually not so (for testing purposes)
 		 */
 		void initialize(const Task &task, const bool forceSequence = false);
@@ -79,22 +83,22 @@ namespace gcm {
 		 * Interpolate nodal values in specified points.
 		 * Interpolated value for k-th point in vector %dx are
 		 * stored in k-th column of returned Matrix.
-		 * @param stage 0 - along X direction, 1 - along Y direction
+		 * @param stage direction
 		 * @param y y-index of the reference node
 		 * @param x x-index of the reference node
 		 * @param dx Vector of distances from reference node on which
 		 * values should be interpolated
 		 * @return Matrix with interpolated nodal values in columns
 		 */
-		linal::Matrix<TModel::Node::M, TModel::Node::M> Mesh<TModel>::interpolateValuesAround
-				(const int stage, const int y, const int x, const TModel::Node::Vector& dx) const;
+		typename Node::Matrix interpolateValuesAround
+				(const int stage, const int y, const int x, const Vector& dx) const;
 
-		/* Place in %src nodal values which are necessary for
+		/* Place in src nodal values which are necessary for
 		 * interpolation in specified point. The number of placed
 		 * in values is equal to src.size()
 		 */
 		void findSourcesForInterpolation(const int stage, const int y, const int x,
-		                                 const real &dx, std::vector<TModel::Node::Vector>& src) const;
+		                                 const real &dx, std::vector<Vector>& src) const;
 
 		/* Write vtk snapshot */
 		void snapshot(int step) const;
@@ -103,7 +107,7 @@ namespace gcm {
 		void _snapshot(int step) const;
 
 
-		friend class MPISolver;
+		friend class MPISolver<TModel>;
 
 		/* ---------------- For testing purposes ---------------- */
 	public:
@@ -121,9 +125,7 @@ namespace gcm {
 
 		const int getStartYForTest() const { return startY; };
 
-		const TModel::Node &getNodeForTest(const int y, const int x) const { return get(y, x); };
-
-		const std::shared_ptr<const GcmMatrices2D> getDefaultMatrixForTest() const { return defaultMatrix; };
+		const Node &getNodeForTest(const int y, const int x) const { return get(y, x); };
 
 		/* Change rheology in some area
 		 *

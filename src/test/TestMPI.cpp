@@ -15,38 +15,38 @@ TEST(MPI, CustomDatatype)
 
 	const int testNumberOfNodes = 1000;
 	
-	Node leftNodes[testNumberOfNodes];
-	Node rightNodes[testNumberOfNodes];
+	IdealElastic2DNode leftNodes[testNumberOfNodes];
+	IdealElastic2DNode rightNodes[testNumberOfNodes];
 
 	for (int k = 0; k < testNumberOfNodes; k++) {
-		for (int i = 0; i < N; i++) {
-			leftNodes[k].u(i) = rightNodes[k].u(i) = rank;
+		for (int i = 0; i < IdealElastic2DNode::M; i++) {
+			leftNodes[k](i) = rightNodes[k](i) = rank;
 		}
 	}
 
 	if (numberOfWorkers > 1) {
 		if (rank == 0) {
-			MPI_Sendrecv_replace(rightNodes, testNumberOfNodes, DataBus::MPI_NODE,
+			MPI_Sendrecv_replace(rightNodes, testNumberOfNodes, IdealElastic2DNode::MPI_NODE_TYPE,
 			                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 		} else if (rank == numberOfWorkers - 1) {
-			MPI_Sendrecv_replace(leftNodes, testNumberOfNodes, DataBus::MPI_NODE,
+			MPI_Sendrecv_replace(leftNodes, testNumberOfNodes, IdealElastic2DNode::MPI_NODE_TYPE,
 			                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 		} else {
-			MPI_Sendrecv_replace(rightNodes, testNumberOfNodes, DataBus::MPI_NODE,
+			MPI_Sendrecv_replace(rightNodes, testNumberOfNodes, IdealElastic2DNode::MPI_NODE_TYPE,
 			                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Sendrecv_replace(leftNodes, testNumberOfNodes, DataBus::MPI_NODE,
+			MPI_Sendrecv_replace(leftNodes, testNumberOfNodes, IdealElastic2DNode::MPI_NODE_TYPE,
 			                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 
 		for (int k = 0; k < testNumberOfNodes; k++) {
-			for (int i = 0; i < N; i++) {
+			for (int i = 0; i < IdealElastic2DNode::M; i++) {
 				if (rank == 0) {
-					ASSERT_EQ(rightNodes[k].u(i), rank + 1);
+					ASSERT_EQ(rightNodes[k](i), rank + 1);
 				} else if (rank == numberOfWorkers - 1) {
-					ASSERT_EQ(leftNodes[k].u(i), rank - 1);
+					ASSERT_EQ(leftNodes[k](i), rank - 1);
 				} else {
-					ASSERT_EQ(leftNodes[k].u(i), rank - 1);
-					ASSERT_EQ(rightNodes[k].u(i), rank + 1);
+					ASSERT_EQ(leftNodes[k](i), rank - 1);
+					ASSERT_EQ(rightNodes[k](i), rank + 1);
 				}
 			}
 		}

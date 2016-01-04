@@ -3,11 +3,13 @@
 
 #include "lib/model/Model.hpp"
 #include "lib/nodes/IdealElastic2DNode.hpp"
+#include "lib/gcm_matrices/IdealElastic2DGcmMatrices.hpp"
 
 namespace gcm {
 	class IdealElastic2DModel : public Model {
+	public:
 		typedef IdealElastic2DNode Node;
-
+		typedef IdealElastic2DGcmMatrices GcmMatrices;
 	};
 }
 

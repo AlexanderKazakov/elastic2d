@@ -7,8 +7,8 @@
 
 namespace gcm {
 	namespace linal {
-		template<int M, typename Container=DefaultMatrixContainer<M, 1>>
-		class Vector : public Matrix<M, 1, Container> {
+		template<int TM, typename Container>
+		class Vector : public Matrix<TM, 1, Container> {
 		public:
 			/**
 			 * Returns vector component.
@@ -29,28 +29,28 @@ namespace gcm {
 			real &operator()(const int i);
 		};
 
-		template<int M, typename Container>
+		template<int TM, typename Container>
 		inline
-		gcm::real Vector<M, Container>::operator()(const int i) const
+		gcm::real Vector<TM, Container>::operator()(const int i) const
 		{
-			return this->values[getIndex(i, 1)];
+			return this->values[i];
 		};
 
-		template<int M, typename Container>
+		template<int TM, typename Container>
 		inline
-		gcm::real& Vector<M, Container>::operator()(const int i)
+		gcm::real& Vector<TM, Container>::operator()(const int i)
 		{
-			return this->values[getIndex(i, 1)];
+			return this->values[i];
 		};
 	}
 };
 
 namespace std {
-	template<int M>
-	inline std::ostream &operator<<(std::ostream &os, const gcm::linal::Vector<M> &vector) {
+	template<int TM>
+	inline std::ostream &operator<<(std::ostream &os, const gcm::linal::Vector<TM> &vector) {
 
 		os << "Vector:\n";
-		for (int i = 0; i < M; i++) {
+		for (int i = 0; i < TM; i++) {
 			os << vector(i) << "\n";
 		}
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "lib/MPISolver.hpp"
+#include "lib/solver/MPISolver.hpp"
 
 using namespace gcm;
 
@@ -21,17 +21,17 @@ TEST(Solver, StageXForward)
 		task.T = 100.0;
 		task.initialConditions = InitialConditions::PWaveX;
 
-		Mesh *mesh = new Mesh();
-		Mesh *newMesh = new Mesh();
+		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		Vector pWave = mesh->getNodeForTest(0, 2).u;
-		Vector zero; zero.createVector({0, 0, 0, 0, 0});
+		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, 2).u;
+		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
+					ASSERT_EQ(mesh->getNodeForTest(y, x),
 					          (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -61,12 +61,12 @@ TEST(Solver, StageXBackward)
 		task.T = 100.0;
 		task.initialConditions = InitialConditions::SWaveXBackward;
 
-		Mesh *mesh = new Mesh();
-		Mesh *newMesh = new Mesh();
+		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		Vector pWave = mesh->getNodeForTest(0, task.X - 3).u;
-		Vector zero; zero.createVector({0, 0, 0, 0, 0});
+		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, task.X - 3).u;
+		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
@@ -101,17 +101,17 @@ TEST(Solver, StageY)
 		task.T = 100.0;
 		task.initialConditions = InitialConditions::PWaveY;
 
-		Mesh *mesh = new Mesh();
-		Mesh *newMesh = new Mesh();
+		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		Vector pWave = mesh->getNodeForTest(2, 0).u;
-		Vector zero; zero.createVector({0, 0, 0, 0, 0});
+		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(2, 0).u;
+		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
+					ASSERT_EQ(mesh->getNodeForTest(y, x),
 					          (y == 2 + i || y == 3 + i || y == 4 + i || y == 5 + i || y == 6 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -140,17 +140,17 @@ TEST(Solver, StageYSxx)
 		task.T = 100.0;
 		task.initialConditions = InitialConditions::SxxOnly;
 
-		Mesh *mesh = new Mesh();
-		Mesh *newMesh = new Mesh();
+		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2).u;
-		Vector zero; zero.createVector({0, 0, 0, 0, 0});
+		IdealElastic2DModel::Node::Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2).u;
+		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
 		MPISolver solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
+					ASSERT_EQ(mesh->getNodeForTest(y, x),
 					          (x == task.X / 2 && y == task.Y / 2 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -178,14 +178,14 @@ TEST(Solver, calculate)
 	task.T = 100.0;
 	task.initialConditions = InitialConditions::SWaveY;
 
-	Mesh *mesh = new Mesh();
-	Mesh *newMesh = new Mesh();
+	StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+	StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 	mesh->initialize(task);
 	newMesh->initialize(task);
-	Vector sWave = mesh->getNodeForTest(3, task.X / 2).u;
+	IdealElastic2DModel::Node::Vector sWave = mesh->getNodeForTest(3, task.X / 2).u;
 	MPISolver solver(mesh, newMesh);
 	solver.calculate();
-	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2).u);
+	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2));
 }
 
 
@@ -208,8 +208,8 @@ TEST(Solver, TwoLayersDifferentRho)
 		task.numberOfSnaps = numberOfSnapsInitial + 2 * i; // in order to catch the impulses
 		task.initialConditions = InitialConditions::PWaveY;
 
-		Mesh *mesh = new Mesh();
-		Mesh *newMesh = new Mesh();
+		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
 
@@ -230,10 +230,9 @@ TEST(Solver, TwoLayersDifferentRho)
 		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 		Node transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
 
-		auto defaultMatrix = mesh->getDefaultMatrixForTest();
-		real rho0 = defaultMatrix->rho;
-		real lambda0 = defaultMatrix->lambda;
-		real mu0 = defaultMatrix->mu;
+		real rho0 = task.rho0;
+		real lambda0 = task.lambda0;
+		real mu0 = task.mu0;
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0); // acoustic impedance
 
@@ -244,17 +243,17 @@ TEST(Solver, TwoLayersDifferentRho)
 		real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 		real Z = sqrt(E * rho); // acoustic impedance
 
-		ASSERT_NEAR(reflect.get(NodeMap::Syy) / init.get(NodeMap::Syy),
+		ASSERT_NEAR(reflect.Syy / init.Syy,
 		            (Z - Z0) / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(reflect.get(NodeMap::Vy) / init.get(NodeMap::Vy),
+		ASSERT_NEAR(reflect.Vy / init.Vy,
 		            (Z0 - Z) / (Z + Z0),
 		            1e-2);
 
-		ASSERT_NEAR(transfer.get(NodeMap::Syy) / init.get(NodeMap::Syy),
+		ASSERT_NEAR(transfer.Syy / init.Syy,
 		            2 * Z / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(transfer.get(NodeMap::Vy) / init.get(NodeMap::Vy),
+		ASSERT_NEAR(transfer.Vy / init.Vy,
 		            2 * Z0 / (Z + Z0),
 		            1e-2);
 
@@ -282,8 +281,8 @@ TEST(Solver, TwoLayersDifferentE)
 		task.numberOfSnaps = numberOfSnapsInitial - 2 * i; // in order to catch the impulses
 		task.initialConditions = InitialConditions::PWaveY;
 
-		Mesh *mesh = new Mesh();
-		Mesh *newMesh = new Mesh();
+		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
 
@@ -304,10 +303,9 @@ TEST(Solver, TwoLayersDifferentE)
 		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 		Node transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
 
-		auto defaultMatrix = mesh->getDefaultMatrixForTest();
-		real rho0 = defaultMatrix->rho;
-		real lambda0 = defaultMatrix->lambda;
-		real mu0 = defaultMatrix->mu;
+		real rho0 = task.rho0;
+		real lambda0 = task.lambda0;
+		real mu0 = task.mu0;
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0); // acoustic impedance
 
@@ -318,17 +316,17 @@ TEST(Solver, TwoLayersDifferentE)
 		real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 		real Z = sqrt(E * rho); // acoustic impedance
 
-		ASSERT_NEAR(reflect.get(NodeMap::Syy) / init.get(NodeMap::Syy),
+		ASSERT_NEAR(reflect.Syy / init.Syy,
 		            (Z - Z0) / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(reflect.get(NodeMap::Vy) / init.get(NodeMap::Vy),
+		ASSERT_NEAR(reflect.Vy / init.Vy,
 		            (Z0 - Z) / (Z + Z0),
 		            1e-2);
 
-		ASSERT_NEAR(transfer.get(NodeMap::Syy) / init.get(NodeMap::Syy),
+		ASSERT_NEAR(transfer.Syy / init.Syy,
 		            2 * Z / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(transfer.get(NodeMap::Vy) / init.get(NodeMap::Vy),
+		ASSERT_NEAR(transfer.Vy / init.Vy,
 		            2 * Z0 / (Z + Z0),
 		            1e-2);
 
