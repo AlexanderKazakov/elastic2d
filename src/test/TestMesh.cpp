@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "lib/grid/StructuredGrid.hpp"
+#include "lib/model/IdealElastic2DModel.hpp"
 
 using namespace gcm;
 
@@ -102,8 +103,7 @@ TEST(StructuredGrid, interpolateValuesAround)
 			}
 		}
 
-		IdealElastic2DModel::Node::Vector dx;
-		dx.createVector({-1, 1, -0.5, 0.5, 0});
+		IdealElastic2DModel::Node::Vector dx({-1, 1, -0.5, 0.5, 0});
 		IdealElastic2DModel::Node::Matrix matrix = structuredGrid.interpolateValuesAround(stage, 1, 1, dx);
 
 		for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {

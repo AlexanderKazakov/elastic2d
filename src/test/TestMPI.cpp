@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
 #include "lib/config.hpp"
-#include "lib/DataBus.hpp"
+#include "lib/util/DataBus.hpp"
 #include "lib/Task.hpp"
-#include "lib/mesh/Mesh.hpp"
-#include "lib/MPISolver.hpp"
+#include "lib/grid/StructuredGrid.hpp"
+#include "lib/solver/MPISolver.hpp"
+#include "lib/nodes/IdealElastic2DNode.hpp"
+#include "lib/model/IdealElastic2DModel.hpp"
 
 using namespace gcm;
 
@@ -70,26 +72,25 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	task.initialConditions = InitialConditions::Explosion;
 
 	// calculate in sequence
-	Mesh *meshSeq = new Mesh();
-	Mesh *newMeshSeq = new Mesh();
+	StructuredGrid<IdealElastic2DModel> *meshSeq = new StructuredGrid<IdealElastic2DModel>();
+	StructuredGrid<IdealElastic2DModel> *newMeshSeq = new StructuredGrid<IdealElastic2DModel>();
 	meshSeq->initialize(task, true);
 	newMeshSeq->initialize(task, true);
-	MPISolver sequenceSolver(meshSeq, newMeshSeq);
+	MPISolver<IdealElastic2DModel> sequenceSolver(meshSeq, newMeshSeq);
 	sequenceSolver.calculate();
 
 	// calculate in parallel
-	Mesh *mesh = new Mesh();
-	Mesh *newMesh = new Mesh();
+	StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
+	StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 	mesh->initialize(task);
 	newMesh->initialize(task);
-	MPISolver mpiSolver(mesh, newMesh);
+	MPISolver<IdealElastic2DModel> mpiSolver(mesh, newMesh);
 	mpiSolver.calculate();
 
 	// check that parallel result is equal to sequence result
 	for (int y = 0; y < mesh->getYForTest(); y++) {
 		for (int x = 0; x < mesh->getXForTest(); x++) {
-			ASSERT_EQ(mesh->getNodeForTest(y, x).u,
-			          meshSeq->getNodeForTest(y + mesh->getStartYForTest(), x).u);
+			ASSERT_EQ(mesh->getNodeForTest(y, x), meshSeq->getNodeForTest(y + mesh->getStartYForTest(), x));
 		}
 	}
 }

@@ -1,3 +1,4 @@
+#include <lib/model/IdealElastic2DModel.hpp>
 #include "lib/solver/MPISolver.hpp"
 
 #include "lib/util/DataBus.hpp"
@@ -5,38 +6,41 @@
 using namespace gcm;
 
 template<class TModel>
-MPISolver::MPISolver(StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh) :
+MPISolver<TModel>::MPISolver(StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh) :
 		mesh(mesh), newMesh(newMesh) {}
 
 template<class TModel>
-void MPISolver::calculate() {
+void MPISolver<TModel>::calculate() {
 	exchangeNodesWithNeighbors();
 	real currentTime = 0.0; int step = 0;
 	if (makeSnapshots) mesh->snapshot(step);
 	while(currentTime < mesh->T) {
-	if (splittingSecondOrder) {
-		switch (TModel::DIMENSIONALITY) {
-			case 1:
-				stage(0, mesh->tau);
-			case 2:
-				stage(0, mesh->tau / 2);
-				stage(1, mesh->tau);
-				stage(0, mesh->tau / 2);
-			case 3:
-				THROW_UNSUPPORTED("TODO splitting second order in 3D");
+		if (splittingSecondOrder) {
+			switch (TModel::DIMENSIONALITY) {
+				case 1:
+					stage(0, mesh->tau);
+					break;
+				case 2:
+					stage(0, mesh->tau / 2);
+					stage(1, mesh->tau);
+					stage(0, mesh->tau / 2);
+					break;
+				case 3:
+					THROW_UNSUPPORTED("TODO splitting second order in 3D");
+					break;
+			}
+		} else {
+			for (int s = 0; s < TModel::DIMENSIONALITY; s++) {
+				stage(s, mesh->tau);
+			}
 		}
-	} else {
-		for (int s = 0; s < TModel::DIMENSIONALITY; s++) {
-			stage(s, mesh->tau);
-		}
-	}
 		currentTime += mesh->tau; step += 1;
 		if (makeSnapshots) mesh->snapshot(step);
 	}
 }
 
 template<class TModel>
-void MPISolver::stage(const int s, const real& timeStep) {
+void MPISolver<TModel>::stage(const int s, const real& timeStep) {
 
 	mesh->applyBorderConditions();
 
@@ -44,7 +48,7 @@ void MPISolver::stage(const int s, const real& timeStep) {
 		for (int x = 0; x < mesh->X; x++) {
 
 			// points to interpolate values on previous time layer
-			TModel::Node::Vector dx = (*mesh)(y, x).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);
+			auto dx = ((*mesh)(y, x)).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);
 
 			/* new values = U1 * Riemann solvers */
 			(*newMesh)(y, x) = (*mesh)(y, x).matrix->A(s).U1 *
@@ -60,7 +64,7 @@ void MPISolver::stage(const int s, const real& timeStep) {
 }
 
 template<class TModel>
-void MPISolver::exchangeNodesWithNeighbors() {
+void MPISolver<TModel>::exchangeNodesWithNeighbors() {
 
 	int rank = mesh->rank;
 	int numberOfWorkers = mesh->numberOfWorkers;
@@ -85,5 +89,6 @@ void MPISolver::exchangeNodesWithNeighbors() {
 		             mesh->nodes, sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}
-
 }
+
+template class MPISolver<IdealElastic2DModel>;

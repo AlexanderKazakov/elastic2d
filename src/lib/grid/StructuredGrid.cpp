@@ -46,14 +46,14 @@ void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequen
 
 	startY = rank * numberOfNodesAlongYPerOneCore;
 
-	nodes = new TModel::Node[(Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder)];
+	nodes = new Node[(Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder)];
 
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		nodes[i].clear();
+		linal::clear(nodes[i]);
 		nodes[i].matrix = nullptr;
 	}
 
-	defaultMatrix = std::make_shared<TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
+	defaultMatrix = std::make_shared<typename TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
 	for (int y = 0; y < Y; ++y) {
 		for (int x = 0; x < X; ++x) {
 			(*this)(y, x).matrix = defaultMatrix;
@@ -64,13 +64,13 @@ void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequen
 }
 
 template<class TModel>
-TModel::Node::Matrix StructuredGrid<TModel>::interpolateValuesAround
-		(const int stage, const int y, const int x, const TModel::Node::Vector& dx) const {
+typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValuesAround
+		(const int stage, const int y, const int x, const Vector& dx) const {
 
-	TModel::Node::Matrix ans;
-	std::vector<TModel::Node::Vector> src(accuracyOrder + 1);
-	TModel::Node::Vector res;
-	for (int k = 0; k < TModel::Node::M; k++) {
+	Matrix ans;
+	std::vector<Vector> src(accuracyOrder + 1);
+	Vector res;
+	for (int k = 0; k < Node::M; k++) {
 		findSourcesForInterpolation(stage, y, x, dx(k), src);
 		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h[stage]);
 		ans.setColumn(k, res);
@@ -81,7 +81,7 @@ TModel::Node::Matrix StructuredGrid<TModel>::interpolateValuesAround
 
 template<class TModel>
 void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const int y, const int x,
-                                                         const real &dx, std::vector<TModel::Node::Vector>& src) const {
+                                                         const real &dx, std::vector<Vector>& src) const {
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
@@ -208,9 +208,10 @@ void StructuredGrid<TModel>::_snapshot(int step) const {
 template<class TModel>
 void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	auto newRheologyMatrix = std::make_shared<GcmMatrices>(rho2rho0 * defaultMatrix->rho,
-	                                                       lambda2lambda0 * defaultMatrix->lambda,
-	                                                       mu2mu0 * defaultMatrix->mu);
+	auto oldMatrix = std::static_pointer_cast<IdealElastic2DGcmMatrices>(defaultMatrix);
+	auto newRheologyMatrix = std::make_shared<IdealElastic2DGcmMatrices>(rho2rho0 * oldMatrix->rho,
+	                                                       lambda2lambda0 * oldMatrix->lambda,
+	                                                       mu2mu0 * oldMatrix->mu);
 
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
@@ -220,41 +221,14 @@ void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& la
 		}
 	}
 
-	const real defaultAcousticVelocity = sqrt((defaultMatrix->lambda + 2 * defaultMatrix->mu) /
-			                                          defaultMatrix->rho);
+	const real defaultAcousticVelocity = sqrt((oldMatrix->lambda + 2 * oldMatrix->mu) /
+			                                          oldMatrix->rho);
 	const real newAcousticVelocity = sqrt((newRheologyMatrix->lambda + 2 * newRheologyMatrix->mu) / 
 			                                      newRheologyMatrix->rho);
 
 	if (newAcousticVelocity > defaultAcousticVelocity) {
 		tau /= newAcousticVelocity / defaultAcousticVelocity;
 	}
-
-}
-
-template<class TModel>
-void StructuredGrid<TModel>::changeRheology2(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
-
-	auto newRheologyMatrix = std::make_shared<GcmMatrices>(rho2rho0 * defaultMatrix->rho,
-	                                                       lambda2lambda0 * defaultMatrix->lambda,
-	                                                       mu2mu0 * defaultMatrix->mu);
-	for (int x = 0; x < X; x++) {
-		for (int y = 0; y < Y; y++) {
-			if ((y + startY) > 0.2 * globalY && (y + startY) < 0.6 * globalY &&
-					x > 0.4 * X && x < 0.6 * X) {
-				(*this)(y, x).matrix = newRheologyMatrix;
-			}
-		}
-	}
-
-	const real defaultAcousticVelocity = sqrt((defaultMatrix->lambda + 2 * defaultMatrix->mu) /
-	                                          defaultMatrix->rho);
-	const real newAcousticVelocity = sqrt((newRheologyMatrix->lambda + 2 * newRheologyMatrix->mu) /
-	                                      newRheologyMatrix->rho);
-
-	if (newAcousticVelocity > defaultAcousticVelocity) {
-		tau /= newAcousticVelocity / defaultAcousticVelocity;
-	}
-
 }
 
 template<class TModel>
@@ -404,4 +378,4 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 }
 
 
-template class Mesh<IdealElastic2DModel>;
+template class StructuredGrid<IdealElastic2DModel>;

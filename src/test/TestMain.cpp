@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
-#include "lib/DataBus.hpp"
+#include "lib/util/DataBus.hpp"
 
-#include "test/TestMatrix.cpp"
+#include "test/gcmMatrices.cpp"
 #include "test/TestNode.cpp"
 #include "test/TestInterpolator.cpp"
 #include "test/TestMesh.cpp"

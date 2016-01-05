@@ -1,3 +1,4 @@
+#include <lib/nodes/IdealElastic2DNode.hpp>
 #include "Interpolator.hpp"
 
 using namespace gcm;
@@ -28,7 +29,7 @@ void Interpolator<TVector>::minMaxInterpolate(TVector &res, std::vector<TVector>
 }
 
 template<class TVector>
-void Interpolator::interpolate(TVector &res, std::vector<TVector> &src, const real &q) const {
+void Interpolator<TVector>::interpolate(TVector &res, std::vector<TVector> &src, const real &q) const {
 	// Newton interpolation
 	res = src[0];
 	const int p = src.size() - 1; // order of interpolation
@@ -41,3 +42,20 @@ void Interpolator::interpolate(TVector &res, std::vector<TVector> &src, const re
 		res += src[0];
 	}
 }
+
+template class Interpolator<linal::Vector<1>>;
+template class Interpolator<linal::Vector<2>>;
+template class Interpolator<linal::Vector<3>>;
+template class Interpolator<linal::Vector<4>>;
+template class Interpolator<linal::Vector<5>>;
+template class Interpolator<linal::Vector<6>>;
+template class Interpolator<linal::Vector<7>>;
+template class Interpolator<linal::Vector<8>>;
+template class Interpolator<linal::Vector<9>>;
+template class Interpolator<linal::Vector<10>>;
+template class Interpolator<linal::Vector<11>>;
+template class Interpolator<linal::Vector<12>>;
+template class Interpolator<linal::Vector<13>>;
+
+
+template class Interpolator<linal::Vector<5, IdealElastic2DContainer>>;

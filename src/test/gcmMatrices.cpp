@@ -74,8 +74,8 @@ TEST(GcmMatrices, LeftEigenVectors)
 template<int N, int Dimensionality>
 void rightEigenVectorCheck(const GcmMatrices<N, Dimensionality>& matrix) {
 	for (int s = 0; s < matrix.DIMENSIONALITY; s++) {
-		Matrix UA = matrix.A(s).U * matrix.A(s).A;
-		Matrix LU = matrix.A(s).L * matrix.A(s).U;
+		Matrix<N,N> UA = matrix.A(s).U * matrix.A(s).A;
+		Matrix<N,N> LU = matrix.A(s).L * matrix.A(s).U;
 		for(int i = 0; i < N; i++) {
 			for(int j = 0; j < N; j++) {
 				ASSERT_NEAR(UA(i, j), LU(i, j), EQUALITY_TOLERANCE) << "(" << s << ") U = " << matrix.A(s).U;

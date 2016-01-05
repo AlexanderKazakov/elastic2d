@@ -7,7 +7,7 @@
 #include <cmath>
 #include <iostream>
 
-const int NUMBER_ITERATIONS = 1000;
+const int LINAL_TEST_NUMBER_ITERATIONS = 1000;
 
 using namespace gcm;
 using namespace gcm::linal;
@@ -651,7 +651,7 @@ TEST(Linal, MatrixVectorMultiplication)
 
 TEST(Linal, TraceVerification)
 {
-    Matrix A;
+    Matrix<5, 5> A;
     A(0, 0) = 12; A(1, 1) = 56.333; A(2, 2) = 1; A(3, 3) = 0; A(4, 4) = -34.0022;
     ASSERT_NEAR(A.trace(), 35.3308, EQUALITY_TOLERANCE);
 }
@@ -696,7 +696,7 @@ TEST(Linal, diagonalMultiply)
     Matrix<9, 9> A, B;
     srand(time(0));
 
-    for (int l = 0; l < NUMBER_ITERATIONS; l++) {
+    for (int l = 0; l < LINAL_TEST_NUMBER_ITERATIONS; l++) {
 
         for (int i = 0; i < A.M; i++) {
             for (int j = 0; j < A.N; j++) {

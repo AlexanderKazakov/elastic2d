@@ -3,6 +3,7 @@
 
 #include <initializer_list>
 #include <iostream>
+#include <string.h>
 #include <cmath>
 
 #include <gsl/gsl_math.h>
@@ -85,7 +86,10 @@ namespace gcm
              *
              * @param m Matrix to construct from.
              */
-            Matrix(const Matrix<TM, TN, Container>& m);
+            template<typename Container2>
+            Matrix(const Matrix<TM, TN, Container2>& m2) {
+                (*this) = m2;
+            };
 
             /**
              * Assignment operator.
@@ -94,7 +98,16 @@ namespace gcm
              *
              * @return Reference to modified matrix instance.
              */
-            Matrix<TM, TN, Container>& operator=(const Matrix<TM, TN, Container>& m);
+            template<typename Container2>
+            Matrix<TM, TN, Container>& operator=(const Matrix<TM, TN, Container2>& m2)
+            {
+                // TODO - memcpy should be here?
+                for (int i = 0; i < TM; i++)
+                    for (int j = 0; j < TN; j++)
+                        (*this)(i, j) = m2(i, j);
+
+                return *this;
+            };
 
             /**
              * Constructor that initializes matrix with specified values.
@@ -102,16 +115,6 @@ namespace gcm
              * @param values Values to initialize matrix with.
              */
             Matrix(std::initializer_list<real> values);
-
-            /**
-             * Returns matrix component.
-             *
-             * @param i First index.
-             * @param j Second index.
-             *
-             * @return Corresponding matrix component.
-             */
-            real operator()(const int i, const int j) const;
 
             /**
              * Returns reference to matrix component, used to modify matrix content.
@@ -122,6 +125,16 @@ namespace gcm
              * @return Reference to corresponding matrix component.
              */
             real& operator()(const int i, const int j);
+
+            /**
+             * Returns matrix component.
+             *
+             * @param i First index.
+             * @param j Second index.
+             *
+             * @return Corresponding matrix component.
+             */
+            real operator()(const int i, const int j) const;
 
             /**
              * Transposes matrix.
@@ -147,11 +160,15 @@ namespace gcm
             /** @param list of diagonal values. */
             void createDiagonal(const std::initializer_list <real> &list);
 
-            /** Fill in the i-th column. */
-            void setColumn(const int i, const Vector<TM> &column);
-
             /** @return i-th column. */
             Vector<TM> getColumn(const int i) const;
+
+            template<typename VectorContainer>
+            void setColumn(const int i, const Vector<TM, VectorContainer>& column) {
+                for (int j = 0; j < TM; j++) {
+                    (*this)(j, i) = column(j);
+                }
+            }
 
             /** @return values from diagonal multiplied by c in vector */
             Vector<TN> getDiagonalMultipliedBy(const real &c) const;
@@ -176,22 +193,6 @@ namespace gcm
             for (auto value: values)
                 this->values[i++] = value;
         }
-        
-        template<int TM, int TN, typename Container>
-        Matrix<TM, TN, Container>::Matrix(const Matrix<TM, TN, Container>& m)
-        {
-            (*this) = m;
-        }
-
-        template<int TM, int TN, typename Container>
-        Matrix<TM, TN, Container>& Matrix<TM, TN, Container>::operator=(const Matrix<TM, TN, Container>& m)
-        {
-            for (int i = 0; i < TM; i++)
-                for (int j = 0; j < TN; j++)
-                    (*this)(i, j) = m(i, j);
-
-            return *this;
-        }
 
         template<int TM, int TN, typename Container>
         inline
@@ -205,14 +206,14 @@ namespace gcm
 
         template<int TM, int TN, typename Container>
         inline
-        real Matrix<TM, TN, Container>::operator()(const int i, const int j) const
+        real& Matrix<TM, TN, Container>::operator()(const int i, const int j)
         {
             return this->values[getIndex(i, j)];
         }
 
         template<int TM, int TN, typename Container>
         inline
-        real& Matrix<TM, TN, Container>::operator()(const int i, const int j)
+        real Matrix<TM, TN, Container>::operator()(const int i, const int j) const
         {
             return this->values[getIndex(i, j)];
         }
@@ -277,14 +278,8 @@ namespace gcm
             clear(*this);
             int i = 0;
             for (auto& value : list) {
-                (*this)(i, i++) = value;
-            }
-        }
-
-        template<int TM, int TN, typename Container>
-        void Matrix<TM, TN, Container>::setColumn(const int i, const Vector<TM>& column) {
-            for (int j = 0; j < TM; j++) {
-                (*this)(j, i) = column(j);
+                (*this)(i, i) = value;
+                i++;
             }
         }
 
@@ -317,18 +312,6 @@ namespace gcm
             }
             return ans;
         }
-
-        /*template<int TM, int TN, typename Container>
-        Vector<TM> Matrix<TM, TN, Container>::operator*(const Vector<TN> &b) const {
-            Vector<TN> c; // c = this * b
-            for (int i = 0; i < TN; i++) {
-                c(i) = 0.0;
-                for (int j = 0; j < TM; j++) {
-                    c(i) += (*this)(i, j) * b(j);
-                }
-            }
-            return c;
-        }*/
 
         template<int TM, int TN, typename Container>
         real Matrix<TM, TN, Container>::trace() const {

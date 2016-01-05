@@ -34,12 +34,12 @@ namespace gcm {
 	public:
 		static const int DIMENSIONALITY = Dimensionality; /// number of dimensions (stages)
 		/** @return GcmMatrix along specified direction */
-		const GcmMatrix<M>& A(const int direction) const {
+		const GcmMatrix<M>&A(const int direction) const {
 			return m[direction];
 		};
 	protected:
 		// TODO - logic around random basis here
-		const GcmMatrix<M> m[DIMENSIONALITY];
+		GcmMatrix<M> m[DIMENSIONALITY];
 	};
 }
 

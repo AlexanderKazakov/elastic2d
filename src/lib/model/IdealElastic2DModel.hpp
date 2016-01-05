@@ -10,6 +10,7 @@ namespace gcm {
 	public:
 		typedef IdealElastic2DNode Node;
 		typedef IdealElastic2DGcmMatrices GcmMatrices;
+		static const int DIMENSIONALITY = GcmMatrices::DIMENSIONALITY;
 	};
 }
 

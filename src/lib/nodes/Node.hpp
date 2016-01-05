@@ -10,11 +10,12 @@ namespace gcm {
 
 	template<int TM, int TN> class DefaultMatrixContainer;
 
-	template<int M, typename Container=DefaultMatrixContainer<M, 1>>
-	class Node : public linal::Vector<M, Container> {
+	template<int TM, typename Container=DefaultMatrixContainer<TM, 1>>
+	class Node : public linal::Vector<TM, Container> {
 	public:
-		typedef linal::Vector<M, Container> Vector;
-		typedef linal::Matrix<M, M> Matrix;
+		typedef linal::Vector<TM, Container> Vector;
+		typedef linal::Matrix<TM, TM> Matrix;
+
 	};
 }
 

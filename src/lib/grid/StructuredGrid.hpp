@@ -17,6 +17,7 @@ namespace gcm {
 	public:
 		typedef typename TModel::Node Node;
 		typedef typename Node::Vector Vector;
+		typedef typename Node::Matrix Matrix;
 	private:
 		int rank = 0; // index of core
 		int numberOfWorkers = 0; // number of cores
@@ -90,7 +91,7 @@ namespace gcm {
 		 * values should be interpolated
 		 * @return Matrix with interpolated nodal values in columns
 		 */
-		typename Node::Matrix interpolateValuesAround
+		Matrix interpolateValuesAround
 				(const int stage, const int y, const int x, const Vector& dx) const;
 
 		/* Place in src nodal values which are necessary for
@@ -134,8 +135,6 @@ namespace gcm {
 		 * @param mu2mu0 = (mu in the area) / (default mu)
 		 */
 		void changeRheology(const real &rho2rho0, const real &lambda2lambda0, const real &mu2mu0);
-
-		void changeRheology2(const real &rho2rho0, const real &lambda2lambda0, const real &mu2mu0);
 
 		/* ---------------- For testing purposes (end) ---------------- */
 

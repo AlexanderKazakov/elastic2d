@@ -28,6 +28,19 @@ namespace gcm {
 		static MPI::Datatype MPI_NODE_TYPE; /// Special type for node for MPI connection
 
 		std::shared_ptr<GcmMatrices<5,2>> matrix; /// pointer to GcmMatrices for the node
+
+		// TODO - can it be moved to Node<> or further?
+		/*template<typename VectorContainer>
+		IdealElastic2DNode& operator=(const gcm::linal::Vector<5, VectorContainer>& vector) {
+			*(static_cast<linal::Vector<5, IdealElastic2DContainer>*>(this)) = vector;
+			return (*this);
+		};*/
+		template<typename Container>
+		IdealElastic2DNode& operator=(const gcm::linal::Matrix<5, 1, Container>& vector) {
+			*(static_cast<linal::Matrix<5, 1, IdealElastic2DContainer>*>(this)) = vector;
+			return (*this);
+		};
+		// TODO (end)
 	};
 }
 

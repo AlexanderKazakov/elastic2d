@@ -1,12 +1,8 @@
 #include <lib/nodes/IdealElastic2DNode.hpp>
-#include "lib/DataBus.hpp"
+#include "lib/util/DataBus.hpp"
 
 using namespace gcm;
 
-
-void DataBus::createStaticTypes() {
-	createStaticType<IdealElastic2DNode>();
-}
 
 template<class TNode>
 void createStaticType() {
@@ -38,4 +34,6 @@ void createStaticType() {
 	TNode::MPI_NODE_TYPE.Commit();
 }
 
-
+void DataBus::createStaticTypes() {
+	createStaticType<IdealElastic2DNode>();
+}

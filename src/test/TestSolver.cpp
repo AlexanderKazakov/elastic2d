@@ -25,9 +25,9 @@ TEST(Solver, StageXForward)
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, 2).u;
-		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		MPISolver solver(mesh, newMesh);
+		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, 2);
+		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
+		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -67,7 +67,7 @@ TEST(Solver, StageXBackward)
 		newMesh->initialize(task);
 		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, task.X - 3).u;
 		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		MPISolver solver(mesh, newMesh);
+		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -105,9 +105,9 @@ TEST(Solver, StageY)
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(2, 0).u;
-		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		MPISolver solver(mesh, newMesh);
+		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(2, 0);
+		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
+		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -144,9 +144,9 @@ TEST(Solver, StageYSxx)
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 		mesh->initialize(task);
 		newMesh->initialize(task);
-		IdealElastic2DModel::Node::Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2).u;
-		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		MPISolver solver(mesh, newMesh);
+		IdealElastic2DModel::Node::Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2);
+		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
+		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -182,8 +182,8 @@ TEST(Solver, calculate)
 	StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 	mesh->initialize(task);
 	newMesh->initialize(task);
-	IdealElastic2DModel::Node::Vector sWave = mesh->getNodeForTest(3, task.X / 2).u;
-	MPISolver solver(mesh, newMesh);
+	IdealElastic2DModel::Node::Vector sWave = mesh->getNodeForTest(3, task.X / 2);
+	MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 	solver.calculate();
 	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2));
 }
@@ -221,14 +221,14 @@ TEST(Solver, TwoLayersDifferentRho)
 
 
 		int leftNodeIndex = task.Y * 0.25;
-		Node init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
+		IdealElastic2DNode init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
-		MPISolver solver(mesh, newMesh);
+		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		solver.calculate();
 
 		int rightNodeIndex = task.Y * 0.7;
-		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
-		Node transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
+		IdealElastic2DNode reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
+		IdealElastic2DNode transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
 
 		real rho0 = task.rho0;
 		real lambda0 = task.lambda0;
@@ -294,14 +294,14 @@ TEST(Solver, TwoLayersDifferentE)
 
 
 		int leftNodeIndex = task.Y * 0.25;
-		Node init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
+		IdealElastic2DNode init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
-		MPISolver solver(mesh, newMesh);
+		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		solver.calculate();
 
 		int rightNodeIndex = task.Y * 0.7;
-		Node reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
-		Node transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
+		IdealElastic2DNode reflect = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
+		IdealElastic2DNode transfer = mesh->getNodeForTest(rightNodeIndex, task.X / 2);
 
 		real rho0 = task.rho0;
 		real lambda0 = task.lambda0;

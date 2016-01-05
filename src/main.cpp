@@ -13,9 +13,7 @@ int main(int argc, char** argv) {
 	StructuredGrid<IdealElastic2DModel> mesh2;
 	Task task;
 	mesh1.initialize(task);
-	mesh1.changeRheology2(4, 1, 1);
 	mesh2.initialize(task);
-	mesh2.changeRheology2(4, 1, 1);
 	MPISolver<IdealElastic2DModel> solver(&mesh1, &mesh2);
 	solver.splittingSecondOrder = true;
 	solver.makeSnapshots = true;
