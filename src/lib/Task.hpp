@@ -13,11 +13,13 @@ namespace gcm {
 
 		real xLength = 0.0;
 		real yLength = 0.0;
+		real zLength = 0.0;
 
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
 		int X = 0; // number of nodes along x direction
 		int Y = 0; // number of nodes along y direction
+		int Z = 0; // number of nodes along z direction
 
 		real rho0 = 0.0; // default density
 		real lambda0 = 0.0; // default Lame parameter

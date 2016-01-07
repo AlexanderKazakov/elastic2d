@@ -1,6 +1,7 @@
-#include <lib/model/IdealElastic2DModel.hpp>
+#include "lib/model/IdealElastic1DModel.hpp"
+#include "lib/model/IdealElastic2DModel.hpp"
+#include "lib/model/IdealElastic3DModel.hpp"
 #include "lib/solver/MPISolver.hpp"
-
 #include "lib/util/DataBus.hpp"
 
 using namespace gcm;
@@ -91,4 +92,6 @@ void MPISolver<TModel>::exchangeNodesWithNeighbors() {
 	}
 }
 
+//template class MPISolver<IdealElastic1DModel>;
 template class MPISolver<IdealElastic2DModel>;
+template class MPISolver<IdealElastic3DModel>;

@@ -28,10 +28,12 @@ namespace gcm {
 
 		int X = 0; // number of nodes along x direction
 		int Y = 0; // number of nodes along y direction of this grid (on this core)
+		int Z = 0; // number of nodes along y direction of this grid (on this core)
 		int globalY = 0; // number of nodes along y direction of all meshes (all cores)
 
-		real h[2] = {0.0, /* x spatial step */
-		             0.0  /* y spatial step */ };
+		real h[3] = {0.0,  /* x spatial step */
+		             0.0,  /* y spatial step */
+		             0.0,  /* z spatial step */ };
 
 		real tau = 0.0; // time step
 		real T = 0.0; // required time
@@ -44,7 +46,7 @@ namespace gcm {
 		int startY = 0; // global y-index of first real node of the grid
 
 		/* gcm_matrices that is common for majority of nodes */
-		std::shared_ptr<GcmMatrices<Node::M, TModel::GcmMatrices::DIMENSIONALITY>> defaultMatrix;
+		std::shared_ptr<typename TModel::GcmMatrices> defaultMatrix;
 
 		/* Data storage. Real nodes with assistant nodes on borders */
 		Node *nodes = nullptr;

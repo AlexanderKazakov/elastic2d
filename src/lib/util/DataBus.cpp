@@ -1,4 +1,6 @@
-#include <lib/nodes/IdealElastic2DNode.hpp>
+#include "lib/nodes/IdealElastic2DNode.hpp"
+#include "lib/nodes/IdealElastic1DNode.hpp"
+#include "lib/nodes/IdealElastic3DNode.hpp"
 #include "lib/util/DataBus.hpp"
 
 using namespace gcm;
@@ -8,7 +10,6 @@ template<class TNode>
 void createStaticType() {
 	TNode* nodes = new TNode[2];
 
-	// Node
 	MPI::Datatype node_types[] = {
 			MPI::LB,
 #if LIBGCM_DOUBLE_PRECISION
@@ -35,5 +36,7 @@ void createStaticType() {
 }
 
 void DataBus::createStaticTypes() {
+	createStaticType<IdealElastic3DNode>();
 	createStaticType<IdealElastic2DNode>();
+	createStaticType<IdealElastic1DNode>();
 }

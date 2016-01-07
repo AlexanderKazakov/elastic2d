@@ -39,18 +39,26 @@ find_package (Threads REQUIRED)
 include_directories(src)
 set(SOURCE_MAIN_FILE src/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
-set(TEST_MAIN_FILE src/test/TestMain.cpp)
-set(TEST_MPI_FILE src/test/TestMPI.cpp)
+file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
+file(GLOB_RECURSE SAMPLE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sample/*.cpp")
+set(TEST_MPI_FILE src/test/testMPI.cpp)
 
 # libgcm
 add_library(gcm SHARED ${LIB_SOURCES})
 
-# The program itself
+# the program itself
 add_executable(gcm_exe ${SOURCE_MAIN_FILE})
 target_link_libraries(gcm_exe gcm ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES})
 
-add_executable(gcm_tests ${TEST_MAIN_FILE})
-add_executable(gcm_mpi_tests ${TEST_MPI_FILE})
-
+# tests
+add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
 target_link_libraries(gcm_tests     gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
+# tests on mpi
+add_executable(gcm_mpi_tests ${TEST_MPI_FILE})
 target_link_libraries(gcm_mpi_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
+
+# tmp
+add_executable(tmp src/test/sequence/gcmMatrices.cpp src/test/sequence/sequenceTestMain.cpp)
+target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})

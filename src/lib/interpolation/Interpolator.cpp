@@ -1,5 +1,7 @@
-#include <lib/nodes/IdealElastic2DNode.hpp>
-#include "Interpolator.hpp"
+#include "lib/nodes/IdealElastic1DNode.hpp"
+#include "lib/nodes/IdealElastic2DNode.hpp"
+#include "lib/nodes/IdealElastic3DNode.hpp"
+#include "lib/interpolation/Interpolator.hpp"
 
 using namespace gcm;
 
@@ -43,19 +45,10 @@ void Interpolator<TVector>::interpolate(TVector &res, std::vector<TVector> &src,
 	}
 }
 
-template class Interpolator<linal::Vector<1>>;
 template class Interpolator<linal::Vector<2>>;
-template class Interpolator<linal::Vector<3>>;
-template class Interpolator<linal::Vector<4>>;
 template class Interpolator<linal::Vector<5>>;
-template class Interpolator<linal::Vector<6>>;
-template class Interpolator<linal::Vector<7>>;
-template class Interpolator<linal::Vector<8>>;
 template class Interpolator<linal::Vector<9>>;
-template class Interpolator<linal::Vector<10>>;
-template class Interpolator<linal::Vector<11>>;
-template class Interpolator<linal::Vector<12>>;
-template class Interpolator<linal::Vector<13>>;
 
-
+template class Interpolator<linal::Vector<2, IdealElastic1DContainer>>;
 template class Interpolator<linal::Vector<5, IdealElastic2DContainer>>;
+template class Interpolator<linal::Vector<9, IdealElastic3DContainer>>;

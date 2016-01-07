@@ -29,17 +29,18 @@ namespace gcm {
 	 * @tparam M size of vec{u}
 	 * @tparam Dimensionality number of dimensions, usually from 1 to 3
 	 */
-	template<int M, int Dimensionality>
+	template<int TM, int Dimensionality>
 	class GcmMatrices {
 	public:
+		static const int M = TM; /// size of corresponding vector
 		static const int DIMENSIONALITY = Dimensionality; /// number of dimensions (stages)
 		/** @return GcmMatrix along specified direction */
-		const GcmMatrix<M>&A(const int direction) const {
+		const GcmMatrix<TM>&A(const int direction) const {
 			return m[direction];
 		};
 	protected:
 		// TODO - logic around random basis here
-		GcmMatrix<M> m[DIMENSIONALITY];
+		GcmMatrix<TM> m[DIMENSIONALITY];
 	};
 }
 

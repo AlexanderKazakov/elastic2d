@@ -1,6 +1,9 @@
 #include <fstream>
 #include <algorithm>
+
+#include "lib/model/IdealElastic1DModel.hpp"
 #include "lib/model/IdealElastic2DModel.hpp"
+#include "lib/model/IdealElastic3DModel.hpp"
 #include "lib/grid/StructuredGrid.hpp"
 
 using namespace gcm;
@@ -21,6 +24,7 @@ void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequen
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 
 	X = task.X; // number of nodes along x direction
+	Z = task.Z; // number of nodes along z direction
 
 	// we divide the grid among processes equally along y-axis
 	int numberOfNodesAlongYPerOneCore = (int) std::round((real) task.Y / numberOfWorkers);
@@ -31,10 +35,11 @@ void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequen
 
 	h[0] = task.xLength / (X - 1); /* x spatial step */
 	h[1] = task.yLength / (task.Y - 1); /* y spatial step */
+	h[2] = task.zLength / (Z - 1); /* z spatial step */
 
 	real c0 = sqrt((task.lambda0 + 2 * task.mu0) / task.rho0); // default acoustic velocity
 
-	tau = task.CourantNumber * fmin(h[0], h[1]) / c0; // time step
+	tau = task.CourantNumber * fmin(h[0], fmin(h[1], h[2])) / c0; // time step
 
 	T = task.numberOfSnaps * tau; // required time
 	if (task.numberOfSnaps == 0) T = task.T;
@@ -208,8 +213,8 @@ void StructuredGrid<TModel>::_snapshot(int step) const {
 template<class TModel>
 void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	auto oldMatrix = std::static_pointer_cast<IdealElastic2DGcmMatrices>(defaultMatrix);
-	auto newRheologyMatrix = std::make_shared<IdealElastic2DGcmMatrices>(rho2rho0 * oldMatrix->rho,
+	auto oldMatrix = defaultMatrix;
+	auto newRheologyMatrix = std::make_shared<typename TModel::GcmMatrices>(rho2rho0 * oldMatrix->rho,
 	                                                       lambda2lambda0 * oldMatrix->lambda,
 	                                                       mu2mu0 * oldMatrix->mu);
 
@@ -378,4 +383,6 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 }
 
 
+//template class StructuredGrid<IdealElastic1DModel>;
 template class StructuredGrid<IdealElastic2DModel>;
+template class StructuredGrid<IdealElastic3DModel>;

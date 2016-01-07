@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "lib/model/IdealElastic2DModel.hpp"
 
 #include "lib/solver/MPISolver.hpp"
 

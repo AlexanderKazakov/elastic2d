@@ -16,6 +16,11 @@ namespace gcm {
 		typedef linal::Vector<TM, Container> Vector;
 		typedef linal::Matrix<TM, TM> Matrix;
 
+		template<typename MatrixContainer>
+		Node<TM, Container>& operator=(const gcm::linal::Matrix<TM, 1, MatrixContainer>& vector) {
+			*(static_cast<linal::Matrix<TM, 1, Container>*>(this)) = vector;
+			return (*this);
+		};
 	};
 }
 

@@ -1,4 +1,5 @@
 #include "lib/linal/Matrix.hpp"
+#include "lib/linal/Vector.hpp"
 #include "lib/linal/Matrix33.hpp"
 #include "lib/linal/Vector3.hpp"
 #include "lib/linal/RotationMatrix.hpp"

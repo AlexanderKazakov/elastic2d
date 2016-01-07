@@ -3,14 +3,6 @@
 
 #include "lib/util/DataBus.hpp"
 
-#include "test/gcmMatrices.cpp"
-#include "test/TestNode.cpp"
-#include "test/TestInterpolator.cpp"
-#include "test/TestMesh.cpp"
-#include "test/TestSolver.cpp"
-#include "test/assertions.cpp"
-#include "test/linal.cpp"
-
 using namespace gcm;
 
 int main(int argc, char **argv) {

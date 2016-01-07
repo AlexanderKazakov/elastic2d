@@ -11,7 +11,7 @@ using namespace gcm::linal;
 
 TEST(Interpolator, Const)
 {
-	const int N = 7;
+	const int N = 5;
 	Interpolator<Vector<N>> interpolator;
 	for (int i = 0; i <= MAX_ACCURACY_ORDER; i++) {
 		Vector<N> res;
@@ -76,7 +76,7 @@ TEST(Interpolator, Quadratic)
 
 TEST(Interpolator, MinMax)
 {
-	const int N = 4;
+	const int N = 2;
 	Interpolator<Vector<N>> interpolator;
 	Vector<N> res;
 	std::vector<Vector<N>> src(3);
@@ -91,7 +91,7 @@ TEST(Interpolator, MinMax)
 
 TEST(Interpolator, MinMaxFifthOrder)
 {
-	const int N = 13;
+	const int N = 2;
 	Interpolator<Vector<N>> interpolator;
 
 	// minmax interpolation
@@ -116,7 +116,7 @@ TEST(Interpolator, MinMaxFifthOrder)
 
 TEST(Interpolator, TenthOrder)
 {
-	const int N = 3;
+	const int N = 2;
 	auto func = [](real x) {
 		return x * x * x * x * x * x * x * x * x * x + 4 * x * x * x * x * x * x * x * x * x -
 		       25 * x * x * x * x * x * x * x + 2 * x * x * x * x * x - 3 * x * x + 5;
@@ -137,7 +137,7 @@ TEST(Interpolator, TenthOrder)
 
 TEST(Interpolator, Exceptions)
 {
-	const int N = 11;
+	const int N = 5;
 	Interpolator<Vector<N>> interpolator;
 	Vector<N> res;
 	std::vector<Vector<N>> src(2);
