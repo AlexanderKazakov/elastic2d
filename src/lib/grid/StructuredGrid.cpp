@@ -1,5 +1,6 @@
 #include <fstream>
 #include <algorithm>
+#include <limits>
 
 #include "lib/model/IdealElastic1DModel.hpp"
 #include "lib/model/IdealElastic2DModel.hpp"
@@ -9,15 +10,7 @@
 using namespace gcm;
 
 template<class TModel>
-void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequence) {
-
-	rank = MPI::COMM_WORLD.Get_rank();
-	numberOfWorkers = MPI::COMM_WORLD.Get_size();
-
-	if (forceSequence) {
-		rank = 0;
-		numberOfWorkers = 1;
-	}
+void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 
 	/* ------------------ Properties and conditions ------------------ */
 
@@ -33,19 +26,13 @@ void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequen
 
 	globalY = task.Y;
 
-	h[0] = task.xLength / (X - 1); /* x spatial step */
-	h[1] = task.yLength / (task.Y - 1); /* y spatial step */
-	h[2] = task.zLength / (Z - 1); /* z spatial step */
+	h[0] = task.xLength / (X - 1);
+	h[1] = task.yLength / (task.Y - 1);
+	h[2] = task.zLength / (Z - 1);
 
-	real c0 = sqrt((task.lambda0 + 2 * task.mu0) / task.rho0); // default acoustic velocity
-
-	tau = task.CourantNumber * fmin(h[0], fmin(h[1], h[2])) / c0; // time step
-
-	T = task.numberOfSnaps * tau; // required time
-	if (task.numberOfSnaps == 0) T = task.T;
-
-	initialConditions = task.initialConditions;
-	borderConditions = task.borderConditions;
+	if (X == 1) h[0] = std::numeric_limits<real>::max();
+	if (Y == 1) h[1] = std::numeric_limits<real>::max();
+	if (Z == 1) h[2] = std::numeric_limits<real>::max();
 
 	/* ------------------ Properties and conditions (end) ------------------ */
 
@@ -59,6 +46,7 @@ void StructuredGrid<TModel>::initialize(const Task &task, const bool forceSequen
 	}
 
 	defaultMatrix = std::make_shared<typename TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
+	maximalLambda = defaultMatrix->getMaximalEigenvalue();
 	for (int y = 0; y < Y; ++y) {
 		for (int x = 0; x < X; ++x) {
 			(*this)(y, x).matrix = defaultMatrix;
@@ -95,129 +83,12 @@ void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const 
 }
 
 template<class TModel>
-void StructuredGrid<TModel>::snapshot(int step) const {
-	char buffer[50];
-	sprintf(buffer, "%s%02d%s%05d.vtk", "snaps/core", rank, "_snapshot", step);
-	std::fstream f(buffer, std::ios::out);
-	if (!f) {
-		std::cerr << "Unable to open file " << buffer << std::endl;
-		return;
-	}
-	f << "# vtk DataFile Version 3.0" << std::endl;
-	f << "U data" << std::endl;
-	f << "ASCII" << std::endl;
-	f << "DATASET STRUCTURED_POINTS" << std::endl;
-	f << "DIMENSIONS " << X << " " << Y << " 1" << std::endl;
-	f << "SPACING " << h[0] << " " << h[1] << " 1" << std::endl;
-	f << "ORIGIN " << "0 " << startY * h[1] << " 0" << std::endl;
-	f << "POINT_DATA " << X * Y << std::endl;
-
-	// TODO - will it work with floats? - No
-	f << "VECTORS V double" << std::endl;
-	for (int y = 0; y < Y; y++)
-		for (int x = 0; x < X; x++)
-			f << get(y, x).Vx << " " << get(y, x).Vy << " 0" << std::endl;
-
-	f << "SCALARS Sxx double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int y = 0; y < Y; y++)
-		for (int x = 0; x < X; x++)
-			f << get(y, x).Sxx << std::endl;
-
-	f << "SCALARS Sxy double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int y = 0; y < Y; y++)
-		for (int x = 0; x < X; x++)
-			f << get(y, x).Sxy << std::endl;
-
-	f << "SCALARS Syy double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int y = 0; y < Y; y++)
-		for (int x = 0; x < X; x++)
-			f << get(y, x).Syy << std::endl;
-
-	f << "SCALARS pressure double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int y = 0; y < Y; y++)
-		for (int x = 0; x < X; x++)
-			f << - (get(y, x).Sxx + get(y, x).Syy) / 2 << std::endl;
-
-	f.close();
-}
-
-
-template<typename T>
-static void put(std::fstream &f, const T value) {
-	union {
-		char buf[sizeof(T)];
-		T val;
-	} helper;
-	helper.val = value;
-	std::reverse(helper.buf, helper.buf + sizeof(T));
-	f.write(helper.buf, sizeof(T));
-}
-
-template<class TModel>
-void StructuredGrid<TModel>::_snapshot(int step) const {
-	char buffer[50];
-	sprintf(buffer, "%s%02d%s%05d.vtk", "snaps/core", rank, "_snapshot", step);
-	std::fstream f(buffer, std::ios::out);
-	if (!f) {
-		std::cerr << "Unable to open file " << buffer << std::endl;
-		return;
-	}
-	f << "# vtk DataFile Version 3.0" << std::endl;
-	f << "U data" << std::endl;
-	f << "BINARY" << std::endl;
-	f << "DATASET STRUCTURED_POINTS" << std::endl;
-	f << "DIMENSIONS " << X + 2 * accuracyOrder << " " << Y + 2 * accuracyOrder << " 1" << std::endl;
-	f << "SPACING " << h[0] << " " << h[1] << " 1" << std::endl;
-	f << "ORIGIN " << - accuracyOrder * h[0] << " "
-	<< (rank * (globalY / numberOfWorkers + 2 * accuracyOrder) - accuracyOrder) * h[1]
-	<< " 0" << std::endl;
-	f << "POINT_DATA " << (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) << std::endl;
-
-	f << "SCALARS Vx double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].Vx);
-	}
-
-	f << "SCALARS Vy double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].Vy);
-	}
-
-	f << "SCALARS Sxx double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].Sxx);
-	}
-
-	f << "SCALARS Sxy double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].Sxy);
-	}
-
-	f << "SCALARS Syy double" << std::endl;
-	f << "LOOKUP_TABLE default" << std::endl;
-	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
-		put(f, nodes[i].Syy);
-	}
-
-	f.close();
-}
-
-template<class TModel>
 void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
 	auto oldMatrix = defaultMatrix;
 	auto newRheologyMatrix = std::make_shared<typename TModel::GcmMatrices>(rho2rho0 * oldMatrix->rho,
 	                                                       lambda2lambda0 * oldMatrix->lambda,
 	                                                       mu2mu0 * oldMatrix->mu);
-
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
 			if ((y + startY) * h[1] >= 0.5) {
@@ -226,14 +97,7 @@ void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& la
 		}
 	}
 
-	const real defaultAcousticVelocity = sqrt((oldMatrix->lambda + 2 * oldMatrix->mu) /
-			                                          oldMatrix->rho);
-	const real newAcousticVelocity = sqrt((newRheologyMatrix->lambda + 2 * newRheologyMatrix->mu) / 
-			                                      newRheologyMatrix->rho);
-
-	if (newAcousticVelocity > defaultAcousticVelocity) {
-		tau /= newAcousticVelocity / defaultAcousticVelocity;
-	}
+	maximalLambda = fmax(maximalLambda, newRheologyMatrix->getMaximalEigenvalue());
 }
 
 template<class TModel>
@@ -380,6 +244,11 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 	} else {
 		throw("Unknown initial condition");
 	}
+}
+
+template<class TModel>
+real StructuredGrid<TModel>::getMinimalSpatialStep() const {
+	return fmin(h[0], fmin(h[1], h[2]));
 }
 
 

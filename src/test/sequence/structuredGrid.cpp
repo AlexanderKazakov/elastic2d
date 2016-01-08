@@ -24,8 +24,8 @@ TEST(StructuredGrid, initialize) {
 	structuredGrid.initialize(task);
 	ASSERT_NEAR(structuredGrid.getH0ForTest(), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(structuredGrid.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(structuredGrid.getTauForTest(), 0.808290377, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(structuredGrid.getTForTest(), 4.0414518843, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.X; x++) {
 		for (int y = 0; y < task.Y; y++) {
 			for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {

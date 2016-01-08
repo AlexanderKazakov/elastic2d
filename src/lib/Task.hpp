@@ -30,6 +30,11 @@ namespace gcm {
 		int numberOfSnaps = 0; // how many snaps to calculate
 		real T = 0.0; // optional, required time if (numberOfSnaps == 0)
 
+		bool splittingSecondOrder = false;
+		bool enableSnapshotting = false;
+		bool forceSequence = false; // if true make the grid thinking that the number of
+		// processes is one, even if it isn's so actually (for testing purposes)
+
 		InitialConditions initialConditions = InitialConditions::Zero;
 
 		std::map <std::string, BorderConditions> borderConditions = {

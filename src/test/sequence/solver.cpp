@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "lib/model/IdealElastic2DModel.hpp"
 
-#include "lib/solver/MPISolver.hpp"
+#include "lib/model/IdealElastic2DModel.hpp"
+#include "lib/solver/MpiStructuredSolver.hpp"
 
 using namespace gcm;
 
@@ -24,11 +24,10 @@ TEST(Solver, StageXForward)
 
 		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-		mesh->initialize(task);
-		newMesh->initialize(task);
+		MpiStructuredSolver<IdealElastic2DModel> solver;
+		solver.initialize(task, mesh, newMesh);
 		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, 2);
 		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
-		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -37,51 +36,10 @@ TEST(Solver, StageXForward)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			solver.stage(0, mesh->getTauForTest());
+			solver.stage(0, solver.getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
-}
-
-
-TEST(Solver, StageXBackward)
-{
-/*
-	for (int accuracyOrder = 2; accuracyOrder < 20; accuracyOrder++) {
-		Task task;
-		task.accuracyOrder = accuracyOrder;
-		task.lambda0 = 2.0;
-		task.mu0 = task.lambda0 / 2; // s-wave two times slower than p-wave
-		task.CourantNumber = 2.0; // so Courant for s-wave is 1.0
-		task.rho0 = 4.0;
-		task.X = 10;
-		task.Y = 10;
-		task.xLength = 2.0;
-		task.yLength = 3.0;
-		task.numberOfSnaps = 1;
-		task.T = 100.0;
-		task.initialConditions = InitialConditions::SWaveXBackward;
-
-		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
-		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-		mesh->initialize(task);
-		newMesh->initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(0, task.X - 3).u;
-		IdealElastic2DModel::Node::Vector zero; zero.createVector({0, 0, 0, 0, 0});
-		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
-		for (int i = 0; i < 7; i++) {
-			for (int y = 0; y < task.Y; y++) {
-				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(y, x).u,
-					          (x == task.X - 4 - i || x == task.X - 3 - i) ? pWave : zero)
-					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
-				}
-			}
-			solver.stage(0, mesh->getTauForTest());
-			std::swap(mesh, newMesh); // because solver swap them internally
-		}
-	}
-*/
 }
 
 
@@ -104,11 +62,10 @@ TEST(Solver, StageY)
 
 		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-		mesh->initialize(task);
-		newMesh->initialize(task);
+		MpiStructuredSolver<IdealElastic2DModel> solver;
+		solver.initialize(task, mesh, newMesh);
 		IdealElastic2DModel::Node::Vector pWave = mesh->getNodeForTest(2, 0);
 		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
-		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -117,7 +74,7 @@ TEST(Solver, StageY)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			solver.stage(1, mesh->getTauForTest());
+			solver.stage(1, solver.getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
@@ -143,11 +100,10 @@ TEST(Solver, StageYSxx)
 
 		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-		mesh->initialize(task);
-		newMesh->initialize(task);
+		MpiStructuredSolver<IdealElastic2DModel> solver;
+		solver.initialize(task, mesh, newMesh);
 		IdealElastic2DModel::Node::Vector sxxOnly = mesh->getNodeForTest(task.Y / 2, task.X / 2);
 		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
-		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -156,7 +112,7 @@ TEST(Solver, StageYSxx)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
-			solver.stage(1, mesh->getTauForTest());
+			solver.stage(1, solver.getTauForTest());
 			std::swap(mesh, newMesh); // because solver swap them internally
 		}
 	}
@@ -181,10 +137,9 @@ TEST(Solver, calculate)
 
 	StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 	StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-	mesh->initialize(task);
-	newMesh->initialize(task);
+	MpiStructuredSolver<IdealElastic2DModel> solver;
+	solver.initialize(task, mesh, newMesh);
 	IdealElastic2DModel::Node::Vector sWave = mesh->getNodeForTest(3, task.X / 2);
-	MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 	solver.calculate();
 	ASSERT_EQ(sWave, mesh->getNodeForTest(22, task.X / 2));
 }
@@ -211,8 +166,8 @@ TEST(Solver, TwoLayersDifferentRho)
 
 		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-		mesh->initialize(task);
-		newMesh->initialize(task);
+		MpiStructuredSolver<IdealElastic2DModel> solver;
+		solver.initialize(task, mesh, newMesh);
 
 		real rho2rho0 = rho2rho0Initial * pow(2, i);
 		real lambda2lambda0 = 1;
@@ -220,11 +175,9 @@ TEST(Solver, TwoLayersDifferentRho)
 		mesh->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 		newMesh->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
-
 		int leftNodeIndex = task.Y * 0.25;
 		IdealElastic2DNode init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
-		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		solver.calculate();
 
 		int rightNodeIndex = task.Y * 0.7;
@@ -284,8 +237,8 @@ TEST(Solver, TwoLayersDifferentE)
 
 		StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 		StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-		mesh->initialize(task);
-		newMesh->initialize(task);
+		MpiStructuredSolver<IdealElastic2DModel> solver;
+		solver.initialize(task, mesh, newMesh);
 
 		real rho2rho0 = 1;
 		real lambda2lambda0 = E2E0Initial * pow(2, i);
@@ -293,11 +246,9 @@ TEST(Solver, TwoLayersDifferentE)
 		mesh->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 		newMesh->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
-
 		int leftNodeIndex = task.Y * 0.25;
 		IdealElastic2DNode init = mesh->getNodeForTest(leftNodeIndex, task.X / 2);
 
-		MPISolver<IdealElastic2DModel> solver(mesh, newMesh);
 		solver.calculate();
 
 		int rightNodeIndex = task.Y * 0.7;

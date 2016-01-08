@@ -11,23 +11,49 @@ namespace gcm {
 	class IdealElastic2DContainer {
 	public:
 		static const int SIZE = 5;
+		static const int V_SIZE = 2;
+		static const int S_SIZE = 3;
 		union {
 			real values[SIZE];
 			struct {
-				real Vx;
-				real Vy;
-				real Sxx;
-				real Sxy;
-				real Syy;
+				union {
+					real V[V_SIZE];
+					struct {
+						real Vx;
+						real Vy;
+					};
+				};
+				union {
+					real S[S_SIZE];
+					struct {
+						real Sxx;
+						real Sxy;
+						real Syy;
+					};
+				};
 			};
 		};
 	};
 
 	class IdealElastic2DNode : public Node<5, IdealElastic2DContainer> {
 	public:
-		static MPI::Datatype MPI_NODE_TYPE; /// Special type for node for MPI connection
+		static MPI::Datatype MPI_NODE_TYPE; // Special type for node for MPI connection
 
-		std::shared_ptr<GcmMatrices<M,2>> matrix; /// pointer to GcmMatrices for the node
+		std::shared_ptr<GcmMatrices<M,2>> matrix; // pointer to GcmMatrices for the node
+
+		real getPressure() const {
+			return - (Sxx + Syy) / 2;
+		}
+
+		void setPressure(const real& pressure) {
+			Sxx = - pressure; Syy = - pressure;
+		}
+
+		/*static struct {*/
+		static const std::map<const std::string /* name */, const std::pair<const int /* index */, const int /* size */>> VECTORS;
+		static const std::map<const std::string /* name */, const int /* index */> SCALARS;
+		/*} Map; // for snapshotters*/
+
 
 		// TODO - can it be moved to Node<> or further?
 		template<typename Container>

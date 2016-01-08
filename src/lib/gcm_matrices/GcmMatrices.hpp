@@ -18,6 +18,13 @@ namespace gcm {
 		linal::Matrix<M,M> U; // matrix of left eigenvectors (aka eigenstrings)
 		linal::Matrix<M,M> U1; // matrix of right eigenvectors
 		linal::Matrix<M,M> L; // diagonal eigenvalue matrix
+		real getMaximalEigenvalue() const {
+			real ans = 0.0;
+			for (int i = 0; i < M; i++) {
+				ans = fmax(ans, fabs(L(i, i)));
+			}
+			return ans;
+		};
 	};
 
 	/**
@@ -32,15 +39,23 @@ namespace gcm {
 	template<int TM, int Dimensionality>
 	class GcmMatrices {
 	public:
-		static const int M = TM; /// size of corresponding vector
-		static const int DIMENSIONALITY = Dimensionality; /// number of dimensions (stages)
+		static const int M = TM; // size of corresponding vector
+		static const int DIMENSIONALITY = Dimensionality; // number of dimensions (stages)
 		/** @return GcmMatrix along specified direction */
-		const GcmMatrix<TM>&A(const int direction) const {
+		const GcmMatrix<TM>& A(const int direction) const {
 			return m[direction];
+		};
+		/** @return maximal in modulus eigenvalue of matrices from all directions */
+		real getMaximalEigenvalue() const {
+			real ans = 0.0;
+			for (int i = 0; i < Dimensionality; i++) {
+				ans = fmax(ans, A(i).getMaximalEigenvalue());
+			}
+			return ans;
 		};
 	protected:
 		// TODO - logic around random basis here
-		GcmMatrix<TM> m[DIMENSIONALITY];
+		GcmMatrix<TM> m[Dimensionality];
 	};
 }
 

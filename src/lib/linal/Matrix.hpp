@@ -30,12 +30,12 @@ namespace gcm
         template<int TM, int TN>
         class DefaultMatrixContainer {
         public:
-            static const int SIZE = TM * TN; /// size of storage in units of gcm::real
+            static const int SIZE = TM * TN; // size of storage in units of gcm::real
             real values[SIZE];
         };
 
         struct Matrix22Container {
-            static const int SIZE = 2 * 2; /// size of storage in units of gcm::real
+            static const int SIZE = 2 * 2; // size of storage in units of gcm::real
             union {
                 real values[SIZE];
                 struct {
@@ -76,8 +76,8 @@ namespace gcm
              */
             int getIndex(const int i, const int j) const;
         public:
-            static const int M = TM; /// number of strings
-            static const int N = TN; /// number of columns
+            static const int M = TM; // number of strings
+            static const int N = TN; // number of columns
             /** Default constructor. */
             Matrix();
 

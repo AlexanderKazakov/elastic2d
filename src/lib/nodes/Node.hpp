@@ -21,6 +21,7 @@ namespace gcm {
 			*(static_cast<linal::Matrix<TM, 1, Container>*>(this)) = vector;
 			return (*this);
 		};
+
 	};
 }
 

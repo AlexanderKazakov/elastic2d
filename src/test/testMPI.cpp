@@ -4,7 +4,7 @@
 #include "lib/util/DataBus.hpp"
 #include "lib/Task.hpp"
 #include "lib/grid/StructuredGrid.hpp"
-#include "lib/solver/MPISolver.hpp"
+#include "lib/solver/MpiStructuredSolver.hpp"
 #include "lib/nodes/IdealElastic3DNode.hpp"
 #include "lib/nodes/IdealElastic2DNode.hpp"
 #include "lib/nodes/IdealElastic1DNode.hpp"
@@ -92,19 +92,19 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	task.initialConditions = InitialConditions::Explosion;
 
 	// calculate in sequence
+	task.forceSequence = true;
 	StructuredGrid<IdealElastic2DModel> *meshSeq = new StructuredGrid<IdealElastic2DModel>();
 	StructuredGrid<IdealElastic2DModel> *newMeshSeq = new StructuredGrid<IdealElastic2DModel>();
-	meshSeq->initialize(task, true);
-	newMeshSeq->initialize(task, true);
-	MPISolver<IdealElastic2DModel> sequenceSolver(meshSeq, newMeshSeq);
+	MpiStructuredSolver<IdealElastic2DModel> sequenceSolver;
+	sequenceSolver.initialize(task, meshSeq, newMeshSeq);
 	sequenceSolver.calculate();
 
 	// calculate in parallel
+	task.forceSequence = false;
 	StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
 	StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
-	mesh->initialize(task);
-	newMesh->initialize(task);
-	MPISolver<IdealElastic2DModel> mpiSolver(mesh, newMesh);
+	MpiStructuredSolver<IdealElastic2DModel> mpiSolver;
+	mpiSolver.initialize(task, mesh, newMesh);
 	mpiSolver.calculate();
 
 	// check that parallel result is equal to sequence result

@@ -1,30 +1,43 @@
 #include "lib/model/IdealElastic1DModel.hpp"
 #include "lib/model/IdealElastic2DModel.hpp"
 #include "lib/model/IdealElastic3DModel.hpp"
-#include "lib/solver/MPISolver.hpp"
+#include "MpiStructuredSolver.hpp"
 #include "lib/util/DataBus.hpp"
 
 using namespace gcm;
 
 template<class TModel>
-MPISolver<TModel>::MPISolver(StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh) :
-		mesh(mesh), newMesh(newMesh) {}
+void MpiStructuredSolver<TModel>::initialize(const Task &task, StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh) {
+
+	this->mesh = mesh;
+	this->mesh->initialize(task);
+	this->newMesh = newMesh;
+	this->newMesh->initialize(task);
+	CourantNumber = task.CourantNumber;
+	tau = CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda(); // time step
+	T = task.numberOfSnaps * tau; // required time
+	if (task.numberOfSnaps == 0) T = task.T;
+	splittingSecondOrder = task.splittingSecondOrder;
+	snapshotter = new VtkTextStructuredSnapshotter<TModel>();
+	snapshotter->initialize(mesh, task.enableSnapshotting);
+}
 
 template<class TModel>
-void MPISolver<TModel>::calculate() {
+void MpiStructuredSolver<TModel>::calculate() {
+	tau = CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda(); // time step
 	exchangeNodesWithNeighbors();
 	real currentTime = 0.0; int step = 0;
-	if (makeSnapshots) mesh->snapshot(step);
-	while(currentTime < mesh->T) {
+	snapshotter->snapshot(step);
+	while(currentTime < T) {
 		if (splittingSecondOrder) {
 			switch (TModel::DIMENSIONALITY) {
 				case 1:
-					stage(0, mesh->tau);
+					stage(0, tau);
 					break;
 				case 2:
-					stage(0, mesh->tau / 2);
-					stage(1, mesh->tau);
-					stage(0, mesh->tau / 2);
+					stage(0, tau / 2);
+					stage(1, tau);
+					stage(0, tau / 2);
 					break;
 				case 3:
 					THROW_UNSUPPORTED("TODO splitting second order in 3D");
@@ -32,16 +45,16 @@ void MPISolver<TModel>::calculate() {
 			}
 		} else {
 			for (int s = 0; s < TModel::DIMENSIONALITY; s++) {
-				stage(s, mesh->tau);
+				stage(s, tau);
 			}
 		}
-		currentTime += mesh->tau; step += 1;
-		if (makeSnapshots) mesh->snapshot(step);
+		currentTime += tau; step += 1;
+		snapshotter->snapshot(step);
 	}
 }
 
 template<class TModel>
-void MPISolver<TModel>::stage(const int s, const real& timeStep) {
+void MpiStructuredSolver<TModel>::stage(const int s, const real& timeStep) {
 
 	mesh->applyBorderConditions();
 
@@ -65,10 +78,10 @@ void MPISolver<TModel>::stage(const int s, const real& timeStep) {
 }
 
 template<class TModel>
-void MPISolver<TModel>::exchangeNodesWithNeighbors() {
+void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
 
-	int rank = mesh->rank;
-	int numberOfWorkers = mesh->numberOfWorkers;
+	int rank = mesh->getRank();
+	int numberOfWorkers = mesh->getNumberOfWorkers();
 	if (numberOfWorkers == 1) return;
 
 	int sizeOfBuffer = mesh->accuracyOrder * (mesh->X + 2 * mesh->accuracyOrder);
@@ -78,10 +91,12 @@ void MPISolver<TModel>::exchangeNodesWithNeighbors() {
 		MPI_Sendrecv(&(mesh->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
 		             &(mesh->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+
 	} else if (rank == numberOfWorkers - 1) {
 		MPI_Sendrecv(&(mesh->nodes[sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
 		             mesh->nodes, sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+
 	} else {
 		MPI_Sendrecv(&(mesh->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
 			     	 &(mesh->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
@@ -92,6 +107,6 @@ void MPISolver<TModel>::exchangeNodesWithNeighbors() {
 	}
 }
 
-//template class MPISolver<IdealElastic1DModel>;
-template class MPISolver<IdealElastic2DModel>;
-template class MPISolver<IdealElastic3DModel>;
+//template class MpiStructuredSolver<IdealElastic1DModel>;
+template class MpiStructuredSolver<IdealElastic2DModel>;
+template class MpiStructuredSolver<IdealElastic3DModel>;

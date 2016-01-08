@@ -25,7 +25,7 @@ done
 rm -rf snaps
 mkdir snaps
 echo "running calculation with $np processes"
-mpirun -np $np ./build/gcm
+mpirun -np $np ./build/gcm_exe
 
 if (($np == 1 && run_paraview)); then
     echo "running paraview"

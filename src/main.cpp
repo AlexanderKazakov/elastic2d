@@ -1,7 +1,7 @@
-#include <lib/model/IdealElastic2DModel.hpp>
+#include "lib/model/IdealElastic2DModel.hpp"
 #include "lib/grid/StructuredGrid.hpp"
 #include "lib/util/DataBus.hpp"
-#include "lib/solver/MPISolver.hpp"
+#include "lib/solver/MpiStructuredSolver.hpp"
 
 using namespace gcm;
 
@@ -12,11 +12,8 @@ int main(int argc, char** argv) {
 	StructuredGrid<IdealElastic2DModel> mesh1;
 	StructuredGrid<IdealElastic2DModel> mesh2;
 	Task task;
-	mesh1.initialize(task);
-	mesh2.initialize(task);
-	MPISolver<IdealElastic2DModel> solver(&mesh1, &mesh2);
-	solver.splittingSecondOrder = true;
-	solver.makeSnapshots = true;
+	MpiStructuredSolver<IdealElastic2DModel> solver;
+	solver.initialize(task, &mesh1, &mesh2);
 
 	solver.calculate();
 
