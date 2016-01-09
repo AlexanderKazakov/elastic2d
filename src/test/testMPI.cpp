@@ -93,24 +93,21 @@ TEST(MPI, MPISolverVsSequenceSolver)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	StructuredGrid<IdealElastic2DModel> *meshSeq = new StructuredGrid<IdealElastic2DModel>();
-	StructuredGrid<IdealElastic2DModel> *newMeshSeq = new StructuredGrid<IdealElastic2DModel>();
 	MpiStructuredSolver<IdealElastic2DModel> sequenceSolver;
-	sequenceSolver.initialize(task, meshSeq, newMeshSeq);
+	sequenceSolver.initialize(task);
 	sequenceSolver.calculate();
 
 	// calculate in parallel
 	task.forceSequence = false;
-	StructuredGrid<IdealElastic2DModel> *mesh = new StructuredGrid<IdealElastic2DModel>();
-	StructuredGrid<IdealElastic2DModel> *newMesh = new StructuredGrid<IdealElastic2DModel>();
 	MpiStructuredSolver<IdealElastic2DModel> mpiSolver;
-	mpiSolver.initialize(task, mesh, newMesh);
+	mpiSolver.initialize(task);
 	mpiSolver.calculate();
 
 	// check that parallel result is equal to sequence result
-	for (int y = 0; y < mesh->getYForTest(); y++) {
-		for (int x = 0; x < mesh->getXForTest(); x++) {
-			ASSERT_EQ(mesh->getNodeForTest(y, x), meshSeq->getNodeForTest(y + mesh->getStartYForTest(), x));
+	for (int x = 0; x < mpiSolver.getMesh()->getXForTest(); x++) {
+		for (int y = 0; y < mpiSolver.getMesh()->getYForTest(); y++) {
+			ASSERT_EQ(mpiSolver.getMesh()->getNodeForTest(x, y, 0),
+			          sequenceSolver.getMesh()->getNodeForTest(x + mpiSolver.getMesh()->getStartXForTest(), y, 0));
 		}
 	}
 }

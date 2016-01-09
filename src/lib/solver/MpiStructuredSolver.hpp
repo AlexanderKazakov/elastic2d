@@ -11,7 +11,7 @@ namespace gcm {
 	class MpiStructuredSolver {
 	public:
 
-		void initialize(const Task& task, StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh);
+		void initialize(const Task& task);
 
 		/**
 		 * Perform calculation of the task
@@ -45,6 +45,10 @@ namespace gcm {
 		const real &getTauForTest() const { return tau; };
 
 		const real &getTForTest() const { return T; };
+
+		StructuredGrid<TModel> *getMesh() const { return mesh; }
+
+		StructuredGrid<TModel> *getNewMesh() const { return newMesh; }
 
 		/* ---------------- For testing purposes (end) ---------------- */
 

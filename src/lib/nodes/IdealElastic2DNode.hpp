@@ -35,6 +35,7 @@ namespace gcm {
 		};
 	};
 
+	// TODO - why size of the node is 56 bytes?
 	class IdealElastic2DNode : public Node<5, IdealElastic2DContainer> {
 	public:
 		static MPI::Datatype MPI_NODE_TYPE; // Special type for node for MPI connection

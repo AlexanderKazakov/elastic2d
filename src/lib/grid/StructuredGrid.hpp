@@ -28,7 +28,8 @@ namespace gcm {
 		int X = 0; // number of nodes along x direction
 		int Y = 0; // number of nodes along y direction of this grid (on this core)
 		int Z = 0; // number of nodes along z direction
-		int globalY = 0; // number of nodes along y direction of all meshes (all cores)
+		int globalX = 0; // number of nodes along x direction of all meshes (from all cores)
+		int startX = 0; // global x-index of first real node of the grid
 
 		real h[3] = {0.0,  /* x spatial step */
 		             0.0,  /* y spatial step */
@@ -36,7 +37,6 @@ namespace gcm {
 
 		/* ------------------ Properties and conditions (end) ------------------ */
 
-		int startY = 0; // global y-index of first real node of the grid
 
 		/* GcmMatrices that is common for majority of nodes */
 		std::shared_ptr<typename TModel::GcmMatrices> defaultMatrix;
@@ -48,21 +48,23 @@ namespace gcm {
 		/**
 		 * Operator to iterate relatively to real nodes.
 		 * Read / write access
-		 * @param y y index < Y
 		 * @param x x index < X
+		 * @param y y index < Y
+		 * @param z z index < Z
 		 */
-		inline Node &operator()(const int y, const int x) {
-			return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
+		inline Node &operator()(const int x, const int y, const int z) {
+			return nodes[(2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder) + (2 * accuracyOrder + Z) * (y + accuracyOrder) + (z + accuracyOrder)];
 		};
 
 		/**
 		 * Operator to iterate relatively real nodes.
 		 * Read only access
-		 * @param y y index < Y
 		 * @param x x index < X
+		 * @param y y index < Y
+		 * @param z z index < Z
 		 */
-		inline const Node &get(const int y, const int x) const {
-			return nodes[(2 * accuracyOrder + X) * (y + accuracyOrder) + (x + accuracyOrder)];
+		inline const Node &get(const int x, const int y, const int z) const {
+			return nodes[(2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder) + (2 * accuracyOrder + Z) * (y + accuracyOrder) + (z + accuracyOrder)];
 		};
 
 		/* Equal-distance spatial interpolator */
@@ -79,28 +81,26 @@ namespace gcm {
 		 * Interpolated value for k-th point in vector %dx are
 		 * stored in k-th column of returned Matrix.
 		 * @param stage direction
-		 * @param y y-index of the reference node
 		 * @param x x-index of the reference node
+		 * @param y y-index of the reference node
+		 * @param z z-index of the reference node
 		 * @param dx Vector of distances from reference node on which
 		 * values should be interpolated
 		 * @return Matrix with interpolated nodal values in columns
 		 */
 		Matrix interpolateValuesAround
-				(const int stage, const int y, const int x, const Vector& dx) const;
+				(const int stage, const int x, const int y, const int z, const Vector& dx) const;
 
 		/**
 		 * Place in src nodal values which are necessary for
 		 * interpolation in specified point. The number of placed
 		 * in values is equal to src.size()
 		 */
-		void findSourcesForInterpolation(const int stage, const int y, const int x,
+		void findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
 		                                 const real &dx, std::vector<Vector>& src) const;
 
 		friend class VtkTextStructuredSnapshotter<TModel>;
 		friend class MpiStructuredSolver<TModel>;
-		// TODO - replace after implementing iterator
-		friend class Grid;
-		// TODO (end)
 
 		/* ---------------- For testing purposes ---------------- */
 	public:
@@ -112,9 +112,9 @@ namespace gcm {
 
 		const int getXForTest() const { return X; };
 
-		const int getStartYForTest() const { return startY; };
+		const int getStartXForTest() const { return startX; };
 
-		const Node &getNodeForTest(const int y, const int x) const { return get(y, x); };
+		const Node &getNodeForTest(const int x, const int y, const int z) const { return get(x, y, z); };
 
 		/* Change rheology in some area
 		 *

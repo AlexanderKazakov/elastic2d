@@ -28,8 +28,10 @@ TEST(StructuredGrid, initialize) {
 	ASSERT_NEAR(structuredGrid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.X; x++) {
 		for (int y = 0; y < task.Y; y++) {
-			for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x)(i), 0.0);
+			for (int z = 0; z < task.Z; z++) {
+				for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
+					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z)(i), 0.0);
+				}
 			}
 		}
 	}
@@ -55,17 +57,17 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vx, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vx, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
 		std::vector<IdealElastic2DModel::Node::Vector> src(task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
-			structuredGrid.findSourcesForInterpolation(stage, 1, 1, dx, src);
+			structuredGrid.findSourcesForInterpolation(stage, 1, 1, 0, dx, src);
 			for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
 				ASSERT_EQ(src[0](i), (i == 2 || i == 4) ? 1.0 : 0.0);
 				ASSERT_EQ(src[1](i), 0.0);
@@ -95,16 +97,16 @@ TEST(StructuredGrid, interpolateValuesAround)
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vx, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Vy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Sxy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(y, x).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vx, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
 		IdealElastic2DModel::Node::Vector dx({-1, 1, -0.5, 0.5, 0});
-		IdealElastic2DModel::Node::Matrix matrix = structuredGrid.interpolateValuesAround(stage, 1, 1, dx);
+		IdealElastic2DModel::Node::Matrix matrix = structuredGrid.interpolateValuesAround(stage, 1, 1, 0, dx);
 
 		for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
 			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1

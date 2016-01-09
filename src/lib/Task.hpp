@@ -37,11 +37,13 @@ namespace gcm {
 
 		InitialConditions initialConditions = InitialConditions::Zero;
 
-		std::map <std::string, BorderConditions> borderConditions = {
-				{"left",   BorderConditions::NonReflection},
-				{"right",  BorderConditions::NonReflection},
-		        {"bottom", BorderConditions::NonReflection},
-		        {"up",     BorderConditions::NonReflection}};
+		std::map <Border, BorderConditions> borderConditions = {
+				{Border::X_LEFT,  BorderConditions::NonReflection},
+				{Border::X_RIGHT, BorderConditions::NonReflection},
+				{Border::Y_LEFT,  BorderConditions::NonReflection},
+				{Border::Y_RIGHT, BorderConditions::NonReflection},
+				{Border::Z_LEFT,  BorderConditions::NonReflection},
+				{Border::Z_RIGHT, BorderConditions::NonReflection}};
 
 		/* ------------------ Properties and conditions (end) ------------------ */
 

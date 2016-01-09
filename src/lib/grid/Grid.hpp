@@ -16,7 +16,7 @@ namespace gcm {
 		/* ------------------ Properties and conditions ------------------ */
 
 		InitialConditions initialConditions = InitialConditions::Zero;
-		std::map <std::string, BorderConditions> borderConditions;
+		std::map <Border, BorderConditions> borderConditions;
 
 		/* ------------------ Properties and conditions (end) ------------------ */
 

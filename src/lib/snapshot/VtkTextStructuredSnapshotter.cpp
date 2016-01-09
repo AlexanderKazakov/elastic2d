@@ -17,7 +17,7 @@ void VtkTextStructuredSnapshotter<TModel>::snapshotImpl(const std::string &fileN
 	snapshotFileStream << "DATASET STRUCTURED_POINTS" << std::endl;
 	snapshotFileStream << "DIMENSIONS " << structuredGrid->X << " " << structuredGrid->Y << " " << structuredGrid->Z << std::endl;
 	snapshotFileStream << "SPACING " << structuredGrid->h[0] << " " << structuredGrid->h[1] << " " << structuredGrid->h[2] << std::endl;
-	snapshotFileStream << "ORIGIN " << "0 " << structuredGrid->startY * structuredGrid->h[1] << " 0" << std::endl;
+	snapshotFileStream << "ORIGIN " << structuredGrid->startX * structuredGrid->h[0] << " 0 0" << std::endl;
 	snapshotFileStream << "POINT_DATA " << structuredGrid->X * structuredGrid->Y * structuredGrid->Z << std::endl;
 
 	for (auto& vec : TModel::Node::VECTORS) {
@@ -38,9 +38,11 @@ void VtkTextStructuredSnapshotter<TModel>::writeScalar(const std::string name, c
 	// TODO - will it work with floats?
 	snapshotFileStream << "SCALARS " << name << " double" << std::endl;
 	snapshotFileStream << "LOOKUP_TABLE default" << std::endl;
-	for (int y = 0; y < structuredGrid->Y; y++) {
-		for (int x = 0; x < structuredGrid->X; x++) {
-			snapshotFileStream << structuredGrid->get(y, x)(index) << std::endl;
+	for (int z = 0; z < structuredGrid->Z; z++) {
+		for (int y = 0; y < structuredGrid->Y; y++) {
+			for (int x = 0; x < structuredGrid->X; x++) {
+				snapshotFileStream << structuredGrid->get(x, y, z)(index) << std::endl;
+			}
 		}
 	}
 }
@@ -49,15 +51,17 @@ template<class TModel>
 void VtkTextStructuredSnapshotter<TModel>::writeVector(const std::string& name, const int index, const int size) {
 	// TODO - will it work with floats?
 	snapshotFileStream << "VECTORS " << name << " double" << std::endl;
-	for (int y = 0; y < structuredGrid->Y; y++) {
-		for (int x = 0; x < structuredGrid->X; x++) {
-			for (int i = index; i < index + size; i++) {
-				snapshotFileStream << structuredGrid->get(y, x)(i) << " ";
+	for (int z = 0; z < structuredGrid->Z; z++) {
+		for (int y = 0; y < structuredGrid->Y; y++) {
+			for (int x = 0; x < structuredGrid->X; x++) {
+				for (int i = index; i < index + size; i++) {
+					snapshotFileStream << structuredGrid->get(x, y, z)(i) << " ";
+				}
+				for (int i = index + size; i < index + VTK_VECTOR_SIZE; i++) {
+					snapshotFileStream << "0 "; // vtk recognize only vectors of size 3
+				}
+				snapshotFileStream << std::endl;
 			}
-			for (int i = index + size; i < index + VTK_VECTOR_SIZE; i++) {
-				snapshotFileStream << "0 "; // vtk recognize only vectors of size 3
-			}
-			snapshotFileStream << std::endl;
 		}
 	}
 }

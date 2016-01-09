@@ -7,11 +7,11 @@
 using namespace gcm;
 
 template<class TModel>
-void MpiStructuredSolver<TModel>::initialize(const Task &task, StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh) {
+void MpiStructuredSolver<TModel>::initialize(const Task &task) {
 	LOG_INFO("Start initialization");
-	this->mesh = mesh;
+	this->mesh = new StructuredGrid<TModel>();
+	this->newMesh = new StructuredGrid<TModel>();
 	this->mesh->initialize(task);
-	this->newMesh = newMesh;
 	this->newMesh->initialize(task);
 	CourantNumber = task.CourantNumber;
 	tau = CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda(); // time step
@@ -60,18 +60,20 @@ void MpiStructuredSolver<TModel>::stage(const int s, const real& timeStep) {
 	LOG_DEBUG("Start stage " << s << " tau = " << timeStep);
 	mesh->applyBorderConditions();
 
-	for (int y = 0; y < mesh->Y; y++) {
-		for (int x = 0; x < mesh->X; x++) {
+	for (int x = 0; x < mesh->X; x++) {
+		for (int y = 0; y < mesh->Y; y++) {
+			for (int z = 0; z < mesh->Z; z++) {
 
 			// points to interpolate values on previous time layer
-			auto dx = ((*mesh)(y, x)).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);
+			auto dx = ((*mesh)(x, y, z)).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);
 
 			/* new values = U1 * Riemann solvers */
-			(*newMesh)(y, x) = (*mesh)(y, x).matrix->A(s).U1 *
+			(*newMesh)(x, y, z) = (*mesh)(x, y, z).matrix->A(s).U1 *
 			                     /* Riemann solvers = U * old values */
-			                     (*mesh)(y, x).matrix->A(s).U.diagonalMultiply
+			                     (*mesh)(x, y, z).matrix->A(s).U.diagonalMultiply
 					                     /* old values are in columns of the matrix */
-					                     (mesh->interpolateValuesAround(s, y, x, dx));
+					                     (mesh->interpolateValuesAround(s, x, y, z, dx));
+			}
 		}
 	}
 
@@ -87,8 +89,8 @@ void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
 	int numberOfWorkers = mesh->getNumberOfWorkers();
 	if (numberOfWorkers == 1) return;
 
-	int sizeOfBuffer = mesh->accuracyOrder * (mesh->X + 2 * mesh->accuracyOrder);
-	int nodesSize = (mesh->X + 2 * mesh->accuracyOrder) * (mesh->Y + 2 * mesh->accuracyOrder);
+	int sizeOfBuffer = mesh->accuracyOrder * (mesh->Y + 2 * mesh->accuracyOrder) * (mesh->Z + 2 * mesh->accuracyOrder);
+	int nodesSize = (mesh->X + 2 * mesh->accuracyOrder) * (mesh->Y + 2 * mesh->accuracyOrder) * (mesh->Z + 2 * mesh->accuracyOrder);
 
 	if (rank == 0) {
 		MPI_Sendrecv(&(mesh->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
