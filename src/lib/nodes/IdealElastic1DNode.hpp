@@ -36,11 +36,11 @@ namespace gcm {
 
 		/*real getPressure() const {
 			return - Sxx;
-		};
+		};*/
 
 		void setPressure(const real& pressure) {
 			Sxx = - pressure;
-		};*/
+		};
 
 		/*// for snapshotters
 		typedef struct {*/

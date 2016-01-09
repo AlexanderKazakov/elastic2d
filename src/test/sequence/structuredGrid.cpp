@@ -13,9 +13,9 @@ TEST(StructuredGrid, initialize) {
 	task.mu0 = 0.5;
 	task.rho0 = 4.0;
 	task.X = 7;
-	task.Y = 4;
+	task.Y = 9;
 	task.xLength = 20.0;
-	task.yLength = 3.0;
+	task.yLength = 8.0;
 	task.numberOfSnaps = 5;
 	task.T = 100.0;
 	task.initialConditions = InitialConditions::Zero;

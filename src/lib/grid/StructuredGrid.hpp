@@ -4,6 +4,7 @@
 #include <memory>
 #include <mpi.h>
 
+#include "lib/util/Logging.hpp"
 #include "lib/grid/Grid.hpp"
 #include "lib/linal/Vector.hpp"
 #include "lib/nodes/Node.hpp"
@@ -126,6 +127,7 @@ namespace gcm {
 		/* ---------------- For testing purposes (end) ---------------- */
 
 	private:
+		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
 		virtual void applyBorderConditions() override;
 		virtual void applyInitialConditions() override;
 	public:

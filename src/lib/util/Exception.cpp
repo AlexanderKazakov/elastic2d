@@ -75,3 +75,7 @@ int Exception::getLine() const
 {
     return line;
 }
+
+const std::string Exception::what() const {
+    return "Exception was thrown: " + getMessage() + "\n @" + getFile() + ":" + std::to_string(getLine()) + "\nCall stack: \n" + getCallStack();
+}

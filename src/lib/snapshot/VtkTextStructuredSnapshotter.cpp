@@ -7,6 +7,7 @@ using namespace gcm;
 
 template<class TModel>
 void VtkTextStructuredSnapshotter<TModel>::snapshotImpl(const std::string &fileName) {
+	LOG_DEBUG("Start snapshot writing to " << fileName);
 	openSnapshotFileStream(fileName);
 	structuredGrid = static_cast<StructuredGrid<TModel>*>(grid);
 	

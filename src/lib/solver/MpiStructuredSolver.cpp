@@ -8,7 +8,7 @@ using namespace gcm;
 
 template<class TModel>
 void MpiStructuredSolver<TModel>::initialize(const Task &task, StructuredGrid<TModel> *mesh, StructuredGrid<TModel> *newMesh) {
-
+	LOG_INFO("Start initialization");
 	this->mesh = mesh;
 	this->mesh->initialize(task);
 	this->newMesh = newMesh;
@@ -24,11 +24,13 @@ void MpiStructuredSolver<TModel>::initialize(const Task &task, StructuredGrid<TM
 
 template<class TModel>
 void MpiStructuredSolver<TModel>::calculate() {
+	LOG_INFO("Start calculation");
 	tau = CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda(); // time step
 	exchangeNodesWithNeighbors();
 	real currentTime = 0.0; int step = 0;
 	snapshotter->snapshot(step);
 	while(currentTime < T) {
+		LOG_INFO("Start time step " << step);
 		if (splittingSecondOrder) {
 			switch (TModel::DIMENSIONALITY) {
 				case 1:
@@ -55,7 +57,7 @@ void MpiStructuredSolver<TModel>::calculate() {
 
 template<class TModel>
 void MpiStructuredSolver<TModel>::stage(const int s, const real& timeStep) {
-
+	LOG_DEBUG("Start stage " << s << " tau = " << timeStep);
 	mesh->applyBorderConditions();
 
 	for (int y = 0; y < mesh->Y; y++) {
@@ -79,6 +81,7 @@ void MpiStructuredSolver<TModel>::stage(const int s, const real& timeStep) {
 
 template<class TModel>
 void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
+	LOG_DEBUG("Start data exchange with neighbor cores");
 
 	int rank = mesh->getRank();
 	int numberOfWorkers = mesh->getNumberOfWorkers();
@@ -107,6 +110,6 @@ void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
 	}
 }
 
-//template class MpiStructuredSolver<IdealElastic1DModel>;
+template class MpiStructuredSolver<IdealElastic1DModel>;
 template class MpiStructuredSolver<IdealElastic2DModel>;
 template class MpiStructuredSolver<IdealElastic3DModel>;

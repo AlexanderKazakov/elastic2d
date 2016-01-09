@@ -6,6 +6,7 @@
 
 #include "lib/grid/StructuredGrid.hpp"
 #include "lib/snapshot/Snapshotter.hpp"
+#include "lib/util/Logging.hpp"
 
 namespace gcm {
 	template<class TModel> class StructuredGrid;
@@ -21,6 +22,7 @@ namespace gcm {
 		virtual void snapshotImpl(const std::string& fileName) override;
 
 	private:
+		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
 		StructuredGrid<TModel>* structuredGrid;
 
 		void writeScalar(const std::string name, const int index);

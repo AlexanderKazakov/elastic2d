@@ -7,7 +7,7 @@ using namespace gcm;
 
 TEST(Solver, StageXForward)
 {
-	for (int accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
@@ -45,7 +45,7 @@ TEST(Solver, StageXForward)
 
 TEST(Solver, StageY)
 {
-	for (int accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
@@ -83,7 +83,7 @@ TEST(Solver, StageY)
 
 TEST(Solver, StageYSxx)
 {
-	for (int accuracyOrder = 1; accuracyOrder < 20; accuracyOrder++) {
+	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 0.7;

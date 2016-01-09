@@ -32,37 +32,37 @@
 #endif
 
 
-#if CONFIG_ENABLE_LOGGING_INFO
+#if CONFIG_ENABLE_LOGGING && CONFIG_ENABLE_LOGGING_INFO
     #define LOG_INFO(message)  DO_ONCE(LOG4CXX_INFO (logger, message))
 #else
     #define LOG_INFO(message)  DO_ONCE(;)
 #endif
 
-#if CONFIG_ENABLE_LOGGING_WARN
+#if CONFIG_ENABLE_LOGGING && CONFIG_ENABLE_LOGGING_WARN
     #define LOG_WARN(message)  DO_ONCE(LOG4CXX_WARN (logger, message))
 #else
     #define LOG_WARN(message)  DO_ONCE(;)
 #endif
 
-#if CONFIG_ENABLE_LOGGING_FATAL
+#if CONFIG_ENABLE_LOGGING && CONFIG_ENABLE_LOGGING_FATAL
     #define LOG_FATAL(message)  DO_ONCE(LOG4CXX_FATAL (logger, message))
 #else
     #define LOG_FATAL(message)  DO_ONCE(;)
 #endif
 
-#if CONFIG_ENABLE_LOGGING_ERROR
+#if CONFIG_ENABLE_LOGGING && CONFIG_ENABLE_LOGGING_ERROR
     #define LOG_ERROR(message)  DO_ONCE(LOG4CXX_ERROR (logger, message))
 #else
     #define LOG_ERROR(message)  DO_ONCE(;)
 #endif
 
-#if CONFIG_ENABLE_LOGGING_TRACE
+#if CONFIG_ENABLE_LOGGING && CONFIG_ENABLE_LOGGING_TRACE
     #define LOG_TRACE(message)  DO_ONCE(LOG4CXX_TRACE (logger, message))
 #else
     #define LOG_TRACE(message)  DO_ONCE(;)
 #endif
 
-#if CONFIG_ENABLE_LOGGING_DEBUG
+#if CONFIG_ENABLE_LOGGING && CONFIG_ENABLE_LOGGING_DEBUG
     #define LOG_DEBUG(message)  DO_ONCE(LOG4CXX_DEBUG (logger, message))
 #else
     #define LOG_DEBUG(message)  DO_ONCE(;)

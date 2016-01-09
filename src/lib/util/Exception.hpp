@@ -77,7 +77,11 @@ namespace gcm {
              */
             const std::string& getCallStack() const;
             /**
-             * Unsopported exception code.
+             * @return information about failure
+             */
+            const std::string what() const;
+            /**
+             * Unsupported exception code.
              */
             static const int UNSUPPORTED   = -1;
             /**

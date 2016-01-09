@@ -11,20 +11,28 @@ using namespace gcm;
 
 template<class TModel>
 void StructuredGrid<TModel>::initializeImpl(const Task &task) {
+	LOG_INFO("Start initialization");
 
 	/* ------------------ Properties and conditions ------------------ */
 
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
+	assert_gt(accuracyOrder, 0);
 
 	X = task.X; // number of nodes along x direction
+	assert_gt(X, 0);
 	Z = task.Z; // number of nodes along z direction
+	assert_gt(Z, 0);
 
 	// we divide the grid among processes equally along y-axis
 	int numberOfNodesAlongYPerOneCore = (int) std::round((real) task.Y / numberOfWorkers);
+	assert_gt(numberOfNodesAlongYPerOneCore, 0);
 	Y = numberOfNodesAlongYPerOneCore; // number of nodes along y direction
 	if (rank == numberOfWorkers - 1) Y = task.Y - numberOfNodesAlongYPerOneCore * (numberOfWorkers - 1);
+	assert_gt(Y, 0);
+	assert_ge(Y, 2 * accuracyOrder);
 
 	globalY = task.Y;
+	assert_gt(globalY, 0);
 
 	h[0] = task.xLength / (X - 1);
 	h[1] = task.yLength / (task.Y - 1);
@@ -34,11 +42,17 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	if (Y == 1) h[1] = std::numeric_limits<real>::max();
 	if (Z == 1) h[2] = std::numeric_limits<real>::max();
 
+	for (int j = 0; j < 3; j++) {
+		assert_gt(h[j], 0.0);
+		assert_eq(h[j], h[j]);
+	}
+
 	/* ------------------ Properties and conditions (end) ------------------ */
 
 	startY = rank * numberOfNodesAlongYPerOneCore;
 
 	nodes = new Node[(Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder)];
+	assert_true(nodes);
 
 	for (int i = 0; i < (Y + 2 * accuracyOrder) * (X + 2 * accuracyOrder); ++i) {
 		linal::clear(nodes[i]);
@@ -46,6 +60,7 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	}
 
 	defaultMatrix = std::make_shared<typename TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
+	assert_true(defaultMatrix);
 	maximalLambda = defaultMatrix->getMaximalEigenvalue();
 	for (int y = 0; y < Y; ++y) {
 		for (int x = 0; x < X; ++x) {
@@ -75,6 +90,11 @@ typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValue
 template<class TModel>
 void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const int y, const int x,
                                                          const real &dx, std::vector<Vector>& src) const {
+	assert_ge(x, 0);
+	assert_lt(x, X);
+	assert_ge(y, 0);
+	assert_lt(y, Y);
+
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
@@ -105,22 +125,24 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 	if (borderConditions.at("left") == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(y, -i).Vx  =   get(y, i).Vx;
-				(*this)(y, -i).Vy  =   get(y, i).Vy;
-				(*this)(y, -i).Sxx = - get(y, i).Sxx;
-				(*this)(y, -i).Sxy = - get(y, i).Sxy;
-				(*this)(y, -i).Syy = - get(y, i).Syy;
+				for (int j = 0; j < TModel::Node::V_SIZE; j++) {
+					(*this)(y, - i).V[j] = get(y, i).V[j];
+				}
+				for (int j = 0; j < TModel::Node::S_SIZE; j++) {
+					(*this)(y, - i).S[j] = - get(y, i).S[j];
+				}
 			}
 		}
 	}
 	if (borderConditions.at("right") == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(y, X - 1 + i).Vx  =   get(y, X - 1 - i).Vx;
-				(*this)(y, X - 1 + i).Vy  =   get(y, X - 1 - i).Vy;
-				(*this)(y, X - 1 + i).Sxx = - get(y, X - 1 - i).Sxx;
-				(*this)(y, X - 1 + i).Sxy = - get(y, X - 1 - i).Sxy;
-				(*this)(y, X - 1 + i).Syy = - get(y, X - 1 - i).Syy;
+				for (int j = 0; j < TModel::Node::V_SIZE; j++) {
+					(*this)(y, X - 1 + i).V[j] = get(y, X - 1 - i).V[j];
+				}
+				for (int j = 0; j < TModel::Node::S_SIZE; j++) {
+					(*this)(y, X - 1 + i).S[j] = - get(y, X - 1 - i).S[j];
+				}
 			}
 		}
 	}
@@ -128,22 +150,24 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 	if (rank == 0 && borderConditions.at("bottom") == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(-i, x).Vx  =   get(i, x).Vx;
-				(*this)(-i, x).Vy  =   get(i, x).Vy;
-				(*this)(-i, x).Sxx = - get(i, x).Sxx;
-				(*this)(-i, x).Sxy = - get(i, x).Sxy;
-				(*this)(-i, x).Syy = - get(i, x).Syy;
+				for (int j = 0; j < TModel::Node::V_SIZE; j++) {
+					(*this)( - i, x).V[j] = get(i, x).V[j];
+				}
+				for (int j = 0; j < TModel::Node::S_SIZE; j++) {
+					(*this)( - i, x).S[j] = - get(i, x).S[j];
+				}
 			}
 		}
 	}
 	if (rank == numberOfWorkers - 1 && borderConditions.at("up") == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int i = 1; i <= accuracyOrder; i++) {
-				(*this)(Y - 1 + i, x).Vx  =   get(Y - 1 - i, x).Vx;
-				(*this)(Y - 1 + i, x).Vy  =   get(Y - 1 - i, x).Vy;
-				(*this)(Y - 1 + i, x).Sxx = - get(Y - 1 - i, x).Sxx;
-				(*this)(Y - 1 + i, x).Sxy = - get(Y - 1 - i, x).Sxy;
-				(*this)(Y - 1 + i, x).Syy = - get(Y - 1 - i, x).Syy;
+				for (int j = 0; j < TModel::Node::V_SIZE; j++) {
+					(*this)(Y - 1 + i, x).V[j] = get(Y - 1 - i, x).V[j];
+				}
+				for (int j = 0; j < TModel::Node::S_SIZE; j++) {
+					(*this)(Y - 1 + i, x).S[j] = - get(Y - 1 - i, x).S[j];
+				}
 			}
 		}
 	}
@@ -155,14 +179,14 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		return;
 
 	} else if (initialConditions == InitialConditions::TestExplosion) {
-		if (numberOfWorkers != 1) throw "This condition only for sequence version";
+		if (numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
 		int xTo = (X % 2 /* X is odd? */) ? X / 2 : X / 2 + 1;
 		int xFrom = X / 2;
 		int yTo = (Y % 2 /* Y is odd? */) ? Y / 2 : Y / 2 + 1;
 		int yFrom = Y / 2;
 		for (int x = xFrom; x <= xTo; x++) {
 			for (int y = yFrom; y <= yTo; y++) {
-				(*this)(y, x).Sxx = (*this)(y, x).Syy = 1.0;
+				(*this)(y, x).setPressure(-1.0);
 			}
 		}
 		return;
@@ -172,7 +196,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = 0; x <= X; x++) {
 			for (int y = 0; y <= Y; y++) {
 				if ( (x - X / 2)*(x - X / 2) + (y + startY - globalY / 2)*(y + startY - globalY / 2) <= R*R )
-					(*this)(y, x).Sxx = (*this)(y, x).Syy  = - 1.0;
+					(*this)(y, x).setPressure(1.0);
 			}
 		}
 		return;
@@ -215,7 +239,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		}
 
 	} else if (initialConditions == InitialConditions::SxxOnly) {
-		if (numberOfWorkers != 1) throw "This condition only for sequence version";
+		if (numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
 		(*this)(Y / 2, X / 2).Sxx = 5.5;
 
 	} else if (initialConditions == InitialConditions::PWaveXBackward) {
@@ -237,12 +261,12 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int y = 0; y < Y; y++) {
 			for (int x = 0; x < X; x++) {
 				if ( (x - X / 6)*(x - X / 6) + (y + startY - globalY / 2)*(y + startY - globalY / 2) <= R*R )
-					(*this)(y, x).Sxx = (*this)(y, x).Syy  = - 1.0;
+					(*this)(y, x).setPressure(1.0);
 			}
 		}
 
 	} else {
-		throw("Unknown initial condition");
+		THROW_INVALID_ARG("Unknown initial condition");
 	}
 }
 
@@ -252,6 +276,6 @@ real StructuredGrid<TModel>::getMinimalSpatialStep() const {
 }
 
 
-//template class StructuredGrid<IdealElastic1DModel>;
+template class StructuredGrid<IdealElastic1DModel>;
 template class StructuredGrid<IdealElastic2DModel>;
 template class StructuredGrid<IdealElastic3DModel>;

@@ -4,6 +4,7 @@
 
 #include "lib/snapshot/VtkTextStructuredSnapshotter.hpp"
 #include "lib/grid/StructuredGrid.hpp"
+#include "lib/util/Logging.hpp"
 
 namespace gcm {
 	template<class TModel>
@@ -30,10 +31,12 @@ namespace gcm {
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
 		bool splittingSecondOrder = false;
 
-		StructuredGrid<TModel>* mesh;
-		StructuredGrid<TModel>* newMesh;
+		StructuredGrid<TModel>* mesh = nullptr;
+		StructuredGrid<TModel>* newMesh = nullptr;
 
 		Snapshotter* snapshotter = nullptr;
+
+		USE_AND_INIT_LOGGER("gcm.MpiStructuredSolver");
 
 		void exchangeNodesWithNeighbors();
 

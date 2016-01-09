@@ -23,6 +23,7 @@ while getopts ":n:p" o; do
 done
 
 rm -rf snaps
+rm -f *.log
 mkdir snaps
 echo "running calculation with $np processes"
 mpirun -np $np ./build/gcm_exe
