@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "lib/linal/Vector.hpp"
+#include "lib/linal/Linal.hpp"
 #include "lib/gcm_matrices/GcmMatrices.hpp"
 
 namespace gcm {

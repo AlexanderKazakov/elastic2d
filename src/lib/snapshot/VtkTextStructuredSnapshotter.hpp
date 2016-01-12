@@ -12,7 +12,7 @@ namespace gcm {
 	template<class TModel> class StructuredGrid;
 
 	template<class TModel>
-	class VtkTextStructuredSnapshotter : public Snapshotter {
+	class VtkTextStructuredSnapshotter : public Snapshotter<TModel> {
 	public:
 		/**
 		 * Write vtk snapshot. The simplest but not the most efficient
@@ -23,7 +23,7 @@ namespace gcm {
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
-		StructuredGrid<TModel>* structuredGrid;
+		StructuredGrid<TModel>*sGrid;
 
 		void writeScalar(const std::string name, const int index);
 

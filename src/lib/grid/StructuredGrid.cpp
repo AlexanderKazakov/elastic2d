@@ -12,8 +12,6 @@ template<class TModel>
 void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 
-	/* ------------------ Properties and conditions ------------------ */
-
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_gt(accuracyOrder, 0);
 
@@ -25,12 +23,11 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	assert_gt(Z, 0);
 
 	// we divide the grid among processes equally along x-axis
-	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.X / numberOfWorkers);
+	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.X / this->numberOfWorkers);
 	assert_gt(numberOfNodesAlongXPerOneCore, 0);
 	X = numberOfNodesAlongXPerOneCore; // number of nodes along x direction on this mesh
 	// in order to keep specified in task number of nodes
-	if (rank == numberOfWorkers - 1) X = task.X - numberOfNodesAlongXPerOneCore * (numberOfWorkers - 1);
-	assert_gt(X, 0);
+	if (this->rank == this->numberOfWorkers - 1) X = task.X - numberOfNodesAlongXPerOneCore * (this->numberOfWorkers - 1);
 	assert_ge(X, 2 * accuracyOrder);
 
 	h[0] = task.xLength / (task.X - 1);
@@ -46,30 +43,14 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 		assert_eq(h[j], h[j]); // this is supposed to catch NaN
 	}
 
-	/* ------------------ Properties and conditions (end) ------------------ */
+	globalStartXindex = this->rank * numberOfNodesAlongXPerOneCore;
 
-	startX = rank * numberOfNodesAlongXPerOneCore;
+	startX = task.startX + globalStartXindex * h[0];
+	startY = task.startY;
+	startZ = task.startZ;
+	assert_eq(startX, startX); assert_eq(startY, startY); assert_eq(startZ, startZ);
 
-	nodes = new Node[ (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) * (Z + 2 * accuracyOrder) ];
-	assert_true(nodes);
-
-	for (int i = 0; i < (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) * (Z + 2 * accuracyOrder); i++) {
-		linal::clear(nodes[i]);
-		nodes[i].matrix = nullptr;
-	}
-
-	defaultMatrix = std::make_shared<typename TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
-	assert_true(defaultMatrix);
-	maximalLambda = defaultMatrix->getMaximalEigenvalue();
-	for (int x = 0; x < X; x++) {
-		for (int y = 0; y < Y; y++) {
-			for (int z = 0; z < Z; z++) {
-				(*this)(x, y, z).matrix = defaultMatrix;
-			}
-		}
-	}
-
-	applyInitialConditions();
+	this->nodes.resize( (unsigned long) (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) * (Z + 2 * accuracyOrder) );
 }
 
 template<class TModel>
@@ -103,7 +84,7 @@ void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const 
 template<class TModel>
 void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	auto oldMatrix = defaultMatrix;
+	auto oldMatrix = this->defaultMatrix;
 	auto newRheologyMatrix = std::make_shared<typename TModel::GcmMatrices>(rho2rho0 * oldMatrix->rho,
 	                                                       lambda2lambda0 * oldMatrix->lambda,
 	                                                       mu2mu0 * oldMatrix->mu);
@@ -117,13 +98,13 @@ void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& la
 		}
 	}
 
-	maximalLambda = fmax(maximalLambda, newRheologyMatrix->getMaximalEigenvalue());
+	this->maximalLambda = fmax(this->maximalLambda, newRheologyMatrix->getMaximalEigenvalue());
 }
 
 template<class TModel>
 void StructuredGrid<TModel>::applyBorderConditions() {
 
-	if (rank == 0 && borderConditions.at(Border::X_LEFT) == BorderConditions::FreeBorder) {
+	if (this->rank == 0 && this->borderConditions.at(Border::X_LEFT) == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -137,7 +118,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 			}
 		}
 	}
-	if (rank == numberOfWorkers - 1 && borderConditions.at(Border::X_RIGHT) == BorderConditions::FreeBorder) {
+	if (this->rank == this->numberOfWorkers - 1 && this->borderConditions.at(Border::X_RIGHT) == BorderConditions::FreeBorder) {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -152,7 +133,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		}
 	}
 	
-	if (borderConditions.at(Border::Y_LEFT) == BorderConditions::FreeBorder) {
+	if (this->borderConditions.at(Border::Y_LEFT) == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -166,7 +147,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 			}
 		}
 	}
-	if (borderConditions.at(Border::Y_RIGHT) == BorderConditions::FreeBorder) {
+	if (this->borderConditions.at(Border::Y_RIGHT) == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -181,7 +162,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		}
 	}
 
-	if (borderConditions.at(Border::Z_LEFT) == BorderConditions::FreeBorder) {
+	if (this->borderConditions.at(Border::Z_LEFT) == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -195,7 +176,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 			}
 		}
 	}
-	if (borderConditions.at(Border::Z_RIGHT) == BorderConditions::FreeBorder) {
+	if (this->borderConditions.at(Border::Z_RIGHT) == BorderConditions::FreeBorder) {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -213,11 +194,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 
 template<class TModel>
 void StructuredGrid<TModel>::applyInitialConditions() {
-	if (initialConditions == InitialConditions::Zero) {
+	if (this->initialConditions == InitialConditions::Zero) {
 		return;
 
-	} else if (initialConditions == InitialConditions::TestExplosion) {
-		if (numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
+	} else if (this->initialConditions == InitialConditions::TestExplosion) {
+		if (this->numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
 		int xTo = (X % 2 /* X is odd? */) ? X / 2 : X / 2 + 1;
 		int xFrom = X / 2;
 		int yTo = (Y % 2 /* Y is odd? */) ? Y / 2 : Y / 2 + 1;
@@ -233,81 +214,82 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		}
 		return;
 
-	} else if(initialConditions == InitialConditions::Explosion) {
+	} else if(this->initialConditions == InitialConditions::Explosion) {
 		real R = 0.1 * (globalX + Y + Z) / 3;
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					if ( (y - Y / 2) * (y - Y / 2) + (z - Z / 2) * (z - Z / 2) + (x + startX - globalX / 2) * (x + startX - globalX / 2) <= R * R )
+					if ( (y - Y / 2) * (y - Y / 2) + (z - Z / 2) * (z - Z / 2) + (x + globalStartXindex - globalX / 2) * (x +
+					                                                                                                      globalStartXindex - globalX / 2) <= R * R )
 						(*this)(x, y, z).setPressure(1.0);
 				}
 			}
 		}
 		return;
 
-	} else if (initialConditions == InitialConditions::PWaveX) {
+	} else if (this->initialConditions == InitialConditions::PWaveX) {
 		for (int x = 2; x < 0.15 * X + 2; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = defaultMatrix->A(0).U1.getColumn(1);
+					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(1);
 				}
 			}
 		}
 
-	} else if (initialConditions == InitialConditions::PWaveY) {
+	} else if (this->initialConditions == InitialConditions::PWaveY) {
 		for (int x = 0; x < X; x++) {
 			for (int y = 2; y < 0.45 * Y + 2; y++) {
 				for (int z = 0; z < Z; z++) {
-						(*this)(x, y, z) = defaultMatrix->A(1).U1.getColumn(1);
+						(*this)(x, y, z) = this->defaultMatrix->A(1).U1.getColumn(1);
 				}
 			}
 		}
 
-	} else if (initialConditions == InitialConditions::SWaveX) {
+	} else if (this->initialConditions == InitialConditions::SWaveX) {
 		for (int x = 2; x < 0.15 * X + 2; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = defaultMatrix->A(0).U1.getColumn(3);
+					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(3);
 				}
 			}
 		}
 
-	} else if (initialConditions == InitialConditions::SWaveY) {
+	} else if (this->initialConditions == InitialConditions::SWaveY) {
 		for (int x = 0; x < X; x++) {
 			for (int y = 2; y < 0.15 * Y + 2; y++) {
 				for (int z = 0; z < Z; z++) {
-						(*this)(x, y, z) = defaultMatrix->A(1).U1.getColumn(3);
+						(*this)(x, y, z) = this->defaultMatrix->A(1).U1.getColumn(3);
 				}
 			}
 		}
 
-	} else if (initialConditions == InitialConditions::SWaveXBackward) {
+	} else if (this->initialConditions == InitialConditions::SWaveXBackward) {
 		for (int x = (int) (0.85 * X - 2); x < X - 2; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = defaultMatrix->A(0).U1.getColumn(2);
+					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(2);
 				}
 			}
 		}
 
-	} else if (initialConditions == InitialConditions::SxxOnly) {
-		if (numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
+	} else if (this->initialConditions == InitialConditions::SxxOnly) {
+		if (this->numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
 		(*this)(X / 2, Y / 2, Z / 2).Sxx = 5.5;
 
-	} else if (initialConditions == InitialConditions::PWaveXBackward) {
+	} else if (this->initialConditions == InitialConditions::PWaveXBackward) {
 		for (int x = (int)(0.15 * X); x < 0.3 * X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = defaultMatrix->A(0).U1.getColumn(0);
+					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(0);
 				}
 			}
 		}
 
-	} else if (initialConditions == InitialConditions::PWaveYBackward) {
+	} else if (this->initialConditions == InitialConditions::PWaveYBackward) {
 		for (int x = 0; x < X; x++) {
 			for (int y = (int)(0.15 * Y); y < 0.3 * Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = defaultMatrix->A(1).U1.getColumn(1);
+					(*this)(x, y, z) = this->defaultMatrix->A(1).U1.getColumn(1);
 				}
 			}
 		}

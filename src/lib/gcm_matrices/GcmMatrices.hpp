@@ -1,7 +1,7 @@
 #ifndef LIBGCM_MATRIX_HPP
 #define LIBGCM_MATRIX_HPP
 
-#include "lib/linal/Vector.hpp"
+#include "lib/linal/Linal.hpp"
 #include "lib/util/Types.hpp"
 #include "lib/config.hpp"
 

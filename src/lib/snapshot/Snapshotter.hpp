@@ -2,7 +2,6 @@
 #define LIBGCM_SNAPSHOTTER_HPP
 
 #include <fstream>
-#include <mpi.h>
 
 #include "lib/grid/Grid.hpp"
 
@@ -10,6 +9,7 @@ namespace gcm {
 	/**
 	 * Base class for snapshotters
 	 */
+	template <class TModel>
 	class Snapshotter {
 	public:
 		/**
@@ -22,10 +22,10 @@ namespace gcm {
 		 * @param grid pointer to the grid for dump
 		 * @param enableSnapshotting dump or do not dump snaps
 		 */
-		void initialize(Grid *grid, bool enableSnapshotting);
+		void initialize(Grid<TModel> *grid, bool enableSnapshotting);
 
 	protected:
-		Grid* grid = nullptr;
+		Grid<TModel>* grid = nullptr;
 		virtual void snapshotImpl(const std::string& fileName) = 0;
 
 	private:

@@ -21,6 +21,10 @@ namespace gcm {
 		int Y = 0; // number of nodes along y direction
 		int Z = 0; // number of nodes along z direction
 
+		real startX = 0.0; // global x-coordinate of the first real node of the grid
+		real startY = 0.0; // global y-coordinate of the first real node of the grid
+		real startZ = 0.0; // global z-coordinate of the first real node of the grid
+
 		real rho0 = 0.0; // default density
 		real lambda0 = 0.0; // default Lame parameter
 		real mu0 = 0.0; // default Lame parameter

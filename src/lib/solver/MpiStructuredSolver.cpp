@@ -69,8 +69,8 @@ void MpiStructuredSolver<TModel>::stage(const int s, const real& timeStep) {
 
 			/* new values = U1 * Riemann solvers */
 			(*newMesh)(x, y, z) = (*mesh)(x, y, z).matrix->A(s).U1 *
-			                     /* Riemann solvers = U * old values */
-			                     (*mesh)(x, y, z).matrix->A(s).U.diagonalMultiply
+			                      /* Riemann solvers = U * old values */
+			                      (*mesh)(x, y, z).matrix->A(s).U.diagonalMultiply
 					                     /* old values are in columns of the matrix */
 					                     (mesh->interpolateValuesAround(s, x, y, z, dx));
 			}
@@ -90,7 +90,7 @@ void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
 	if (numberOfWorkers == 1) return;
 
 	int sizeOfBuffer = mesh->accuracyOrder * (mesh->Y + 2 * mesh->accuracyOrder) * (mesh->Z + 2 * mesh->accuracyOrder);
-	int nodesSize = (mesh->X + 2 * mesh->accuracyOrder) * (mesh->Y + 2 * mesh->accuracyOrder) * (mesh->Z + 2 * mesh->accuracyOrder);
+	int nodesSize = mesh->nodes.size();
 
 	if (rank == 0) {
 		MPI_Sendrecv(&(mesh->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
@@ -99,7 +99,7 @@ void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
 
 	} else if (rank == numberOfWorkers - 1) {
 		MPI_Sendrecv(&(mesh->nodes[sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
-		             mesh->nodes, sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
+		             &(mesh->nodes[0]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else {
@@ -107,7 +107,7 @@ void MpiStructuredSolver<TModel>::exchangeNodesWithNeighbors() {
 			     	 &(mesh->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 		MPI_Sendrecv(&(mesh->nodes[sizeOfBuffer]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
-		             mesh->nodes, sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
+		             &(mesh->nodes[0]), sizeOfBuffer, TModel::Node::MPI_NODE_TYPE, rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 }

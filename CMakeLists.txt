@@ -40,7 +40,6 @@ include_directories(src)
 set(SOURCE_MAIN_FILE src/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
-file(GLOB_RECURSE SAMPLE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sample/*.cpp")
 set(TEST_MPI_FILE src/test/testMPI.cpp)
 
 # libgcm

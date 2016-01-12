@@ -34,7 +34,7 @@ namespace gcm {
 		StructuredGrid<TModel>* mesh = nullptr;
 		StructuredGrid<TModel>* newMesh = nullptr;
 
-		Snapshotter* snapshotter = nullptr;
+		Snapshotter<TModel>* snapshotter = nullptr;
 
 		USE_AND_INIT_LOGGER("gcm.MpiStructuredSolver");
 
