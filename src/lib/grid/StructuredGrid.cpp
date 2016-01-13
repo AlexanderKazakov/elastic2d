@@ -77,7 +77,7 @@ void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const 
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	const int alongZ = (stage == 2) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
-		src[k] = get(x + alongX * k, y + alongY * k, z + alongZ * k);
+		src[k] = get(x + alongX * k, y + alongY * k, z + alongZ * k).u;
 	}
 }
 
@@ -108,11 +108,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < TModel::Node::V_SIZE; j++) {
-						(*this)( - i, y, z).V[j] = get(i, y, z).V[j];
+					for (int j = 0; j < Vector::V_SIZE; j++) {
+						(*this)( - i, y, z).u.V[j] = get(i, y, z).u.V[j];
 					}
-					for (int j = 0; j < TModel::Node::S_SIZE; j++) {
-						(*this)( - i, y, z).S[j] = - get(i, y, z).S[j];
+					for (int j = 0; j < Vector::S_SIZE; j++) {
+						(*this)( - i, y, z).u.S[j] = - get(i, y, z).u.S[j];
 					}
 				}
 			}
@@ -122,11 +122,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < TModel::Node::V_SIZE; j++) {
-						(*this)(X - 1 + i, y, z).V[j] = get(X - 1 - i, y, z).V[j];
+					for (int j = 0; j < Vector::V_SIZE; j++) {
+						(*this)(X - 1 + i, y, z).u.V[j] = get(X - 1 - i, y, z).u.V[j];
 					}
-					for (int j = 0; j < TModel::Node::S_SIZE; j++) {
-						(*this)(X - 1 + i, y, z).S[j] = - get(X - 1 - i, y, z).S[j];
+					for (int j = 0; j < Vector::S_SIZE; j++) {
+						(*this)(X - 1 + i, y, z).u.S[j] = - get(X - 1 - i, y, z).u.S[j];
 					}
 				}
 			}
@@ -137,11 +137,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < TModel::Node::V_SIZE; j++) {
-						(*this)(x, - i, z).V[j] = get(x, i, z).V[j];
+					for (int j = 0; j < Vector::V_SIZE; j++) {
+						(*this)(x, - i, z).u.V[j] = get(x, i, z).u.V[j];
 					}
-					for (int j = 0; j < TModel::Node::S_SIZE; j++) {
-						(*this)(x, - i, z).S[j] = - get(x, i, z).S[j];
+					for (int j = 0; j < Vector::S_SIZE; j++) {
+						(*this)(x, - i, z).u.S[j] = - get(x, i, z).u.S[j];
 					}
 				}
 			}
@@ -151,11 +151,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < TModel::Node::V_SIZE; j++) {
-						(*this)(x, Y - 1 + i, z).V[j] = get(x, Y - 1 - i, z).V[j];
+					for (int j = 0; j < Vector::V_SIZE; j++) {
+						(*this)(x, Y - 1 + i, z).u.V[j] = get(x, Y - 1 - i, z).u.V[j];
 					}
-					for (int j = 0; j < TModel::Node::S_SIZE; j++) {
-						(*this)(x, Y - 1 + i, z).S[j] = - get(x, Y - 1 - i, z).S[j];
+					for (int j = 0; j < Vector::S_SIZE; j++) {
+						(*this)(x, Y - 1 + i, z).u.S[j] = - get(x, Y - 1 - i, z).u.S[j];
 					}
 				}
 			}
@@ -166,11 +166,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < TModel::Node::V_SIZE; j++) {
-						(*this)(x, y, - i).V[j] = get(x, y, i).V[j];
+					for (int j = 0; j < Vector::V_SIZE; j++) {
+						(*this)(x, y, - i).u.V[j] = get(x, y, i).u.V[j];
 					}
-					for (int j = 0; j < TModel::Node::S_SIZE; j++) {
-						(*this)(x, y, - i).S[j] = - get(x, y, i).S[j];
+					for (int j = 0; j < Vector::S_SIZE; j++) {
+						(*this)(x, y, - i).u.S[j] = - get(x, y, i).u.S[j];
 					}
 				}
 			}
@@ -180,11 +180,11 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < TModel::Node::V_SIZE; j++) {
-						(*this)(x, y, Z - 1 + i).V[j] = get(x, y, Z - 1 - i).V[j];
+					for (int j = 0; j < Vector::V_SIZE; j++) {
+						(*this)(x, y, Z - 1 + i).u.V[j] = get(x, y, Z - 1 - i).u.V[j];
 					}
-					for (int j = 0; j < TModel::Node::S_SIZE; j++) {
-						(*this)(x, y, Z - 1 + i).S[j] = - get(x, y, Z - 1 - i).S[j];
+					for (int j = 0; j < Vector::S_SIZE; j++) {
+						(*this)(x, y, Z - 1 + i).u.S[j] = - get(x, y, Z - 1 - i).u.S[j];
 					}
 				}
 			}
@@ -231,7 +231,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = 2; x < 0.15 * X + 2; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(1);
+					(*this)(x, y, z).u = this->defaultMatrix->A(0).U1.getColumn(1);
 				}
 			}
 		}
@@ -240,7 +240,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 2; y < 0.45 * Y + 2; y++) {
 				for (int z = 0; z < Z; z++) {
-						(*this)(x, y, z) = this->defaultMatrix->A(1).U1.getColumn(1);
+						(*this)(x, y, z).u = this->defaultMatrix->A(1).U1.getColumn(1);
 				}
 			}
 		}
@@ -249,7 +249,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = 2; x < 0.15 * X + 2; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(3);
+					(*this)(x, y, z).u = this->defaultMatrix->A(0).U1.getColumn(3);
 				}
 			}
 		}
@@ -258,7 +258,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 2; y < 0.15 * Y + 2; y++) {
 				for (int z = 0; z < Z; z++) {
-						(*this)(x, y, z) = this->defaultMatrix->A(1).U1.getColumn(3);
+						(*this)(x, y, z).u = this->defaultMatrix->A(1).U1.getColumn(3);
 				}
 			}
 		}
@@ -267,20 +267,20 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = (int) (0.85 * X - 2); x < X - 2; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(2);
+					(*this)(x, y, z).u = this->defaultMatrix->A(0).U1.getColumn(2);
 				}
 			}
 		}
 
 	} else if (this->initialConditions == InitialConditions::SxxOnly) {
 		if (this->numberOfWorkers != 1) THROW_INVALID_ARG("This condition only for sequence version");
-		(*this)(X / 2, Y / 2, Z / 2).Sxx = 5.5;
+		(*this)(X / 2, Y / 2, Z / 2).u.Sxx = 5.5;
 
 	} else if (this->initialConditions == InitialConditions::PWaveXBackward) {
 		for (int x = (int)(0.15 * X); x < 0.3 * X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = this->defaultMatrix->A(0).U1.getColumn(0);
+					(*this)(x, y, z).u = this->defaultMatrix->A(0).U1.getColumn(0);
 				}
 			}
 		}
@@ -289,7 +289,7 @@ void StructuredGrid<TModel>::applyInitialConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = (int)(0.15 * Y); y < 0.3 * Y; y++) {
 				for (int z = 0; z < Z; z++) {
-					(*this)(x, y, z) = this->defaultMatrix->A(1).U1.getColumn(1);
+					(*this)(x, y, z).u = this->defaultMatrix->A(1).U1.getColumn(1);
 				}
 			}
 		}

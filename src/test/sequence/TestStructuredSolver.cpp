@@ -24,7 +24,7 @@ TEST(Solver, StageXForward)
 		
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0);
+		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
 		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
 
 		StructuredGrid<IdealElastic2DModel>* mesh = solver.getMesh();
@@ -32,7 +32,7 @@ TEST(Solver, StageXForward)
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(x, y, 0), (x == 2 + i || x == 3 + i) ? pWave : zero)
+					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u, (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
@@ -62,7 +62,7 @@ TEST(Solver, StageY)
 		
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0);
+		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
 		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
 
 		StructuredGrid<IdealElastic2DModel>* mesh = solver.getMesh();
@@ -70,7 +70,7 @@ TEST(Solver, StageY)
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(x, y, 0),
+					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u,
 					          (y == 2 + i || y == 3 + i || y == 4 + i || y == 5 + i || y == 6 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -101,7 +101,7 @@ TEST(Solver, StageYSxx)
 		
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
-		IdealElastic2DModel::Node::Vector sxxOnly = solver.getMesh()->getNodeForTest(task.X / 2, task.Y / 2, 0);
+		IdealElastic2DModel::Node::Vector sxxOnly = solver.getMesh()->getNodeForTest(task.X / 2, task.Y / 2, 0).u;
 		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
 
 		StructuredGrid<IdealElastic2DModel>* mesh = solver.getMesh();
@@ -109,7 +109,7 @@ TEST(Solver, StageYSxx)
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(x, y, 0),
+					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u,
 					          (x == task.X / 2 && y == task.Y / 2 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -139,9 +139,9 @@ TEST(Solver, calculate)
 	
 	MpiStructuredSolver<IdealElastic2DModel> solver;
 	solver.initialize(task);
-	IdealElastic2DModel::Node::Vector sWave = solver.getMesh()->getNodeForTest(task.X / 2, 3, 0);
+	IdealElastic2DModel::Node::Vector sWave = solver.getMesh()->getNodeForTest(task.X / 2, 3, 0).u;
 	solver.calculate();
-	ASSERT_EQ(sWave, solver.getMesh()->getNodeForTest(task.X / 2, 22, 0));
+	ASSERT_EQ(sWave, solver.getMesh()->getNodeForTest(task.X / 2, 22, 0).u);
 }
 
 
@@ -195,17 +195,17 @@ TEST(Solver, TwoLayersDifferentRho)
 		real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 		real Z = sqrt(E * rho); // acoustic impedance
 
-		ASSERT_NEAR(reflect.Syy / init.Syy,
+		ASSERT_NEAR(reflect.u.Syy / init.u.Syy,
 		            (Z - Z0) / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(reflect.Vy / init.Vy,
+		ASSERT_NEAR(reflect.u.Vy / init.u.Vy,
 		            (Z0 - Z) / (Z + Z0),
 		            1e-2);
 
-		ASSERT_NEAR(transfer.Syy / init.Syy,
+		ASSERT_NEAR(transfer.u.Syy / init.u.Syy,
 		            2 * Z / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(transfer.Vy / init.Vy,
+		ASSERT_NEAR(transfer.u.Vy / init.u.Vy,
 		            2 * Z0 / (Z + Z0),
 		            1e-2);
 
@@ -264,17 +264,17 @@ TEST(Solver, TwoLayersDifferentE)
 		real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 		real Z = sqrt(E * rho); // acoustic impedance
 
-		ASSERT_NEAR(reflect.Syy / init.Syy,
+		ASSERT_NEAR(reflect.u.Syy / init.u.Syy,
 		            (Z - Z0) / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(reflect.Vy / init.Vy,
+		ASSERT_NEAR(reflect.u.Vy / init.u.Vy,
 		            (Z0 - Z) / (Z + Z0),
 		            1e-2);
 
-		ASSERT_NEAR(transfer.Syy / init.Syy,
+		ASSERT_NEAR(transfer.u.Syy / init.u.Syy,
 		            2 * Z / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(transfer.Vy / init.Vy,
+		ASSERT_NEAR(transfer.u.Vy / init.u.Vy,
 		            2 * Z0 / (Z + Z0),
 		            1e-2);
 

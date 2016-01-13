@@ -51,15 +51,15 @@ namespace gcm {
 			Matrix(std::initializer_list<real> values);
 			/**
 			 * Copy constructor
-			 * @param m Matrix to construct from.
+			 * @param m Matrix to construct from
 			 */
 			template<typename Container2>
 			Matrix(const Matrix<TM, TN, Container2> &m2) {
 				(*this) = m2;
 			};
 			/**
-			 * Assignment operator
-			 * @return Reference to modified matrix instance.
+			 * Assignment operator from matrix of equal size and any container
+			 * @return reference to modified matrix instance
 			 */
 			template<typename Container2>
 			Matrix<TM, TN, Container> &operator=(const Matrix<TM, TN, Container2> &m2) {

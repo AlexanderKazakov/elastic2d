@@ -41,7 +41,7 @@ void VtkTextStructuredSnapshotter<TModel>::writeScalar(const std::string name, c
 	for (int z = 0; z < sGrid->Z; z++) {
 		for (int y = 0; y < sGrid->Y; y++) {
 			for (int x = 0; x < sGrid->X; x++) {
-				snapshotFileStream << sGrid->get(x, y, z)(index) << std::endl;
+				snapshotFileStream << sGrid->get(x, y, z).u(index) << std::endl;
 			}
 		}
 	}
@@ -55,7 +55,7 @@ void VtkTextStructuredSnapshotter<TModel>::writeVector(const std::string& name, 
 		for (int y = 0; y < sGrid->Y; y++) {
 			for (int x = 0; x < sGrid->X; x++) {
 				for (int i = index; i < index + size; i++) {
-					snapshotFileStream << sGrid->get(x, y, z)(i) << " ";
+					snapshotFileStream << sGrid->get(x, y, z).u(i) << " ";
 				}
 				for (int i = index + size; i < index + VTK_VECTOR_SIZE; i++) {
 					snapshotFileStream << "0 "; // vtk recognize only vectors of size 3

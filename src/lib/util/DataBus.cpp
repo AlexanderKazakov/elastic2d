@@ -24,7 +24,7 @@ void createStaticType() {
 
 	MPI::Aint node_disp[] = {
 			MPI::Get_address(&nodes[0]),
-			MPI::Get_address(&(nodes[0](0))),
+			MPI::Get_address(&(nodes[0].u(0))),
 			MPI::Get_address(&nodes[1])
 	};
 	for(int i = 3; i >= 0; i--)

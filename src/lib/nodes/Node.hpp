@@ -15,18 +15,15 @@ namespace gcm {
 	 * @tparam Container container used to store node values
 	 */
 	template<int TM, typename Container=DefaultMatrixContainer<TM, 1>>
-	class Node : public linal::Vector<TM, Container> {
+	class Node {
 	public:
 		typedef linal::Vector<TM, Container> Vector;
 		typedef linal::Matrix<TM, TM> Matrix;
 
-		// FIXME - either replace inheritance from Vector to ownership, or keep this shit
-		template<typename Container2>
-		Node<TM, Container>& operator=(const linal::Vector<TM, Container2>& vector) {
-			*(static_cast<linal::Matrix<TM, 1, Container>*>(this)) = vector;
-			return (*this);
-		};
+		static const int M = Vector::M;
 
+		/** The nodal data (PDE variables) */
+		Vector u;
 	};
 }
 

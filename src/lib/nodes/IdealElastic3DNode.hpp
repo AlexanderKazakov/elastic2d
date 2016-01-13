@@ -45,18 +45,12 @@ namespace gcm {
 
 		std::shared_ptr<GcmMatrices<M,3>> matrix; // pointer to GcmMatrices for the node
 
-		template<typename Container>
-		IdealElastic3DNode& operator=(const linal::Vector<M, Container>& vector) {
-			*(static_cast<Node<M, IdealElastic3DContainer>*>(this)) = vector;
-			return (*this);
-		};
-
 		real getPressure() const {
-			return - (Sxx + Syy + Szz) / 3;
+			return - (u.Sxx + u.Syy + u.Szz) / 3;
 		};
 
 		void setPressure(const real& pressure) {
-			Sxx = - pressure; Syy = - pressure; Szz = - pressure;
+			u.Sxx = - pressure; u.Syy = - pressure; u.Szz = - pressure;
 		};
 	};
 }

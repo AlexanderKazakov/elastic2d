@@ -26,7 +26,7 @@ protected:
 
 		for (int k = 0; k < testNumberOfNodes; k++) {
 			for (int i = 0; i < TNode::M; i++) {
-				leftNodes[k](i) = rightNodes[k](i) = rank;
+				leftNodes[k].u(i) = rightNodes[k].u(i) = rank;
 			}
 		}
 
@@ -47,12 +47,12 @@ protected:
 			for (int k = 0; k < testNumberOfNodes; k++) {
 				for (int i = 0; i < TNode::M; i++) {
 					if (rank == 0) {
-						ASSERT_EQ(rightNodes[k](i), rank + 1);
+						ASSERT_EQ(rightNodes[k].u(i), rank + 1);
 					} else if (rank == numberOfWorkers - 1) {
-						ASSERT_EQ(leftNodes[k](i), rank - 1);
+						ASSERT_EQ(leftNodes[k].u(i), rank - 1);
 					} else {
-						ASSERT_EQ(leftNodes[k](i), rank - 1);
-						ASSERT_EQ(rightNodes[k](i), rank + 1);
+						ASSERT_EQ(leftNodes[k].u(i), rank - 1);
+						ASSERT_EQ(rightNodes[k].u(i), rank + 1);
 					}
 				}
 			}
@@ -106,8 +106,8 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	// check that parallel result is equal to sequence result
 	for (int x = 0; x < mpiSolver.getMesh()->getXForTest(); x++) {
 		for (int y = 0; y < mpiSolver.getMesh()->getYForTest(); y++) {
-			ASSERT_EQ(mpiSolver.getMesh()->getNodeForTest(x, y, 0),
-			          sequenceSolver.getMesh()->getNodeForTest(x + mpiSolver.getMesh()->getStartXForTest(), y, 0));
+			ASSERT_EQ(mpiSolver.getMesh()->getNodeForTest(x, y, 0).u,
+			          sequenceSolver.getMesh()->getNodeForTest(x + mpiSolver.getMesh()->getStartXForTest(), y, 0).u);
 		}
 	}
 }

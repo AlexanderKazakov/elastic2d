@@ -30,7 +30,7 @@ TEST(StructuredGrid, initialize) {
 		for (int y = 0; y < task.Y; y++) {
 			for (int z = 0; z < task.Z; z++) {
 				for (int i = 0; i < IdealElastic2DModel::Node::M; i++) {
-					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z)(i), 0.0);
+					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z).u(i), 0.0);
 				}
 			}
 		}
@@ -57,11 +57,11 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vx, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vx, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
@@ -97,11 +97,11 @@ TEST(StructuredGrid, interpolateValuesAround)
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that TestExplosion is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vx, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Vy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Sxy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vx, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxy, 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 

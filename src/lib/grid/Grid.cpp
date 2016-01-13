@@ -24,7 +24,7 @@ void Grid<TModel>::initialize(const Task &task) {
 	maximalLambda = defaultMatrix->getMaximalEigenvalue();
 
 	for (auto& node : nodes) {
-		linal::clear(node);
+		linal::clear(node.u);
 		node.matrix = defaultMatrix;
 	}
 
