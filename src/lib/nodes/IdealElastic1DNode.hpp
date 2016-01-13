@@ -34,35 +34,19 @@ namespace gcm {
 
 		std::shared_ptr<GcmMatrices<M,1>> matrix; // pointer to GcmMatrices for the node
 
-		/*real getPressure() const {
+		template<typename Container>
+		IdealElastic1DNode& operator=(const linal::Vector<M, Container>& vector) {
+			*(static_cast<Node<M, IdealElastic1DContainer>*>(this)) = vector;
+			return (*this);
+		};
+
+		real getPressure() const {
 			return - Sxx;
-		};*/
+		};
 
 		void setPressure(const real& pressure) {
 			Sxx = - pressure;
 		};
-
-		/*// for snapshotters
-		typedef struct {*/
-		static const std::map<const std::string /* name */, const std::pair<const int /* index */, const int /* size */>> VECTORS;
-		static const std::map<const std::string /* name */, const int /* index */> SCALARS;
-			/*typedef real (*Function)(const Node& node);
-			static real getPressure(const Node& node) {
-				return - node.Sxx;
-			};
-			const std::map<const std::string *//**//* name *//**//*, const Function *//**//* function pointer *//**//*> additionScalars = {{"pressure", &getPressure}};*//*
-
-		} NodeMap;
-		static NodeMap Map;*/
-
-
-// TODO - can it be moved to Node<> or further?
-		template<typename Container>
-		IdealElastic1DNode& operator=(const gcm::linal::Matrix<M, 1, Container>& vector) {
-			*(static_cast<Node<M, IdealElastic1DContainer>*>(this)) = vector;
-			return (*this);
-		};
-		// TODO (end)
 
 	};
 }

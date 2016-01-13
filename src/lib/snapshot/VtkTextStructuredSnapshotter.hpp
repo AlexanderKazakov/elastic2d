@@ -23,7 +23,7 @@ namespace gcm {
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
-		StructuredGrid<TModel>*sGrid;
+		StructuredGrid<TModel>* sGrid;
 
 		void writeScalar(const std::string name, const int index);
 

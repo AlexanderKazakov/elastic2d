@@ -45,6 +45,12 @@ namespace gcm {
 
 		std::shared_ptr<GcmMatrices<M,3>> matrix; // pointer to GcmMatrices for the node
 
+		template<typename Container>
+		IdealElastic3DNode& operator=(const linal::Vector<M, Container>& vector) {
+			*(static_cast<Node<M, IdealElastic3DContainer>*>(this)) = vector;
+			return (*this);
+		};
+
 		real getPressure() const {
 			return - (Sxx + Syy + Szz) / 3;
 		};
@@ -52,20 +58,6 @@ namespace gcm {
 		void setPressure(const real& pressure) {
 			Sxx = - pressure; Syy = - pressure; Szz = - pressure;
 		};
-
-		/*static struct {*/
-		static const std::map<const std::string /* name */, const std::pair<const int /* index */, const int /* size */>> VECTORS;
-		static const std::map<const std::string /* name */, const int /* index */> SCALARS;
-		/*} Map; // for snapshotters*/
-
-
-		// TODO - can it be moved to Node<> or further?
-		template<typename Container>
-		IdealElastic3DNode& operator=(const gcm::linal::Matrix<M, 1, Container>& vector) {
-			*(static_cast<Node<M, IdealElastic3DContainer>*>(this)) = vector;
-			return (*this);
-		};
-		// TODO (end)
 	};
 }
 

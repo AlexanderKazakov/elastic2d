@@ -40,7 +40,7 @@ include_directories(src)
 set(SOURCE_MAIN_FILE src/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
-set(TEST_MPI_FILE src/test/testMPI.cpp)
+set(TEST_MPI_FILE src/test/TestMPI.cpp)
 
 # libgcm
 add_library(gcm SHARED ${LIB_SOURCES})
@@ -59,5 +59,5 @@ target_link_libraries(gcm_mpi_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_I
 
 
 # tmp
-add_executable(tmp src/test/sequence/gcmMatrices.cpp src/test/sequence/sequenceTestMain.cpp)
+add_executable(tmp src/test/sequence/TestGcmMatrices.cpp src/test/sequence/TestMain.cpp)
 target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})

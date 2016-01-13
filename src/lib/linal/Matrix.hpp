@@ -105,7 +105,6 @@ namespace gcm {
 			 */
 			void createDiagonal(const std::initializer_list<real> &list);
 
-			// TODO - try to replace templation
 			/** @return i-th column. */
 			template<typename Container2 = DefaultMatrixContainer<TM, 1>>
 			Matrix<TM, 1, Container2> getColumn(const int i) const {
@@ -115,7 +114,7 @@ namespace gcm {
 				}
 				return ans;
 			};
-
+			// FIXME - when replacing templation error "no known conversion" appears though templated copy constructor is provided
 			/** set i-th column */
 			template<typename Container2>
 			void setColumn(const int i, const Matrix<TM, 1, Container2> &column) {

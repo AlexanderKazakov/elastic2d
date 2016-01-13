@@ -20,11 +20,11 @@ void VtkTextStructuredSnapshotter<TModel>::snapshotImpl(const std::string &fileN
 	snapshotFileStream << "ORIGIN " << sGrid->startX << " " << sGrid->startY << " " << sGrid->startZ << std::endl;
 	snapshotFileStream << "POINT_DATA " << sGrid->X * sGrid->Y * sGrid->Z << std::endl;
 
-	for (auto& vec : TModel::Node::VECTORS) {
+	for (auto& vec : TModel::VECTORS) {
 		writeVector(vec.first, vec.second.first, vec.second.second);
 	}
 
-	for (auto& scalar : TModel::Node::SCALARS) {
+	for (auto& scalar : TModel::SCALARS) {
 		writeScalar(scalar.first, scalar.second);
 	}
 

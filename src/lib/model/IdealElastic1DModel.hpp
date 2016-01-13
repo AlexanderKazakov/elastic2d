@@ -10,7 +10,15 @@ namespace gcm {
 	public:
 		typedef IdealElastic1DNode Node;
 		typedef IdealElastic1DGcmMatrices GcmMatrices;
+
 		static const int DIMENSIONALITY = GcmMatrices::DIMENSIONALITY;
+
+		static const std::map<const std::string /* name */,
+				const std::pair<const int /* index */, const int /* size */>> VECTORS;
+
+		static const std::map<const std::string /* name */,
+				const int /* index */> SCALARS;
+
 	};
 }
 

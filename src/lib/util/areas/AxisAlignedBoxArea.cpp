@@ -2,7 +2,11 @@
 
 using namespace gcm;
 
-AxisAlignedBoxArea::AxisAlignedBoxArea(const linal::Vector3 &min, const linal::Vector3 &max) : min(min), max(max) {}
+AxisAlignedBoxArea::AxisAlignedBoxArea(const linal::Vector3 &min, const linal::Vector3 &max) : min(min), max(max) {
+	for (int i = 0; i < 3; i++) {
+		assert_gt((max - min)(i), 0.0);
+	}
+}
 
 bool AxisAlignedBoxArea::contains(const linal::Vector3 &coords) const {
 	for (int i = 0; i < 3; i++) {
