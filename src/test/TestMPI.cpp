@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "lib/config.hpp"
 #include "lib/util/DataBus.hpp"
-#include "lib/Task.hpp"
+#include "lib/task/Task.hpp"
 #include "lib/grid/StructuredGrid.hpp"
 #include "lib/solver/MpiStructuredSolver.hpp"
 #include "lib/nodes/IdealElastic3DNode.hpp"
@@ -89,7 +88,13 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	task.xLength = 4.0;
 	task.yLength = 6.0;
 	task.numberOfSnaps = 50;
-	task.initialConditions = InitialConditions::Explosion;
+	Task::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	pressure.value = 2.0;
+	pressure.area = std::make_shared<SphereArea>(0.3, linal::Vector3({2, 2, 0}));
+	task.initialCondition.quantities.push_back(pressure);
+
+//	task.borderConditions.at(CUBIC_BORDERS::Y_LEFT) = BorderCondition::CONDITION::FREE_BORDER;
 
 	// calculate in sequence
 	task.forceSequence = true;
@@ -99,6 +104,7 @@ TEST(MPI, MPISolverVsSequenceSolver)
 
 	// calculate in parallel
 	task.forceSequence = false;
+	task.enableSnapshotting = true;
 	MpiStructuredSolver<IdealElastic2DModel> mpiSolver;
 	mpiSolver.initialize(task);
 	mpiSolver.calculate();

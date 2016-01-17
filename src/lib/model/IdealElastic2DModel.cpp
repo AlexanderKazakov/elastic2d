@@ -2,11 +2,11 @@
 
 using namespace gcm;
 
-
-const std::map<const std::string /* name */, const std::pair<const int /* index */, const int /* size */>>
-		IdealElastic2DModel::VECTORS = {{"Velocity", {0, IdealElastic2DModel::Node::Vector::V_SIZE}}};
-
-const std::map<const std::string /* name */, const int /* index */>
-		IdealElastic2DModel::SCALARS = {{"Sxx", IdealElastic2DModel::Node::Vector::V_SIZE},
-		                                {"Sxy", IdealElastic2DModel::Node::Vector::V_SIZE + 1},
-		                                {"Syy", IdealElastic2DModel::Node::Vector::V_SIZE + 2}};
+const std::map<PhysicalQuantities::QUANTITY, IdealElastic2DModel::GetSet> IdealElastic2DModel::QUANTITIES = {
+		{PhysicalQuantities::QUANTITY::Vx,       GetSet(IdealElastic2DModel::GetVx, IdealElastic2DModel::SetVx)},
+		{PhysicalQuantities::QUANTITY::Vy,       GetSet(IdealElastic2DModel::GetVy, IdealElastic2DModel::SetVy)},
+		{PhysicalQuantities::QUANTITY::Sxx,      GetSet(IdealElastic2DModel::GetSxx, IdealElastic2DModel::SetSxx)},
+		{PhysicalQuantities::QUANTITY::Sxy,      GetSet(IdealElastic2DModel::GetSxy, IdealElastic2DModel::SetSxy)},
+		{PhysicalQuantities::QUANTITY::Syy,      GetSet(IdealElastic2DModel::GetSyy, IdealElastic2DModel::SetSyy)},
+		{PhysicalQuantities::QUANTITY::PRESSURE, GetSet(IdealElastic2DModel::GetPressure, IdealElastic2DModel::SetPressure)}
+};

@@ -20,8 +20,4 @@ Task::Task() {
 	CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
 	numberOfSnaps = 20;
 
-	initialConditions = InitialConditions::Explosion;
-
-	borderConditions.at(Border::X_LEFT) = BorderConditions::FreeBorder;
-
 }

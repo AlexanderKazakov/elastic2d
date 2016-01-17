@@ -11,7 +11,7 @@ namespace gcm
 	const real EQUALITY_TOLERANCE = 1e-9;
 #else
 	typedef float real;
-	const real EQUALITY_TOLERANCE = 1e-4;
+	const real EQUALITY_TOLERANCE = 1e-3;
 #endif
 
 }

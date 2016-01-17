@@ -1,15 +1,11 @@
 #ifndef LIBGCM_STRUCTUREDGRID_HPP
 #define LIBGCM_STRUCTUREDGRID_HPP
 
-#include <memory>
 #include <mpi.h>
 
-#include "lib/util/Logging.hpp"
 #include "lib/grid/Grid.hpp"
-#include "lib/linal/Linal.hpp"
 #include "lib/nodes/Node.hpp"
 #include "lib/interpolation/Interpolator.hpp"
-#include "lib/Task.hpp"
 
 namespace gcm {
 	template<class TModel> class MpiStructuredSolver;
@@ -124,8 +120,15 @@ namespace gcm {
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
+
+		std::map<CUBIC_BORDERS, BorderCondition::CONDITION> borderConditions;
+
 		virtual void applyBorderConditions() override;
-		virtual void applyInitialConditions() override;
+		virtual void applyInitialConditions(const Task& task) override;
+		linal::Vector3 getCoordinates(const int x, const int y, const int z) const {
+			// TODO - replace with Vector3r
+			return {startX + x * h[0], startY + y * h[1], startZ + z * h[2]};
+		};
 
 		friend class VtkTextStructuredSnapshotter<TModel>;
 		friend class MpiStructuredSolver<TModel>;

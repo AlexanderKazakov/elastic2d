@@ -2,6 +2,16 @@
 
 using namespace gcm;
 
+// TODO - this is wrong
+const std::map<Waves::WAVE, int/* number of column in U1 */> IdealElastic3DGcmMatrices::WAVE_COLUMNS = {
+		{Waves::WAVE::P_FORWARD,   0},
+		{Waves::WAVE::P_BACKWARD,  1},
+		{Waves::WAVE::S1_FORWARD,  2},
+		{Waves::WAVE::S1_BACKWARD, 3},
+		{Waves::WAVE::S2_FORWARD,  4},
+		{Waves::WAVE::S2_BACKWARD, 5}
+};
+
 IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real& lambda, const real& mu) :
 		rho(rho), lambda(lambda), mu(mu) {
 
@@ -28,13 +38,13 @@ IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real
 	m[0].L(7, 7) = sqrt((lambda + 2 * mu) / rho);
 	m[0].L(8, 8) = -sqrt((lambda + 2 * mu) / rho);
 
-	m[0].U(0, 1) = -sqrt(rho * mu)*0.5;
+	m[0].U(0, 1) = -sqrt(rho * mu) * 0.5;
 	m[0].U(0, 4) = 0.5;
-	m[0].U(1, 2) = -sqrt(rho * mu)*0.5;
+	m[0].U(1, 2) = -sqrt(rho * mu) * 0.5;
 	m[0].U(1, 5) = 0.5;
-	m[0].U(2, 1) = sqrt(rho * mu)*0.5;
+	m[0].U(2, 1) = sqrt(rho * mu) * 0.5;
 	m[0].U(2, 4) = 0.5;
-	m[0].U(3, 2) = sqrt(rho * mu)*0.5;
+	m[0].U(3, 2) = sqrt(rho * mu) * 0.5;
 	m[0].U(3, 5) = 0.5;
 	m[0].U(4, 7) = 1;
 	m[0].U(5, 3) = -lambda / (lambda + 2 * mu);
@@ -75,7 +85,7 @@ IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real
 	m[1].A(6, 1) = -lambda - 2 * mu;
 	m[1].A(7, 2) = -mu;
 	m[1].A(8, 1) = -lambda;
-	
+
 	m[1].L(0, 0) = sqrt((lambda + 2 * mu) / rho);
 	m[1].L(1, 1) = -sqrt((lambda + 2 * mu) / rho);
 	m[1].L(2, 2) = sqrt(mu / rho);
@@ -87,13 +97,13 @@ IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real
 	m[1].U(0, 6) = 0.5 * lambda / (lambda + 2 * mu);
 	m[1].U(1, 1) = 0.5 * lambda * sqrt(rho / (lambda + 2 * mu));
 	m[1].U(1, 6) = 0.5 * lambda / (lambda + 2 * mu);
-	m[1].U(2, 0) = -sqrt(rho * mu)*0.5;
+	m[1].U(2, 0) = -sqrt(rho * mu) * 0.5;
 	m[1].U(2, 4) = 0.5;
-	m[1].U(3, 2) = -sqrt(rho * mu)*0.5;
+	m[1].U(3, 2) = -sqrt(rho * mu) * 0.5;
 	m[1].U(3, 7) = 0.5;
-	m[1].U(4, 0) = sqrt(rho * mu)*0.5;
+	m[1].U(4, 0) = sqrt(rho * mu) * 0.5;
 	m[1].U(4, 4) = 0.5;
-	m[1].U(5, 2) = sqrt(rho * mu)*0.5;
+	m[1].U(5, 2) = sqrt(rho * mu) * 0.5;
 	m[1].U(5, 7) = 0.5;
 	m[1].U(6, 3) = 1;
 	m[1].U(6, 6) = -lambda / (lambda + 2 * mu);
@@ -121,7 +131,7 @@ IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real
 	m[1].U1(8, 1) = 1;
 	m[1].U1(8, 8) = 1;
 
-	
+
 	m[2].A(0, 5) = -1.0 / rho;
 	m[2].A(1, 7) = -1.0 / rho;
 	m[2].A(2, 8) = -1.0 / rho;
@@ -130,7 +140,7 @@ IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real
 	m[2].A(6, 2) = -lambda;
 	m[2].A(7, 1) = -mu;
 	m[2].A(8, 2) = -lambda - 2 * mu;
-	
+
 	m[2].L(3, 3) = sqrt((lambda + 2 * mu) / rho);
 	m[2].L(4, 4) = -sqrt((lambda + 2 * mu) / rho);
 	m[2].L(5, 5) = sqrt(mu / rho);
@@ -175,5 +185,4 @@ IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real
 	m[2].U1(7, 8) = sqrt(rho * mu);
 	m[2].U1(8, 3) = (lambda + 2 * mu) / lambda;
 	m[2].U1(8, 4) = (lambda + 2 * mu) / lambda;
-
 }

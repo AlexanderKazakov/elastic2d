@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "lib/util/areas/InfiniteArea.hpp"
 #include "lib/util/areas/AxisAlignedBoxArea.hpp"
 #include "lib/util/areas/SphereArea.hpp"
 #include "lib/util/areas/StraightBoundedCylinderArea.hpp"
@@ -44,4 +45,12 @@ TEST(Area, StraightBoundedCylinderArea) {
 	ASSERT_ANY_THROW(new StraightBoundedCylinderArea(0, {-3, 2, 4}, {-10, 1, 3}));
 	ASSERT_ANY_THROW(new StraightBoundedCylinderArea(-1.0, {-3, 2, 4}, {-10, 1, 3}));
 	ASSERT_ANY_THROW(new StraightBoundedCylinderArea(1.0, {-3, 2, 4}, {-3, 2, 4}));
+}
+
+TEST(Area, InfiniteArea) {
+	Area* area = new InfiniteArea();
+	ASSERT_EQ(true, area->contains({-10, 1, 3}));
+	ASSERT_EQ(true, area->contains({0, 0, 0}));
+	ASSERT_EQ(true, area->contains({std::numeric_limits<real>::infinity(), 0, 3}));
+	ASSERT_EQ(true, area->contains({0, std::numeric_limits<real>::min(), 3}));
 }

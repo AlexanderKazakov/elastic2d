@@ -15,7 +15,7 @@ void createStaticType() {
 #if LIBGCM_DOUBLE_PRECISION
 			MPI::DOUBLE,
 #else
-			MPI::FLOAT
+			MPI::FLOAT,
 #endif
 			MPI::UB
 	};

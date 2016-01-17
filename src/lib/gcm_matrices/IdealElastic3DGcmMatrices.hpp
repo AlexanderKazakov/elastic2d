@@ -10,6 +10,11 @@ namespace gcm {
 		real lambda;
 		real mu;
 
+		/**
+		 * Map between type of wave and corresponding to that type column in matrix U1
+		 */
+		static const std::map<Waves::WAVE, int/* number of column in U1 */> WAVE_COLUMNS;
+
 		IdealElastic3DGcmMatrices(const real &rho, const real &lambda, const real &mu);
 	};
 }

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "lib/util/areas/SphereArea.hpp"
 #include "lib/grid/StructuredGrid.hpp"
 #include "lib/model/IdealElastic2DModel.hpp"
 
@@ -18,7 +19,6 @@ TEST(StructuredGrid, initialize) {
 	task.yLength = 8.0;
 	task.numberOfSnaps = 5;
 	task.T = 100.0;
-	task.initialConditions = InitialConditions::Zero;
 
 	StructuredGrid<IdealElastic2DModel> structuredGrid;
 	structuredGrid.initialize(task);
@@ -48,7 +48,12 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 	task.X = task.Y = 3;
 	task.accuracyOrder = 1;
 	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
-	task.initialConditions = InitialConditions::TestExplosion;
+
+	Task::InitialCondition::Quantity quantity;
+	quantity.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	quantity.value = -1.0;
+	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
+	task.initialCondition.quantities.push_back(quantity);
 
 	for (int stage = 0; stage <= 1; stage++) {
 
@@ -56,7 +61,7 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 		structuredGrid.initialize(task);
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
-				// check that TestExplosion is set properly
+				// check that values is set properly
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vx, 0.0);
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vy, 0.0);
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
@@ -88,7 +93,12 @@ TEST(StructuredGrid, interpolateValuesAround)
 	task.X = task.Y = 3;
 	task.accuracyOrder = 1;
 	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
-	task.initialConditions = InitialConditions::TestExplosion;
+
+	Task::InitialCondition::Quantity quantity;
+	quantity.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	quantity.value = -1.0;
+	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
+	task.initialCondition.quantities.push_back(quantity);
 
 	for (int stage = 0; stage <= 1; stage++) {
 
@@ -96,7 +106,7 @@ TEST(StructuredGrid, interpolateValuesAround)
 		structuredGrid.initialize(task);
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
-				// check that TestExplosion is set properly
+				// check that values is set properly
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vx, 0.0);
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vy, 0.0);
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);

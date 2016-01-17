@@ -2,7 +2,6 @@
 #define LIBGCM_VTKTEXTSTRUCTUREDSNAPSHOTTER_HPP
 
 #include <fstream>
-#include <mpi.h>
 
 #include "lib/grid/StructuredGrid.hpp"
 #include "lib/snapshot/Snapshotter.hpp"
@@ -17,7 +16,7 @@ namespace gcm {
 		/**
 		 * Write vtk snapshot. The simplest but not the most efficient
 		 * snapshotting performed by writing data to file as a text.
-		 * VTK library is not needed for such snapshotting.
+		 * VTK library is not necessary for such snapshotting.
 		 */
 		virtual void snapshotImpl(const std::string& fileName) override;
 
@@ -25,10 +24,7 @@ namespace gcm {
 		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
 		StructuredGrid<TModel>* sGrid;
 
-		void writeScalar(const std::string name, const int index);
-
-		static const int VTK_VECTOR_SIZE = 3;
-		void writeVector(const std::string& name, const int index, const int size);
+		void writeQuantity(const std::string name, const typename TModel::Getter Get);
 
 		std::fstream snapshotFileStream;
 		void openSnapshotFileStream(const std::string& fileName);

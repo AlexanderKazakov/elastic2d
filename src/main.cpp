@@ -12,6 +12,15 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Task task;
+
+	Task::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	pressure.value = 2.0;
+	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 1, 0}));
+	task.initialCondition.quantities.push_back(pressure);
+
+	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::CONDITION::FREE_BORDER;
+
 	task.enableSnapshotting = true;
 	MpiStructuredSolver<IdealElastic2DModel> solver;
 

@@ -116,6 +116,7 @@ TEST(Interpolator, MinMaxFifthOrder)
 
 TEST(Interpolator, TenthOrder)
 {
+#if LIBGCM_DOUBLE_PRECISION
 	const int N = 2;
 	auto func = [](real x) {
 		return x * x * x * x * x * x * x * x * x * x + 4 * x * x * x * x * x * x * x * x * x -
@@ -132,6 +133,9 @@ TEST(Interpolator, TenthOrder)
 		interpolator.interpolate(res, src, q);
 		ASSERT_NEAR(res(0), func(q), fabs(res(0)) * EQUALITY_TOLERANCE * 1e+3);
 	}
+#else
+#warning "Interpolation with floats is much worse than with doubles"
+#endif
 }
 
 

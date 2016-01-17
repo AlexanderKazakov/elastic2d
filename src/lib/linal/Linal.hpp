@@ -298,6 +298,20 @@ namespace gcm {
 					m1(i, j) = m1(i, j) + m2(i, j);
 		}
 
+		template<int TM, int TN, typename Container>
+		void operator*=(Matrix<TM, TN, Container> &m, const real x) {
+			for (int i = 0; i < TM; i++)
+				for (int j = 0; j < TN; j++)
+					m(i, j) *= x;
+		}
+
+		template<int TM, int TN, typename Container>
+		void operator/=(Matrix<TM, TN, Container> &m, const real x) {
+			for (int i = 0; i < TM; i++)
+				for (int j = 0; j < TN; j++)
+					m(i, j) /= x;
+		}
+
 		template<int TM, int TN, typename Container1, typename Container2>
 		bool operator==(const Matrix<TM, TN, Container1> &m1, const Matrix<TM, TN, Container2> &m2) {
 			for (int i = 0; i < TM; i++)

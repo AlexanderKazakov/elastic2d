@@ -2,6 +2,13 @@
 
 using namespace gcm;
 
+const std::map<Waves::WAVE, int /* number of column in U1 */> IdealElastic2DGcmMatrices::WAVE_COLUMNS = {
+		{Waves::WAVE::P_FORWARD,   1},
+		{Waves::WAVE::P_BACKWARD,  0},
+		{Waves::WAVE::S1_FORWARD,  3},
+		{Waves::WAVE::S1_BACKWARD, 2}
+};
+
 IdealElastic2DGcmMatrices::IdealElastic2DGcmMatrices(const real& rho, const real& lambda, const real& mu) :
 		rho(rho), lambda(lambda), mu(mu) {
 

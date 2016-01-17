@@ -2,9 +2,8 @@
 
 using namespace gcm;
 
-
-const std::map<const std::string /* name */, const std::pair<const int /* index */, const int /* size */>>
-		IdealElastic1DModel::VECTORS = {{"Velocity", {0, IdealElastic1DModel::Node::Vector::V_SIZE}}};
-
-const std::map<const std::string /* name */, const int /* index */>
-		IdealElastic1DModel::SCALARS = {{"Sxx", IdealElastic1DModel::Node::Vector::V_SIZE}};
+const std::map<PhysicalQuantities::QUANTITY, IdealElastic1DModel::GetSet> IdealElastic1DModel::QUANTITIES = {
+		{PhysicalQuantities::QUANTITY::Vx,       GetSet(IdealElastic1DModel::GetVx, IdealElastic1DModel::SetVx)},
+		{PhysicalQuantities::QUANTITY::Sxx,      GetSet(IdealElastic1DModel::GetSxx, IdealElastic1DModel::SetSxx)},
+		{PhysicalQuantities::QUANTITY::PRESSURE, GetSet(IdealElastic1DModel::GetPressure, IdealElastic1DModel::SetPressure)}
+};

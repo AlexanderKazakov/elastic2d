@@ -2,6 +2,8 @@
 
 #include "lib/model/IdealElastic2DModel.hpp"
 #include "lib/solver/MpiStructuredSolver.hpp"
+#include "lib/util/areas/AxisAlignedBoxArea.hpp"
+#include "lib/util/areas/StraightBoundedCylinderArea.hpp"
 
 using namespace gcm;
 
@@ -20,7 +22,16 @@ TEST(Solver, StageXForward)
 		task.yLength = 3.0;
 		task.numberOfSnaps = 1;
 		task.T = 100.0;
-		task.initialConditions = InitialConditions::PWaveX;
+
+		Task::InitialCondition::Wave wave;
+		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.direction = 0; // along x
+		wave.quantity = PhysicalQuantities::QUANTITY::PRESSURE;
+		wave.quantityValue = 5;
+		linal::Vector3 min({0.3, -1, -1});
+		linal::Vector3 max({0.7, 4, 1});
+		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+		task.initialCondition.waves.push_back(wave);
 		
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
@@ -55,11 +66,20 @@ TEST(Solver, StageY)
 		task.X = 10;
 		task.Y = 10;
 		task.xLength = 3.0;
-		task.yLength = 3.0;
+		task.yLength = 2.0;
 		task.numberOfSnaps = 1;
 		task.T = 100.0;
-		task.initialConditions = InitialConditions::PWaveY;
-		
+
+		Task::InitialCondition::Wave wave;
+		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.direction = 1; // along y
+		wave.quantity = PhysicalQuantities::QUANTITY::Vy;
+		wave.quantityValue = -2;
+		linal::Vector3 min({ -1, 0.3, -1});
+		linal::Vector3 max({ 4, 0.7, 1});
+		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+		task.initialCondition.waves.push_back(wave);
+
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
 		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
@@ -70,8 +90,7 @@ TEST(Solver, StageY)
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
-					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u,
-					          (y == 2 + i || y == 3 + i || y == 4 + i || y == 5 + i || y == 6 + i) ? pWave : zero)
+					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u, (y == 2 + i || y == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
@@ -97,7 +116,14 @@ TEST(Solver, StageYSxx)
 		task.yLength = 3.0;
 		task.numberOfSnaps = 1;
 		task.T = 100.0;
-		task.initialConditions = InitialConditions::SxxOnly;
+
+		Task::InitialCondition::Quantity quantity;
+		quantity.physicalQuantity = PhysicalQuantities::QUANTITY::Sxx;
+		quantity.value = 10;
+		linal::Vector3 begin({3.684, 1.666, -1});
+		linal::Vector3 end({3.684, 1.666, 1});
+		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.1, begin, end);
+		task.initialCondition.quantities.push_back(quantity);
 		
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
@@ -135,7 +161,16 @@ TEST(Solver, calculate)
 	task.yLength = 3.0;
 	task.numberOfSnaps = 9;
 	task.T = 100.0;
-	task.initialConditions = InitialConditions::SWaveY;
+
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::WAVE::S1_FORWARD;
+	wave.direction = 1; // along y
+	wave.quantity = PhysicalQuantities::QUANTITY::Vx;
+	wave.quantityValue = 1;
+	linal::Vector3 min({ -1, 0.1125, -1});
+	linal::Vector3 max({ 8, 0.6375, 1});
+	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+	task.initialCondition.waves.push_back(wave);
 	
 	MpiStructuredSolver<IdealElastic2DModel> solver;
 	solver.initialize(task);
@@ -162,7 +197,16 @@ TEST(Solver, TwoLayersDifferentRho)
 		task.xLength = 2.0;
 		task.yLength = 1.0;
 		task.numberOfSnaps = numberOfSnapsInitial + 2 * i; // in order to catch the impulses
-		task.initialConditions = InitialConditions::PWaveY;
+
+		Task::InitialCondition::Wave wave;
+		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.direction = 1; // along y
+		wave.quantity = PhysicalQuantities::QUANTITY::Vy;
+		wave.quantityValue = -2;
+		linal::Vector3 min({ -1, 0.015, -1});
+		linal::Vector3 max({ 4, 0.455, 1});
+		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+		task.initialCondition.waves.push_back(wave);
 		
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
@@ -231,8 +275,17 @@ TEST(Solver, TwoLayersDifferentE)
 		task.xLength = 2.0;
 		task.yLength = 1.0;
 		task.numberOfSnaps = numberOfSnapsInitial - 2 * i; // in order to catch the impulses
-		task.initialConditions = InitialConditions::PWaveY;
-		
+
+		Task::InitialCondition::Wave wave;
+		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.direction = 1; // along y
+		wave.quantity = PhysicalQuantities::QUANTITY::Vy;
+		wave.quantityValue = -2;
+		linal::Vector3 min({ -1, 0.015, -1});
+		linal::Vector3 max({ 4, 0.455, 1});
+		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+		task.initialCondition.waves.push_back(wave);
+
 		MpiStructuredSolver<IdealElastic2DModel> solver;
 		solver.initialize(task);
 

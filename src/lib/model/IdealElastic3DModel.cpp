@@ -3,13 +3,15 @@
 using namespace gcm;
 
 
-const std::map<const std::string /* name */, const std::pair<const int /* index */, const int /* size */>>
-		IdealElastic3DModel::VECTORS = {{"Velocity", {0, IdealElastic3DModel::Node::Vector::V_SIZE}}};
-
-const std::map<const std::string /* name */, const int /* index */>
-		IdealElastic3DModel::SCALARS = {{"Sxx", IdealElastic3DModel::Node::Vector::V_SIZE},
-		                                {"Sxy", IdealElastic3DModel::Node::Vector::V_SIZE + 1},
-		                                {"Sxz", IdealElastic3DModel::Node::Vector::V_SIZE + 2},
-		                                {"Syy", IdealElastic3DModel::Node::Vector::V_SIZE + 3},
-		                                {"Syz", IdealElastic3DModel::Node::Vector::V_SIZE + 4},
-		                                {"Szz", IdealElastic3DModel::Node::Vector::V_SIZE + 5}};
+const std::map<PhysicalQuantities::QUANTITY, IdealElastic3DModel::GetSet> IdealElastic3DModel::QUANTITIES = {
+		{PhysicalQuantities::QUANTITY::Vx,       GetSet(IdealElastic3DModel::GetVx, IdealElastic3DModel::SetVx)},
+		{PhysicalQuantities::QUANTITY::Vy,       GetSet(IdealElastic3DModel::GetVy, IdealElastic3DModel::SetVy)},
+		{PhysicalQuantities::QUANTITY::Vz,       GetSet(IdealElastic3DModel::GetVz, IdealElastic3DModel::SetVz)},
+		{PhysicalQuantities::QUANTITY::Sxx,      GetSet(IdealElastic3DModel::GetSxx, IdealElastic3DModel::SetSxx)},
+		{PhysicalQuantities::QUANTITY::Sxy,      GetSet(IdealElastic3DModel::GetSxy, IdealElastic3DModel::SetSxy)},
+		{PhysicalQuantities::QUANTITY::Sxz,      GetSet(IdealElastic3DModel::GetSxz, IdealElastic3DModel::SetSxz)},
+		{PhysicalQuantities::QUANTITY::Syy,      GetSet(IdealElastic3DModel::GetSyy, IdealElastic3DModel::SetSyy)},
+		{PhysicalQuantities::QUANTITY::Syz,      GetSet(IdealElastic3DModel::GetSyz, IdealElastic3DModel::SetSyz)},
+		{PhysicalQuantities::QUANTITY::Szz,      GetSet(IdealElastic3DModel::GetSzz, IdealElastic3DModel::SetSzz)},
+		{PhysicalQuantities::QUANTITY::PRESSURE, GetSet(IdealElastic3DModel::GetPressure, IdealElastic3DModel::SetPressure)}
+};

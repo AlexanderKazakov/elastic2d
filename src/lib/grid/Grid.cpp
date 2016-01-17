@@ -28,14 +28,7 @@ void Grid<TModel>::initialize(const Task &task) {
 		node.matrix = defaultMatrix;
 	}
 
-	/* ------------------ Properties and conditions ------------------ */
-
-	initialConditions = task.initialConditions;
-	borderConditions = task.borderConditions;
-
-	/* ------------------ Properties and conditions (end) ------------------ */
-
-	applyInitialConditions();
+	applyInitialConditions(task);
 }
 
 template class Grid<IdealElastic1DModel>;
