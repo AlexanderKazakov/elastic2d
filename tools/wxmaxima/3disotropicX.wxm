@@ -1,0 +1,54 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 13.04.2 ] */
+
+/* [wxMaxima: input   start ] */
+A : zeromatrix(9,9);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+A[1][4] : -1.0 / rho;
+A[2][5] : -1.0 / rho;
+A[3][6] : -1.0 / rho;
+A[4][1] : -lambda - 2 * mu;
+A[5][2] : -mu;
+A[6][3] : -mu;
+A[7][1] : -lambda;
+A[9][1] : -lambda;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+A;
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+combine(eigenvalues(A));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+esys1 : combine(eigenvectors(A));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+esys1[2];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+U1 : transpose(matrix(esys1[2][1][1]/2.0, esys1[2][2][1]/2.0, esys1[2][3][1]/2.0, esys1[2][3][2]/2.0, 
+                      esys1[2][4][1]/2.0, esys1[2][4][2]/2.0, esys1[2][5][1], esys1[2][5][2], esys1[2][5][3]));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+esys : combine(factor(eigenvectors(transpose(A))));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+U : matrix(esys[2][1][1]/1.0, esys[2][2][1]/1.0, esys[2][3][1]/1.0, esys[2][3][2]/1.0, esys[2][4][1]/1.0,
+esys[2][4][2]/1.0, esys[2][5][2]/1.0 + -1.0 * esys[2][5][1] * lambda / (lambda + 2*mu), esys[2][5][3]/1.0, -1.0 * esys[2][5][1] * lambda / (lambda + 2*mu));
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+U.U1;
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$
