@@ -1,15 +1,15 @@
-#include "IdealElastic2DGcmMatrices.hpp"
+#include "lib/gcm_matrices/IsotropicElastic2DGcmMatrices.hpp"
 
 using namespace gcm;
 
-const std::map<Waves::WAVE, int /* number of column in U1 */> IdealElastic2DGcmMatrices::WAVE_COLUMNS = {
-		{Waves::WAVE::P_FORWARD,   1},
-		{Waves::WAVE::P_BACKWARD,  0},
-		{Waves::WAVE::S1_FORWARD,  3},
-		{Waves::WAVE::S1_BACKWARD, 2}
+const std::map<Waves::T, int /* number of column in U1 */> IsotropicElastic2DGcmMatrices::WAVE_COLUMNS = {
+		{Waves::T::P_FORWARD,   1},
+		{Waves::T::P_BACKWARD,  0},
+		{Waves::T::S1_FORWARD,  3},
+		{Waves::T::S1_BACKWARD, 2}
 };
 
-IdealElastic2DGcmMatrices::IdealElastic2DGcmMatrices(const real &rho, const real &lambda, const real &mu) :
+IsotropicElastic2DGcmMatrices::IsotropicElastic2DGcmMatrices(const real &rho, const real &lambda, const real &mu) :
 		rho(rho), lambda(lambda), mu(mu) {
 
 	m[0].A = linal::Matrix<5, 5>({0, 0, -1.0 / rho, 0, 0,

@@ -24,9 +24,9 @@ TEST(Solver, StageXForward)
 		task.T = 100.0;
 
 		Task::InitialCondition::Wave wave;
-		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 0; // along x
-		wave.quantity = PhysicalQuantities::QUANTITY::PRESSURE;
+		wave.quantity = PhysicalQuantities::T::PRESSURE;
 		wave.quantityValue = 5;
 		linal::Vector3 min({0.3, -1, -1});
 		linal::Vector3 max({0.7, 4, 1});
@@ -71,9 +71,9 @@ TEST(Solver, StageY)
 		task.T = 100.0;
 
 		Task::InitialCondition::Wave wave;
-		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
-		wave.quantity = PhysicalQuantities::QUANTITY::Vy;
+		wave.quantity = PhysicalQuantities::T::Vy;
 		wave.quantityValue = -2;
 		linal::Vector3 min({ -1, 0.3, -1});
 		linal::Vector3 max({ 4, 0.7, 1});
@@ -118,7 +118,7 @@ TEST(Solver, StageYSxx)
 		task.T = 100.0;
 
 		Task::InitialCondition::Quantity quantity;
-		quantity.physicalQuantity = PhysicalQuantities::QUANTITY::Sxx;
+		quantity.physicalQuantity = PhysicalQuantities::T::Sxx;
 		quantity.value = 10;
 		linal::Vector3 begin({3.684, 1.666, -1});
 		linal::Vector3 end({3.684, 1.666, 1});
@@ -163,9 +163,9 @@ TEST(Solver, calculate)
 	task.T = 100.0;
 
 	Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::WAVE::S1_FORWARD;
+	wave.waveType = Waves::T::S1_FORWARD;
 	wave.direction = 1; // along y
-	wave.quantity = PhysicalQuantities::QUANTITY::Vx;
+	wave.quantity = PhysicalQuantities::T::Vx;
 	wave.quantityValue = 1;
 	linal::Vector3 min({ -1, 0.1125, -1});
 	linal::Vector3 max({ 8, 0.6375, 1});
@@ -199,9 +199,9 @@ TEST(Solver, TwoLayersDifferentRho)
 		task.numberOfSnaps = numberOfSnapsInitial + 2 * i; // in order to catch the impulses
 
 		Task::InitialCondition::Wave wave;
-		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
-		wave.quantity = PhysicalQuantities::QUANTITY::Vy;
+		wave.quantity = PhysicalQuantities::T::Vy;
 		wave.quantityValue = -2;
 		linal::Vector3 min({ -1, 0.015, -1});
 		linal::Vector3 max({ 4, 0.455, 1});
@@ -277,9 +277,9 @@ TEST(Solver, TwoLayersDifferentE)
 		task.numberOfSnaps = numberOfSnapsInitial - 2 * i; // in order to catch the impulses
 
 		Task::InitialCondition::Wave wave;
-		wave.waveType = Waves::WAVE::P_FORWARD;
+		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
-		wave.quantity = PhysicalQuantities::QUANTITY::Vy;
+		wave.quantity = PhysicalQuantities::T::Vy;
 		wave.quantityValue = -2;
 		linal::Vector3 min({ -1, 0.015, -1});
 		linal::Vector3 max({ 4, 0.455, 1});

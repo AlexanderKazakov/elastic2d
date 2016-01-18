@@ -121,7 +121,7 @@ namespace gcm {
 	private:
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
 
-		std::map<CUBIC_BORDERS, BorderCondition::CONDITION> borderConditions;
+		std::map<CUBIC_BORDERS, BorderCondition::T> borderConditions;
 
 		virtual void applyBorderConditions() override;
 		virtual void applyInitialConditions(const Task& task) override;

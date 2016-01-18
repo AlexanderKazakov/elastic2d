@@ -3,43 +3,37 @@
 using namespace gcm;
 
 
-const std::map<PhysicalQuantities::QUANTITY, std::string> PhysicalQuantities::NAME = {
-		{PhysicalQuantities::QUANTITY::Vx,       "Vx"},
-		{PhysicalQuantities::QUANTITY::Vy,       "Vy"},
-		{PhysicalQuantities::QUANTITY::Vz,       "Vz"},
+const std::map<PhysicalQuantities::T, std::string> PhysicalQuantities::NAME = {
+		{PhysicalQuantities::T::Vx,       "Vx"},
+		{PhysicalQuantities::T::Vy,       "Vy"},
+		{PhysicalQuantities::T::Vz,       "Vz"},
 
-		{PhysicalQuantities::QUANTITY::Sxx,      "Sxx"},
-		{PhysicalQuantities::QUANTITY::Sxy,      "Sxy"},
-		{PhysicalQuantities::QUANTITY::Sxz,      "Sxz"},
-		{PhysicalQuantities::QUANTITY::Syy,      "Syy"},
-		{PhysicalQuantities::QUANTITY::Syz,      "Syz"},
-		{PhysicalQuantities::QUANTITY::Szz,      "Szz"},
+		{PhysicalQuantities::T::Sxx,      "Sxx"},
+		{PhysicalQuantities::T::Sxy,      "Sxy"},
+		{PhysicalQuantities::T::Sxz,      "Sxz"},
+		{PhysicalQuantities::T::Syy,      "Syy"},
+		{PhysicalQuantities::T::Syz,      "Syz"},
+		{PhysicalQuantities::T::Szz,      "Szz"},
 
-		{PhysicalQuantities::QUANTITY::RHO,      "rho"},
-		{PhysicalQuantities::QUANTITY::PRESSURE, "pressure"},
+		{PhysicalQuantities::T::RHO,      "rho"},
+		{PhysicalQuantities::T::PRESSURE, "pressure"},
 };
 
-// TODO gtest
-//static_assert(PhysicalQuantities::NAME.size() == static_cast<int>(PhysicalQuantities::QUANTITY::SIZE_OF_ENUM), "");
 
+const std::map<Waves::T, std::string> Waves::NAME = {
+		{Waves::T::P_FORWARD,   "P_wave_forward"},
+		{Waves::T::P_BACKWARD,  "P_wave_backward"},
 
-const std::map<Waves::WAVE, std::string> Waves::NAME = {
-		{Waves::WAVE::P_FORWARD,   "P_wave_forward"},
-		{Waves::WAVE::P_BACKWARD,  "P_wave_backward"},
+		{Waves::T::S1_FORWARD,  "S1_wave_forward"},
+		{Waves::T::S1_BACKWARD, "S1_wave_backward"},
 
-		{Waves::WAVE::S1_FORWARD,  "S1_wave_forward"},
-		{Waves::WAVE::S1_BACKWARD, "S1_wave_backward"},
-
-		{Waves::WAVE::S2_FORWARD,  "S2_wave_forward"},
-		{Waves::WAVE::S2_BACKWARD, "S2_wave_backward"},
+		{Waves::T::S2_FORWARD,  "S2_wave_forward"},
+		{Waves::T::S2_BACKWARD, "S2_wave_backward"},
 };
 
-//static_assert(Waves::NAME.size() == static_cast<int>(Waves::WAVE::SIZE_OF_ENUM), "");
 
-
-const std::map<BorderCondition::CONDITION, std::string> BorderCondition::NAME = {
-		{BorderCondition::CONDITION::NON_REFLECTION, "non-reflection"},
-		{BorderCondition::CONDITION::FREE_BORDER,    "free-border"}
+const std::map<BorderCondition::T, std::string> BorderCondition::NAME = {
+		{BorderCondition::T::NON_REFLECTION, "non-reflection"},
+		{BorderCondition::T::FREE_BORDER,    "free-border"}
 };
 
-//static_assert(BorderCondition::NAME.size() == static_cast<int>(BorderCondition::CONDITION::SIZE_OF_ENUM), "");

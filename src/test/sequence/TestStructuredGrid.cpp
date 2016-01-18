@@ -50,7 +50,7 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
 
 	Task::InitialCondition::Quantity quantity;
-	quantity.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	quantity.value = -1.0;
 	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
 	task.initialCondition.quantities.push_back(quantity);
@@ -95,7 +95,7 @@ TEST(StructuredGrid, interpolateValuesAround)
 	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
 
 	Task::InitialCondition::Quantity quantity;
-	quantity.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	quantity.value = -1.0;
 	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
 	task.initialCondition.quantities.push_back(quantity);

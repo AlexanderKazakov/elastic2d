@@ -1,14 +1,14 @@
-#include "IdealElastic1DGcmMatrices.hpp"
+#include "lib/gcm_matrices/Elastic1DGcmMatrices.hpp"
 
 using namespace gcm;
 
-const std::map<Waves::WAVE, int /* number of column in U1 */> IdealElastic1DGcmMatrices::WAVE_COLUMNS = {
-		{Waves::WAVE::P_FORWARD,  0},
-		{Waves::WAVE::P_BACKWARD, 1}
+const std::map<Waves::T, int /* number of column in U1 */> Elastic1DGcmMatrices::WAVE_COLUMNS = {
+		{Waves::T::P_FORWARD,  0},
+		{Waves::T::P_BACKWARD, 1}
 };
 
 
-IdealElastic1DGcmMatrices::IdealElastic1DGcmMatrices(const real& rho, const real& lambda, const real& mu) :
+Elastic1DGcmMatrices::Elastic1DGcmMatrices(const real& rho, const real& lambda, const real& mu) :
 		rho(rho), lambda(lambda), mu(mu) {
 
 	real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus

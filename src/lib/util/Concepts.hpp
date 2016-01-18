@@ -8,6 +8,7 @@
  * The file contains structs with enumerations and some properties for physical concepts used by the program.
  * The aim is to formalize and unify interconnection between parts of the program.
  * Use it every time when parts of the program communicate to each other by this concepts.
+ * Enum class called T (type), map with string names called NAME.
  */
 
 namespace gcm {
@@ -16,7 +17,8 @@ namespace gcm {
      * For all physical quantities used in the program.
      */
 	struct PhysicalQuantities {
-		enum class QUANTITY {
+		/** Type */
+		enum class T {
 			Vx /* Velocity component along x-axis */,
 			Vy /* Velocity component along y-axis */,
 			Vz /* Velocity component along z-axis */,
@@ -34,15 +36,16 @@ namespace gcm {
 			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 		};
 
-		/** string names of thq quantities */
-		static const std::map<QUANTITY, std::string> NAME;
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
 	};
 
 	/**
 	 * For all types of waves used in the program.
 	 */
 	struct Waves {
-		enum class WAVE {
+		/** Type */
+		enum class T {
 			P_FORWARD, P_BACKWARD,
 			S1_FORWARD, S1_BACKWARD,
 			S2_FORWARD, S2_BACKWARD,
@@ -50,21 +53,24 @@ namespace gcm {
 			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 		};
 
-		static const std::map<WAVE, std::string> NAME;
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
 	};
 
 	/**
 	 * For all types of border conditions used in the program.
 	 */
 	struct BorderCondition {
-		enum class CONDITION {
+		/** Type */
+		enum class T {
 			NON_REFLECTION,
 			FREE_BORDER,
 
 			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 		};
 
-		static const std::map<CONDITION, std::string> NAME;
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
 	};
 
 	/* Six faces of axis-aligned cube */

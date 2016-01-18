@@ -89,7 +89,7 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	task.yLength = 6.0;
 	task.numberOfSnaps = 50;
 	Task::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::QUANTITY::PRESSURE;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
 	pressure.area = std::make_shared<SphereArea>(0.3, linal::Vector3({2, 2, 0}));
 	task.initialCondition.quantities.push_back(pressure);

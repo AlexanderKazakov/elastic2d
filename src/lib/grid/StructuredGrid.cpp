@@ -107,7 +107,7 @@ void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& la
 template<class TModel>
 void StructuredGrid<TModel>::applyBorderConditions() {
 
-	if (this->rank == 0 && borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::CONDITION::FREE_BORDER) {
+	if (this->rank == 0 && borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::T::FREE_BORDER) {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -121,7 +121,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 			}
 		}
 	}
-	if (this->rank == this->numberOfWorkers - 1 && borderConditions.at(CUBIC_BORDERS::X_RIGHT) == BorderCondition::CONDITION::FREE_BORDER) {
+	if (this->rank == this->numberOfWorkers - 1 && borderConditions.at(CUBIC_BORDERS::X_RIGHT) == BorderCondition::T::FREE_BORDER) {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -136,7 +136,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		}
 	}
 	
-	if (Y != 1 && borderConditions.at(CUBIC_BORDERS::Y_LEFT) == BorderCondition::CONDITION::FREE_BORDER) {
+	if (Y != 1 && borderConditions.at(CUBIC_BORDERS::Y_LEFT) == BorderCondition::T::FREE_BORDER) {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -150,7 +150,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 			}
 		}
 	}
-	if (Y != 1 && borderConditions.at(CUBIC_BORDERS::Y_RIGHT) == BorderCondition::CONDITION::FREE_BORDER) {
+	if (Y != 1 && borderConditions.at(CUBIC_BORDERS::Y_RIGHT) == BorderCondition::T::FREE_BORDER) {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -165,7 +165,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		}
 	}
 
-	if (Z != 1 && borderConditions.at(CUBIC_BORDERS::Z_LEFT) == BorderCondition::CONDITION::FREE_BORDER) {
+	if (Z != 1 && borderConditions.at(CUBIC_BORDERS::Z_LEFT) == BorderCondition::T::FREE_BORDER) {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
@@ -179,7 +179,7 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 			}
 		}
 	}
-	if (Z != 1 && borderConditions.at(CUBIC_BORDERS::Z_RIGHT) == BorderCondition::CONDITION::FREE_BORDER) {
+	if (Z != 1 && borderConditions.at(CUBIC_BORDERS::Z_RIGHT) == BorderCondition::T::FREE_BORDER) {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {

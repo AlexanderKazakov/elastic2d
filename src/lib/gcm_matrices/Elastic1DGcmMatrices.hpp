@@ -4,7 +4,7 @@
 #include "lib/gcm_matrices/GcmMatrices.hpp"
 
 namespace gcm {
-	class IdealElastic1DGcmMatrices : public GcmMatrices<2, 1> {
+	class Elastic1DGcmMatrices : public GcmMatrices<2, 1> {
 	public:
 		real rho;
 		real lambda;
@@ -13,9 +13,9 @@ namespace gcm {
 		/**
 		 * Map between type of wave and corresponding to that type column in matrix U1
 		 */
-		static const std::map<Waves::WAVE, int/* number of column in U1 */> WAVE_COLUMNS;
+		static const std::map<Waves::T, int/* number of column in U1 */> WAVE_COLUMNS;
 
-		IdealElastic1DGcmMatrices(const real &rho, const real &lambda, const real &mu);
+		Elastic1DGcmMatrices(const real &rho, const real &lambda, const real &mu);
 	};
 }
 

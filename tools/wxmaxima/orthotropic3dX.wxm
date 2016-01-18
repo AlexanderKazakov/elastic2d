@@ -2,12 +2,18 @@
 /* [ Created with wxMaxima version 13.04.2 ] */
 
 /* [wxMaxima: input   start ] */
-A : zeromatrix(2,2);
+A : zeromatrix(9,9);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-A[1][1] : 0;              A[1][2] : b;
-A[2][1] : c;              A[2][2] : 0;
+A[1][4] : -1.0 / rho;
+A[2][5] : -1.0 / rho;
+A[3][6] : -1.0 / rho;
+A[4][1] : -c11;
+A[5][2] : -c66;
+A[6][3] : -c55;
+A[7][1] : -c12;
+A[9][1] : -c13;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -19,11 +25,16 @@ combine(eigenvalues(A));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-esys1 : combine(factor(eigenvectors(A)));
+esys1 : combine(eigenvectors(A));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-U1 : transpose(matrix(esys1[2][1][1], esys1[2][2][1]));
+esys1[2];
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+U1 : transpose(matrix(esys1[2][1][1]/2.0, esys1[2][2][1]/2.0, esys1[2][3][1]/2.0, esys1[2][4][1]/2.0, 
+                      esys1[2][5][1]/2.0, esys1[2][6][1]/2.0, esys1[2][7][1], esys1[2][7][2], esys1[2][7][3]));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -31,11 +42,12 @@ esys : combine(factor(eigenvectors(transpose(A))));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-U : matrix(esys[2][1][1], esys[2][2][1]);
+U : matrix(esys[2][1][1]/1.0, esys[2][2][1]/1.0, esys[2][3][1]/1.0, esys[2][4][1]/1.0, esys[2][5][1]/1.0,
+esys[2][6][1]/1.0, esys[2][7][2]/1.0 - c12 * esys[2][7][1] / c11, esys[2][7][3]/1.0, -1.0 * c13 * esys[2][7][1] / c11);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-simplify(U.U1);
+U.U1;
 /* [wxMaxima: input   end   ] */
 
 /* Maxima can't load/batch files which end with a comment! */

@@ -9,11 +9,11 @@ A : zeromatrix(9,9);
 A[1][6] : -1.0 / rho;
 A[2][8] : -1.0 / rho;
 A[3][9] : -1.0 / rho;
-A[4][3] : -lambda;
-A[6][1] : -mu;
-A[7][3] : -lambda;
-A[8][2] : -mu;
-A[9][3] : -lambda - 2 * mu;
+A[4][3] : -c13;
+A[6][1] : -c55;
+A[7][3] : -c23;
+A[8][2] : -c44;
+A[9][3] : -c33;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -29,8 +29,8 @@ esys1 : combine(eigenvectors(A));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-U1 : transpose(matrix(esys1[2][1][1]/2.0, esys1[2][2][1]/2.0, esys1[2][3][1]/2.0, esys1[2][3][2]/2.0, 
-                      esys1[2][4][1]/2.0, esys1[2][4][2]/2.0, esys1[2][5][1], esys1[2][5][2], esys1[2][5][3]));
+U1 : transpose(matrix(esys1[2][1][1]/2.0, esys1[2][2][1]/2.0, esys1[2][3][1]/2.0, esys1[2][4][1]/2.0, 
+                      esys1[2][5][1]/2.0, esys1[2][6][1]/2.0, esys1[2][7][1], esys1[2][7][2], esys1[2][7][3]));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -38,8 +38,8 @@ esys : combine(factor(eigenvectors(transpose(A))));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-U : matrix(esys[2][1][1]/1.0, esys[2][2][1]/1.0, esys[2][3][1]/1.0, esys[2][3][2]/1.0, esys[2][4][1]/1.0,
-esys[2][4][2]/1.0, esys[2][5][1]/1.0, esys[2][5][2]/1.0, esys[2][5][3]/1.0);
+U : matrix(esys[2][1][1]/1.0, esys[2][2][1]/1.0, esys[2][3][1]/1.0, esys[2][4][1]/1.0, esys[2][5][1]/1.0,
+esys[2][6][1]/1.0, esys[2][7][1]/1.0, esys[2][7][2]/1.0, esys[2][7][3]/1.0);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */

@@ -1,17 +1,17 @@
-#include "IdealElastic3DGcmMatrices.hpp"
+#include "lib/gcm_matrices/IsotropicElastic3DGcmMatrices.hpp"
 
 using namespace gcm;
 
-const std::map<Waves::WAVE, int/* number of column in U1 */> IdealElastic3DGcmMatrices::WAVE_COLUMNS = {
-		{Waves::WAVE::P_FORWARD,   1},
-		{Waves::WAVE::P_BACKWARD,  0},
-		{Waves::WAVE::S1_FORWARD,  4},
-		{Waves::WAVE::S1_BACKWARD, 2},
-		{Waves::WAVE::S2_FORWARD,  5},
-		{Waves::WAVE::S2_BACKWARD, 3}
+const std::map<Waves::T, int/* number of column in U1 */> IsotropicElastic3DGcmMatrices::WAVE_COLUMNS = {
+		{Waves::T::P_FORWARD,   1},
+		{Waves::T::P_BACKWARD,  0},
+		{Waves::T::S1_FORWARD,  4},
+		{Waves::T::S1_BACKWARD, 2},
+		{Waves::T::S2_FORWARD,  5},
+		{Waves::T::S2_BACKWARD, 3}
 };
 
-IdealElastic3DGcmMatrices::IdealElastic3DGcmMatrices(const real& rho, const real& lambda, const real& mu) :
+IsotropicElastic3DGcmMatrices::IsotropicElastic3DGcmMatrices(const real& rho, const real& lambda, const real& mu) :
 		rho(rho), lambda(lambda), mu(mu) {
 
 	m[0].A = linal::Matrix<9, 9>({0, 0, 0, -1.0 / rho, 0, 0, 0, 0, 0,

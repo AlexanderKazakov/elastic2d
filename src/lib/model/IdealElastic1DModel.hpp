@@ -3,13 +3,13 @@
 
 #include "lib/model/Model.hpp"
 #include "lib/nodes/IdealElastic1DNode.hpp"
-#include "lib/gcm_matrices/IdealElastic1DGcmMatrices.hpp"
+#include "lib/gcm_matrices/Elastic1DGcmMatrices.hpp"
 
 namespace gcm {
 	class IdealElastic1DModel : public Model {
 	public:
 		typedef IdealElastic1DNode Node;
-		typedef IdealElastic1DGcmMatrices GcmMatrices;
+		typedef Elastic1DGcmMatrices GcmMatrices;
 		static const int DIMENSIONALITY = GcmMatrices::DIMENSIONALITY;
 
 		// The code below is to provide for classes like snapshotters, initial condition setters, etc
@@ -25,7 +25,7 @@ namespace gcm {
 			Getter Get;
 			Setter Set;
 		};
-		static const std::map<PhysicalQuantities::QUANTITY, GetSet> QUANTITIES;
+		static const std::map<PhysicalQuantities::T, GetSet> QUANTITIES;
 
 		static real GetVx(const Node& node) { return node.u.Vx; };
 		static real GetSxx(const Node& node) { return node.u.Sxx; };

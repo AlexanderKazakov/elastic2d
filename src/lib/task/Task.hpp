@@ -59,9 +59,9 @@ namespace gcm {
 			// initial conditions in terms of waves
 			struct Wave {
 				std::shared_ptr<Area> area;
-				Waves::WAVE waveType;
+				Waves::T waveType;
 				int direction;
-				PhysicalQuantities::QUANTITY quantity; // quantity to calibrate wave amplitude
+				PhysicalQuantities::T quantity; // quantity to calibrate wave amplitude
 				real quantityValue; // value of calibration quantity
 			};
 			std::vector<Wave> waves = {};
@@ -69,7 +69,7 @@ namespace gcm {
 			// initial conditions in terms of physical quantities
 			struct Quantity {
 				std::shared_ptr<Area> area;
-				PhysicalQuantities::QUANTITY physicalQuantity;
+				PhysicalQuantities::T physicalQuantity;
 				real value;
 			};
 			std::vector<Quantity> quantities = {};
@@ -77,13 +77,13 @@ namespace gcm {
 		} initialCondition;
 
 		// border conditions for cubic body
-		std::map<CUBIC_BORDERS, BorderCondition::CONDITION> borderConditions = {
-				{CUBIC_BORDERS::X_LEFT,  BorderCondition::CONDITION::NON_REFLECTION},
-				{CUBIC_BORDERS::X_RIGHT, BorderCondition::CONDITION::NON_REFLECTION},
-				{CUBIC_BORDERS::Y_LEFT,  BorderCondition::CONDITION::NON_REFLECTION},
-				{CUBIC_BORDERS::Y_RIGHT, BorderCondition::CONDITION::NON_REFLECTION},
-				{CUBIC_BORDERS::Z_LEFT,  BorderCondition::CONDITION::NON_REFLECTION},
-				{CUBIC_BORDERS::Z_RIGHT, BorderCondition::CONDITION::NON_REFLECTION}
+		std::map<CUBIC_BORDERS, BorderCondition::T> borderConditions = {
+				{CUBIC_BORDERS::X_LEFT,  BorderCondition::T::NON_REFLECTION},
+				{CUBIC_BORDERS::X_RIGHT, BorderCondition::T::NON_REFLECTION},
+				{CUBIC_BORDERS::Y_LEFT,  BorderCondition::T::NON_REFLECTION},
+				{CUBIC_BORDERS::Y_RIGHT, BorderCondition::T::NON_REFLECTION},
+				{CUBIC_BORDERS::Z_LEFT,  BorderCondition::T::NON_REFLECTION},
+				{CUBIC_BORDERS::Z_RIGHT, BorderCondition::T::NON_REFLECTION}
 		};
 
 		Task();
