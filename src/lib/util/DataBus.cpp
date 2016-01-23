@@ -1,7 +1,5 @@
-#include "lib/nodes/IdealElastic2DNode.hpp"
-#include "lib/nodes/IdealElastic1DNode.hpp"
-#include "lib/nodes/IdealElastic3DNode.hpp"
-#include "lib/util/DataBus.hpp"
+#include <lib/util/DataBus.hpp>
+#include <lib/nodes/Node.hpp>
 
 using namespace gcm;
 

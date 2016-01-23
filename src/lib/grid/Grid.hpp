@@ -4,9 +4,9 @@
 #include <vector>
 #include <mpi.h>
 
-#include "lib/util/Logging.hpp"
-#include "lib/task/Task.hpp"
-#include "lib/linal/Linal.hpp"
+#include <lib/util/Logging.hpp>
+#include <lib/task/Task.hpp>
+#include <lib/linal/Linal.hpp>
 
 namespace gcm {
 	template<class TModel> class MpiStructuredSolver;
@@ -42,7 +42,7 @@ namespace gcm {
 		std::vector<Node> nodes;
 
 		/* GcmMatrices that is common for majority of nodes */
-		std::shared_ptr<typename TModel::GcmMatrices> defaultMatrix;
+		std::shared_ptr<typename TModel::GCM_MATRICES> defaultMatrix;
 		real maximalLambda = 0.0; // maximal eigenvalue among all nodes all GcmMatrices of the mesh
 
 		virtual void initializeImpl(const Task &task) = 0;

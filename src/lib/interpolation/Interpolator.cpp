@@ -1,7 +1,5 @@
-#include "lib/nodes/IdealElastic1DNode.hpp"
-#include "lib/nodes/IdealElastic2DNode.hpp"
-#include "lib/nodes/IdealElastic3DNode.hpp"
-#include "lib/interpolation/Interpolator.hpp"
+#include <lib/interpolation/Interpolator.hpp>
+#include <lib/variables/VelocitySigmaVariables.hpp>
 
 using namespace gcm;
 
@@ -49,6 +47,6 @@ template class Interpolator<linal::Vector<2>>;
 template class Interpolator<linal::Vector<5>>;
 template class Interpolator<linal::Vector<9>>;
 
-template class Interpolator<linal::Vector<2, IdealElastic1DContainer>>;
-template class Interpolator<linal::Vector<5, IdealElastic2DContainer>>;
-template class Interpolator<linal::Vector<9, IdealElastic3DContainer>>;
+template class Interpolator<linal::Vector<2, VelocitySigmaVariables<1>>>;
+template class Interpolator<linal::Vector<5, VelocitySigmaVariables<2>>>;
+template class Interpolator<linal::Vector<9, VelocitySigmaVariables<3>>>;

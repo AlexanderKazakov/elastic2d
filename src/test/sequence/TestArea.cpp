@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "lib/util/areas/InfiniteArea.hpp"
-#include "lib/util/areas/AxisAlignedBoxArea.hpp"
-#include "lib/util/areas/SphereArea.hpp"
-#include "lib/util/areas/StraightBoundedCylinderArea.hpp"
+#include <lib/util/areas/InfiniteArea.hpp>
+#include <lib/util/areas/AxisAlignedBoxArea.hpp>
+#include <lib/util/areas/SphereArea.hpp>
+#include <lib/util/areas/StraightBoundedCylinderArea.hpp>
 
 using namespace gcm;
 

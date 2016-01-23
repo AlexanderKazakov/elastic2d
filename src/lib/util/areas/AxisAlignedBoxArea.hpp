@@ -1,7 +1,7 @@
 #ifndef LIBGCM_BOXAREA_HPP
 #define LIBGCM_BOXAREA_HPP
 
-#include "lib/util/areas/Area.hpp"
+#include <lib/util/areas/Area.hpp>
 
 namespace gcm {
 	class AxisAlignedBoxArea : public Area {

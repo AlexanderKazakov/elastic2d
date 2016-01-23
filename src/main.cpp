@@ -1,8 +1,8 @@
-#include "lib/model/IdealElastic1DModel.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
-#include "lib/model/IdealElastic3DModel.hpp"
-#include "lib/util/DataBus.hpp"
-#include "lib/solver/MpiStructuredSolver.hpp"
+#include <lib/model/IdealElastic1DModel.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include <lib/model/IdealElastic3DModel.hpp>
+#include <lib/util/DataBus.hpp>
+#include <lib/solver/MpiStructuredSolver.hpp>
 
 using namespace gcm;
 

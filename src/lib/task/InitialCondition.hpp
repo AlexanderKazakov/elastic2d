@@ -10,10 +10,10 @@ namespace gcm {
 	public:
 		typedef typename TModel::Node Node;
 		typedef typename TModel::Node::Vector Vector;
-		typedef typename TModel::GcmMatrices GcmMatrices;
+		typedef typename TModel::GCM_MATRICES GCM_MATRICES;
 
 		/** Convert task terms of initial conditions to own format */
-		void initialize(const Task& task, std::shared_ptr<GcmMatrices> gcmMatrices);
+		void initialize(const Task& task, std::shared_ptr<GCM_MATRICES> gcmMatrices);
 
 		/**
 		 * Apply initial conditions to node assume that its coordinates is coords.

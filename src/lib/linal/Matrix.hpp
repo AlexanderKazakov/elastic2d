@@ -12,8 +12,8 @@
 #include <gsl/gsl_vector.h>
 
 
-#include "lib/util/Types.hpp"
-#include "lib/util/Assertion.hpp"
+#include <lib/util/Types.hpp>
+#include <lib/util/Assertion.hpp>
 
 
 namespace gcm {
@@ -43,12 +43,19 @@ namespace gcm {
 			static const int M = TM; // number of strings
 			static const int N = TN; // number of columns
 
+			// TODO
+			/*Y& operator=(const Y&) = default;	// default copy semantics
+			Y(const Y&) = default;*/
+			// TODO - rvalues
+
 			/** Default constructor. */
 			Matrix() {
 				static_assert(this->SIZE >= TM * TN, "Container must have enough memory to store values");
 			};
 			/** @param values Values to initialize matrix with, string by string */
-			Matrix(std::initializer_list<real> values);
+			Matrix(std::initializer_list<real> values) {
+				this->initialize(values);
+			};
 			/**
 			 * Copy constructor
 			 * @param m Matrix to construct from
@@ -67,6 +74,8 @@ namespace gcm {
 				memcpy(this->values, m2.values, sizeof(this->values));
 				return *this;
 			};
+			/** @param values Values to initialize matrix with, string by string */
+			void initialize(std::initializer_list<real> values);
 
 			/** Read-only access to matrix component */
 			real operator()(const int i, const int j) const {
@@ -99,12 +108,6 @@ namespace gcm {
 			/** Inverses matrix modifying its contents */
 			void invertInplace();
 
-			/**
-			 * Clear matrix and fill in diagonal with values from list
-			 * @param list list of diagonal values.
-			 */
-			void createDiagonal(const std::initializer_list<real> &list);
-
 			/** @return i-th column. */
 			template<typename Container2 = DefaultMatrixContainer<TM, 1>>
 			Matrix<TM, 1, Container2> getColumn(const int i) const {
@@ -123,9 +126,6 @@ namespace gcm {
 				}
 			};
 
-			/** @return in vector values from diagonal multiplied by c */
-			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> getDiagonalMultipliedBy(const real &c) const;
-
 			/** @return in vector diagonal of this matrix multiplied by matrix B */
 			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> diagonalMultiply(const Matrix<TN, TM> &B) const;
 
@@ -139,10 +139,8 @@ namespace gcm {
 			};
 		};
 
-		template<class TContainer> void clear(TContainer &container); // forward declaration
-
 		template<int TM, int TN, typename Container>
-		Matrix<TM, TN, Container>::Matrix(std::initializer_list<real> values) : Matrix() {
+		void Matrix<TM, TN, Container>::initialize(std::initializer_list<real> values) {
 			assert_eq(this->SIZE, values.size());
 			int i = 0;
 			for (auto value: values)
@@ -201,28 +199,6 @@ namespace gcm {
 		}
 
 		template<int TM, int TN, typename Container>
-		void Matrix<TM, TN, Container>::createDiagonal(const std::initializer_list<real> &list) {
-			assert_eq(TM, TN);
-			assert_eq(TM, list.size());
-			clear(*this);
-			int i = 0;
-			for (auto &value : list) {
-				(*this)(i, i) = value;
-				i++;
-			}
-		}
-
-		template<int TM, int TN, typename Container>
-		Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> Matrix<TM, TN, Container>::getDiagonalMultipliedBy(const real &c) const {
-			assert_eq(TM, TN);
-			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> ans;
-			for (int i = 0; i < TN; i++) {
-				ans(i) = (*this)(i, i) * c;
-			}
-			return ans;
-		}
-
-		template<int TM, int TN, typename Container>
 		Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> Matrix<TM, TN, Container>::diagonalMultiply(const Matrix<TN, TM> &B) const {
 			assert_eq(TM, TN);
 			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> ans;
@@ -248,8 +224,8 @@ namespace gcm {
 };
 
 namespace std {
-	template<int TM, int TN>
-	inline std::ostream &operator<<(std::ostream &os, const gcm::linal::Matrix<TM, TN> &matrix) {
+	template<int TM, int TN, typename Container>
+	inline std::ostream &operator<<(std::ostream &os, const gcm::linal::Matrix<TM, TN, Container> &matrix) {
 
 		os << "Matrix:\n";
 		for (int i = 0; i < TM; i++) {

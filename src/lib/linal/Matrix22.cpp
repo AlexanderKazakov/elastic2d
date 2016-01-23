@@ -1,4 +1,4 @@
-#include "lib/linal/Matrix22.hpp"
+#include <lib/linal/Matrix22.hpp>
 
 using namespace gcm;
 using namespace gcm::linal;

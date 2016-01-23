@@ -1,8 +1,8 @@
-#include "lib/linal/Linal.hpp"
-#include "lib/linal/Matrix33.hpp"
-#include "lib/linal/Matrix22.hpp"
-#include "lib/linal/Vector3.hpp"
-#include "lib/linal/RotationMatrix.hpp"
+#include <lib/linal/Linal.hpp>
+#include <lib/linal/Matrix33.hpp>
+#include <lib/linal/Matrix22.hpp>
+#include <lib/linal/Vector3.hpp>
+#include <lib/linal/RotationMatrix.hpp>
 
 #include <gtest/gtest.h>
 #include <cmath>
@@ -475,7 +475,7 @@ TEST(Linal, VectorDotProduct)
     ASSERT_EQ(dotProduct(v1, v2), 0.0);
 }
 
-/*
+/* TODO complete tests (also symm, diagonal ...)
 TEST(Linal, VectorCrossProduct)
 {
     Vector3 v1({
@@ -686,19 +686,6 @@ TEST(Linal, diagonalMultiply)
     }
 }
 
-TEST(Linal, getDiagonalMultipliedBy)
-{
-    Matrix<11,11> matrix;
-    for (int i = 0; i < matrix.M; i++) {
-        for (int j = 0; j < matrix.N; j++) {
-            matrix(i, j) = (real) i;
-        }
-    }
-    Vector<11> vector = matrix.getDiagonalMultipliedBy(- 5.0);
-    for (int k = 0; k < vector.M; k++) {
-        ASSERT_EQ(vector(k), - 5.0 * k);
-    }
-}
 
 TEST(Linal, VectorOperators)
 {

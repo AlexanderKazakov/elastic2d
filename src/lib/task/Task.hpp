@@ -5,13 +5,17 @@
 #include <memory>
 #include <vector>
 
-#include "lib/util/Types.hpp"
-#include "lib/util/Concepts.hpp"
-#include "lib/util/areas/SphereArea.hpp"
+#include <lib/util/Types.hpp>
+#include <lib/util/Concepts.hpp>
+#include <lib/util/areas/SphereArea.hpp>
+#include <lib/materials/IsotropicMaterial.hpp>
+#include <lib/materials/OrthotropicMaterial.hpp>
 
 namespace gcm {
 	/**
-	 * Properties, conditions and task
+	 * Properties, conditions, tasks in format of the program.
+	 * The aim is to separate parsing xml or whatever from program initialization.
+	 * Any parser just creates an object of this class and return it.
 	 */
 	class Task {
 
@@ -30,9 +34,7 @@ namespace gcm {
 		real startY = 0.0; // global y-coordinate of the first real node of the grid
 		real startZ = 0.0; // global z-coordinate of the first real node of the grid
 
-		real rho0 = 0.0; // default density
-		real lambda0 = 0.0; // default Lame parameter
-		real mu0 = 0.0; // default Lame parameter
+		IsotropicMaterial material;
 
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
 

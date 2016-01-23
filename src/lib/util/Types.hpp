@@ -1,7 +1,7 @@
 #ifndef LIBGCM_TYPES_HPP
 #define LIBGCM_TYPES_HPP
 
-#include "lib/config.hpp"
+#include <lib/config.hpp>
 
 namespace gcm
 {

@@ -13,9 +13,10 @@ Task::Task() {
 	Y = 21; // number of nodes along y direction
 	Z = 1; // number of nodes along z direction
 
-	rho0 = 8.0; // default density
-	lambda0 = 12e+4; // default Lame parameter
-	mu0 = 77e+3; // default Lame parameter
+	real rho0 = 8.0; // default density
+	real lambda0 = 12e+4; // default Lame parameter
+	real mu0 = 77e+3; // default Lame parameter
+	material = IsotropicMaterial(rho0, lambda0, mu0);
 
 	CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
 	numberOfSnaps = 20;

@@ -1,13 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "lib/util/DataBus.hpp"
-#include "lib/task/Task.hpp"
-#include "lib/grid/StructuredGrid.hpp"
-#include "lib/solver/MpiStructuredSolver.hpp"
-#include "lib/nodes/IdealElastic3DNode.hpp"
-#include "lib/nodes/IdealElastic2DNode.hpp"
-#include "lib/nodes/IdealElastic1DNode.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
+#include <lib/util/DataBus.hpp>
+#include <lib/task/Task.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/solver/MpiStructuredSolver.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include <lib/nodes/Node.hpp>
 
 using namespace gcm;
 
@@ -80,9 +78,7 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	Task task;
 	task.accuracyOrder = 2;
 	task.CourantNumber = 1.8;
-	task.lambda0 = 2.0;
-	task.mu0 = 0.5;
-	task.rho0 = 4.0;
+	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.X = 50;
 	task.Y = 70;
 	task.xLength = 4.0;

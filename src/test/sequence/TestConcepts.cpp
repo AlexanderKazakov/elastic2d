@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "lib/util/Concepts.hpp"
+#include <lib/util/Concepts.hpp>
 
 using namespace gcm;
 

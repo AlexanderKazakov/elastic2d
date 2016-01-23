@@ -1,7 +1,7 @@
 #ifndef LIBGCM_INFINITEAREA_HPP
 #define LIBGCM_INFINITEAREA_HPP
 
-#include "lib/util/areas/Area.hpp"
+#include <lib/util/areas/Area.hpp>
 
 namespace gcm {
 	/**

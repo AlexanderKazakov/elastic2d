@@ -1,4 +1,4 @@
-#include "lib/linal/RotationMatrix.hpp"
+#include <lib/linal/RotationMatrix.hpp>
 
 
 using namespace gcm;

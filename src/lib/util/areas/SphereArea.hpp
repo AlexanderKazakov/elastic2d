@@ -1,7 +1,7 @@
 #ifndef LIBGCM_SPHEREAREA_HPP
 #define LIBGCM_SPHEREAREA_HPP
 
-#include "lib/util/areas/Area.hpp"
+#include <lib/util/areas/Area.hpp>
 
 namespace gcm {
 	class SphereArea : public Area {

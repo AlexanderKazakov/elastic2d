@@ -1,7 +1,7 @@
 #ifndef LIBGCM_CYLINDERAREA_HPP
 #define LIBGCM_CYLINDERAREA_HPP
 
-#include "lib/util/areas/Area.hpp"
+#include <lib/util/areas/Area.hpp>
 
 namespace gcm {
 	/** Straight bounded cylinder (aka barrel, keg, etc..) */

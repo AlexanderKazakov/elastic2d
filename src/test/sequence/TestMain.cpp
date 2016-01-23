@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
-#include "lib/util/DataBus.hpp"
+#include <lib/util/DataBus.hpp>
 
 using namespace gcm;
 

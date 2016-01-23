@@ -1,35 +1,34 @@
 ## About
 
-Two-dimensional simulation of wave processes in elastic body. Rectangular area, structured grid. Grid-characteristic method.
+1-2-3-dimensional simulation of wave and associated processes
 
 ## Build
 
-base build
 ```
-mkdir build
-cd build
-cmake ..
-make
+./tools/build.sh [-c]
 ```
-
-build with google tests, gprof profiling and in Debug mode (by default, all this options are disabled)
 ```
-mkdir build
-cd build
-cmake .. -DCOMPILE_TESTS=ON -DPROFILE=ON -DCMAKE_BUILD_TYPE=Debug
-make
+-c  clear all before build
 ```
 
 ## Run
 
 ```
-mpirun -np <NUMBER OF PROCESSES> ./gcm
+./tools/run.sh [-n] [-p]
+```
+```
+-n  number of processes (default is number of cores on the machine)
+-p  run Paraview after calculation (only in one-process mode)
 ```
 
 ## Run tests
 
+On MPI connections
 ```
-mpirun -np <NUMBER OF PROCESSES> ./gcm_mpi_tests
-mpirun -np 1 ./gcm_tests
+mpirun -np <NUMBER OF PROCESSES> ./build/gcm_mpi_tests
 ```
 
+On other functionality
+```
+./build/gcm_tests
+```

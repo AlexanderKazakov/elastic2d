@@ -1,7 +1,7 @@
 #ifndef LIBGCM_LINAL_MATRIX33_HPP
 #define LIBGCM_LINAL_MATRIX33_HPP
 
-#include "lib/linal/Linal.hpp"
+#include <lib/linal/Linal.hpp>
 
 namespace gcm {
 	namespace linal {

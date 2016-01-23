@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include "lib/grid/Grid.hpp"
+#include <lib/grid/Grid.hpp>
 
 namespace gcm {
 	/**

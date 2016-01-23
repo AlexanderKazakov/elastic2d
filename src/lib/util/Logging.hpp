@@ -1,8 +1,8 @@
 #ifndef LIBGCM_LOGGING_HPP
 #define LIBGCM_LOGGING_HPP
 
-#include "lib/util/Macros.hpp"
-#include "lib/config.hpp"
+#include <lib/util/Macros.hpp>
+#include <lib/config.hpp>
 
 #if CONFIG_ENABLE_LOGGING
     #include <log4cxx/logger.h>

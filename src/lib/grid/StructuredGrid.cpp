@@ -1,12 +1,12 @@
 #include <fstream>
 #include <algorithm>
 
-#include "lib/grid/StructuredGrid.hpp"
+#include <lib/grid/StructuredGrid.hpp>
 
-#include "lib/task/InitialCondition.hpp"
-#include "lib/model/IdealElastic1DModel.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
-#include "lib/model/IdealElastic3DModel.hpp"
+#include <lib/task/InitialCondition.hpp>
+#include <lib/model/IdealElastic1DModel.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include <lib/model/IdealElastic3DModel.hpp>
 
 using namespace gcm;
 
@@ -87,10 +87,10 @@ void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const 
 template<class TModel>
 void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	auto oldMatrix = this->defaultMatrix;
-	auto newRheologyMatrix = std::make_shared<typename TModel::GcmMatrices>(rho2rho0 * oldMatrix->rho,
-	                                                       lambda2lambda0 * oldMatrix->lambda,
-	                                                       mu2mu0 * oldMatrix->mu);
+	IsotropicMaterial oldMaterial = this->defaultMatrix->getMaterial();
+	IsotropicMaterial newMaterial(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
+	auto newRheologyMatrix = std::make_shared<typename TModel::GCM_MATRICES>(newMaterial);
+
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
@@ -111,10 +111,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::V_SIZE; j++) {
+					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)( - i, y, z).u.V[j] = get(i, y, z).u.V[j];
 					}
-					for (int j = 0; j < Vector::S_SIZE; j++) {
+					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
 						(*this)( - i, y, z).u.S[j] = - get(i, y, z).u.S[j];
 					}
 				}
@@ -125,10 +125,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int y = 0; y < Y; y++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::V_SIZE; j++) {
+					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(X - 1 + i, y, z).u.V[j] = get(X - 1 - i, y, z).u.V[j];
 					}
-					for (int j = 0; j < Vector::S_SIZE; j++) {
+					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
 						(*this)(X - 1 + i, y, z).u.S[j] = - get(X - 1 - i, y, z).u.S[j];
 					}
 				}
@@ -140,10 +140,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::V_SIZE; j++) {
+					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(x, - i, z).u.V[j] = get(x, i, z).u.V[j];
 					}
-					for (int j = 0; j < Vector::S_SIZE; j++) {
+					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
 						(*this)(x, - i, z).u.S[j] = - get(x, i, z).u.S[j];
 					}
 				}
@@ -154,10 +154,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int z = 0; z < Z; z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::V_SIZE; j++) {
+					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(x, Y - 1 + i, z).u.V[j] = get(x, Y - 1 - i, z).u.V[j];
 					}
-					for (int j = 0; j < Vector::S_SIZE; j++) {
+					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
 						(*this)(x, Y - 1 + i, z).u.S[j] = - get(x, Y - 1 - i, z).u.S[j];
 					}
 				}
@@ -169,10 +169,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::V_SIZE; j++) {
+					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(x, y, - i).u.V[j] = get(x, y, i).u.V[j];
 					}
-					for (int j = 0; j < Vector::S_SIZE; j++) {
+					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
 						(*this)(x, y, - i).u.S[j] = - get(x, y, i).u.S[j];
 					}
 				}
@@ -183,10 +183,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 		for (int x = 0; x < X; x++) {
 			for (int y = 0; y < Y; y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::V_SIZE; j++) {
+					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(x, y, Z - 1 + i).u.V[j] = get(x, y, Z - 1 - i).u.V[j];
 					}
-					for (int j = 0; j < Vector::S_SIZE; j++) {
+					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
 						(*this)(x, y, Z - 1 + i).u.S[j] = - get(x, y, Z - 1 - i).u.S[j];
 					}
 				}

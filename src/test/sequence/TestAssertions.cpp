@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "lib/util/Assertion.hpp"
-#include "lib/util/Exception.hpp"
-#include "lib/config.hpp"
+#include <lib/util/Assertion.hpp>
+#include <lib/util/Exception.hpp>
+#include <lib/config.hpp>
 
 using namespace gcm;
 

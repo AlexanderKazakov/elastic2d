@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "lib/util/areas/SphereArea.hpp"
-#include "lib/grid/StructuredGrid.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
+#include <lib/util/areas/SphereArea.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
 
 using namespace gcm;
 
@@ -10,9 +10,7 @@ TEST(StructuredGrid, initialize) {
 	Task task;
 	task.accuracyOrder = 3;
 	task.CourantNumber = 0.7;
-	task.lambda0 = 2.0;
-	task.mu0 = 0.5;
-	task.rho0 = 4.0;
+	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.X = 7;
 	task.Y = 9;
 	task.xLength = 20.0;
@@ -41,9 +39,7 @@ TEST(StructuredGrid, initialize) {
 TEST(StructuredGrid, findSourcesForInterpolation)
 {
 	Task task;
-	task.lambda0 = 2.0;
-	task.mu0 = 1.0;
-	task.rho0 = 2.0;
+	task.material = IsotropicMaterial(2.0, 2.0, 1.0);
 
 	task.X = task.Y = 3;
 	task.accuracyOrder = 1;
@@ -62,11 +58,11 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that values is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vx, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[0], 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[1], 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 1), 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
@@ -86,9 +82,7 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 TEST(StructuredGrid, interpolateValuesAround)
 {
 	Task task;
-	task.lambda0 = 2.0;
-	task.mu0 = 1.0;
-	task.rho0 = 2.0;
+	task.material = IsotropicMaterial(2.0, 2.0, 1.0);
 
 	task.X = task.Y = 3;
 	task.accuracyOrder = 1;
@@ -107,11 +101,11 @@ TEST(StructuredGrid, interpolateValuesAround)
 		for (int x = 0; x < task.X; x++) {
 			for (int y = 0; y < task.Y; y++) {
 				// check that values is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vx, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Vy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxx, (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Sxy, 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.Syy, (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[0], 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[1], 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 1), 0.0);
+				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 

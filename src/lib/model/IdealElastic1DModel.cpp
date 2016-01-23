@@ -1,4 +1,4 @@
-#include "lib/model/IdealElastic1DModel.hpp"
+#include <lib/model/IdealElastic1DModel.hpp>
 
 using namespace gcm;
 

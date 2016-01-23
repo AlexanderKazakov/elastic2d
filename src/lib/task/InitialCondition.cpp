@@ -1,13 +1,13 @@
-#include "lib/task/InitialCondition.hpp"
-#include "lib/model/IdealElastic1DModel.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
-#include "lib/model/IdealElastic3DModel.hpp"
+#include <lib/task/InitialCondition.hpp>
+#include <lib/model/IdealElastic1DModel.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include <lib/model/IdealElastic3DModel.hpp>
 
 
 using namespace gcm;
 
 template<class TModel>
-void InitialCondition<TModel>::initialize(const Task &task, std::shared_ptr<GcmMatrices> gcmMatrices) {
+void InitialCondition<TModel>::initialize(const Task &task, std::shared_ptr<GCM_MATRICES> gcmMatrices) {
 	for (auto& vector : task.initialCondition.vectors) {
 		assert_eq(Node::M, vector.list.size());
 		conditions.push_back(Condition(vector.area, Vector(vector.list)));
@@ -15,7 +15,7 @@ void InitialCondition<TModel>::initialize(const Task &task, std::shared_ptr<GcmM
 	for (auto& wave : task.initialCondition.waves) {
 		assert_lt(wave.direction, TModel::DIMENSIONALITY);
 		auto& A = gcmMatrices->A(wave.direction);
-		int columnNumber = TModel::GcmMatrices::WAVE_COLUMNS.at(wave.waveType);
+		int columnNumber = GCM_MATRICES::WAVE_COLUMNS.at(wave.waveType);
 		Node node;
 		node.matrix = gcmMatrices;
 		node.u = A.U1.getColumn(columnNumber);

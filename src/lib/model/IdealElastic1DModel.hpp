@@ -1,16 +1,15 @@
 #ifndef LIBGCM_IDEALELASTIC1DMODEL_HPP
 #define LIBGCM_IDEALELASTIC1DMODEL_HPP
 
-#include "lib/model/Model.hpp"
-#include "lib/nodes/IdealElastic1DNode.hpp"
-#include "lib/gcm_matrices/Elastic1DGcmMatrices.hpp"
+#include <lib/model/Model.hpp>
+#include <lib/nodes/Node.hpp>
 
 namespace gcm {
 	class IdealElastic1DModel : public Model {
 	public:
 		typedef IdealElastic1DNode Node;
-		typedef Elastic1DGcmMatrices GcmMatrices;
-		static const int DIMENSIONALITY = GcmMatrices::DIMENSIONALITY;
+		typedef GcmMatrices<2, 1, IsotropicMaterial> GCM_MATRICES;
+		static const int DIMENSIONALITY = GCM_MATRICES::DIMENSIONALITY;
 
 		// The code below is to provide for classes like snapshotters, initial condition setters, etc
 		// unified for all models interface to information about model's physical quantities
@@ -27,13 +26,13 @@ namespace gcm {
 		};
 		static const std::map<PhysicalQuantities::T, GetSet> QUANTITIES;
 
-		static real GetVx(const Node& node) { return node.u.Vx; };
-		static real GetSxx(const Node& node) { return node.u.Sxx; };
-		static real GetPressure(const Node& node) { return node.getPressure(); };
+		static real GetVx(const Node& node) { return node.u.V[0]; };
+		static real GetSxx(const Node& node) { return node.u.S[0]; };
+		static real GetPressure(const Node& node) { return node.u.getPressure(); };
 
-		static void SetVx(const real& value, Node& node) { node.u.Vx = value; };
-		static void SetSxx(const real& value, Node& node) { node.u.Sxx = value; };
-		static void SetPressure(const real& value, Node& node) { node.setPressure(value); };
+		static void SetVx(const real& value, Node& node) { node.u.V[0] = value; };
+		static void SetSxx(const real& value, Node& node) { node.u.S[0] = value; };
+		static void SetPressure(const real& value, Node& node) { node.u.setPressure(value); };
 
 	};
 }

@@ -1,8 +1,8 @@
-#include "lib/model/IdealElastic1DModel.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
-#include "lib/model/IdealElastic3DModel.hpp"
+#include <lib/model/IdealElastic1DModel.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include <lib/model/IdealElastic3DModel.hpp>
 #include "MpiStructuredSolver.hpp"
-#include "lib/util/DataBus.hpp"
+#include <lib/util/DataBus.hpp>
 
 using namespace gcm;
 
@@ -64,15 +64,15 @@ void MpiStructuredSolver<TModel>::stage(const int s, const real& timeStep) {
 		for (int y = 0; y < mesh->Y; y++) {
 			for (int z = 0; z < mesh->Z; z++) {
 
-			// points to interpolate values on previous time layer
-			auto dx = ((*mesh)(x, y, z)).matrix->A(s).L.getDiagonalMultipliedBy( - timeStep);
+				// points to interpolate values on previous time layer
+				auto dx = - timeStep * linal::diag((*mesh)(x, y, z).matrix->A(s).L);
 
-			/* new values = U1 * Riemann solvers */
-			(*newMesh)(x, y, z).u = (*mesh)(x, y, z).matrix->A(s).U1 *
-			                      /* Riemann solvers = U * old values */
-			                      (*mesh)(x, y, z).matrix->A(s).U.diagonalMultiply
-					                     /* old values are in columns of the matrix */
-					                     (mesh->interpolateValuesAround(s, x, y, z, dx));
+				/* new values = U1 * Riemann solvers */
+				(*newMesh)(x, y, z).u = (*mesh)(x, y, z).matrix->A(s).U1 *
+				                      /* Riemann solvers = U * old values */
+				                      (*mesh)(x, y, z).matrix->A(s).U.diagonalMultiply
+						                     /* old values are in columns of the matrix */
+						                     (mesh->interpolateValuesAround(s, x, y, z, dx));
 			}
 		}
 	}

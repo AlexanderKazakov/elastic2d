@@ -3,9 +3,9 @@
 
 #include <fstream>
 
-#include "lib/grid/StructuredGrid.hpp"
-#include "lib/snapshot/Snapshotter.hpp"
-#include "lib/util/Logging.hpp"
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/snapshot/Snapshotter.hpp>
+#include <lib/util/Logging.hpp>
 
 namespace gcm {
 	template<class TModel> class StructuredGrid;

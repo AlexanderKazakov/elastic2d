@@ -1,7 +1,9 @@
 #ifndef LIBGCM_LINAL_HPP
 #define LIBGCM_LINAL_HPP
 
-#include "lib/linal/Matrix.hpp"
+#include <lib/linal/Matrix.hpp>
+#include <lib/linal/DiagonalMatrix.hpp>
+#include <lib/linal/SymmetricMatrix.hpp>
 
 namespace gcm {
 	namespace linal {
@@ -11,6 +13,16 @@ namespace gcm {
 		 */
 		template<int TM, typename Container = DefaultMatrixContainer<TM, 1>>
 		using Vector = Matrix<TM, 1, Container>;
+
+		/** @return matrix diagonal into vector */
+		template<int TM, typename Container>
+		Vector<TM> diag(const Matrix<TM, TM, Container>& m) {
+			Vector<TM> ans;
+			for (int i = 0; i < TM; i++) {
+				ans(i) = m(i, i);
+			}
+			return ans;
+		}
 
 		/** Set all the container's values to zero */
 		template<class TContainer>

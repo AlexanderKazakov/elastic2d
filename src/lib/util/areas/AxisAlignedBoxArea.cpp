@@ -1,4 +1,4 @@
-#include "lib/util/areas/AxisAlignedBoxArea.hpp"
+#include <lib/util/areas/AxisAlignedBoxArea.hpp>
 
 using namespace gcm;
 

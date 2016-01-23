@@ -1,7 +1,7 @@
-#include "lib/snapshot/Snapshotter.hpp"
-#include "lib/model/IdealElastic1DModel.hpp"
-#include "lib/model/IdealElastic3DModel.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
+#include <lib/snapshot/Snapshotter.hpp>
+#include <lib/model/IdealElastic1DModel.hpp>
+#include <lib/model/IdealElastic3DModel.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
 
 using namespace gcm;
 

@@ -3,9 +3,9 @@
 
 #include <mpi.h>
 
-#include "lib/grid/Grid.hpp"
-#include "lib/nodes/Node.hpp"
-#include "lib/interpolation/Interpolator.hpp"
+#include <lib/grid/Grid.hpp>
+#include <lib/nodes/Node.hpp>
+#include <lib/interpolation/Interpolator.hpp>
 
 namespace gcm {
 	template<class TModel> class MpiStructuredSolver;

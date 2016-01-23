@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include "lib/config.hpp"
-#include "lib/util/Exception.hpp"
-#include "lib/util/Macros.hpp"
+#include <lib/config.hpp>
+#include <lib/util/Exception.hpp>
+#include <lib/util/Macros.hpp>
 
 namespace std
 {

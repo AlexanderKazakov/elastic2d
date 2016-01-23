@@ -2,9 +2,9 @@
 #define LIBGCM_MPISOLVER_HPP
 
 
-#include "lib/snapshot/VtkTextStructuredSnapshotter.hpp"
-#include "lib/grid/StructuredGrid.hpp"
-#include "lib/util/Logging.hpp"
+#include <lib/snapshot/VtkTextStructuredSnapshotter.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/util/Logging.hpp>
 
 namespace gcm {
 	template<class TModel>

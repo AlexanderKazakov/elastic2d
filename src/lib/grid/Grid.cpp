@@ -1,8 +1,8 @@
-#include "lib/grid/Grid.hpp"
+#include <lib/grid/Grid.hpp>
 
-#include "lib/model/IdealElastic1DModel.hpp"
-#include "lib/model/IdealElastic2DModel.hpp"
-#include "lib/model/IdealElastic3DModel.hpp"
+#include <lib/model/IdealElastic1DModel.hpp>
+#include <lib/model/IdealElastic2DModel.hpp>
+#include <lib/model/IdealElastic3DModel.hpp>
 
 using namespace gcm;
 
@@ -19,7 +19,7 @@ void Grid<TModel>::initialize(const Task &task) {
 
 	initializeImpl(task);
 
-	defaultMatrix = std::make_shared<typename TModel::GcmMatrices>(task.rho0, task.lambda0, task.mu0);
+	defaultMatrix = std::make_shared<typename TModel::GCM_MATRICES>(task.material);
 	assert_true(defaultMatrix);
 	maximalLambda = defaultMatrix->getMaximalEigenvalue();
 

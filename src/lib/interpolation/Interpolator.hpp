@@ -2,8 +2,8 @@
 #define LIBGCM_INTERPOLATOR_HPP
 
 #include <vector>
-#include "lib/linal/Linal.hpp"
-#include "lib/util/Types.hpp"
+#include <lib/linal/Linal.hpp>
+#include <lib/util/Types.hpp>
 
 
 namespace gcm {
