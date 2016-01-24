@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/gcm_matrices/GcmMatrices.hpp>
+#include <lib/rheology/gcm_matrices/GcmMatrices.hpp>
 
 using namespace gcm;
 using namespace gcm::linal;

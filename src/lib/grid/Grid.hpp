@@ -5,25 +5,40 @@
 #include <mpi.h>
 
 #include <lib/util/Logging.hpp>
-#include <lib/task/Task.hpp>
+#include <lib/util/task/Task.hpp>
 #include <lib/linal/Linal.hpp>
 
 namespace gcm {
 	template<class TModel> class MpiStructuredSolver;
 
-	template <class TModel>
+	template <class TNode>
 	class Grid {
 	public:
-		typedef typename TModel::Node Node;
+		typedef TNode Node;
 		typedef typename Node::Vector Vector;
 		typedef typename Node::Matrix Matrix;
 
 		/** @param task properties and initial conditions etc */
 		void initialize(const Task &task);
 
-		int getRank() const { return rank; };
-		int getNumberOfWorkers() const { return numberOfWorkers; };
-		real getMaximalLambda() const { return maximalLambda; };
+		int getRank() const {
+			assert_ge(rank, 0);
+			assert_lt(rank, numberOfWorkers);
+			return rank;
+		};
+		int getNumberOfWorkers() const {
+			assert_gt(numberOfWorkers, 0);
+			return numberOfWorkers;
+		};
+		real getMaximalLambda() const {
+			assert_gt(maximalLambda, 0.0);
+			return maximalLambda;
+		};
+		real getMinimalSpatialStep() const {
+			real minH = this->getMinimalSpatialStepImpl();
+			assert_gt(minH, 0.0);
+			return minH;
+		};
 
 		/**
 		 * Change rheology in some area
@@ -35,22 +50,20 @@ namespace gcm {
 		virtual void changeRheology(const real &rho2rho0, const real &lambda2lambda0, const real &mu2mu0) = 0;
 
 	protected:
-		int rank = 0; // index of core
-		int numberOfWorkers = 0; // number of cores
+		int rank = -1; // index of core
+		int numberOfWorkers = -1; // number of cores
 
 		/* Node storage */
 		std::vector<Node> nodes;
 
-		/* GcmMatrices that is common for majority of nodes */
-		std::shared_ptr<typename TModel::GCM_MATRICES> defaultMatrix;
-		real maximalLambda = 0.0; // maximal eigenvalue among all nodes all GcmMatrices of the mesh
+		real maximalLambda = 0.0; // maximal in modulus eigenvalue among all nodes all GcmMatrices of the mesh
 
 		virtual void initializeImpl(const Task &task) = 0;
 		virtual void applyInitialConditions(const Task &task) = 0;
-		virtual real getMinimalSpatialStep() const = 0;
+		virtual real getMinimalSpatialStepImpl() const = 0;
 		virtual void applyBorderConditions() = 0;
 		
-		friend class MpiStructuredSolver<TModel>;
+		friend class MpiStructuredSolver<TNode>;
 	};
 }
 

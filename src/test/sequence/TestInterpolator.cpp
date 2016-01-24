@@ -2,7 +2,7 @@
 #include <cmath>
 
 #include <lib/linal/Linal.hpp>
-#include <lib/interpolation/Interpolator.hpp>
+#include <lib/numeric/interpolation/Interpolator.hpp>
 
 #define MAX_ACCURACY_ORDER 20
 

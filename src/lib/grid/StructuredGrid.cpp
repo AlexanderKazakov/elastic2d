@@ -2,16 +2,12 @@
 #include <algorithm>
 
 #include <lib/grid/StructuredGrid.hpp>
-
-#include <lib/task/InitialCondition.hpp>
-#include <lib/model/IdealElastic1DModel.hpp>
-#include <lib/model/IdealElastic2DModel.hpp>
-#include <lib/model/IdealElastic3DModel.hpp>
+#include <lib/util/task/InitialCondition.hpp>
 
 using namespace gcm;
 
-template<class TModel>
-void StructuredGrid<TModel>::initializeImpl(const Task &task) {
+template<class TNode>
+void StructuredGrid<TNode>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
@@ -56,12 +52,12 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	this->nodes.resize( (unsigned long) (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) * (Z + 2 * accuracyOrder) );
 }
 
-template<class TModel>
-typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValuesAround
+template<class TNode>
+typename StructuredGrid<TNode>::Matrix StructuredGrid<TNode>::interpolateValuesAround
 		(const int stage, const int x, const int y, const int z, const Vector& dx) const {
 
 	Matrix ans;
-	std::vector<Vector> src(accuracyOrder + 1);
+	std::vector<Vector> src( (unsigned long) (accuracyOrder + 1) );
 	Vector res;
 	for (int k = 0; k < Node::M; k++) {
 		findSourcesForInterpolation(stage, x, y, z, dx(k), src);
@@ -72,8 +68,8 @@ typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValue
 	return ans;
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
+template<class TNode>
+void StructuredGrid<TNode>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
                                                          const real &dx, std::vector<Vector>& src) const {
 
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
@@ -84,12 +80,12 @@ void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const 
 	}
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
+template<class TNode>
+void StructuredGrid<TNode>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
 
-	IsotropicMaterial oldMaterial = this->defaultMatrix->getMaterial();
+	IsotropicMaterial oldMaterial = (*this)(0, 0, 0).matrix->getMaterial();
 	IsotropicMaterial newMaterial(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
-	auto newRheologyMatrix = std::make_shared<typename TModel::GCM_MATRICES>(newMaterial);
+	auto newRheologyMatrix = std::make_shared<typename TNode::GcmMatrices>(newMaterial);
 
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
@@ -104,8 +100,8 @@ void StructuredGrid<TModel>::changeRheology(const real& rho2rho0, const real& la
 	this->maximalLambda = fmax(this->maximalLambda, newRheologyMatrix->getMaximalEigenvalue());
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::applyBorderConditions() {
+template<class TNode>
+void StructuredGrid<TNode>::applyBorderConditions() {
 
 	if (this->rank == 0 && borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::T::FREE_BORDER) {
 		for (int y = 0; y < Y; y++) {
@@ -195,10 +191,10 @@ void StructuredGrid<TModel>::applyBorderConditions() {
 	}
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
-	InitialCondition<TModel> initialCondition;
-	initialCondition.initialize(task, this->defaultMatrix);
+template<class TNode>
+void StructuredGrid<TNode>::applyInitialConditions(const Task& task) {
+	InitialCondition<TNode> initialCondition;
+	initialCondition.initialize(task);
 
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
@@ -209,12 +205,12 @@ void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
 	}
 }
 
-template<class TModel>
-real StructuredGrid<TModel>::getMinimalSpatialStep() const {
+template<class TNode>
+real StructuredGrid<TNode>::getMinimalSpatialStepImpl() const {
 	return fmin(h[0], fmin(h[1], h[2]));
 }
 
 
-template class StructuredGrid<IdealElastic1DModel>;
-template class StructuredGrid<IdealElastic2DModel>;
-template class StructuredGrid<IdealElastic3DModel>;
+template class StructuredGrid<IdealElastic1DNode>;
+template class StructuredGrid<IdealElastic2DNode>;
+template class StructuredGrid<IdealElastic3DNode>;

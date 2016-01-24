@@ -4,20 +4,20 @@
 #include <mpi.h>
 
 #include <lib/grid/Grid.hpp>
-#include <lib/nodes/Node.hpp>
-#include <lib/interpolation/Interpolator.hpp>
+#include <lib/grid/nodes/Node.hpp>
+#include <lib/numeric/interpolation/Interpolator.hpp>
 
 namespace gcm {
-	template<class TModel> class MpiStructuredSolver;
-	template<class TModel> class VtkTextStructuredSnapshotter;
+	template<class TNode> class MpiStructuredSolver;
+	template<class TNode> class VtkTextStructuredSnapshotter;
 
-	template <class TModel>
-	class StructuredGrid : public Grid<TModel> {
+	template<class TNode>
+	class StructuredGrid : public Grid<TNode> {
 
 	public:
-		typedef typename Grid<TModel>::Node Node;
-		typedef typename Grid<TModel>::Vector Vector;
-		typedef typename Grid<TModel>::Matrix Matrix;
+		typedef typename Grid<TNode>::Node Node;
+		typedef typename Grid<TNode>::Vector Vector;
+		typedef typename Grid<TNode>::Matrix Matrix;
 
 	private:
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
@@ -46,7 +46,9 @@ namespace gcm {
 		 * @param z z index < Z
 		 */
 		inline Node &operator()(const int x, const int y, const int z) {
-			return this->nodes[(2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder) + (2 * accuracyOrder + Z) * (y + accuracyOrder) + (z + accuracyOrder)];
+			return this->nodes[  (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
+			                   + (2 * accuracyOrder + Z) * (y + accuracyOrder)
+			                   + (z + accuracyOrder) ];
 		};
 
 		/**
@@ -57,7 +59,9 @@ namespace gcm {
 		 * @param z z index < Z
 		 */
 		inline const Node &get(const int x, const int y, const int z) const {
-			return this->nodes[(2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder) + (2 * accuracyOrder + Z) * (y + accuracyOrder) + (z + accuracyOrder)];
+			return this->nodes[  (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
+			                   + (2 * accuracyOrder + Z) * (y + accuracyOrder)
+			                   + (z + accuracyOrder) ];
 		};
 
 		/* Equal-distance spatial interpolator */
@@ -116,7 +120,7 @@ namespace gcm {
 
 		/* ---------------- For testing purposes (end) ---------------- */
 
-		virtual real getMinimalSpatialStep() const override;
+		virtual real getMinimalSpatialStepImpl() const override;
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
@@ -130,8 +134,8 @@ namespace gcm {
 			return {startX + x * h[0], startY + y * h[1], startZ + z * h[2]};
 		};
 
-		friend class VtkTextStructuredSnapshotter<TModel>;
-		friend class MpiStructuredSolver<TModel>;
+		friend class VtkTextStructuredSnapshotter<TNode>;
+		friend class MpiStructuredSolver<TNode>;
 	};
 }
 

@@ -1,7 +1,7 @@
 #ifndef LIBGCM_AREA_HPP
 #define LIBGCM_AREA_HPP
 
-#include <lib/linal/Vector3.hpp>
+#include <lib/linal/special/Vector3.hpp>
 #include <lib/linal/Linal.hpp>
 
 namespace gcm {

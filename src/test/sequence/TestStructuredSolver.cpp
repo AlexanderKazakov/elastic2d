@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/model/IdealElastic2DModel.hpp>
-#include <lib/solver/MpiStructuredSolver.hpp>
+#include <lib/numeric/grid_characteristic_method/MpiStructuredSolver.hpp>
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
 #include <lib/util/areas/StraightBoundedCylinderArea.hpp>
 
@@ -31,13 +30,13 @@ TEST(Solver, StageXForward)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 		
-		MpiStructuredSolver<IdealElastic2DModel> solver;
+		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
-		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
+		IdealElastic2DNode::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
+		IdealElastic2DNode::Vector zero({0, 0, 0, 0, 0});
 
-		StructuredGrid<IdealElastic2DModel>* mesh = solver.getMesh();
-		StructuredGrid<IdealElastic2DModel>* newMesh = solver.getNewMesh();
+		StructuredGrid<IdealElastic2DNode>* mesh = solver.getMesh();
+		StructuredGrid<IdealElastic2DNode>* newMesh = solver.getNewMesh();
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -76,13 +75,13 @@ TEST(Solver, StageY)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		MpiStructuredSolver<IdealElastic2DModel> solver;
+		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
-		IdealElastic2DModel::Node::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
-		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
+		IdealElastic2DNode::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
+		IdealElastic2DNode::Vector zero({0, 0, 0, 0, 0});
 
-		StructuredGrid<IdealElastic2DModel>* mesh = solver.getMesh();
-		StructuredGrid<IdealElastic2DModel>* newMesh = solver.getNewMesh();
+		StructuredGrid<IdealElastic2DNode>* mesh = solver.getMesh();
+		StructuredGrid<IdealElastic2DNode>* newMesh = solver.getNewMesh();
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -119,13 +118,13 @@ TEST(Solver, StageYSxx)
 		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.1, begin, end);
 		task.initialCondition.quantities.push_back(quantity);
 		
-		MpiStructuredSolver<IdealElastic2DModel> solver;
+		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
-		IdealElastic2DModel::Node::Vector sxxOnly = solver.getMesh()->getNodeForTest(task.X / 2, task.Y / 2, 0).u;
-		IdealElastic2DModel::Node::Vector zero({0, 0, 0, 0, 0});
+		IdealElastic2DNode::Vector sxxOnly = solver.getMesh()->getNodeForTest(task.X / 2, task.Y / 2, 0).u;
+		IdealElastic2DNode::Vector zero({0, 0, 0, 0, 0});
 
-		StructuredGrid<IdealElastic2DModel>* mesh = solver.getMesh();
-		StructuredGrid<IdealElastic2DModel>* newMesh = solver.getNewMesh();
+		StructuredGrid<IdealElastic2DNode>* mesh = solver.getMesh();
+		StructuredGrid<IdealElastic2DNode>* newMesh = solver.getNewMesh();
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.Y; y++) {
 				for (int x = 0; x < task.X; x++) {
@@ -164,9 +163,9 @@ TEST(Solver, calculate)
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	task.initialCondition.waves.push_back(wave);
 	
-	MpiStructuredSolver<IdealElastic2DModel> solver;
+	MpiStructuredSolver<IdealElastic2DNode> solver;
 	solver.initialize(task);
-	IdealElastic2DModel::Node::Vector sWave = solver.getMesh()->getNodeForTest(task.X / 2, 3, 0).u;
+	IdealElastic2DNode::Vector sWave = solver.getMesh()->getNodeForTest(task.X / 2, 3, 0).u;
 	solver.calculate();
 	ASSERT_EQ(sWave, solver.getMesh()->getNodeForTest(task.X / 2, 22, 0).u);
 }
@@ -198,7 +197,7 @@ TEST(Solver, TwoLayersDifferentRho)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 		
-		MpiStructuredSolver<IdealElastic2DModel> solver;
+		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
 
 		real rho2rho0 = rho2rho0Initial * pow(2, i);
@@ -274,7 +273,7 @@ TEST(Solver, TwoLayersDifferentE)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		MpiStructuredSolver<IdealElastic2DModel> solver;
+		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
 
 		real rho2rho0 = 1;

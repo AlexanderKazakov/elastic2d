@@ -1,13 +1,11 @@
 #include <lib/grid/Grid.hpp>
+#include <lib/grid/nodes/Node.hpp>
 
-#include <lib/model/IdealElastic1DModel.hpp>
-#include <lib/model/IdealElastic2DModel.hpp>
-#include <lib/model/IdealElastic3DModel.hpp>
 
 using namespace gcm;
 
-template<class TModel>
-void Grid<TModel>::initialize(const Task &task) {
+template<class TNode>
+void Grid<TNode>::initialize(const Task &task) {
 
 	rank = MPI::COMM_WORLD.Get_rank();
 	numberOfWorkers = MPI::COMM_WORLD.Get_size();
@@ -19,18 +17,15 @@ void Grid<TModel>::initialize(const Task &task) {
 
 	initializeImpl(task);
 
-	defaultMatrix = std::make_shared<typename TModel::GCM_MATRICES>(task.material);
-	assert_true(defaultMatrix);
-	maximalLambda = defaultMatrix->getMaximalEigenvalue();
-
+	auto gcmMatricesPtr = std::make_shared<typename TNode::GcmMatrices>(task.material);
 	for (auto& node : nodes) {
-		linal::clear(node.u);
-		node.matrix = defaultMatrix;
+		node.matrix = gcmMatricesPtr;
 	}
+	maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
 
 	applyInitialConditions(task);
 }
 
-template class Grid<IdealElastic1DModel>;
-template class Grid<IdealElastic2DModel>;
-template class Grid<IdealElastic3DModel>;
+template class Grid<IdealElastic1DNode>;
+template class Grid<IdealElastic2DNode>;
+template class Grid<IdealElastic3DNode>;

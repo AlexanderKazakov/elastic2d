@@ -40,6 +40,7 @@ namespace gcm {
 		template<int TM, int TN, typename Container=DefaultMatrixContainer<TM, TN>>
 		class Matrix : public Container {
 		public:
+			typedef Container ContainerType;
 			static const int M = TM; // number of strings
 			static const int N = TN; // number of columns
 

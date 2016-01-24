@@ -2,8 +2,8 @@
 #define LIBGCM_LINAL_HPP
 
 #include <lib/linal/Matrix.hpp>
-#include <lib/linal/DiagonalMatrix.hpp>
-#include <lib/linal/SymmetricMatrix.hpp>
+#include <lib/linal/special/DiagonalMatrix.hpp>
+#include <lib/linal/special/SymmetricMatrix.hpp>
 
 namespace gcm {
 	namespace linal {

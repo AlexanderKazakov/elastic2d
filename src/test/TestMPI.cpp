@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 
 #include <lib/util/DataBus.hpp>
-#include <lib/task/Task.hpp>
+#include <lib/util/task/Task.hpp>
 #include <lib/grid/StructuredGrid.hpp>
-#include <lib/solver/MpiStructuredSolver.hpp>
-#include <lib/model/IdealElastic2DModel.hpp>
-#include <lib/nodes/Node.hpp>
+#include <lib/numeric/grid_characteristic_method/MpiStructuredSolver.hpp>
+#include <lib/grid/nodes/Node.hpp>
 
 using namespace gcm;
 
@@ -94,14 +93,14 @@ TEST(MPI, MPISolverVsSequenceSolver)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	MpiStructuredSolver<IdealElastic2DModel> sequenceSolver;
+	MpiStructuredSolver<IdealElastic2DNode> sequenceSolver;
 	sequenceSolver.initialize(task);
 	sequenceSolver.calculate();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	MpiStructuredSolver<IdealElastic2DModel> mpiSolver;
+	MpiStructuredSolver<IdealElastic2DNode> mpiSolver;
 	mpiSolver.initialize(task);
 	mpiSolver.calculate();
 
