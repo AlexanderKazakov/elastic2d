@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 	DataBus::createStaticTypes();
 	USE_AND_INIT_LOGGER("gcm.main");
 
-	MpiStructuredSolver<IdealElastic2DNode> solver;
+	MpiStructuredSolver<IdealElastic3DNode> solver;
 
 	try {
 		solver.initialize(parseTask());
@@ -30,8 +30,8 @@ Task parseTask() {
 
 	task.accuracyOrder = 2;
 
-	task.lengthes = {2, 3, 2};
-	task.sizes = {21, 21, 1};
+	task.lengthes = {2, 2, 5};
+	task.sizes = {21, 21, 51};
 
 	real rho0 = 8.0; // default density
 	real lambda0 = 12e+4; // default Lame parameter
@@ -44,10 +44,10 @@ Task parseTask() {
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 1, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 1, 2}));
 	task.initialCondition.quantities.push_back(pressure);
 
-//	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
+	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 
 	task.enableSnapshotting = true;
 

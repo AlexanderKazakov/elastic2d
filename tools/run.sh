@@ -2,7 +2,7 @@
 
 usage() { echo "Usage: $0
     [-n] number_of_processes
-    [-p] (to open Paraview after calculation - only for single-process mode)"
+    [-p] (to open Paraview after calculation)"
     1>&2; exit 1; }
 
 np=`cat /proc/cpuinfo | grep processor | wc -l`
@@ -28,7 +28,11 @@ mkdir snaps
 echo "Start ./build/gcm_exe with $np processes ..."
 mpirun -np $np ./build/gcm_exe
 
-if (($np == 1 && run_paraview)); then
+if ((run_paraview)); then
     echo "Run Paraview ..."
-    paraview --data=snaps/core00_snapshot..vtk
+    if (($np == 1)); then
+        paraview --data=snaps/core00_snapshot..vtk
+    else
+        paraview
+    fi
 fi

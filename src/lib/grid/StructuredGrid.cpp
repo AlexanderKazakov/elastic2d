@@ -17,7 +17,6 @@ void StructuredGrid<TNode>::initializeImpl(const Task &task) {
 	startR = task.startR;
 
 	// MPI - we divide the grid among processes equally along x-axis
-	globalX = task.sizes(0); // number of nodes along x direction of all meshes (from all cores)
 	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / this->numberOfWorkers);
 	sizes(0) = numberOfNodesAlongXPerOneCore; // number of nodes along x direction on this mesh
 	// in order to keep specified in task number of nodes

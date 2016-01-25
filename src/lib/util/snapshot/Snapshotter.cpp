@@ -3,21 +3,21 @@
 
 using namespace gcm;
 
-template <class TModel>
-void Snapshotter<TModel>::snapshot(const int step) {
+template <class TNode>
+void Snapshotter<TNode>::snapshot(Grid<TNode>* _grid, const int step) {
 	if (enableSnapshotting) {
+		this->grid = _grid;
 		snapshotImpl(makeFileNameForSnapshot(step));
 	}
 }
 
-template <class TModel>
-void Snapshotter<TModel>::initialize(Grid<TModel>* _grid, bool _enableSnapshotting) {
-		this->grid = _grid;
-		this->enableSnapshotting = _enableSnapshotting;
+template <class TNode>
+void Snapshotter<TNode>::initialize(const Task& task) {
+		this->enableSnapshotting = task.enableSnapshotting;
 }
 
-template <class TModel>
-std::string Snapshotter<TModel>::makeFileNameForSnapshot(const int step) {
+template <class TNode>
+std::string Snapshotter<TNode>::makeFileNameForSnapshot(const int step) {
 	char buffer[50];
 	sprintf(buffer, "%s%02d%s%05d%s", "snaps/core", grid->getRank(), "_snapshot", step, ".vtk");
 	return std::string(buffer);

@@ -26,8 +26,7 @@ namespace gcm {
 		linal::VectorInt<3> sizes = {0, 0, 0}; // numbers of nodes along each direction (on this core)
 
 		// the grid is divided equally along x-axis among processes
-		int globalX = 0; // number of nodes along x direction of all grids (from all cores)
-		int globalStartXindex;// = 0; // global x-index of the first real node of the grid
+		int globalStartXindex = 0; // global x-index of the first real node of the grid
 
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node of the grid
 		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction

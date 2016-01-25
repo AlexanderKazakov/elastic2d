@@ -86,13 +86,10 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
-
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 0.5, 0}));
-
 	task.initialCondition.quantities.push_back(pressure);
 
-
-//	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
+	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 
 	// calculate in sequence
 	task.forceSequence = true;

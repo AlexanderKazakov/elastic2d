@@ -16,8 +16,9 @@ void MpiStructuredSolver<TNode>::initialize(const Task &task) {
 	T = task.numberOfSnaps * tau; // required time
 	if (task.numberOfSnaps == 0) T = task.T;
 	splittingSecondOrder = task.splittingSecondOrder;
+
 	snapshotter = new VtkTextStructuredSnapshotter<TNode>();
-	snapshotter->initialize(mesh, task.enableSnapshotting);
+	snapshotter->initialize(task);
 }
 
 template<class TNode>
@@ -33,7 +34,7 @@ void MpiStructuredSolver<TNode>::calculate() {
 	tau = CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda(); // time step
 	exchangeNodesWithNeighbors();
 	real currentTime = 0.0; int step = 0;
-	snapshotter->snapshot(step);
+	snapshotter->snapshot(mesh, step);
 	while(currentTime < T) {
 		LOG_INFO("Start time step " << step);
 		if (splittingSecondOrder) {
@@ -56,7 +57,7 @@ void MpiStructuredSolver<TNode>::calculate() {
 			}
 		}
 		currentTime += tau; step += 1;
-		snapshotter->snapshot(step);
+		snapshotter->snapshot(mesh, step);
 	}
 }
 
