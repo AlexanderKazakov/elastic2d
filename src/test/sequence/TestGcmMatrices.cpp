@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <lib/rheology/gcm_matrices/GcmMatrices.hpp>
+#include <lib/rheology/materials/OrthotropicMaterial.hpp>
+#include <lib/rheology/materials/IsotropicMaterial.hpp>
 
 using namespace gcm;
 using namespace gcm::linal;
@@ -83,71 +85,71 @@ TYPED_TEST_P(TestGcmMatrices, Diagonalization) {
 REGISTER_TYPED_TEST_CASE_P(TestGcmMatrices, Diagonalization);
 
 // write in generics all the GcmMatrices implementations using in mpi connections
-typedef Types<GcmMatrices<2, 1, IsotropicMaterial>, GcmMatrices<5, 2, IsotropicMaterial>, GcmMatrices<9, 3, IsotropicMaterial>, 
-        GcmMatrices<9, 3, OrthotropicMaterial>> AllImplementations;
+typedef Types<GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>, GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>, GcmMatrices<VelocitySigmaVariables<3>, IsotropicMaterial>, 
+        GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllGcmMatrices, TestGcmMatrices, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
 
 
 template<>
-void TestGcmMatrices<GcmMatrices<2, 1, IsotropicMaterial>>::testValuesOrdersConcerted(const GcmMatrices<2, 1, IsotropicMaterial> &matrix) {
+void TestGcmMatrices<GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>>::testValuesOrdersConcerted(const GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial> &matrix) {
 	// Vx 0, Sxx 0
 	
-	int indexForward = GcmMatrices<2, 1, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_FORWARD);
-	int indexBackward = GcmMatrices<2, 1, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_BACKWARD);
+	int indexForward = GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_FORWARD);
+	int indexBackward = GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_BACKWARD);
 
-	linal::Vector<GcmMatrices<2, 1, IsotropicMaterial>::M> pForward = matrix.A(0).U1.getColumn(indexForward);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::M> pForward = matrix.A(0).U1.getColumn(indexForward);
 	ASSERT_LT(pForward(0) /* Vx */ * pForward(1) /* Sxx */, 0); // compression or depression wave
 	ASSERT_GT(matrix.A(0).L(indexForward), 0);
 
-	linal::Vector<GcmMatrices<2, 1, IsotropicMaterial>::M> pBackward = matrix.A(0).U1.getColumn(indexBackward);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::M> pBackward = matrix.A(0).U1.getColumn(indexBackward);
 	ASSERT_GT(pBackward(0) /* Vx */ * pBackward(1) /* Sxx */, 0); // compression or depression wave
 	ASSERT_LT(matrix.A(0).L(indexBackward), 0);
 };
 
 template<>
-void TestGcmMatrices<GcmMatrices<5, 2, IsotropicMaterial>>::testValuesOrdersConcerted(const GcmMatrices<5, 2, IsotropicMaterial> &matrix) {
+void TestGcmMatrices<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>>::testValuesOrdersConcerted(const GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial> &matrix) {
 	// Vx 0, Vy 1, Sxx 2, Sxy 3, Syy 4
 
-	int indexForwardP = GcmMatrices<5, 2, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_FORWARD);
-	int indexBackwardP = GcmMatrices<5, 2, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_BACKWARD);
-	int indexForwardS = GcmMatrices<5, 2, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::S1_FORWARD);
-	int indexBackwardS = GcmMatrices<5, 2, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::S1_BACKWARD);
+	int indexForwardP = GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_FORWARD);
+	int indexBackwardP = GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::P_BACKWARD);
+	int indexForwardS = GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::S1_FORWARD);
+	int indexBackwardS = GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS.at(Waves::T::S1_BACKWARD);
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> pForwardX = matrix.A(0).U1.getColumn(indexForwardP);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> pForwardX = matrix.A(0).U1.getColumn(indexForwardP);
 	ASSERT_LT(pForwardX(0) /* Vx */ * pForwardX(2) /* Sxx */, 0); // compression or depression wave
 	ASSERT_GT(matrix.A(0).L(indexForwardP), 0);
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> pBackwardX = matrix.A(0).U1.getColumn(indexBackwardP);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> pBackwardX = matrix.A(0).U1.getColumn(indexBackwardP);
 	ASSERT_GT(pBackwardX(0) /* Vx */ * pBackwardX(2) /* Sxx */, 0); // compression or depression wave
 	ASSERT_LT(matrix.A(0).L(indexBackwardP), 0);
 
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> sForwardX = matrix.A(0).U1.getColumn(indexForwardS);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> sForwardX = matrix.A(0).U1.getColumn(indexForwardS);
 	ASSERT_LT(sForwardX(1) /* Vy */ * sForwardX(3) /* Sxy */, 0); // shear wave
 	ASSERT_GT(matrix.A(0).L(indexForwardS), 0);
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> sBackwardX = matrix.A(0).U1.getColumn(indexBackwardS);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> sBackwardX = matrix.A(0).U1.getColumn(indexBackwardS);
 	ASSERT_GT(sBackwardX(1) /* Vy */ * sBackwardX(3) /* Sxy */, 0); // shear wave
 	ASSERT_LT(matrix.A(0).L(indexBackwardS), 0);
 
 
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> pForwardY = matrix.A(1).U1.getColumn(indexForwardP);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> pForwardY = matrix.A(1).U1.getColumn(indexForwardP);
 	ASSERT_LT(pForwardY(1) /* Vy */ * pForwardY(4) /* Syy */, 0); // compression or depression wave
 	ASSERT_GT(matrix.A(1).L(indexForwardP), 0);
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> pBackwardY = matrix.A(1).U1.getColumn(indexBackwardP);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> pBackwardY = matrix.A(1).U1.getColumn(indexBackwardP);
 	ASSERT_GT(pBackwardY(1) /* Vy */ * pBackwardY(4) /* Syy */, 0); // compression or depression wave
 	ASSERT_LT(matrix.A(1).L(indexBackwardP), 0);
 
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> sForwardY = matrix.A(1).U1.getColumn(indexForwardS);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> sForwardY = matrix.A(1).U1.getColumn(indexForwardS);
 	ASSERT_LT(sForwardY(0) /* Vx */ * sForwardY(3) /* Sxy */, 0); // shear wave
 	ASSERT_GT(matrix.A(1).L(indexForwardS), 0);
 
-	linal::Vector<GcmMatrices<5, 2, IsotropicMaterial>::M> sBackwardY = matrix.A(1).U1.getColumn(indexBackwardS);
+	linal::Vector<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::M> sBackwardY = matrix.A(1).U1.getColumn(indexBackwardS);
 	ASSERT_GT(sBackwardY(0) /* Vx */ * sBackwardY(3) /* Sxy */, 0); // shear wave
 	ASSERT_LT(matrix.A(1).L(indexBackwardS), 0);
 };

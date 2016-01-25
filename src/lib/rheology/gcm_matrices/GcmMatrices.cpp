@@ -1,16 +1,19 @@
 #include <lib/rheology/gcm_matrices/GcmMatrices.hpp>
+#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
+#include <lib/rheology/materials/IsotropicMaterial.hpp>
+#include <lib/rheology/materials/OrthotropicMaterial.hpp>
 
 using namespace gcm;
 
 
 template<>
-const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<2, 1, IsotropicMaterial>::WAVE_COLUMNS = {
+const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::WAVE_COLUMNS = {
 		{Waves::T::P_FORWARD,  0},
 		{Waves::T::P_BACKWARD, 1}
 };
 
 template<>
-const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<5, 2, IsotropicMaterial>::WAVE_COLUMNS = {
+const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS = {
 		{Waves::T::P_FORWARD,   1},
 		{Waves::T::P_BACKWARD,  0},
 		{Waves::T::S1_FORWARD,  3},
@@ -18,7 +21,7 @@ const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<5, 2, Iso
 };
 
 template<>
-const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<9, 3, IsotropicMaterial>::WAVE_COLUMNS = {
+const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<3>, IsotropicMaterial>::WAVE_COLUMNS = {
 		{Waves::T::P_FORWARD,   1},
 		{Waves::T::P_BACKWARD,  0},
 		{Waves::T::S1_FORWARD,  4},
@@ -28,7 +31,7 @@ const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<9, 3, Isot
 };
 
 template<>
-const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<9, 3, OrthotropicMaterial>::WAVE_COLUMNS = {
+const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>::WAVE_COLUMNS = {
 		{Waves::T::P_FORWARD,   5},
 		{Waves::T::P_BACKWARD,  4},
 		{Waves::T::S1_FORWARD,  1},
@@ -46,17 +49,17 @@ real GcmMatrix<M>::getMaximalEigenvalue() const {
 	return ans;
 };
 
-template<int TM, int Dimensionality, class TMaterial>
-real GcmMatrices<TM, Dimensionality, TMaterial>::getMaximalEigenvalue() const {
+template<typename TVariables, class TMaterial>
+real GcmMatrices<TVariables, TMaterial>::getMaximalEigenvalue() const {
 	real ans = 0.0;
-	for (int i = 0; i < Dimensionality; i++) {
+	for (int i = 0; i < DIMENSIONALITY; i++) {
 		ans = fmax(ans, A(i).getMaximalEigenvalue());
 	}
 	return ans;
 };
 
 
-template class GcmMatrices<2, 1, IsotropicMaterial>;
-template class GcmMatrices<5, 2, IsotropicMaterial>;
-template class GcmMatrices<9, 3, IsotropicMaterial>;
-template class GcmMatrices<9, 3, OrthotropicMaterial>;
+template class GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>;
+template class GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>;
+template class GcmMatrices<VelocitySigmaVariables<3>, IsotropicMaterial>;
+template class GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>;

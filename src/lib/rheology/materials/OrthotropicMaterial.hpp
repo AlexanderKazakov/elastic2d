@@ -3,12 +3,12 @@
 
 
 #include <lib/util/Types.hpp>
+#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
 #include <initializer_list>
 
 namespace gcm {
 	class IsotropicMaterial;
-	template<int TM, int Dimensionality, class TMaterial> class GcmMatrices;
-
+	template<typename TVariables, class TMaterial> class GcmMatrices;
 
 	/**
 	 * Orthotropic elastic materials
@@ -32,7 +32,7 @@ namespace gcm {
 		OrthotropicMaterial(const IsotropicMaterial& isotropic);
 
 		/** Fill in gcm matrices */
-		void constructGcmMatrices(GcmMatrices<9, 3, OrthotropicMaterial>& m) const;
+		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>& m) const;
 
 		/** For testing purposes */
 		static OrthotropicMaterial generateRandomMaterial();

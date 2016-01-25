@@ -3,8 +3,6 @@
 
 #include <map>
 
-#include <lib/rheology/materials/OrthotropicMaterial.hpp>
-#include <lib/rheology/materials/IsotropicMaterial.hpp>
 #include <lib/linal/Linal.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Concepts.hpp>
@@ -34,17 +32,16 @@ namespace gcm {
 	 *             + \mat{Ay} \partial{\vec{u}}/\partial{y}
 	 *             + \mat{Az} \partial{\vec{u}}/\partial{z} = \vec{f}.
 	 * The class represents \mat{Ax}, \mat{Ay} \mat{Az} with their eigensystems for a concrete model and material.
-	 * @tparam TM size of vec{u}
-	 * @tparam Dimensionality number of dimensions, usually from 1 to 3
+	 * @tparam TVariables variables in equation - \vec{u}
 	 * @tparam TMaterial type of material used to construct the matrices
 	 */
-	template<int TM, int Dimensionality, class TMaterial>
+	template<typename TVariables, class TMaterial>
 	class GcmMatrices {
 	public:
-		typedef typename GcmMatrix<TM>::Matrix Matrix;
 		typedef TMaterial Material; // type of material used to construct the matrices
-		static const int M = TM; // size of corresponding vector
-		static const int DIMENSIONALITY = Dimensionality; // number of dimensions (stages)
+		static const int M = TVariables::SIZE; // size of corresponding vector
+		static const int DIMENSIONALITY = TVariables::DIMENSIONALITY; // number of dimensions (stages)
+		typedef typename GcmMatrix<M>::Matrix Matrix;
 
 		/** Map between type of wave and corresponding to that type column in matrix U1 */
 		static const std::map<Waves::T, int/* index of column in U1 */> WAVE_COLUMNS;
@@ -54,23 +51,23 @@ namespace gcm {
 		};
 
 		/** @return GcmMatrix along specified direction */
-		const GcmMatrix<TM>& A(const int direction) const {
+		const GcmMatrix<M>& A(const int direction) const {
 			return m[direction];
 		};
 
 		/** @return maximal in modulus eigenvalue of matrices from all directions */
 		real getMaximalEigenvalue() const;
 
-		TMaterial getMaterial() const { return material; };
+		Material getMaterial() const { return material; };
+
 
 	protected:
 
-		TMaterial material;
+		Material material;
 
-		// TODO - logic around random basis here and/or in Grid?
-		GcmMatrix<TM> m[Dimensionality];
+		GcmMatrix<M> m[DIMENSIONALITY];
 
-		friend TMaterial;
+		friend Material;
 	};
 }
 

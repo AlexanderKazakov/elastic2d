@@ -47,11 +47,11 @@ namespace gcm {
 
 
 	typedef Node<VectorEnvelope<linal::Vector<2, VelocitySigmaVariables<1>>>,
-			GcmMatricesPtrEnvelope<GcmMatrices<2, 1, IsotropicMaterial>>> IdealElastic1DNode;
+			GcmMatricesPtrEnvelope<GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>>> IdealElastic1DNode;
 	typedef Node<VectorEnvelope<linal::Vector<5, VelocitySigmaVariables<2>>>,
-			GcmMatricesPtrEnvelope<GcmMatrices<5, 2, IsotropicMaterial>>> IdealElastic2DNode;
+			GcmMatricesPtrEnvelope<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>>> IdealElastic2DNode;
 	typedef Node<VectorEnvelope<linal::Vector<9, VelocitySigmaVariables<3>>>,
-			GcmMatricesPtrEnvelope<GcmMatrices<9, 3, IsotropicMaterial>>> IdealElastic3DNode;
+			GcmMatricesPtrEnvelope<GcmMatrices<VelocitySigmaVariables<3>, IsotropicMaterial>>> IdealElastic3DNode;
 
 
 }

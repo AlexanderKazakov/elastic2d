@@ -19,7 +19,7 @@ OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	c12 = c13 = c23 = isotropic.lambda;
 }
 
-void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<9, 3, OrthotropicMaterial> &m) const {
+void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial> &m) const {
 	m.m[0].A.initialize({0, 0, 0, -1.0 / rho, 0, 0, 0, 0, 0,
 	                     0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
 	                     0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,

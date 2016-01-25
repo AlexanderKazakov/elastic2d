@@ -8,7 +8,7 @@ IsotropicMaterial::IsotropicMaterial() : IsotropicMaterial(0, 0, 0) { }
 IsotropicMaterial::IsotropicMaterial(const real& _rho, const real& _lambda, const real& _mu) :
 		rho(_rho), lambda(_lambda), mu(_mu) { }
 
-void IsotropicMaterial::constructGcmMatrices(GcmMatrices<2, 1, IsotropicMaterial> &m) const {
+void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial> &m) const {
 	real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 
 	m.m[0].A.initialize({0.0, -1.0 / rho,
@@ -23,7 +23,7 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<2, 1, IsotropicMaterial
 	                      sqrt(E * rho), sqrt(E * rho)});
 }
 
-void IsotropicMaterial::constructGcmMatrices(GcmMatrices<5, 2, IsotropicMaterial> &m) const {
+void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial> &m) const {
 	// TODO - actually we can use orthotropic material here
 	m.m[0].A.initialize({0, 0, -1.0 / rho, 0, 0,
 	                     0, 0, 0, -1.0 / rho, 0,
@@ -71,7 +71,7 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<5, 2, IsotropicMaterial
 	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0});
 }
 
-void IsotropicMaterial::constructGcmMatrices(GcmMatrices<9, 3, IsotropicMaterial> &m) const {
+void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, IsotropicMaterial> &m) const {
 	// TODO - actually we can use orthotropic material here
 	m.m[0].A.initialize({0, 0, 0, -1.0 / rho, 0, 0, 0, 0, 0,
 	                     0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
