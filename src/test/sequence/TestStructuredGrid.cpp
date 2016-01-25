@@ -10,10 +10,9 @@ TEST(StructuredGrid, initialize) {
 	task.accuracyOrder = 3;
 	task.CourantNumber = 0.7;
 	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
-	task.X = 7;
-	task.Y = 9;
-	task.xLength = 20.0;
-	task.yLength = 8.0;
+	task.sizes(0) = 7;
+	task.sizes(1) = 9;
+	task.lengthes = {20, 8, 1};
 	task.numberOfSnaps = 5;
 	task.T = 100.0;
 
@@ -23,9 +22,9 @@ TEST(StructuredGrid, initialize) {
 	ASSERT_NEAR(structuredGrid.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(structuredGrid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(structuredGrid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
-	for (int x = 0; x < task.X; x++) {
-		for (int y = 0; y < task.Y; y++) {
-			for (int z = 0; z < task.Z; z++) {
+	for (int x = 0; x < task.sizes(0); x++) {
+		for (int y = 0; y < task.sizes(1); y++) {
+			for (int z = 0; z < task.sizes(2); z++) {
 				for (int i = 0; i < IdealElastic2DNode::M; i++) {
 					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z).u(i), 0.0);
 				}
@@ -40,9 +39,9 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 	Task task;
 	task.material = IsotropicMaterial(2.0, 2.0, 1.0);
 
-	task.X = task.Y = 3;
+	task.sizes(0) = task.sizes(1) = 3;
 	task.accuracyOrder = 1;
-	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
+	task.lengthes = {2.0, 2.0, 1.0}; // h_x = h_y = 1.0
 
 	Task::InitialCondition::Quantity quantity;
 	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -54,8 +53,8 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 
 		StructuredGrid<IdealElastic2DNode> structuredGrid;
 		structuredGrid.initialize(task);
-		for (int x = 0; x < task.X; x++) {
-			for (int y = 0; y < task.Y; y++) {
+		for (int x = 0; x < task.sizes(0); x++) {
+			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[0], 0.0);
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[1], 0.0);
@@ -83,9 +82,9 @@ TEST(StructuredGrid, interpolateValuesAround)
 	Task task;
 	task.material = IsotropicMaterial(2.0, 2.0, 1.0);
 
-	task.X = task.Y = 3;
+	task.sizes(0) = task.sizes(1) = 3;
 	task.accuracyOrder = 1;
-	task.xLength = task.yLength = 2.0; // h_x = h_y = 1.0
+	task.lengthes = {2, 2, 2}; // h_x = h_y = 1.0
 
 	Task::InitialCondition::Quantity quantity;
 	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -97,8 +96,8 @@ TEST(StructuredGrid, interpolateValuesAround)
 
 		StructuredGrid<IdealElastic2DNode> structuredGrid;
 		structuredGrid.initialize(task);
-		for (int x = 0; x < task.X; x++) {
-			for (int y = 0; y < task.Y; y++) {
+		for (int x = 0; x < task.sizes(0); x++) {
+			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[0], 0.0);
 				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[1], 0.0);

@@ -9,47 +9,33 @@ using namespace gcm;
 template<class TNode>
 void StructuredGrid<TNode>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
-
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_ge(accuracyOrder, 1);
 
-	globalX = task.X; // number of nodes along x direction of all meshes (from all cores)
-	assert_ge(globalX, 2 * accuracyOrder);
-	Y = task.Y; // number of nodes along y direction
-	if (Y != 1) assert_ge(Y, 2 * accuracyOrder);
-	Z = task.Z; // number of nodes along z direction
-	if (Z != 1) assert_ge(Z, 2 * accuracyOrder);
+	h = linal::plainDivision(task.lengthes, task.sizes - linal::VectorInt<3>({1, 1, 1}));
+	sizes = task.sizes;
+	startR = task.startR;
 
-	// we divide the grid among processes equally along x-axis
-	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.X / this->numberOfWorkers);
-	X = numberOfNodesAlongXPerOneCore; // number of nodes along x direction on this mesh
+	// MPI - we divide the grid among processes equally along x-axis
+	globalX = task.sizes(0); // number of nodes along x direction of all meshes (from all cores)
+	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / this->numberOfWorkers);
+	sizes(0) = numberOfNodesAlongXPerOneCore; // number of nodes along x direction on this mesh
 	// in order to keep specified in task number of nodes
-	if (this->rank == this->numberOfWorkers - 1) X = task.X - numberOfNodesAlongXPerOneCore * (this->numberOfWorkers - 1);
-	assert_ge(X, 2 * accuracyOrder);
-
-	h[0] = task.xLength / (task.X - 1);
-	h[1] = task.yLength / (task.Y - 1);
-	h[2] = task.zLength / (task.Z - 1);
-
-	if (task.X == 1) h[0] = std::numeric_limits<real>::max();
-	if (task.Y == 1) h[1] = std::numeric_limits<real>::max();
-	if (task.Z == 1) h[2] = std::numeric_limits<real>::max();
+	if (this->rank == this->numberOfWorkers - 1) sizes(0) = task.sizes(0) - numberOfNodesAlongXPerOneCore * (this->numberOfWorkers - 1);
+	startR(0) += (this->rank * numberOfNodesAlongXPerOneCore) * h(0); // mpi parallel along X axis
+	globalStartXindex = this->rank * numberOfNodesAlongXPerOneCore; // for testing
+	// MPI - (end)
 
 	for (int j = 0; j < 3; j++) {
-		assert_gt(h[j], 0.0);
-		assert_eq(h[j], h[j]); // this is supposed to catch NaN
+		if (sizes(j) != 1) assert_ge(sizes(j), 2 * accuracyOrder);
+		assert_gt(h(j), 0.0);
+		assert_eq(h(j), h(j)); // this is supposed to catch NaN
+		assert_eq(startR(j), startR(j));
 	}
-
-	globalStartXindex = this->rank * numberOfNodesAlongXPerOneCore;
-
-	startX = task.startX + globalStartXindex * h[0];
-	startY = task.startY;
-	startZ = task.startZ;
-	assert_eq(startX, startX); assert_eq(startY, startY); assert_eq(startZ, startZ); // this is supposed to catch NaN
-
+	
 	borderConditions = task.borderConditions;
 
-	this->nodes.resize( (unsigned long) (X + 2 * accuracyOrder) * (Y + 2 * accuracyOrder) * (Z + 2 * accuracyOrder) );
+	this->nodes.resize( (unsigned long) (sizes(0) + 2 * accuracyOrder) * (sizes(1) + 2 * accuracyOrder) * (sizes(2) + 2 * accuracyOrder) );
 }
 
 template<class TNode>
@@ -61,7 +47,7 @@ typename StructuredGrid<TNode>::Matrix StructuredGrid<TNode>::interpolateValuesA
 	Vector res;
 	for (int k = 0; k < Node::M; k++) {
 		findSourcesForInterpolation(stage, x, y, z, dx(k), src);
-		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h[stage]);
+		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h(stage));
 		ans.setColumn(k, res);
 	}
 
@@ -87,10 +73,10 @@ void StructuredGrid<TNode>::changeRheology(const real& rho2rho0, const real& lam
 	IsotropicMaterial newMaterial(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
 	auto newRheologyMatrix = std::make_shared<typename TNode::GcmMatrices>(newMaterial);
 
-	for (int x = 0; x < X; x++) {
-		for (int y = 0; y < Y; y++) {
-			for (int z = 0; z < Z; z++) {
-				if (y * h[1] >= 0.5) {
+	for (int x = 0; x < sizes(0); x++) {
+		for (int y = 0; y < sizes(1); y++) {
+			for (int z = 0; z < sizes(2); z++) {
+				if (y * h(1) >= 0.5) {
 					(*this)(x, y, z).matrix = newRheologyMatrix;
 				}
 			}
@@ -104,8 +90,8 @@ template<class TNode>
 void StructuredGrid<TNode>::applyBorderConditions() {
 
 	if (this->rank == 0 && borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int y = 0; y < Y; y++) {
-			for (int z = 0; z < Z; z++) {
+		for (int y = 0; y < sizes(1); y++) {
+			for (int z = 0; z < sizes(2); z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
 					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)( - i, y, z).u.V[j] = get(i, y, z).u.V[j];
@@ -118,23 +104,23 @@ void StructuredGrid<TNode>::applyBorderConditions() {
 		}
 	}
 	if (this->rank == this->numberOfWorkers - 1 && borderConditions.at(CUBIC_BORDERS::X_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int y = 0; y < Y; y++) {
-			for (int z = 0; z < Z; z++) {
+		for (int y = 0; y < sizes(1); y++) {
+			for (int z = 0; z < sizes(2); z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
 					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(X - 1 + i, y, z).u.V[j] = get(X - 1 - i, y, z).u.V[j];
+						(*this)(sizes(0) - 1 + i, y, z).u.V[j] = get(sizes(0) - 1 - i, y, z).u.V[j];
 					}
 					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(X - 1 + i, y, z).u.S[j] = - get(X - 1 - i, y, z).u.S[j];
+						(*this)(sizes(0) - 1 + i, y, z).u.S[j] = - get(sizes(0) - 1 - i, y, z).u.S[j];
 					}
 				}
 			}
 		}
 	}
 	
-	if (Y != 1 && borderConditions.at(CUBIC_BORDERS::Y_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < X; x++) {
-			for (int z = 0; z < Z; z++) {
+	if (sizes(1) != 1 && borderConditions.at(CUBIC_BORDERS::Y_LEFT) == BorderCondition::T::FREE_BORDER) {
+		for (int x = 0; x < sizes(0); x++) {
+			for (int z = 0; z < sizes(2); z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
 					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(x, - i, z).u.V[j] = get(x, i, z).u.V[j];
@@ -146,24 +132,24 @@ void StructuredGrid<TNode>::applyBorderConditions() {
 			}
 		}
 	}
-	if (Y != 1 && borderConditions.at(CUBIC_BORDERS::Y_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < X; x++) {
-			for (int z = 0; z < Z; z++) {
+	if (sizes(1) != 1 && borderConditions.at(CUBIC_BORDERS::Y_RIGHT) == BorderCondition::T::FREE_BORDER) {
+		for (int x = 0; x < sizes(0); x++) {
+			for (int z = 0; z < sizes(2); z++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
 					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(x, Y - 1 + i, z).u.V[j] = get(x, Y - 1 - i, z).u.V[j];
+						(*this)(x, sizes(1) - 1 + i, z).u.V[j] = get(x, sizes(1) - 1 - i, z).u.V[j];
 					}
 					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(x, Y - 1 + i, z).u.S[j] = - get(x, Y - 1 - i, z).u.S[j];
+						(*this)(x, sizes(1) - 1 + i, z).u.S[j] = - get(x, sizes(1) - 1 - i, z).u.S[j];
 					}
 				}
 			}
 		}
 	}
 
-	if (Z != 1 && borderConditions.at(CUBIC_BORDERS::Z_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < X; x++) {
-			for (int y = 0; y < Y; y++) {
+	if (sizes(2) != 1 && borderConditions.at(CUBIC_BORDERS::Z_LEFT) == BorderCondition::T::FREE_BORDER) {
+		for (int x = 0; x < sizes(0); x++) {
+			for (int y = 0; y < sizes(1); y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
 					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
 						(*this)(x, y, - i).u.V[j] = get(x, y, i).u.V[j];
@@ -175,15 +161,15 @@ void StructuredGrid<TNode>::applyBorderConditions() {
 			}
 		}
 	}
-	if (Z != 1 && borderConditions.at(CUBIC_BORDERS::Z_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < X; x++) {
-			for (int y = 0; y < Y; y++) {
+	if (sizes(2) != 1 && borderConditions.at(CUBIC_BORDERS::Z_RIGHT) == BorderCondition::T::FREE_BORDER) {
+		for (int x = 0; x < sizes(0); x++) {
+			for (int y = 0; y < sizes(1); y++) {
 				for (int i = 1; i <= accuracyOrder; i++) {
 					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(x, y, Z - 1 + i).u.V[j] = get(x, y, Z - 1 - i).u.V[j];
+						(*this)(x, y, sizes(2) - 1 + i).u.V[j] = get(x, y, sizes(2) - 1 - i).u.V[j];
 					}
 					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(x, y, Z - 1 + i).u.S[j] = - get(x, y, Z - 1 - i).u.S[j];
+						(*this)(x, y, sizes(2) - 1 + i).u.S[j] = - get(x, y, sizes(2) - 1 - i).u.S[j];
 					}
 				}
 			}
@@ -196,9 +182,9 @@ void StructuredGrid<TNode>::applyInitialConditions(const Task& task) {
 	InitialCondition<TNode> initialCondition;
 	initialCondition.initialize(task);
 
-	for (int x = 0; x < X; x++) {
-		for (int y = 0; y < Y; y++) {
-			for (int z = 0; z < Z; z++) {
+	for (int x = 0; x < sizes(0); x++) {
+		for (int y = 0; y < sizes(1); y++) {
+			for (int z = 0; z < sizes(2); z++) {
 				initialCondition.apply((*this)(x, y, z), getCoordinates(x, y, z));
 			}
 		}
@@ -207,7 +193,7 @@ void StructuredGrid<TNode>::applyInitialConditions(const Task& task) {
 
 template<class TNode>
 real StructuredGrid<TNode>::getMinimalSpatialStepImpl() const {
-	return fmin(h[0], fmin(h[1], h[2]));
+	return fmin(h(0), fmin(h(1), h(2)));
 }
 
 

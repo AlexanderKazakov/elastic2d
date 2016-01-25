@@ -5,6 +5,7 @@
 
 #include <lib/grid/Grid.hpp>
 #include <lib/grid/nodes/Node.hpp>
+#include <lib/linal/special/VectorInt.hpp>
 #include <lib/numeric/interpolation/Interpolator.hpp>
 
 namespace gcm {
@@ -22,47 +23,40 @@ namespace gcm {
 	private:
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
-		int X = 0; // number of nodes along x direction of this grid (on this core)
-		int Y = 0; // number of nodes along y direction
-		int Z = 0; // number of nodes along z direction
+		linal::VectorInt<3> sizes = {0, 0, 0}; // numbers of nodes along each direction (on this core)
 
 		// the grid is divided equally along x-axis among processes
 		int globalX = 0; // number of nodes along x direction of all grids (from all cores)
-		int globalStartXindex = 0; // global x-index of the first real node of the grid
+		int globalStartXindex;// = 0; // global x-index of the first real node of the grid
 
-		real startX = 0.0; // global x-coordinate of the first real node of the grid
-		real startY = 0.0; // global y-coordinate of the first real node of the grid
-		real startZ = 0.0; // global z-coordinate of the first real node of the grid
-
-		real h[3] = { 0.0,  /* x spatial step */
-		              0.0,  /* y spatial step */
-		              0.0,  /* z spatial step */ };
-
+		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node of the grid
+		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction
+		
 		/**
 		 * Operator to iterate relatively to real nodes.
 		 * Read / write access
-		 * @param x x index < X
-		 * @param y y index < Y
-		 * @param z z index < Z
+		 * @param x x index < sizes(0)
+		 * @param y y index < sizes(1)
+		 * @param z z index < sizes(2)
 		 */
 		inline Node &operator()(const int x, const int y, const int z) {
 			return this->nodes[ (unsigned long)
-			                     (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
-			                   + (2 * accuracyOrder + Z) * (y + accuracyOrder)
+			                     (2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)
+			                   + (2 * accuracyOrder + sizes(2)) * (y + accuracyOrder)
 			                   + (z + accuracyOrder) ];
 		};
 
 		/**
 		 * Operator to iterate relatively real nodes.
 		 * Read only access
-		 * @param x x index < X
-		 * @param y y index < Y
-		 * @param z z index < Z
+		 * @param x x index < sizes(0)
+		 * @param y y index < sizes(1)
+		 * @param z z index < sizes(2)
 		 */
 		inline const Node &get(const int x, const int y, const int z) const {
 			return this->nodes[ (unsigned long)
-			                     (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
-			                   + (2 * accuracyOrder + Z) * (y + accuracyOrder)
+			                     (2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)
+			                   + (2 * accuracyOrder + sizes(2)) * (y + accuracyOrder)
 			                   + (z + accuracyOrder) ];
 		};
 
@@ -100,13 +94,13 @@ namespace gcm {
 
 		/* ---------------- For testing purposes ---------------- */
 
-		const real &getH0ForTest() const { return h[0]; };
+		real getH0ForTest() const { return h(0); };
 
-		const real &getH1ForTest() const { return h[1]; };
+		real getH1ForTest() const { return h(1); };
 
-		int getYForTest() const { return Y; };
+		int getYForTest() const { return sizes(1); };
 
-		int getXForTest() const { return X; };
+		int getXForTest() const { return sizes(0); };
 
 		int getStartXForTest() const { return globalStartXindex; };
 
@@ -132,8 +126,7 @@ namespace gcm {
 		virtual void applyBorderConditions() override;
 		virtual void applyInitialConditions(const Task& task) override;
 		linal::Vector3 getCoordinates(const int x, const int y, const int z) const {
-			// TODO - replace with Vector3r
-			return {startX + x * h[0], startY + y * h[1], startZ + z * h[2]};
+			return startR + linal::plainMultiply(linal::VectorInt<3>({x, y, z}), h);
 		};
 
 		friend class VtkTextStructuredSnapshotter<TNode>;

@@ -1,6 +1,8 @@
 #ifndef LIBGCM_LINAL_HPP
 #define LIBGCM_LINAL_HPP
 
+#include <limits>
+
 #include <lib/linal/Matrix.hpp>
 #include <lib/linal/special/DiagonalMatrix.hpp>
 #include <lib/linal/special/SymmetricMatrix.hpp>
@@ -359,6 +361,55 @@ namespace gcm {
 			assert_gt(l, 0.0);
 			return v / l;
 		}
+
+		/**
+		 * Computes component-by-component product of two matrices. Generic implementation.
+		 *
+		 * @tparam TM, TN matrix dimensions
+		 * @tparam Container1 Container type for first product item.
+		 * @tparam Container2 Container type for second  product item.
+		 * @tparam Container3 Container type for result.
+		 * @param m1 First product item.
+		 * @param m2 Second product item.
+		 *
+		 * @return component-by-component product of m1 and m2
+		 */
+		template<int TM, int TN, typename Container1, typename Container2, typename Container3 = DefaultMatrixContainer<TM, TN>>
+		Matrix<TM, TN, Container3> plainMultiply(const Matrix<TM, TN, Container1> &m1, const Matrix<TM, TN, Container2> &m2) {
+			Matrix<TM, TN, Container3> result;
+
+			for (int i = 0; i < TM; i++) {
+				for (int j = 0; j < TN; j++) {
+					result(i, j) = m1(i, j) * m2(i, j);
+				}
+			}
+
+			return result;
+		}
+
+		/**
+		 * Computes component-by-component division of two matrices. Generic implementation.
+		 * @return component-by-component division of m1 and m2
+		 * @warning if some component of m2 == 0 corresponding component of answer will be
+		 * std::numeric_limits<real>::max() * sign of m1 component
+		 */
+		template<int TM, int TN, typename Container1, typename Container2, typename Container3 = DefaultMatrixContainer<TM, TN>>
+		Matrix<TM, TN, Container3> plainDivision(const Matrix<TM, TN, Container1> &m1, const Matrix<TM, TN, Container2> &m2) {
+			Matrix<TM, TN, Container3> result;
+
+			for (int i = 0; i < TM; i++) {
+				for (int j = 0; j < TN; j++) {
+					result(i, j) = m1(i, j) / m2(i, j);
+					if (m2(i, j) == 0) {
+						assert_ne(m1(i, j), 0);
+						result(i, j) = (m1(i, j) > 0 ? 1 : -1) * std::numeric_limits<real>::max();
+					}
+				}
+			}
+
+			return result;
+		}
+
 	};
 };
 

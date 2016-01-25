@@ -1,4 +1,4 @@
-#include <lib/numeric/grid_characteristic_method/MpiStructuredSolver.hpp>
+#include <lib/numeric/gcmethod/MpiStructuredSolver.hpp>
 #include <lib/util/DataBus.hpp>
 
 using namespace gcm;
@@ -65,9 +65,9 @@ void MpiStructuredSolver<TNode>::stage(const int s, const real& timeStep) {
 	LOG_DEBUG("Start stage " << s << " tau = " << timeStep);
 	mesh->applyBorderConditions();
 
-	for (int x = 0; x < mesh->X; x++) {
-		for (int y = 0; y < mesh->Y; y++) {
-			for (int z = 0; z < mesh->Z; z++) {
+	for (int x = 0; x < mesh->sizes(0); x++) {
+		for (int y = 0; y < mesh->sizes(1); y++) {
+			for (int z = 0; z < mesh->sizes(2); z++) {
 
 				// points to interpolate values on previous time layer
 				auto dx = - timeStep * linal::diag((*mesh)(x, y, z).matrix->A(s).L);
@@ -94,7 +94,7 @@ void MpiStructuredSolver<TNode>::exchangeNodesWithNeighbors() {
 	int numberOfWorkers = mesh->getNumberOfWorkers();
 	if (numberOfWorkers == 1) return;
 
-	int sizeOfBuffer = mesh->accuracyOrder * (mesh->Y + 2 * mesh->accuracyOrder) * (mesh->Z + 2 * mesh->accuracyOrder);
+	int sizeOfBuffer = mesh->accuracyOrder * (mesh->sizes(1) + 2 * mesh->accuracyOrder) * (mesh->sizes(2) + 2 * mesh->accuracyOrder);
 	unsigned long nodesSize = mesh->nodes.size();
 
 	if (rank == 0) {

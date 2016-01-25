@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/numeric/grid_characteristic_method/MpiStructuredSolver.hpp>
+#include <lib/numeric/gcmethod/MpiStructuredSolver.hpp>
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
 #include <lib/util/areas/StraightBoundedCylinderArea.hpp>
 
@@ -13,10 +13,9 @@ TEST(Solver, StageXForward)
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
 		task.material = IsotropicMaterial(4.0, 2.0, 0.5);
-		task.X = 10;
-		task.Y = 10;
-		task.xLength = 2.0;
-		task.yLength = 3.0;
+		task.sizes(0) = 10;
+		task.sizes(1) = 10;
+		task.lengthes = {2, 3, 1};
 		task.numberOfSnaps = 1;
 		task.T = 100.0;
 
@@ -29,7 +28,7 @@ TEST(Solver, StageXForward)
 		linal::Vector3 max({0.7, 4, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
-		
+
 		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
 		IdealElastic2DNode::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
@@ -38,8 +37,8 @@ TEST(Solver, StageXForward)
 		StructuredGrid<IdealElastic2DNode>* mesh = solver.getMesh();
 		StructuredGrid<IdealElastic2DNode>* newMesh = solver.getNewMesh();
 		for (int i = 0; i < 7; i++) {
-			for (int y = 0; y < task.Y; y++) {
-				for (int x = 0; x < task.X; x++) {
+			for (int y = 0; y < task.sizes(1); y++) {
+				for (int x = 0; x < task.sizes(0); x++) {
 					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u, (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -58,10 +57,9 @@ TEST(Solver, StageY)
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
 		task.material = IsotropicMaterial(4.0, 2.0, 0.5);
-		task.X = 10;
-		task.Y = 10;
-		task.xLength = 3.0;
-		task.yLength = 2.0;
+		task.sizes(0) = 10;
+		task.sizes(1) = 10;
+		task.lengthes = {3, 2, 1};
 		task.numberOfSnaps = 1;
 		task.T = 100.0;
 
@@ -83,8 +81,8 @@ TEST(Solver, StageY)
 		StructuredGrid<IdealElastic2DNode>* mesh = solver.getMesh();
 		StructuredGrid<IdealElastic2DNode>* newMesh = solver.getNewMesh();
 		for (int i = 0; i < 2; i++) {
-			for (int y = 0; y < task.Y; y++) {
-				for (int x = 0; x < task.X; x++) {
+			for (int y = 0; y < task.sizes(1); y++) {
+				for (int x = 0; x < task.sizes(0); x++) {
 					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u, (y == 2 + i || y == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -103,10 +101,9 @@ TEST(Solver, StageYSxx)
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 0.7;
 		task.material = IsotropicMaterial(4.0, 2.0, 0.5);
-		task.X = 20;
-		task.Y = 10;
-		task.xLength = 7.0;
-		task.yLength = 3.0;
+		task.sizes(0) = 20;
+		task.sizes(1) = 10;
+		task.lengthes = {7, 3, 1};
 		task.numberOfSnaps = 1;
 		task.T = 100.0;
 
@@ -117,19 +114,19 @@ TEST(Solver, StageYSxx)
 		linal::Vector3 end({3.684, 1.666, 1});
 		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.1, begin, end);
 		task.initialCondition.quantities.push_back(quantity);
-		
+
 		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
-		IdealElastic2DNode::Vector sxxOnly = solver.getMesh()->getNodeForTest(task.X / 2, task.Y / 2, 0).u;
+		IdealElastic2DNode::Vector sxxOnly = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, task.sizes(1) / 2, 0).u;
 		IdealElastic2DNode::Vector zero({0, 0, 0, 0, 0});
 
 		StructuredGrid<IdealElastic2DNode>* mesh = solver.getMesh();
 		StructuredGrid<IdealElastic2DNode>* newMesh = solver.getNewMesh();
 		for (int i = 0; i < 7; i++) {
-			for (int y = 0; y < task.Y; y++) {
-				for (int x = 0; x < task.X; x++) {
+			for (int y = 0; y < task.sizes(1); y++) {
+				for (int x = 0; x < task.sizes(0); x++) {
 					ASSERT_EQ(mesh->getNodeForTest(x, y, 0).u,
-					          (x == task.X / 2 && y == task.Y / 2 ) ? sxxOnly : zero)
+					          (x == task.sizes(0) / 2 && y == task.sizes(1) / 2 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
@@ -146,10 +143,9 @@ TEST(Solver, calculate)
 	task.accuracyOrder = 5;
 	task.CourantNumber = 4.5;
 	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
-	task.X = 20;
-	task.Y = 40;
-	task.xLength = 7.0;
-	task.yLength = 3.0;
+	task.sizes(0) = 20;
+	task.sizes(1) = 40;
+	task.lengthes = {7, 3, 1};
 	task.numberOfSnaps = 9;
 	task.T = 100.0;
 
@@ -162,12 +158,12 @@ TEST(Solver, calculate)
 	linal::Vector3 max({ 8, 0.6375, 1});
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	task.initialCondition.waves.push_back(wave);
-	
+
 	MpiStructuredSolver<IdealElastic2DNode> solver;
 	solver.initialize(task);
-	IdealElastic2DNode::Vector sWave = solver.getMesh()->getNodeForTest(task.X / 2, 3, 0).u;
+	IdealElastic2DNode::Vector sWave = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, 3, 0).u;
 	solver.calculate();
-	ASSERT_EQ(sWave, solver.getMesh()->getNodeForTest(task.X / 2, 22, 0).u);
+	ASSERT_EQ(sWave, solver.getMesh()->getNodeForTest(task.sizes(0) / 2, 22, 0).u);
 }
 
 
@@ -181,10 +177,9 @@ TEST(Solver, TwoLayersDifferentRho)
 		task.accuracyOrder = 3;
 		task.CourantNumber = 1.5;
 		task.material = IsotropicMaterial(1.0, 2.0, 0.8);
-		task.X = 50;
-		task.Y = 100;
-		task.xLength = 2.0;
-		task.yLength = 1.0;
+		task.sizes(0) = 50;
+		task.sizes(1) = 100;
+		task.lengthes = {2, 1, 1};
 		task.numberOfSnaps = numberOfSnapsInitial + 2 * i; // in order to catch the impulses
 
 		Task::InitialCondition::Wave wave;
@@ -196,7 +191,7 @@ TEST(Solver, TwoLayersDifferentRho)
 		linal::Vector3 max({ 4, 0.455, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
-		
+
 		MpiStructuredSolver<IdealElastic2DNode> solver;
 		solver.initialize(task);
 
@@ -206,14 +201,14 @@ TEST(Solver, TwoLayersDifferentRho)
 		solver.getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 		solver.getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
-		int leftNodeIndex = (int) (task.Y * 0.25);
-		IdealElastic2DNode init = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
+		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
+		IdealElastic2DNode init = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		solver.calculate();
 
-		int rightNodeIndex = (int) (task.Y * 0.7);
-		IdealElastic2DNode reflect = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
-		IdealElastic2DNode transfer = solver.getMesh()->getNodeForTest(task.X / 2, rightNodeIndex, 0);
+		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
+		IdealElastic2DNode reflect = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		IdealElastic2DNode transfer = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.material.rho;
 		real lambda0 = task.material.lambda;
@@ -257,10 +252,9 @@ TEST(Solver, TwoLayersDifferentE)
 		task.accuracyOrder = 3;
 		task.CourantNumber = 1.5;
 		task.material = IsotropicMaterial(1.0, 2.0, 0.8);
-		task.X = 50;
-		task.Y = 100;
-		task.xLength = 2.0;
-		task.yLength = 1.0;
+		task.sizes(0) = 50;
+		task.sizes(1) = 100;
+		task.lengthes = {2, 1, 1};
 		task.numberOfSnaps = numberOfSnapsInitial - 2 * i; // in order to catch the impulses
 
 		Task::InitialCondition::Wave wave;
@@ -282,14 +276,14 @@ TEST(Solver, TwoLayersDifferentE)
 		solver.getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 		solver.getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
-		int leftNodeIndex = (int) (task.Y * 0.25);
-		IdealElastic2DNode init = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
+		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
+		IdealElastic2DNode init = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		solver.calculate();
 
-		int rightNodeIndex = (int) (task.Y * 0.7);
-		IdealElastic2DNode reflect = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
-		IdealElastic2DNode transfer = solver.getMesh()->getNodeForTest(task.X / 2, rightNodeIndex, 0);
+		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
+		IdealElastic2DNode reflect = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		IdealElastic2DNode transfer = solver.getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.material.rho;
 		real lambda0 = task.material.lambda;

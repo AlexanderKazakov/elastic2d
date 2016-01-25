@@ -3,8 +3,7 @@
 #include <lib/util/DataBus.hpp>
 #include <lib/util/task/Task.hpp>
 #include <lib/grid/StructuredGrid.hpp>
-#include <lib/numeric/grid_characteristic_method/MpiStructuredSolver.hpp>
-#include <lib/grid/nodes/Node.hpp>
+#include <lib/numeric/gcmethod/MpiStructuredSolver.hpp>
 
 using namespace gcm;
 
@@ -78,18 +77,22 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	task.accuracyOrder = 2;
 	task.CourantNumber = 1.8;
 	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
-	task.X = 50;
-	task.Y = 70;
-	task.xLength = 4.0;
-	task.yLength = 6.0;
-	task.numberOfSnaps = 50;
+
+	task.sizes(0) = 20;
+	task.sizes(1) = 10;
+	task.lengthes = {2, 1, 1};
+	task.numberOfSnaps = 5;
+
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
-	pressure.area = std::make_shared<SphereArea>(0.3, linal::Vector3({2, 2, 0}));
+
+	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 0.5, 0}));
+
 	task.initialCondition.quantities.push_back(pressure);
 
-//	task.borderConditions.at(CUBIC_BORDERS::Y_LEFT) = BorderCondition::CONDITION::FREE_BORDER;
+
+//	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 
 	// calculate in sequence
 	task.forceSequence = true;
@@ -108,7 +111,11 @@ TEST(MPI, MPISolverVsSequenceSolver)
 	for (int x = 0; x < mpiSolver.getMesh()->getXForTest(); x++) {
 		for (int y = 0; y < mpiSolver.getMesh()->getYForTest(); y++) {
 			ASSERT_EQ(mpiSolver.getMesh()->getNodeForTest(x, y, 0).u,
-			          sequenceSolver.getMesh()->getNodeForTest(x + mpiSolver.getMesh()->getStartXForTest(), y, 0).u);
+			          sequenceSolver.getMesh()->getNodeForTest
+					          (x + mpiSolver.getMesh()->getStartXForTest(), y, 0).u) <<
+								"x = " << x <<
+								" global x = " << x + mpiSolver.getMesh()->getStartXForTest()
+			                      << " y = " << y << std::endl;
 		}
 	}
 }

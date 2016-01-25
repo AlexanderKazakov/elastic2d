@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include <lib/linal/special/VectorInt.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Concepts.hpp>
 #include <lib/util/areas/SphereArea.hpp>
@@ -20,24 +21,15 @@ namespace gcm {
 	class Task {
 
 	public:
-		real xLength = 0.0;
-		real yLength = 0.0;
-		real zLength = 0.0;
-
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
-		int X = 1; // number of nodes along x direction
-		int Y = 1; // number of nodes along y direction
-		int Z = 1; // number of nodes along z direction
-
-		real startX = 0.0; // global x-coordinate of the first real node of the grid
-		real startY = 0.0; // global y-coordinate of the first real node of the grid
-		real startZ = 0.0; // global z-coordinate of the first real node of the grid
+		linal::Vector<3> lengthes = {0, 0, 0}; // lengthes of cube in each direction
+		linal::VectorInt<3> sizes = {1, 1, 1}; // number of nodes along each direction
+		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node
 
 		IsotropicMaterial material;
 
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
-
 		int numberOfSnaps = 0; // how many snaps to calculate
 		real T = 0.0; // optional, required time if (numberOfSnaps == 0)
 
@@ -87,8 +79,6 @@ namespace gcm {
 				{CUBIC_BORDERS::Z_LEFT,  BorderCondition::T::NON_REFLECTION},
 				{CUBIC_BORDERS::Z_RIGHT, BorderCondition::T::NON_REFLECTION}
 		};
-
-		Task();
 	};
 }
 

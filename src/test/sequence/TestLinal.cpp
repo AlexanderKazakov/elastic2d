@@ -2,6 +2,7 @@
 #include <lib/linal/special/Matrix33.hpp>
 #include <lib/linal/special/Matrix22.hpp>
 #include <lib/linal/special/Vector3.hpp>
+#include <lib/linal/special/VectorInt.hpp>
 #include <lib/linal/special/RotationMatrix.hpp>
 
 #include <gtest/gtest.h>
@@ -706,4 +707,38 @@ TEST(Linal, VectorOperators)
     for (int j = 0; j < vector.M; j++) {
         ASSERT_EQ(vector(j), 2 * ((real) j - 3));
     }
+}
+
+TEST(Linal, VectorInt)
+{
+    VectorInt<3> i = {1, 3, 4};
+    Vector<3> r = {0.1, 0.3, 0.7};
+
+    VectorInt<3> plainIntMultpl = plainMultiply(i, r);
+    ASSERT_EQ(0, plainIntMultpl(0));
+    ASSERT_EQ(0, plainIntMultpl(1));
+    ASSERT_EQ(2, plainIntMultpl(2));
+
+    Vector<3> plainRealMultpl = plainMultiply(i, r);
+    // attention: NEAR!!!
+    ASSERT_NEAR(0.1, plainRealMultpl(0), EQUALITY_TOLERANCE);
+    ASSERT_NEAR(0.9, plainRealMultpl(1), EQUALITY_TOLERANCE);
+    ASSERT_NEAR(2.8, plainRealMultpl(2), EQUALITY_TOLERANCE);
+}
+
+TEST(Linal, plainDivision)
+{
+    VectorInt<3> i = {1, 3, 4};
+    Vector<3> r = {0.1, 0.3, 0.7};
+
+    Vector<3> q = plainDivision(r, i);
+    ASSERT_NEAR(0.1, q(0), EQUALITY_TOLERANCE);
+    ASSERT_NEAR(0.1, q(1), EQUALITY_TOLERANCE);
+    ASSERT_NEAR(0.7 / 4, q(2), EQUALITY_TOLERANCE);
+
+    Vector<1> a = {1};
+    Vector<1> b = {0};
+    ASSERT_NEAR(  std::numeric_limits<real>::max(), plainDivision(  a, b)(0), EQUALITY_TOLERANCE);
+    ASSERT_NEAR(- std::numeric_limits<real>::max(), plainDivision(- a, b)(0), EQUALITY_TOLERANCE);
+    ASSERT_ANY_THROW(plainDivision(b, b));
 }
