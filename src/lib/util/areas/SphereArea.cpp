@@ -3,7 +3,7 @@
 using namespace gcm;
 
 
-SphereArea::SphereArea(const real &radius, const linal::Vector3 &center) : radius(radius), center(center) {
+SphereArea::SphereArea(const real& _radius, const linal::Vector3& _center) : radius(_radius), center(_center) {
 	assert_gt(radius, 0.0);
 }
 

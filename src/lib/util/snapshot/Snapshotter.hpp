@@ -22,7 +22,8 @@ namespace gcm {
 		 * @param grid pointer to the grid for dump
 		 * @param enableSnapshotting dump or do not dump snaps
 		 */
-		void initialize(Grid<TModel> *grid, bool enableSnapshotting);
+		void initialize(Grid<TModel>* _grid, bool _enableSnapshotting);
+		virtual ~Snapshotter() { };
 
 	protected:
 		Grid<TModel>* grid = nullptr;

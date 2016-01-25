@@ -6,7 +6,7 @@
 namespace gcm {
 	class SphereArea : public Area {
 	public:
-		SphereArea(const real& radius, const linal::Vector3& center);
+		SphereArea(const real& _radius, const linal::Vector3& _center);
 		virtual bool contains(const linal::Vector3& coords) const override;
 	private:
 		real radius;

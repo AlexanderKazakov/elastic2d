@@ -1,13 +1,27 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(gcm)
-set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(WARNING_FLAGS "-Wall -Wextra -Wsign-conversion -Wconversion -Wundef -Wcast-align -Wwrite-strings -Wlogical-op -Wmissing-declarations -Wredundant-decls -Wshadow -Woverloaded-virtual")
+set(ADDITIONAL_OPTIMIZATION_FLAGS "-march=native -Ofast -msse3 -ffast-math -funroll-loops")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pipe ${WARNING_FLAGS}")
+
+# Show compiler output (default is not)
+option(VERBOSE_MAKE "VERBOSE_MAKE" OFF)
+IF(VERBOSE_MAKE)
+    set(CMAKE_VERBOSE_MAKEFILE ON)
+ENDIF()
 
 # Profiling (default is not)
 option(PROFILE "PROFILE" OFF)
 IF(PROFILE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+ENDIF()
+
+# Additional optimization (default is not)
+option(ADDITIONAL_OPTIMIZE "ADDITIONAL_OPTIMIZE" OFF)
+IF(ADDITIONAL_OPTIMIZE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDITIONAL_OPTIMIZATION_FLAGS}")
 ENDIF()
 
 # Debug/Release (default is Release)

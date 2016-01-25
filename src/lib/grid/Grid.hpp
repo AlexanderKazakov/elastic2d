@@ -20,6 +20,7 @@ namespace gcm {
 
 		/** @param task properties and initial conditions etc */
 		void initialize(const Task &task);
+		virtual ~Grid() { };
 
 		int getRank() const {
 			assert_ge(rank, 0);

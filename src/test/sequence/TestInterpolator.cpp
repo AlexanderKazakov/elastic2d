@@ -15,7 +15,7 @@ TEST(Interpolator, Const)
 	Interpolator<Vector<N>> interpolator;
 	for (int i = 0; i <= MAX_ACCURACY_ORDER; i++) {
 		Vector<N> res;
-		std::vector<Vector<N>> src(i + 1);
+		std::vector<Vector<N>> src((unsigned int)(i + 1));
 		for(real q = 0; q <= (real) i; q+= 0.2) {
 			for (auto &item : src) {
 				for (int j = 0; j < N; j++) {
@@ -38,11 +38,11 @@ TEST(Interpolator, Linear)
 	Interpolator<Vector<N>> interpolator;
 	for (int k = 0; k <= MAX_ACCURACY_ORDER; k++) {
 		Vector<N> res;
-		std::vector<Vector<N>> src(k + 1);
+		std::vector<Vector<N>> src((unsigned int)(k + 1));
 		for(real q = 0; q <= (real) k; q+= 0.2) {
-			for (int i = 0; i < src.size(); i++) {
+			for (int i = 0; i < (int) src.size(); i++) {
 				for (int j = 0; j < N; j++) {
-					src[i](j) = (j - (real) (N) / 2) * i + 2 * (j - (real) (N) / 2);
+					src[(unsigned long)i](j) = (j - (real) (N) / 2) * i + 2 * (j - (real) (N) / 2);
 				}
 			}
 
@@ -116,7 +116,6 @@ TEST(Interpolator, MinMaxFifthOrder)
 
 TEST(Interpolator, TenthOrder)
 {
-#if LIBGCM_DOUBLE_PRECISION
 	const int N = 2;
 	auto func = [](real x) {
 		return x * x * x * x * x * x * x * x * x * x + 4 * x * x * x * x * x * x * x * x * x -
@@ -127,15 +126,11 @@ TEST(Interpolator, TenthOrder)
 	std::vector<Vector<N>> src(11);
 	for (real q = 0; q < 11.0; q += 0.1) {
 		for (int i = 0; i < 11; i++) {
-			real x = i - 5;
-			src[i](0) = func(i);
+			src[(unsigned long)i](0) = func(i);
 		}
 		interpolator.interpolate(res, src, q);
 		ASSERT_NEAR(res(0), func(q), fabs(res(0)) * EQUALITY_TOLERANCE * 1e+3);
 	}
-#else
-#warning "Interpolation with floats is much worse than with doubles"
-#endif
 }
 
 

@@ -76,7 +76,7 @@ void StructuredGrid<TNode>::findSourcesForInterpolation(const int stage, const i
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	const int alongZ = (stage == 2) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
-		src[k] = get(x + alongX * k, y + alongY * k, z + alongZ * k).u;
+		src[(unsigned long)k] = get(x + alongX * k, y + alongY * k, z + alongZ * k).u;
 	}
 }
 

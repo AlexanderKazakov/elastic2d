@@ -3,8 +3,9 @@
 using namespace gcm;
 
 
-StraightBoundedCylinderArea::StraightBoundedCylinderArea(const real &radius, const linal::Vector3 &begin, const linal::Vector3 &end) :
-		radius(radius), begin(begin), end(end) {
+StraightBoundedCylinderArea::StraightBoundedCylinderArea(const real& _radius,
+                                                         const linal::Vector3& _begin, const linal::Vector3& _end) :
+		radius(_radius), begin(_begin), end(_end) {
 	axis = linal::normalize(end - begin);
 	assert_gt(radius, 0.0);
 }

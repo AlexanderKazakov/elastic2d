@@ -33,11 +33,11 @@ namespace gcm {
 			/** Default constructor. */
 			Matrix() { };
 			/** @param values Values to initialize matrix with, string by string */
-			Matrix(std::initializer_list<real> values) {
-				this->initialize(values);
+			Matrix(std::initializer_list<real> list) {
+				this->initialize(list);
 			};
 			/** @param values Values to initialize matrix with, string by string */
-			void initialize(std::initializer_list<real> values);
+			void initialize(std::initializer_list<real> list);
 
 			/** Read-only access to matrix component */
 			real operator()(const int i, const int j) const {
@@ -73,10 +73,10 @@ namespace gcm {
 		};
 
 		template<int TM>
-		void Matrix<TM, TM, DiagonalMatrixContainer<TM>>::initialize(std::initializer_list<real> values) {
-			assert_eq(this->SIZE, values.size());
+		void Matrix<TM, TM, DiagonalMatrixContainer<TM>>::initialize(std::initializer_list<real> list) {
+			assert_eq(this->SIZE, list.size());
 			int i = 0;
-			for (auto value: values)
+			for (auto value: list)
 				this->values[i++] = value;
 		}
 
@@ -105,11 +105,11 @@ namespace gcm {
 
 		template<int TM>
 		real Matrix<TM, TM, DiagonalMatrixContainer<TM>>::trace() const {
-			real trace = 0.0;
+			real ans = 0.0;
 			for (int i = 0; i < TM; i++) {
-				trace += (*this)(i);
+				ans += (*this)(i);
 			}
-			return trace;
+			return ans;
 		}
 	};
 };

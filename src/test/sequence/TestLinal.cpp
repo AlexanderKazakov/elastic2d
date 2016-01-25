@@ -663,7 +663,7 @@ TEST(Linal, getColumn)
 TEST(Linal, diagonalMultiply)
 {
     Matrix<9, 9> A, B;
-    srand(time(0));
+    srand((unsigned int)time(0));
 
     for (int l = 0; l < LINAL_TEST_NUMBER_ITERATIONS; l++) {
 

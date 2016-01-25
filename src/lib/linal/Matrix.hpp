@@ -51,11 +51,11 @@ namespace gcm {
 
 			/** Default constructor. */
 			Matrix() {
-				static_assert(this->SIZE >= TM * TN, "Container must have enough memory to store values");
+				static_assert(this->SIZE == TM * TN, "Container must have enough memory to store values");
 			};
 			/** @param values Values to initialize matrix with, string by string */
-			Matrix(std::initializer_list<real> values) {
-				this->initialize(values);
+			Matrix(std::initializer_list<real> list) {
+				this->initialize(list);
 			};
 			/**
 			 * Copy constructor
@@ -76,7 +76,7 @@ namespace gcm {
 				return *this;
 			};
 			/** @param values Values to initialize matrix with, string by string */
-			void initialize(std::initializer_list<real> values);
+			void initialize(std::initializer_list<real> list);
 
 			/** Read-only access to matrix component */
 			real operator()(const int i, const int j) const {
@@ -141,10 +141,10 @@ namespace gcm {
 		};
 
 		template<int TM, int TN, typename Container>
-		void Matrix<TM, TN, Container>::initialize(std::initializer_list<real> values) {
-			assert_eq(this->SIZE, values.size());
+		void Matrix<TM, TN, Container>::initialize(std::initializer_list<real> list) {
+			assert_eq(this->SIZE, list.size());
 			int i = 0;
-			for (auto value: values)
+			for (auto value: list)
 				this->values[i++] = value;
 		}
 
@@ -175,7 +175,7 @@ namespace gcm {
 
 			for (int i = 0; i < TM; i++)
 				for (int j = 0; j < TM; j++)
-					gsl_matrix_set(Z1, i, j, (*this)(i, j));
+					gsl_matrix_set(Z1, (size_t)i, (size_t)j, (*this)(i, j));
 
 			if (gsl_linalg_LU_decomp(Z1, perm, &k))
 				THROW_INVALID_ARG("gsl_linalg_LU_decomp failed");
@@ -185,7 +185,7 @@ namespace gcm {
 
 			for (int i = 0; i < TM; i++)
 				for (int j = 0; j < TM; j++)
-					result(i, j) = gsl_matrix_get(Z, i, j);
+					result(i, j) = gsl_matrix_get(Z, (size_t)i, (size_t)j);
 
 			gsl_permutation_free(perm);
 			gsl_matrix_free(Z);
@@ -215,11 +215,11 @@ namespace gcm {
 		template<int TM, int TN, typename Container>
 		real Matrix<TM, TN, Container>::trace() const {
 			assert_eq(TM, TN);
-			real trace = 0.0;
+			real ans = 0.0;
 			for (int i = 0; i < TN; i++) {
-				trace += (*this)(i, i);
+				ans += (*this)(i, i);
 			}
-			return trace;
+			return ans;
 		}
 	};
 };

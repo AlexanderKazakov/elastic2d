@@ -65,7 +65,7 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 			}
 		}
 
-		std::vector<IdealElastic2DNode::Vector> src(task.accuracyOrder + 1);
+		std::vector<IdealElastic2DNode::Vector> src((unsigned long)task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
 			structuredGrid.findSourcesForInterpolation(stage, 1, 1, 0, dx, src);
 			for (int i = 0; i < IdealElastic2DNode::M; i++) {

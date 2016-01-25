@@ -46,7 +46,8 @@ namespace gcm {
 		 * @param z z index < Z
 		 */
 		inline Node &operator()(const int x, const int y, const int z) {
-			return this->nodes[  (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
+			return this->nodes[ (unsigned long)
+			                     (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
 			                   + (2 * accuracyOrder + Z) * (y + accuracyOrder)
 			                   + (z + accuracyOrder) ];
 		};
@@ -59,7 +60,8 @@ namespace gcm {
 		 * @param z z index < Z
 		 */
 		inline const Node &get(const int x, const int y, const int z) const {
-			return this->nodes[  (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
+			return this->nodes[ (unsigned long)
+			                     (2 * accuracyOrder + Z) * (2 * accuracyOrder + Y) * (x + accuracyOrder)
 			                   + (2 * accuracyOrder + Z) * (y + accuracyOrder)
 			                   + (z + accuracyOrder) ];
 		};
@@ -102,11 +104,11 @@ namespace gcm {
 
 		const real &getH1ForTest() const { return h[1]; };
 
-		const int getYForTest() const { return Y; };
+		int getYForTest() const { return Y; };
 
-		const int getXForTest() const { return X; };
+		int getXForTest() const { return X; };
 
-		const int getStartXForTest() const { return globalStartXindex; };
+		int getStartXForTest() const { return globalStartXindex; };
 
 		const Node &getNodeForTest(const int x, const int y, const int z) const { return get(x, y, z); };
 

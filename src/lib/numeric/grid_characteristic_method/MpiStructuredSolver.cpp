@@ -21,6 +21,13 @@ void MpiStructuredSolver<TNode>::initialize(const Task &task) {
 }
 
 template<class TNode>
+MpiStructuredSolver<TNode>::~MpiStructuredSolver() {
+	delete this->mesh;
+	delete this->newMesh;
+	delete this->snapshotter;
+}
+
+template<class TNode>
 void MpiStructuredSolver<TNode>::calculate() {
 	LOG_INFO("Start calculation");
 	tau = CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda(); // time step
@@ -88,7 +95,7 @@ void MpiStructuredSolver<TNode>::exchangeNodesWithNeighbors() {
 	if (numberOfWorkers == 1) return;
 
 	int sizeOfBuffer = mesh->accuracyOrder * (mesh->Y + 2 * mesh->accuracyOrder) * (mesh->Z + 2 * mesh->accuracyOrder);
-	int nodesSize = mesh->nodes.size();
+	unsigned long nodesSize = mesh->nodes.size();
 
 	if (rank == 0) {
 		MPI_Sendrecv(&(mesh->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank + 1, 1,
@@ -96,7 +103,7 @@ void MpiStructuredSolver<TNode>::exchangeNodesWithNeighbors() {
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else if (rank == numberOfWorkers - 1) {
-		MPI_Sendrecv(&(mesh->nodes[sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank - 1, 1,
+		MPI_Sendrecv(&(mesh->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank - 1, 1,
 		             &(mesh->nodes[0]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
@@ -104,7 +111,7 @@ void MpiStructuredSolver<TNode>::exchangeNodesWithNeighbors() {
 		MPI_Sendrecv(&(mesh->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank + 1, 1,
 			     	 &(mesh->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-		MPI_Sendrecv(&(mesh->nodes[sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank - 1, 1,
+		MPI_Sendrecv(&(mesh->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank - 1, 1,
 		             &(mesh->nodes[0]), sizeOfBuffer, TNode::MPI_NODE_TYPE, rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}

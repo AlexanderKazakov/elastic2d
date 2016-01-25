@@ -31,6 +31,8 @@ void createStaticType() {
 	TNode::MPI_NODE_TYPE = MPI::Datatype::Create_struct(3, node_lengths, node_disp, node_types);
 
 	TNode::MPI_NODE_TYPE.Commit();
+
+	delete [] nodes;
 }
 
 void DataBus::createStaticTypes() {

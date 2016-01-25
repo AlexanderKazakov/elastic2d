@@ -13,7 +13,7 @@ namespace gcm {
 		 * @param begin center of upper cap of the keg
 		 * @param end center of lower cap of the keg
 		 */
-		StraightBoundedCylinderArea(const real& radius, const linal::Vector3& begin, const linal::Vector3& end);
+		StraightBoundedCylinderArea(const real& _radius, const linal::Vector3& _begin, const linal::Vector3& _end);
 		virtual bool contains(const linal::Vector3& coords) const override;
 	private:
 		real radius;

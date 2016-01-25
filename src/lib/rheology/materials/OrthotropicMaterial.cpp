@@ -4,7 +4,7 @@
 using namespace gcm;
 
 
-OrthotropicMaterial::OrthotropicMaterial(const real rho, std::initializer_list<real> list) : rho(rho) {
+OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<real> list) : rho(_rho) {
 	int i = 0;
 	for(auto& r : list) {
 		c[i] = r;

@@ -22,7 +22,7 @@ namespace gcm {
 
 	private:
 		struct Condition {
-			Condition(std::shared_ptr<Area> area, Vector vector) : area(area), vector(vector) { };
+			Condition(std::shared_ptr<Area> _area, Vector _vector) : area(_area), vector(_vector) { };
 			std::shared_ptr<Area> area;
 			Vector vector;
 		};

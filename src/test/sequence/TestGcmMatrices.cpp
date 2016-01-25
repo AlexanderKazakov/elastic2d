@@ -57,7 +57,7 @@ class TestGcmMatrices : public testing::Test {
 
 protected:
 	void testDiagonalization() {
-		srand(time(0));
+		srand((unsigned int)time(0));
 		for (int i = 0; i < NUMBER_ITERATIONS; i++) {
 			typename TGcmMatrices::Material material = TGcmMatrices::Material::generateRandomMaterial();
 

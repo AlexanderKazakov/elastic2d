@@ -49,7 +49,7 @@ namespace gcm {
 		/** Map between type of wave and corresponding to that type column in matrix U1 */
 		static const std::map<Waves::T, int/* index of column in U1 */> WAVE_COLUMNS;
 
-		GcmMatrices(const TMaterial& material) : material(material) {
+		GcmMatrices(const TMaterial& _material) : material(_material) {
 			material.constructGcmMatrices(*this);
 		};
 

@@ -5,20 +5,13 @@
 ## Build
 
 ```
-./tools/build.sh [-c]
-```
-```
--c  clear all before build
+./tools/build.sh -h
 ```
 
 ## Run
 
 ```
-./tools/run.sh [-n] [-p]
-```
-```
--n  number of processes (default is number of cores on the machine)
--p  run Paraview after calculation (only in one-process mode)
+./tools/run.sh -h
 ```
 
 ## Run tests

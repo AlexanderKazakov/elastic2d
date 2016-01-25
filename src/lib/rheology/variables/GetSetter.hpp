@@ -22,7 +22,7 @@ namespace gcm {
 		typedef real (*Getter)(const Variables& variablesToGetFrom);
 		typedef void (*Setter)(const real& value, Variables& variablesToSetTo);
 
-		GetSetter(Getter Get, Setter Set) : Get(Get), Set(Set) { };
+		GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { };
 
 		Getter Get;
 		Setter Set;

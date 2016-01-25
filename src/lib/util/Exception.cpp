@@ -9,12 +9,12 @@ const string& Exception::getCallStack() const
     return callStack;
 }
 
-Exception::Exception(int code, const string& message, const string& file, int line)
+Exception::Exception(int _code, const string& _message, const string& _file, int _line)
 {
-    this->code = code;
-    this->line = line;
-    this->message = message;
-    this->file = file;
+    this->code = _code;
+    this->line = _line;
+    this->message = _message;
+    this->file = _file;
 
     // save call stack
     void** buffer = new void*[100];

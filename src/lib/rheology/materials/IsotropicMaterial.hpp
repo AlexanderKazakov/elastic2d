@@ -15,7 +15,7 @@ namespace gcm {
 		real mu;
 
 		IsotropicMaterial();
-		IsotropicMaterial(const real& rho, const real& lambda, const real& mu);
+		IsotropicMaterial(const real& _rho, const real& _lambda, const real& _mu);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<2, 1, IsotropicMaterial>& m) const;

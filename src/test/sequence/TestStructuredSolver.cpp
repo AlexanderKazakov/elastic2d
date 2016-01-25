@@ -206,12 +206,12 @@ TEST(Solver, TwoLayersDifferentRho)
 		solver.getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 		solver.getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
-		int leftNodeIndex = task.Y * 0.25;
+		int leftNodeIndex = (int) (task.Y * 0.25);
 		IdealElastic2DNode init = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
 
 		solver.calculate();
 
-		int rightNodeIndex = task.Y * 0.7;
+		int rightNodeIndex = (int) (task.Y * 0.7);
 		IdealElastic2DNode reflect = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
 		IdealElastic2DNode transfer = solver.getMesh()->getNodeForTest(task.X / 2, rightNodeIndex, 0);
 
@@ -282,12 +282,12 @@ TEST(Solver, TwoLayersDifferentE)
 		solver.getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 		solver.getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
-		int leftNodeIndex = task.Y * 0.25;
+		int leftNodeIndex = (int) (task.Y * 0.25);
 		IdealElastic2DNode init = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
 
 		solver.calculate();
 
-		int rightNodeIndex = task.Y * 0.7;
+		int rightNodeIndex = (int) (task.Y * 0.7);
 		IdealElastic2DNode reflect = solver.getMesh()->getNodeForTest(task.X / 2, leftNodeIndex, 0);
 		IdealElastic2DNode transfer = solver.getMesh()->getNodeForTest(task.X / 2, rightNodeIndex, 0);
 

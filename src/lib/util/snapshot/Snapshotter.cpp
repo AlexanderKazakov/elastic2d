@@ -11,9 +11,9 @@ void Snapshotter<TModel>::snapshot(const int step) {
 }
 
 template <class TModel>
-void Snapshotter<TModel>::initialize(Grid<TModel> *grid, bool enableSnapshotting) {
-		this->grid = grid;
-		this->enableSnapshotting = enableSnapshotting;
+void Snapshotter<TModel>::initialize(Grid<TModel>* _grid, bool _enableSnapshotting) {
+		this->grid = _grid;
+		this->enableSnapshotting = _enableSnapshotting;
 }
 
 template <class TModel>

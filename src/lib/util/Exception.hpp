@@ -45,7 +45,7 @@ namespace gcm {
              * @param file Name of the file where exception was thrown.
              * @param line Number of line in the file where exception was thrown.
              */
-            Exception(int code, const std::string& message, const std::string& file, int line);
+            Exception(int _code, const std::string& _message, const std::string& _file, int _line);
             /**
              * Getter for exception code.
              *

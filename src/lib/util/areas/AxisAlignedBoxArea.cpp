@@ -2,7 +2,7 @@
 
 using namespace gcm;
 
-AxisAlignedBoxArea::AxisAlignedBoxArea(const linal::Vector3 &min, const linal::Vector3 &max) : min(min), max(max) {
+AxisAlignedBoxArea::AxisAlignedBoxArea(const linal::Vector3& _min, const linal::Vector3& _max) : min(_min), max(_max) {
 	for (int i = 0; i < 3; i++) {
 		assert_gt((max - min)(i), 0.0);
 	}

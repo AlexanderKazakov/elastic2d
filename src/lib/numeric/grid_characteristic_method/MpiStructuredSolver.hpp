@@ -10,8 +10,8 @@ namespace gcm {
 	template<class TNode>
 	class MpiStructuredSolver {
 	public:
-
 		void initialize(const Task& task);
+		~MpiStructuredSolver();
 
 		/**
 		 * Perform calculation of the task

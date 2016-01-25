@@ -28,7 +28,7 @@ namespace gcm {
 			};
 		};
 
-		OrthotropicMaterial(const real rho, std::initializer_list<real>);
+		OrthotropicMaterial(const real _rho, std::initializer_list<real>);
 		OrthotropicMaterial(const IsotropicMaterial& isotropic);
 
 		/** Fill in gcm matrices */
