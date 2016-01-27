@@ -1,10 +1,12 @@
 #include <lib/numeric/gcmethod/GridCharacteristicMethod.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
-template<class TNode>
-void GridCharacteristicMethod<TNode>::stage(const int s, const real& timeStep,
-                                            const StructuredGrid<TNode>* mesh, StructuredGrid<TNode>* newMesh) {
+template<class TGrid>
+void GridCharacteristicMethod<TGrid>::stage(const int s, const real& timeStep,
+                                            const TGrid* mesh, TGrid* newMesh) {
 	LOG_DEBUG("Start stage " << s << " timeStep = " << timeStep);
 
 	for (int x = 0; x < mesh->sizes(0); x++) {
@@ -26,6 +28,13 @@ void GridCharacteristicMethod<TNode>::stage(const int s, const real& timeStep,
 }
 
 
-template class GridCharacteristicMethod<IdealElastic1DNode>;
-template class GridCharacteristicMethod<IdealElastic2DNode>;
-template class GridCharacteristicMethod<IdealElastic3DNode>;
+template class GridCharacteristicMethod<StructuredGrid<Elastic1DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<Elastic2DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<Elastic3DModel>>;
+
+template class GridCharacteristicMethod<StructuredGrid<PlasticFlow1DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<PlasticFlow2DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<PlasticFlow3DModel>>;
+
+template class GridCharacteristicMethod<StructuredGrid<OrthotropicElastic3DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<OrthotropicPlasticFlow3DModel>>;

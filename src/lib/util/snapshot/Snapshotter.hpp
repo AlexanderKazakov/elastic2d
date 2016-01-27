@@ -9,14 +9,13 @@ namespace gcm {
 	/**
 	 * Base class for snapshotters
 	 */
-	template <class TNode>
 	class Snapshotter {
 	public:
 		/**
 		 * Write snapshot for specified time step
 		 * @param step number of time step
 		 */
-		void snapshot(Grid<TNode>* _grid, const int step);
+		void snapshot(Grid* _grid, const int step);
 
 		/**
 		 * @param grid pointer to the grid for dump
@@ -26,7 +25,7 @@ namespace gcm {
 		virtual ~Snapshotter() { };
 
 	protected:
-		Grid<TNode>* grid = nullptr;
+		Grid* grid = nullptr;
 		virtual void snapshotImpl(const int step) = 0;
 
 	private:

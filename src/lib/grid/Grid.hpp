@@ -1,23 +1,17 @@
 #ifndef LIBGCM_GRID_HPP
 #define LIBGCM_GRID_HPP
 
-#include <vector>
 #include <mpi.h>
 
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
-#include <lib/linal/Linal.hpp>
 
 namespace gcm {
-	template<class TModel> class GridCharacteristicMethod;
-
-	template <class TNode>
+	/**
+	 * Base class for all grids
+	 */
 	class Grid {
 	public:
-		typedef TNode Node;
-		typedef typename Node::Vector Vector;
-		typedef typename Node::Matrix Matrix;
-
 		/** @param task properties and initial conditions etc */
 		void initialize(const Task &task);
 		virtual ~Grid() { };
@@ -45,17 +39,12 @@ namespace gcm {
 		int rank = -1; // index of core
 		int numberOfWorkers = -1; // number of cores
 
-		/* Node storage */
-		std::vector<Node> nodes;
-
 		real maximalLambda = 0.0; // maximal in modulus eigenvalue among all nodes all GcmMatrices of the mesh
 
 		virtual void initializeImpl(const Task &task) = 0;
 		virtual void applyInitialConditions(const Task &task) = 0;
 		virtual real getMinimalSpatialStepImpl() const = 0;
 		virtual void applyBorderConditions() = 0;
-		
-		friend class GridCharacteristicMethod<TNode>;
 	};
 }
 

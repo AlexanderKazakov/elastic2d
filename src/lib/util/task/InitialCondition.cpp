@@ -1,49 +1,56 @@
 #include <lib/util/task/InitialCondition.hpp>
-#include <lib/grid/nodes/Node.hpp>
+#include <lib/rheology/models/Model.hpp>
 
 
 using namespace gcm;
 
-template<class TNode>
-void InitialCondition<TNode>::initialize(const Task &task) {
+template<class TModel>
+void InitialCondition<TModel>::initialize(const Task &task) {
 
 	for (auto& vectorInitCondition : task.initialCondition.vectors) {
-		assert_eq(TNode::M, vectorInitCondition.list.size());
+		assert_eq(Vector::M, vectorInitCondition.list.size());
 		conditions.push_back(Condition(vectorInitCondition.area, Vector(vectorInitCondition.list)));
 	}
 
 	for (auto& wave : task.initialCondition.waves) {
-		assert_lt(wave.direction, TNode::DIMENSIONALITY);
-		GcmMatrices gcmMatrices(task.material); 
+		assert_lt(wave.direction, TModel::DIMENSIONALITY);
+		GCM_MATRICES gcmMatrices(task.material); 
 		auto A = gcmMatrices.A(wave.direction);
-		int columnNumber = GcmMatrices::WAVE_COLUMNS.at(wave.waveType);
-		TNode tmp;
-		tmp.u = A.U1.getColumn(columnNumber);
-		real currentValue = Vector::QUANTITIES.at(wave.quantity).Get(tmp.u);
+		int columnNumber = GCM_MATRICES::WAVE_COLUMNS.at(wave.waveType);
+		Vector tmp;
+		tmp = A.U1.getColumn(columnNumber);
+		real currentValue = Vector::QUANTITIES.at(wave.quantity).Get(tmp);
 		assert_ne(currentValue, 0.0);
-		tmp.u *= wave.quantityValue / currentValue;
-		conditions.push_back(Condition(wave.area, tmp.u));
+		tmp *= wave.quantityValue / currentValue;
+		conditions.push_back(Condition(wave.area, tmp));
 	}
 
 	for (auto& quantityInitCondition : task.initialCondition.quantities) {
-		TNode tmp;
-		linal::clear(tmp.u);
-		Vector::QUANTITIES.at(quantityInitCondition.physicalQuantity).Set(quantityInitCondition.value, tmp.u);
-		conditions.push_back(Condition(quantityInitCondition.area, tmp.u));
+		Vector tmp;
+		linal::clear(tmp);
+		Vector::QUANTITIES.at(quantityInitCondition.physicalQuantity).Set(quantityInitCondition.value, tmp);
+		conditions.push_back(Condition(quantityInitCondition.area, tmp));
 	}
 }
 
-template<class TNode>
-void InitialCondition<TNode>::apply(TNode &node, const linal::Vector3 &coords) const {
-	linal::clear(node.u);
+template<class TModel>
+void InitialCondition<TModel>::apply(Vector &v, const linal::Vector3 &coords) const {
+	linal::clear(v);
 	for (auto& condition : conditions) {
 		if (condition.area->contains(coords)) {
-			node.u += condition.vector;
+			v += condition.vector;
 		}
 	}
 }
 
 
-template class InitialCondition<IdealElastic1DNode>;
-template class InitialCondition<IdealElastic2DNode>;
-template class InitialCondition<IdealElastic3DNode>;
+template class InitialCondition<Elastic1DModel>;
+template class InitialCondition<Elastic2DModel>;
+template class InitialCondition<Elastic3DModel>;
+
+template class InitialCondition<PlasticFlow1DModel>;
+template class InitialCondition<PlasticFlow2DModel>;
+template class InitialCondition<PlasticFlow3DModel>;
+
+template class InitialCondition<OrthotropicElastic3DModel>;
+template class InitialCondition<OrthotropicPlasticFlow3DModel>;

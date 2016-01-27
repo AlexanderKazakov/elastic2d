@@ -2,16 +2,16 @@
 #define LIBGCM_DEFAULTSOLVER_HPP
 
 #include <lib/numeric/gcmethod/GridCharacteristicMethod.hpp>
-#include <lib/grid/StructuredGrid.hpp>
 #include <lib/util/Logging.hpp>
+#include <lib/util/task/Task.hpp>
 
 namespace gcm {
-	template <class TNode> class Engine;
+	template <class TGrid> class Engine;
 
 	/**
 	 * Class for handling complete time step
 	 */
-	template<class TNode>
+	template<class TGrid>
 	class DefaultSolver {
 	public:
 		void initialize(const Task& task);
@@ -24,12 +24,12 @@ namespace gcm {
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
 		bool splittingSecondOrder = false; // use or not time second order approach in splitting method
 
-		GridCharacteristicMethod<TNode>* method = nullptr;
+		GridCharacteristicMethod<TGrid>* method = nullptr;
 
 		/** After calculation of step, actual values are always here */
-		StructuredGrid<TNode>* mesh = nullptr;
+		TGrid* mesh = nullptr;
 		/** This is auxiliary mesh */
-		StructuredGrid<TNode>* newMesh = nullptr;
+		TGrid* newMesh = nullptr;
 
 		USE_AND_INIT_LOGGER("gcm.DefaultSolver");
 
@@ -38,7 +38,7 @@ namespace gcm {
 		/** Calculate time step from Courant–Friedrichs–Lewy condition */
 		real calculateTau() const;
 
-		friend class Engine<TNode>;
+		friend class Engine<TGrid>;
 	};
 }
 

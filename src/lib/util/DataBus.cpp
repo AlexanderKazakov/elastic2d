@@ -1,5 +1,6 @@
 #include <lib/util/DataBus.hpp>
-#include <lib/grid/nodes/Node.hpp>
+#include <lib/rheology/models/Model.hpp>
+#include <lib/grid/StructuredGrid.hpp>
 
 using namespace gcm;
 
@@ -18,7 +19,7 @@ void createStaticType() {
 			MPI::UB
 	};
 
-	int node_lengths[] = {1, TNode::M, 1};
+	int node_lengths[] = {1, TNode::Vector::M, 1};
 
 	MPI::Aint node_disp[] = {
 			MPI::Get_address(&nodes[0]),
@@ -36,7 +37,14 @@ void createStaticType() {
 }
 
 void DataBus::createStaticTypes() {
-	createStaticType<IdealElastic3DNode>();
-	createStaticType<IdealElastic2DNode>();
-	createStaticType<IdealElastic1DNode>();
+	createStaticType<StructuredGrid<Elastic1DModel>::Node>();
+	createStaticType<StructuredGrid<Elastic2DModel>::Node>();
+	createStaticType<StructuredGrid<Elastic3DModel>::Node>();
+
+	createStaticType<StructuredGrid<PlasticFlow1DModel>::Node>();
+	createStaticType<StructuredGrid<PlasticFlow2DModel>::Node>();
+	createStaticType<StructuredGrid<PlasticFlow3DModel>::Node>();
+
+	createStaticType<StructuredGrid<OrthotropicElastic3DModel>::Node>();
+	createStaticType<StructuredGrid<OrthotropicPlasticFlow3DModel>::Node>();
 }

@@ -5,11 +5,11 @@
 
 namespace gcm {
 
-	template<class TNode>
+	template<class TModel>
 	class InitialCondition {
 	public:
-		typedef typename TNode::Vector Vector;
-		typedef typename TNode::GcmMatrices GcmMatrices;
+		typedef typename TModel::Vector Vector;
+		typedef typename TModel::GCM_MATRICES GCM_MATRICES;
 
 		/** Convert task terms of initial conditions to own format */
 		void initialize(const Task& task);
@@ -18,7 +18,7 @@ namespace gcm {
 		 * Apply initial conditions to node assume that its coordinates is coords.
 		 * We don't use smth like node.coords because some nodes don't have coords.
 		 */
-		void apply(TNode& node, const linal::Vector3& coords) const;
+		void apply(Vector& v, const linal::Vector3& coords) const;
 
 	private:
 		struct Condition {

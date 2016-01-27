@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
+#include <test/wrappers/Wrappers.hpp>
 
 #include <lib/util/DataBus.hpp>
 #include <lib/util/task/Task.hpp>
+#include <lib/rheology/models/Model.hpp>
+#include <lib/grid/StructuredGrid.hpp>
 
-#include <test/wrappers/Wrappers.hpp>
 
 using namespace gcm;
 
@@ -20,7 +22,7 @@ protected:
 		TNode rightNodes[testNumberOfNodes];
 
 		for (int k = 0; k < testNumberOfNodes; k++) {
-			for (int i = 0; i < TNode::M; i++) {
+			for (int i = 0; i < TNode::Vector::M; i++) {
 				leftNodes[k].u(i) = rightNodes[k].u(i) = rank;
 			}
 		}
@@ -40,7 +42,7 @@ protected:
 			}
 
 			for (int k = 0; k < testNumberOfNodes; k++) {
-				for (int i = 0; i < TNode::M; i++) {
+				for (int i = 0; i < TNode::Vector::M; i++) {
 					if (rank == 0) {
 						ASSERT_EQ(rightNodes[k].u(i), rank + 1);
 					} else if (rank == numberOfWorkers - 1) {
@@ -65,7 +67,10 @@ TYPED_TEST_P(TestMpiNodeTypes, MPI_NODE_TYPE) {
 REGISTER_TYPED_TEST_CASE_P(TestMpiNodeTypes, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
-typedef Types<IdealElastic3DNode, IdealElastic2DNode, IdealElastic1DNode> AllImplementations;
+typedef Types<
+		StructuredGrid<Elastic1DModel>::Node,
+		StructuredGrid<Elastic2DModel>::Node,
+		StructuredGrid<Elastic3DModel>::Node> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiNodeTypes, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
@@ -93,14 +98,14 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	EngineWrapper<IdealElastic2DNode> sequenceEngine;
+	EngineWrapper<StructuredGrid<Elastic2DModel>> sequenceEngine;
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	EngineWrapper<IdealElastic2DNode> mpiEngine;
+	EngineWrapper<StructuredGrid<Elastic2DModel>> mpiEngine;
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 

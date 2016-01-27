@@ -3,15 +3,12 @@
 
 #include <fstream>
 
-#include <lib/grid/StructuredGrid.hpp>
 #include <lib/util/snapshot/Snapshotter.hpp>
 #include <lib/util/Logging.hpp>
 
 namespace gcm {
-	template<class TNode> class StructuredGrid;
-
-	template<class TNode>
-	class VtkTextStructuredSnapshotter : public Snapshotter<TNode> {
+	template<class TGrid>
+	class VtkTextStructuredSnapshotter : public Snapshotter {
 	public:
 		/**
 		 * Write vtk snapshot. The simplest but not the most efficient
@@ -22,9 +19,10 @@ namespace gcm {
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
-		StructuredGrid<TNode>* sGrid;
+		TGrid* sGrid;
 
-		void writeQuantity(const std::string name, const typename GetSetter<typename TNode::Variables>::Getter Get);
+		void writeQuantity(const std::string name,
+		                   const typename GetSetter<typename TGrid::Node::Variables>::Getter Get);
 
 		std::fstream snapshotFileStream;
 		void openSnapshotFileStream(const std::string& fileName);

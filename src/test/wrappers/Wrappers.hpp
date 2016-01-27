@@ -2,6 +2,7 @@
 #define LIBGCM_TEST_WRAPPERS_HPP
 
 #include <lib/Engine.hpp>
+#include <lib/grid/StructuredGrid.hpp>
 
 namespace gcm {
 
@@ -9,8 +10,8 @@ namespace gcm {
 	 * Wrappers for access to protected members for testing purposes
 	 */
 
-	template<class TNode>
-	class StructuredGridWrapper : public StructuredGrid<TNode> {
+	template<class TModel>
+	class StructuredGridWrapper : public StructuredGrid<TModel> {
 	public:
 		real getH0ForTest() const { return this->h(0); };
 
@@ -22,24 +23,27 @@ namespace gcm {
 
 		int getStartXForTest() const { return this->globalStartXindex; };
 
-		const TNode &getNodeForTest(const int x, const int y, const int z) const { return this->get(x, y, z); };
+		const typename StructuredGrid<TModel>::Node &getNodeForTest(const int x, const int y, const int z) const {
+			return this->get(x, y, z);
+		};
 
-		typename StructuredGrid<TNode>::Matrix interpolateValuesAroundForTest
+		typename StructuredGrid<TModel>::Matrix interpolateValuesAroundForTest
 				(const int stage, const int x, const int y, const int z,
-				 const typename StructuredGrid<TNode>::Vector& dx) const {
+				 const typename StructuredGrid<TModel>::Vector& dx) const {
 			return this->interpolateValuesAround(stage, x, y, z, dx);
 		};
 
 		void findSourcesForInterpolationForTest
 				(const int stage, const int x, const int y, const int z, const real &dx,
-				 std::vector<typename StructuredGrid<TNode>::Vector>& src) const {
+				 std::vector<typename StructuredGrid<TModel>::Vector>& src) const {
 			return this->findSourcesForInterpolation(stage, x, y, z, dx, src);
 		};
 
 		void changeRheology(const real &rho2rho0, const real &lambda2lambda0, const real &mu2mu0) {
 			IsotropicMaterial oldMaterial = (*this)(0, 0, 0).matrix->getMaterial();
-			IsotropicMaterial newMaterial(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
-			auto newRheologyMatrix = std::make_shared<typename TNode::GcmMatrices>(newMaterial);
+			IsotropicMaterial newMaterial
+					(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
+			auto newRheologyMatrix = std::make_shared<typename TModel::GCM_MATRICES>(newMaterial);
 
 			for (int x = 0; x < this->sizes(0); x++) {
 				for (int y = 0; y < this->sizes(1); y++) {
@@ -55,27 +59,27 @@ namespace gcm {
 		}
 	};
 
-	template<class TNode>
-	class DefaultSolverWrapper : public DefaultSolver<TNode> {
+	template<class TGrid>
+	class DefaultSolverWrapper : public DefaultSolver<TGrid> {
 	public:
 		void stageForTest(const int s, const real &timeStep) { return this->stage(s, timeStep); }
 
 		real getTauForTest() const { return this->calculateTau(); };
 
-		StructuredGridWrapper<TNode>* getMesh() const {
-			return static_cast<StructuredGridWrapper<TNode>*>(this->mesh);
+		StructuredGridWrapper<typename TGrid::Model>* getMesh() const {
+			return static_cast<StructuredGridWrapper<typename TGrid::Model>*>(this->mesh);
 		};
 
-		StructuredGridWrapper<TNode>* getNewMesh() const {
-			return static_cast<StructuredGridWrapper<TNode>*>(this->newMesh);
+		StructuredGridWrapper<typename TGrid::Model>* getNewMesh() const {
+			return static_cast<StructuredGridWrapper<typename TGrid::Model>*>(this->newMesh);
 		};
 	};
 
-	template<class TNode>
-	class EngineWrapper : public Engine<TNode> {
+	template<class TGrid>
+	class EngineWrapper : public Engine<TGrid> {
 	public:
-		DefaultSolverWrapper<TNode>* getSolver() const {
-			return static_cast<DefaultSolverWrapper<TNode>*>(this->solver);
+		DefaultSolverWrapper<TGrid>* getSolver() const {
+			return static_cast<DefaultSolverWrapper<TGrid>*>(this->solver);
 		}
 	};
 }

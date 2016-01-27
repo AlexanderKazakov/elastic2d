@@ -4,25 +4,39 @@
 #include <mpi.h>
 
 #include <lib/grid/Grid.hpp>
-#include <lib/grid/nodes/Node.hpp>
 #include <lib/linal/special/VectorInt.hpp>
 #include <lib/numeric/interpolation/Interpolator.hpp>
 #include <lib/numeric/border_conditions/StructuredGridBorderConditions.hpp>
 
 namespace gcm {
-	template<class TNode> class DefaultSolver;
-	template<class TNode> class GridCharacteristicMethod;
-	template<class TNode> class VtkTextStructuredSnapshotter;
-	template<class TNode> class Binary2DSeismograph;
+	template<class TGrid> class DefaultSolver;
+	template<class TGrid> class GridCharacteristicMethod;
+	template<class TGrid> class VtkTextStructuredSnapshotter;
+	template<class TGrid> class Binary2DSeismograph;
 
-	template<class TNode>
-	class StructuredGrid : public Grid<TNode> {
+	template<class TModel>
+	class StructuredGrid : public Grid {
 	public:
-		typedef typename Grid<TNode>::Node Node;
-		typedef typename Grid<TNode>::Vector Vector;
-		typedef typename Grid<TNode>::Matrix Matrix;
+		typedef TModel Model;
+		struct Node {
+			typedef typename TModel::Variables Variables;
+			typedef typename TModel::Vector Vector;
+			typedef typename TModel::GCM_MATRICES GCM_MATRICES;
+
+			static MPI::Datatype MPI_NODE_TYPE; // Special type for node for MPI connection
+
+			std::shared_ptr<GCM_MATRICES> matrix;
+			Vector u; // vector of PDE variables
+		};
+		typedef typename Node::Vector Vector;
+		typedef typename Node::GCM_MATRICES GCM_MATRICES;
+		typedef typename GCM_MATRICES::Matrix Matrix;
+		static const int DIMENSIONALITY = TModel::Variables::DIMENSIONALITY;
 
 	protected:
+		/* Node storage */
+		std::vector<Node> nodes;
+
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
 		linal::VectorInt<3> sizes = {0, 0, 0}; // numbers of nodes along each direction (on this core)
@@ -33,7 +47,7 @@ namespace gcm {
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node of the grid
 		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction
 
-		StructuredGridBorderConditions<TNode> borderConditions;
+		StructuredGridBorderConditions<TModel> borderConditions;
 		
 		/**
 		 * Operator to iterate relatively to real nodes.
@@ -74,7 +88,7 @@ namespace gcm {
 
 		/**
 		 * Interpolate nodal values in specified points.
-		 * Interpolated value for k-th point in vector %dx are
+		 * Interpolated value for k-th point in vector dx are
 		 * stored in k-th column of returned Matrix.
 		 * @param stage direction
 		 * @param x x-index of the reference node
@@ -105,13 +119,12 @@ namespace gcm {
 			return startR + linal::plainMultiply(linal::VectorInt<3>({x, y, z}), h);
 		};
 
-
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
-		friend class VtkTextStructuredSnapshotter<TNode>;
-		friend class GridCharacteristicMethod<TNode>;
-		friend class DefaultSolver<TNode>;
-		friend class StructuredGridBorderConditions<TNode>;
-		friend class Binary2DSeismograph<TNode>;
+		friend class VtkTextStructuredSnapshotter<StructuredGrid>;
+		friend class GridCharacteristicMethod<StructuredGrid>;
+		friend class DefaultSolver<StructuredGrid>;
+		friend class StructuredGridBorderConditions<TModel>;
+		friend class Binary2DSeismograph<StructuredGrid>;
 	};
 }
 

@@ -1,59 +1,39 @@
 #ifndef LIBGCM_MODEL_HPP
 #define LIBGCM_MODEL_HPP
 
-#include <memory>
-#include <mpi.h>
-
-#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
-#include <lib/rheology/materials/IsotropicMaterial.hpp>
+#include <lib/rheology/correctors/Correctors.hpp>
+#include <lib/rheology/materials/Materials.hpp>
+#include <lib/rheology/variables/Variables.hpp>
 
 namespace gcm {
-
 	/**
-	 * Generator for rheology models
-	 * @tparam Components building blocks to construct some model
+	 * Covers rheology aspects
 	 */
-	template<typename... Components>
-	struct Model : Components... {
+	template<typename TVariables, typename TMaterial, typename TCorrector = NullCorrector>
+	struct Model {
+		typedef TVariables Variables;
+		typedef TMaterial  Material;
+		typedef TCorrector Corrector;
 
+		static const int DIMENSIONALITY = Variables::DIMENSIONALITY;
+		static const int PDE_SIZE = Variables::SIZE;
+
+		typedef linal::Vector<PDE_SIZE, Variables> Vector;
+		typedef GcmMatrices<Variables, Material> GCM_MATRICES;
 	};
 
+	// type definitions
 
-	/**
-	 * Using these envelopes as template arguments of Model we can construct any necessary Model.
-	 */
+	typedef Model<VelocitySigmaVariables<1>, IsotropicMaterial> Elastic1DModel;
+	typedef Model<VelocitySigmaVariables<1>, IsotropicMaterial, IdealPlasticFlowCorrector> PlasticFlow1DModel;
 
-	template<typename TVector>
-	struct VectorEnvelope {
-		typedef TVector Vector;
-		typedef typename Vector::ContainerType Variables;
-		static const int M = Vector::M;
+	typedef Model<VelocitySigmaVariables<2>, IsotropicMaterial> Elastic2DModel;
+	typedef Model<VelocitySigmaVariables<2>, IsotropicMaterial, IdealPlasticFlowCorrector> PlasticFlow2DModel;
 
-		TVector u;
-	};
-
-	template<typename TGcmMatrices>
-	struct GcmMatricesPtrEnvelope {
-		typedef TGcmMatrices GcmMatrices;
-		typedef typename GcmMatrices::Matrix Matrix;
-		static const int DIMENSIONALITY = GcmMatrices::DIMENSIONALITY;
-		std::shared_ptr<GcmMatrices> matrix;
-	};
-
-	template<typename TCoords>
-	struct CoordsEnvelope {
-		TCoords coords;
-	};
-
-
-	typedef Model<VectorEnvelope<linal::Vector<2, VelocitySigmaVariables<1>>>,
-			GcmMatricesPtrEnvelope<GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>>> IdealElastic1DModel;
-	typedef Model<VectorEnvelope<linal::Vector<5, VelocitySigmaVariables<2>>>,
-			GcmMatricesPtrEnvelope<GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>>> IdealElastic2DModel;
-	typedef Model<VectorEnvelope<linal::Vector<9, VelocitySigmaVariables<3>>>,
-			GcmMatricesPtrEnvelope<GcmMatrices<VelocitySigmaVariables<3>, IsotropicMaterial>>> IdealElastic3DModel;
-
-
+	typedef Model<VelocitySigmaVariables<3>, IsotropicMaterial> Elastic3DModel;
+	typedef Model<VelocitySigmaVariables<3>, IsotropicMaterial, IdealPlasticFlowCorrector> PlasticFlow3DModel;
+	typedef Model<VelocitySigmaVariables<3>, OrthotropicMaterial> OrthotropicElastic3DModel;
+	typedef Model<VelocitySigmaVariables<3>, OrthotropicMaterial, IdealPlasticFlowCorrector> OrthotropicPlasticFlow3DModel;
 }
 
 #endif //LIBGCM_MODEL_HPP

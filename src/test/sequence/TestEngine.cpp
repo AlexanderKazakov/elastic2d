@@ -3,6 +3,8 @@
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
 
 #include <test/wrappers/Wrappers.hpp>
+#include <lib/rheology/models/Model.hpp>
+#include <lib/grid/StructuredGrid.hpp>
 
 using namespace gcm;
 
@@ -28,9 +30,9 @@ TEST(Engine, run)
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	task.initialCondition.waves.push_back(wave);
 
-	EngineWrapper<IdealElastic2DNode> engine;
+	EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
 	engine.initialize(task);
-	IdealElastic2DNode::Vector sWave = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, 3, 0).u;
+	StructuredGrid<Elastic2DModel>::Vector sWave = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, 3, 0).u;
 	engine.run();
 	ASSERT_EQ(sWave, engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, 22, 0).u);
 }
@@ -61,7 +63,7 @@ TEST(Engine, TwoLayersDifferentRho)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		EngineWrapper<IdealElastic2DNode> engine;
+		EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
 		engine.initialize(task);
 
 		real rho2rho0 = rho2rho0Initial * pow(2, i);
@@ -71,13 +73,16 @@ TEST(Engine, TwoLayersDifferentRho)
 		engine.getSolver()->getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		IdealElastic2DNode init = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		StructuredGrid<Elastic2DModel>::Node init =
+				engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		engine.run();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		IdealElastic2DNode reflect = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
-		IdealElastic2DNode transfer = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
+		StructuredGrid<Elastic2DModel>::Node reflect =
+				engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		StructuredGrid<Elastic2DModel>::Node transfer =
+				engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.material.rho;
 		real lambda0 = task.material.lambda;
@@ -136,7 +141,7 @@ TEST(Engine, TwoLayersDifferentE)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		EngineWrapper<IdealElastic2DNode> engine;
+		EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
 		engine.initialize(task);
 
 		real rho2rho0 = 1;
@@ -146,13 +151,16 @@ TEST(Engine, TwoLayersDifferentE)
 		engine.getSolver()->getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		IdealElastic2DNode init = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		StructuredGrid<Elastic2DModel>::Node init =
+				engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		engine.run();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		IdealElastic2DNode reflect = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
-		IdealElastic2DNode transfer = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
+		StructuredGrid<Elastic2DModel>::Node reflect =
+				engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		StructuredGrid<Elastic2DModel>::Node transfer =
+				engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.material.rho;
 		real lambda0 = task.material.lambda;

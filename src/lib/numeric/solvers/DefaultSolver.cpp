@@ -1,35 +1,37 @@
 #include <lib/numeric/solvers/DefaultSolver.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
-template<class TNode>
-void DefaultSolver<TNode>::initialize(const Task &task) {
+template<class TGrid>
+void DefaultSolver<TGrid>::initialize(const Task &task) {
 	LOG_INFO("Start initialization");
-	this->method = new GridCharacteristicMethod<TNode>();
+	this->method = new GridCharacteristicMethod<TGrid>();
 
-	this->mesh = new StructuredGrid<TNode>();
+	this->mesh = new TGrid();
 	this->mesh->initialize(task);
-	this->newMesh = new StructuredGrid<TNode>();
+	this->newMesh = new TGrid();
 	this->newMesh->initialize(task);
 
 	CourantNumber = task.CourantNumber;
 	splittingSecondOrder = task.splittingSecondOrder;
 }
 
-template<class TNode>
-DefaultSolver<TNode>::~DefaultSolver() {
+template<class TGrid>
+DefaultSolver<TGrid>::~DefaultSolver() {
 	delete this->method;
 	delete this->mesh;
 	delete this->newMesh;
 }
 
-template<class TNode>
-void DefaultSolver<TNode>::nextTimeStep() {
+template<class TGrid>
+void DefaultSolver<TGrid>::nextTimeStep() {
 	LOG_INFO("Start time step " << step);
 	real tau = calculateTau();
 
 	if (splittingSecondOrder) {
-		switch (TNode::DIMENSIONALITY) {
+		switch (TGrid::DIMENSIONALITY) {
 			case 1:
 				stage(0, tau);
 				break;
@@ -43,7 +45,7 @@ void DefaultSolver<TNode>::nextTimeStep() {
 				break;
 		}
 	} else {
-		for (int s = 0; s < TNode::DIMENSIONALITY; s++) {
+		for (int s = 0; s < TGrid::DIMENSIONALITY; s++) {
 			stage(s, tau);
 		}
 	}
@@ -51,19 +53,28 @@ void DefaultSolver<TNode>::nextTimeStep() {
 	currentTime += tau;
 }
 
-template<class TNode>
-void DefaultSolver<TNode>::stage(const int s, const real &timeStep) {
+template<class TGrid>
+void DefaultSolver<TGrid>::stage(const int s, const real &timeStep) {
 	mesh->beforeStage();
 	method->stage(s, timeStep, mesh, newMesh); // now actual values is by pointer newMesh
 	std::swap(mesh, newMesh); // now actual values is again by pointer mesh
 	mesh->afterStage();
 }
 
-template<class TNode>
-real DefaultSolver<TNode>::calculateTau() const {
+template<class TGrid>
+real DefaultSolver<TGrid>::calculateTau() const {
 	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
 }
 
-template class DefaultSolver<IdealElastic1DNode>;
-template class DefaultSolver<IdealElastic2DNode>;
-template class DefaultSolver<IdealElastic3DNode>;
+
+
+template class DefaultSolver<StructuredGrid<Elastic1DModel>>;
+template class DefaultSolver<StructuredGrid<Elastic2DModel>>;
+template class DefaultSolver<StructuredGrid<Elastic3DModel>>;
+
+template class DefaultSolver<StructuredGrid<PlasticFlow1DModel>>;
+template class DefaultSolver<StructuredGrid<PlasticFlow2DModel>>;
+template class DefaultSolver<StructuredGrid<PlasticFlow3DModel>>;
+
+template class DefaultSolver<StructuredGrid<OrthotropicElastic3DModel>>;
+template class DefaultSolver<StructuredGrid<OrthotropicPlasticFlow3DModel>>;

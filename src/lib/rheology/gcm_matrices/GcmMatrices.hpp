@@ -60,11 +60,8 @@ namespace gcm {
 
 		Material getMaterial() const { return material; };
 
-
 	protected:
-
 		Material material;
-
 		GcmMatrix<M> m[DIMENSIONALITY];
 
 		friend Material;

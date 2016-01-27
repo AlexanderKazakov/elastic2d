@@ -1,5 +1,7 @@
 #include <lib/util/DataBus.hpp>
 #include <lib/Engine.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
@@ -11,7 +13,7 @@ int main(int argc, char** argv) {
 	DataBus::createStaticTypes();
 	USE_AND_INIT_LOGGER("gcm.main");
 
-	Engine<IdealElastic3DNode> engine;
+	Engine<StructuredGrid<Elastic3DModel>> engine;
 
 	try {
 		engine.initialize(parseTask());

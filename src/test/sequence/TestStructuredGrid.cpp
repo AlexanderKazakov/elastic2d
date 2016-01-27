@@ -3,6 +3,7 @@
 #include <lib/util/areas/SphereArea.hpp>
 #include <lib/grid/StructuredGrid.hpp>
 #include <test/wrappers/Wrappers.hpp>
+#include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
@@ -17,7 +18,7 @@ TEST(StructuredGrid, initialize) {
 	task.numberOfSnaps = 5;
 	task.T = 100.0;
 
-	StructuredGridWrapper<IdealElastic2DNode> structuredGrid;
+	StructuredGridWrapper<Elastic2DModel> structuredGrid;
 	structuredGrid.initialize(task);
 	ASSERT_NEAR(structuredGrid.getH0ForTest(), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(structuredGrid.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
@@ -26,7 +27,7 @@ TEST(StructuredGrid, initialize) {
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
 			for (int z = 0; z < task.sizes(2); z++) {
-				for (int i = 0; i < IdealElastic2DNode::M; i++) {
+				for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
 					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z).u(i), 0.0);
 				}
 			}
@@ -52,7 +53,7 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		StructuredGridWrapper<IdealElastic2DNode> structuredGrid;
+		StructuredGridWrapper<Elastic2DModel> structuredGrid;
 		structuredGrid.initialize(task);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -65,10 +66,10 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 			}
 		}
 
-		std::vector<IdealElastic2DNode::Vector> src((unsigned long)task.accuracyOrder + 1);
+		std::vector<StructuredGrid<Elastic2DModel>::Vector> src((unsigned long)task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
 			structuredGrid.findSourcesForInterpolationForTest(stage, 1, 1, 0, dx, src);
-			for (int i = 0; i < IdealElastic2DNode::M; i++) {
+			for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
 				ASSERT_EQ(src[0](i), (i == 2 || i == 4) ? 1.0 : 0.0);
 				ASSERT_EQ(src[1](i), 0.0);
 			}
@@ -95,7 +96,7 @@ TEST(StructuredGrid, interpolateValuesAround)
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		StructuredGridWrapper<IdealElastic2DNode> structuredGrid;
+		StructuredGridWrapper<Elastic2DModel> structuredGrid;
 		structuredGrid.initialize(task);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -108,10 +109,11 @@ TEST(StructuredGrid, interpolateValuesAround)
 			}
 		}
 
-		IdealElastic2DNode::Vector dx({-1, 1, -0.5, 0.5, 0});
-		IdealElastic2DNode::Matrix matrix = structuredGrid.interpolateValuesAroundForTest(stage, 1, 1, 0, dx);
+		StructuredGrid<Elastic2DModel>::Vector dx({-1, 1, -0.5, 0.5, 0});
+		StructuredGrid<Elastic2DModel>::Matrix matrix =
+				structuredGrid.interpolateValuesAroundForTest(stage, 1, 1, 0, dx);
 
-		for (int i = 0; i < IdealElastic2DNode::M; i++) {
+		for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
 			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx

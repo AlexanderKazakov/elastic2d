@@ -7,16 +7,14 @@
 #include <lib/util/Logging.hpp>
 
 namespace gcm {
-	template<class TNode> class StructuredGrid;
-
 	/**
 	 * For 2D binary seismography for inverse problem
 	 */
-	template<class TNode>
+	template<class TGrid>
 	class Binary2DSeismograph {
 	public:
 
-		void startSeismo(StructuredGrid<TNode>* grid);
+		void startSeismo(TGrid* grid);
 		void finishSeismo();
 
 	private:
@@ -25,13 +23,13 @@ namespace gcm {
 
 		real* surface = nullptr; // values storage on current time step to write
 
-		void writeNextTimeStep(StructuredGrid<TNode>* grid);
+		void writeNextTimeStep(TGrid* grid);
 
 		std::fstream seismoFileStream;
 		void openSeismoFileStream(const std::string& fileName);
 		void closeSeismoFileStream();
 
-		std::string makeFileNameForSeismo(StructuredGrid<TNode>* grid);
+		std::string makeFileNameForSeismo(TGrid* grid);
 	};
 }
 

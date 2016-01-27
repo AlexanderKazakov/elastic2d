@@ -10,7 +10,7 @@ namespace gcm {
 	/**
 	 * Responsible for the whole process of calculation
 	 */
-	template<class TNode>
+	template<class TGrid>
 	class Engine {
 	public:
 		void initialize(const Task& task);
@@ -22,8 +22,8 @@ namespace gcm {
 		void run();
 
 	protected:
-		DefaultSolver<TNode>* solver = nullptr;
-		Snapshotter<TNode>* snapshotter = nullptr;
+		DefaultSolver<TGrid>* solver = nullptr;
+		Snapshotter* snapshotter = nullptr;
 		real requiredTime = 0;
 
 		USE_AND_INIT_LOGGER("gcm.Engine");

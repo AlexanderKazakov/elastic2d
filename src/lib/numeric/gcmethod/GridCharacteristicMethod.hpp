@@ -1,11 +1,11 @@
 #ifndef LIBGCM_GRIDCHARACTERISTICMETHOD_HPP
 #define LIBGCM_GRIDCHARACTERISTICMETHOD_HPP
 
-#include <lib/grid/StructuredGrid.hpp>
 #include <lib/util/Logging.hpp>
+#include <lib/util/Types.hpp>
 
 namespace gcm {
-	template<class TNode>
+	template<class TGrid>
 	class GridCharacteristicMethod {
 	public:
 		/**
@@ -16,10 +16,9 @@ namespace gcm {
 		 * @param newMesh grid on next time layer
 		 */
 		void stage(const int s, const real &timeStep,
-		           const StructuredGrid<TNode>* mesh, StructuredGrid<TNode>* newMesh);
+		           const TGrid* mesh, TGrid* newMesh);
 
 		USE_AND_INIT_LOGGER("gcm.MpiStructuredSolver");
-
 	};
 }
 
