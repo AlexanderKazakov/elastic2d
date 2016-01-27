@@ -1,5 +1,5 @@
 #include <lib/util/DataBus.hpp>
-#include <lib/numeric/gcmethod/MpiStructuredSolver.hpp>
+#include <lib/Engine.hpp>
 
 using namespace gcm;
 
@@ -11,11 +11,11 @@ int main(int argc, char** argv) {
 	DataBus::createStaticTypes();
 	USE_AND_INIT_LOGGER("gcm.main");
 
-	MpiStructuredSolver<IdealElastic3DNode> solver;
+	Engine<IdealElastic3DNode> engine;
 
 	try {
-		solver.initialize(parseTask());
-		solver.calculate();
+		engine.initialize(parseTask());
+		engine.run();
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
 	}

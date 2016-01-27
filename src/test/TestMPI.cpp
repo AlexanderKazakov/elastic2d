@@ -2,15 +2,15 @@
 
 #include <lib/util/DataBus.hpp>
 #include <lib/util/task/Task.hpp>
-#include <lib/grid/StructuredGrid.hpp>
-#include <lib/numeric/gcmethod/MpiStructuredSolver.hpp>
+
+#include <test/wrappers/Wrappers.hpp>
 
 using namespace gcm;
 
 template<class TNode>
-class Test_MPI_Sendrecv_replace : public testing::Test {
+class TestMpiNodeTypes : public testing::Test {
 protected:
-	void test_MPI_Sendrecv_replace() {
+	void testMpiNodeTypes() {
 		int rank = MPI::COMM_WORLD.Get_rank();
 		int numberOfWorkers = MPI::COMM_WORLD.Get_size();
 
@@ -58,20 +58,20 @@ protected:
 /** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc for explaination */
 #if GTEST_HAS_TYPED_TEST_P
 using testing::Types;
-TYPED_TEST_CASE_P(Test_MPI_Sendrecv_replace);
-TYPED_TEST_P(Test_MPI_Sendrecv_replace, MPI_NODE_TYPE) {
-	this->test_MPI_Sendrecv_replace();
+TYPED_TEST_CASE_P(TestMpiNodeTypes);
+TYPED_TEST_P(TestMpiNodeTypes, MPI_NODE_TYPE) {
+	this->testMpiNodeTypes();
 }
-REGISTER_TYPED_TEST_CASE_P(Test_MPI_Sendrecv_replace, MPI_NODE_TYPE);
+REGISTER_TYPED_TEST_CASE_P(TestMpiNodeTypes, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<IdealElastic3DNode, IdealElastic2DNode, IdealElastic1DNode> AllImplementations;
 
-INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, Test_MPI_Sendrecv_replace, AllImplementations);
+INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiNodeTypes, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
 
 
-TEST(MPI, MPISolverVsSequenceSolver)
+TEST(MPI, MpiEngineVsSequenceEngine)
 {
 	Task task;
 	task.accuracyOrder = 2;
@@ -93,26 +93,26 @@ TEST(MPI, MPISolverVsSequenceSolver)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	MpiStructuredSolver<IdealElastic2DNode> sequenceSolver;
-	sequenceSolver.initialize(task);
-	sequenceSolver.calculate();
+	EngineWrapper<IdealElastic2DNode> sequenceEngine;
+	sequenceEngine.initialize(task);
+	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	MpiStructuredSolver<IdealElastic2DNode> mpiSolver;
-	mpiSolver.initialize(task);
-	mpiSolver.calculate();
+	EngineWrapper<IdealElastic2DNode> mpiEngine;
+	mpiEngine.initialize(task);
+	mpiEngine.run();
 
 	// check that parallel result is equal to sequence result
-	for (int x = 0; x < mpiSolver.getMesh()->getXForTest(); x++) {
-		for (int y = 0; y < mpiSolver.getMesh()->getYForTest(); y++) {
-			ASSERT_EQ(mpiSolver.getMesh()->getNodeForTest(x, y, 0).u,
-			          sequenceSolver.getMesh()->getNodeForTest
-					          (x + mpiSolver.getMesh()->getStartXForTest(), y, 0).u) <<
+	for (int x = 0; x < mpiEngine.getSolver()->getMesh()->getXForTest(); x++) {
+		for (int y = 0; y < mpiEngine.getSolver()->getMesh()->getYForTest(); y++) {
+			ASSERT_EQ(mpiEngine.getSolver()->getMesh()->getNodeForTest(x, y, 0).u,
+			          sequenceEngine.getSolver()->getMesh()->getNodeForTest
+					          (x + mpiEngine.getSolver()->getMesh()->getStartXForTest(), y, 0).u) <<
 								"x = " << x <<
-								" global x = " << x + mpiSolver.getMesh()->getStartXForTest()
-			                      << " y = " << y << std::endl;
+								" global x = " << x + mpiEngine.getSolver()->getMesh()->getStartXForTest()
+			                    << " y = " << y << std::endl;
 		}
 	}
 }

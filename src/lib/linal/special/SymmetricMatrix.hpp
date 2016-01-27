@@ -94,7 +94,7 @@ namespace gcm {
 
 		template<int TM>
 		Matrix<TM, TM, SymmetricMatrixContainer<TM>> Matrix<TM, TM, SymmetricMatrixContainer<TM>>::invert() const {
-			THROW_UNSUPPORTED("TODO: 1) gsl utils to separate file, 2) for symmetric matrices there are more powerful algorithms");
+			THROW_UNSUPPORTED("TODO");
 		}
 
 		template<int TM>

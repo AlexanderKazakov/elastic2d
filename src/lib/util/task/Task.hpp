@@ -36,7 +36,7 @@ namespace gcm {
 		bool splittingSecondOrder = false;
 		bool enableSnapshotting = false;
 		bool forceSequence = false; // if true make the grid thinking that the number of
-		// processes is one, even if it isn't so actually (for testing purposes)
+		// processes is one, even if it isn't so actually
 
 		/**
 		 * All listed here initial conditions will be applied in sequence, not rewriting but adding to each other

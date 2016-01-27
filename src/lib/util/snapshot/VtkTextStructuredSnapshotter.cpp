@@ -3,9 +3,9 @@
 using namespace gcm;
 
 template<class TNode>
-void VtkTextStructuredSnapshotter<TNode>::snapshotImpl(const std::string &fileName) {
+void VtkTextStructuredSnapshotter<TNode>::snapshotImpl(const int step) {
 	LOG_DEBUG("Start snapshot writing to " << fileName);
-	openSnapshotFileStream(fileName);
+	openSnapshotFileStream(makeFileNameForSnapshot(step));
 	sGrid = static_cast<StructuredGrid<TNode>*>(this->grid);
 	
 	snapshotFileStream << "# vtk DataFile Version 3.0" << std::endl;
@@ -46,6 +46,13 @@ void VtkTextStructuredSnapshotter<TNode>::openSnapshotFileStream(const std::stri
 template<class TNode>
 void VtkTextStructuredSnapshotter<TNode>::closeSnapshotFileStream() {
 	snapshotFileStream.close();
+}
+
+template <class TNode>
+std::string VtkTextStructuredSnapshotter<TNode>::makeFileNameForSnapshot(const int step) {
+	char buffer[50];
+	sprintf(buffer, "%s%02d%s%05d%s", "snaps/core", this->grid->getRank(), "_snapshot", step, ".vtk");
+	return std::string(buffer);
 }
 
 template class VtkTextStructuredSnapshotter<IdealElastic1DNode>;

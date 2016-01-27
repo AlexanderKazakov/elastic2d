@@ -32,9 +32,23 @@ void StructuredGrid<TNode>::initializeImpl(const Task &task) {
 		assert_eq(startR(j), startR(j));
 	}
 	
-	borderConditions = task.borderConditions;
+	borderConditions.initialize(task);
 
 	this->nodes.resize( (unsigned long) (sizes(0) + 2 * accuracyOrder) * (sizes(1) + 2 * accuracyOrder) * (sizes(2) + 2 * accuracyOrder) );
+}
+
+template<class TNode>
+void StructuredGrid<TNode>::applyInitialConditions(const Task& task) {
+	InitialCondition<TNode> initialCondition;
+	initialCondition.initialize(task);
+
+	for (int x = 0; x < sizes(0); x++) {
+		for (int y = 0; y < sizes(1); y++) {
+			for (int z = 0; z < sizes(2); z++) {
+				initialCondition.apply((*this)(x, y, z), getCoordinates(x, y, z));
+			}
+		}
+	}
 }
 
 template<class TNode>
@@ -66,128 +80,47 @@ void StructuredGrid<TNode>::findSourcesForInterpolation(const int stage, const i
 }
 
 template<class TNode>
-void StructuredGrid<TNode>::changeRheology(const real& rho2rho0, const real& lambda2lambda0, const real& mu2mu0) {
+void StructuredGrid<TNode>::beforeStage() {
+	exchangeNodesWithNeighbors();
+	applyBorderConditions();
+}
 
-	IsotropicMaterial oldMaterial = (*this)(0, 0, 0).matrix->getMaterial();
-	IsotropicMaterial newMaterial(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
-	auto newRheologyMatrix = std::make_shared<typename TNode::GcmMatrices>(newMaterial);
+template<class TNode>
+void StructuredGrid<TNode>::afterStage() {
 
-	for (int x = 0; x < sizes(0); x++) {
-		for (int y = 0; y < sizes(1); y++) {
-			for (int z = 0; z < sizes(2); z++) {
-				if (y * h(1) >= 0.5) {
-					(*this)(x, y, z).matrix = newRheologyMatrix;
-				}
-			}
-		}
+}
+
+template<class TNode>
+void StructuredGrid<TNode>::exchangeNodesWithNeighbors() {
+	LOG_DEBUG("Start data exchange with neighbor cores");
+	if (this->numberOfWorkers == 1) return;
+
+	int sizeOfBuffer = this->accuracyOrder * (sizes(1) + 2 * this->accuracyOrder) * (sizes(2) + 2 * this->accuracyOrder);
+	unsigned long nodesSize = this->nodes.size();
+
+	if (this->rank == 0) {
+		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank + 1, 1,
+		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank + 1, 1,
+		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+
+	} else if (this->rank == this->numberOfWorkers - 1) {
+		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank - 1, 1,
+		             &(this->nodes[0]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank - 1, 1,
+		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+
+	} else {
+		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank + 1, 1,
+		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank + 1, 1,
+		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank - 1, 1,
+		             &(this->nodes[0]), sizeOfBuffer, TNode::MPI_NODE_TYPE, this->rank - 1, 1,
+		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}
-
-	this->maximalLambda = fmax(this->maximalLambda, newRheologyMatrix->getMaximalEigenvalue());
 }
 
 template<class TNode>
 void StructuredGrid<TNode>::applyBorderConditions() {
-
-	if (this->rank == 0 && borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int y = 0; y < sizes(1); y++) {
-			for (int z = 0; z < sizes(2); z++) {
-				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)( - i, y, z).u.V[j] = get(i, y, z).u.V[j];
-					}
-					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)( - i, y, z).u.S[j] = - get(i, y, z).u.S[j];
-					}
-				}
-			}
-		}
-	}
-	if (this->rank == this->numberOfWorkers - 1 && borderConditions.at(CUBIC_BORDERS::X_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int y = 0; y < sizes(1); y++) {
-			for (int z = 0; z < sizes(2); z++) {
-				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(sizes(0) - 1 + i, y, z).u.V[j] = get(sizes(0) - 1 - i, y, z).u.V[j];
-					}
-					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(sizes(0) - 1 + i, y, z).u.S[j] = - get(sizes(0) - 1 - i, y, z).u.S[j];
-					}
-				}
-			}
-		}
-	}
-	
-	if (sizes(1) != 1 && borderConditions.at(CUBIC_BORDERS::Y_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < sizes(0); x++) {
-			for (int z = 0; z < sizes(2); z++) {
-				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(x, - i, z).u.V[j] = get(x, i, z).u.V[j];
-					}
-					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(x, - i, z).u.S[j] = - get(x, i, z).u.S[j];
-					}
-				}
-			}
-		}
-	}
-	if (sizes(1) != 1 && borderConditions.at(CUBIC_BORDERS::Y_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < sizes(0); x++) {
-			for (int z = 0; z < sizes(2); z++) {
-				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(x, sizes(1) - 1 + i, z).u.V[j] = get(x, sizes(1) - 1 - i, z).u.V[j];
-					}
-					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(x, sizes(1) - 1 + i, z).u.S[j] = - get(x, sizes(1) - 1 - i, z).u.S[j];
-					}
-				}
-			}
-		}
-	}
-
-	if (sizes(2) != 1 && borderConditions.at(CUBIC_BORDERS::Z_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < sizes(0); x++) {
-			for (int y = 0; y < sizes(1); y++) {
-				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(x, y, - i).u.V[j] = get(x, y, i).u.V[j];
-					}
-					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(x, y, - i).u.S[j] = - get(x, y, i).u.S[j];
-					}
-				}
-			}
-		}
-	}
-	if (sizes(2) != 1 && borderConditions.at(CUBIC_BORDERS::Z_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < sizes(0); x++) {
-			for (int y = 0; y < sizes(1); y++) {
-				for (int i = 1; i <= accuracyOrder; i++) {
-					for (int j = 0; j < Vector::DIMENSIONALITY; j++) {
-						(*this)(x, y, sizes(2) - 1 + i).u.V[j] = get(x, y, sizes(2) - 1 - i).u.V[j];
-					}
-					for (int j = 0; j < ( Vector::DIMENSIONALITY * (Vector::DIMENSIONALITY + 1) ) / 2; j++) {
-						(*this)(x, y, sizes(2) - 1 + i).u.S[j] = - get(x, y, sizes(2) - 1 - i).u.S[j];
-					}
-				}
-			}
-		}
-	}
-}
-
-template<class TNode>
-void StructuredGrid<TNode>::applyInitialConditions(const Task& task) {
-	InitialCondition<TNode> initialCondition;
-	initialCondition.initialize(task);
-
-	for (int x = 0; x < sizes(0); x++) {
-		for (int y = 0; y < sizes(1); y++) {
-			for (int z = 0; z < sizes(2); z++) {
-				initialCondition.apply((*this)(x, y, z), getCoordinates(x, y, z));
-			}
-		}
-	}
+	borderConditions.applyBorderConditions(this);
 }
 
 template<class TNode>

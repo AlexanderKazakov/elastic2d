@@ -11,7 +11,6 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
-
 #include <lib/util/Types.hpp>
 #include <lib/util/Assertion.hpp>
 
@@ -44,15 +43,8 @@ namespace gcm {
 			static const int M = TM; // number of strings
 			static const int N = TN; // number of columns
 
-			// TODO
-			/*Y& operator=(const Y&) = default;	// default copy semantics
-			Y(const Y&) = default;*/
-			// TODO - rvalues
-
-			/** Default constructor. */
-			Matrix() {
-				static_assert(this->SIZE == TM * TN, "Container must have enough memory to store values");
-			};
+			Matrix() { };
+			Matrix& operator=(const Matrix &m2) = default;
 			/** @param values Values to initialize matrix with, string by string */
 			Matrix(std::initializer_list<real> list) {
 				this->initialize(list);
@@ -63,6 +55,7 @@ namespace gcm {
 			 */
 			template<typename Container2>
 			Matrix(const Matrix<TM, TN, Container2> &m2) {
+				static_assert(this->SIZE == TM * TN, "Container must have enough memory to store values");
 				(*this) = m2;
 			};
 			/**
@@ -71,6 +64,7 @@ namespace gcm {
 			 */
 			template<typename Container2>
 			Matrix<TM, TN, Container> &operator=(const Matrix<TM, TN, Container2> &m2) {
+				// TODO - rvalues?
 				static_assert(this->SIZE == m2.SIZE, "Containers must have equal size");
 				memcpy(this->values, m2.values, sizeof(this->values));
 				return *this;
@@ -118,7 +112,6 @@ namespace gcm {
 				}
 				return ans;
 			};
-			// FIXME - when replacing templation error "no known conversion" appears though templated copy constructor is provided
 			/** set i-th column */
 			template<typename Container2>
 			void setColumn(const int i, const Matrix<TM, 1, Container2> &column) {
@@ -151,11 +144,9 @@ namespace gcm {
 		template<int TM, int TN, typename Container>
 		Matrix<TN, TM, Container> Matrix<TM, TN, Container>::transpose() const {
 			Matrix<TN, TM, Container> result;
-
 			for (int i = 0; i < TM; i++)
 				for (int j = 0; j < TN; j++)
 					result(j, i) = (*this)(i, j);
-
 			return result;
 		}
 
@@ -166,6 +157,7 @@ namespace gcm {
 
 		template<int TM, int TN, typename Container>
 		Matrix<TN, TM, Container> Matrix<TM, TN, Container>::invert() const {
+			// TODO - move to some "gsl-utils"
 			Matrix<TN, TM, Container> result;
 
 			gsl_matrix *Z1 = gsl_matrix_alloc(TM, TM);
@@ -228,7 +220,7 @@ namespace std {
 	template<int TM, int TN, typename Container>
 	inline std::ostream &operator<<(std::ostream &os, const gcm::linal::Matrix<TM, TN, Container> &matrix) {
 
-		os << "Matrix:\n";
+		os << std::endl;
 		for (int i = 0; i < TM; i++) {
 			for (int j = 0; j < TN; j++) {
 				os << matrix(i, j) << "\t";

@@ -9,7 +9,7 @@
 #include <lib/linal/Linal.hpp>
 
 namespace gcm {
-	template<class TModel> class MpiStructuredSolver;
+	template<class TModel> class GridCharacteristicMethod;
 
 	template <class TNode>
 	class Grid {
@@ -41,15 +41,6 @@ namespace gcm {
 			return minH;
 		};
 
-		/**
-		 * Change rheology in some area
-		 *
-		 * @param rho2rho0 = (rho in the area) / (default rho)
-		 * @param lambda2lambda0 = (lambda in the area) / (default lambda)
-		 * @param mu2mu0 = (mu in the area) / (default mu)
-		 */
-		virtual void changeRheology(const real &rho2rho0, const real &lambda2lambda0, const real &mu2mu0) = 0;
-
 	protected:
 		int rank = -1; // index of core
 		int numberOfWorkers = -1; // number of cores
@@ -64,7 +55,7 @@ namespace gcm {
 		virtual real getMinimalSpatialStepImpl() const = 0;
 		virtual void applyBorderConditions() = 0;
 		
-		friend class MpiStructuredSolver<TNode>;
+		friend class GridCharacteristicMethod<TNode>;
 	};
 }
 

@@ -36,6 +36,12 @@ namespace gcm {
 		real getPressure() const;
 		void setPressure(const real& pressure);
 
+		/**
+		 * Second deviator tensor invariant
+		 * J2 == sqrt( 0.5 * s_{ij}*s_{ij} ),
+		 * where s_{ij} == sigma{ij} - pressure * delta_{ij}
+		 */
+		real getJ2() const;
 
 		/**
 		 * Look at GetSetter.hpp for explanations about the code below

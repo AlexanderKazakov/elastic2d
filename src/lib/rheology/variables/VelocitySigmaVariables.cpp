@@ -48,6 +48,18 @@ void VelocitySigmaVariables<Dimensionality>::setPressure(const real &pressure) {
 	}
 }
 
+template<int Dimensionality>
+real VelocitySigmaVariables<Dimensionality>::getJ2() const {
+	real J22 = 0;
+	real pressure = getPressure();
+	for (int i = 0; i < Dimensionality; i++) {
+		for (int j = 0; j < Dimensionality; j++) {
+			J22 += (sigma(i, j) + (i == j) * pressure) * (sigma(i, j) + (i == j) * pressure) / 2;
+		}
+	}
+	return sqrt(J22);
+}
+
 template class VelocitySigmaVariables<1>;
 template class VelocitySigmaVariables<2>;
 template class VelocitySigmaVariables<3>;

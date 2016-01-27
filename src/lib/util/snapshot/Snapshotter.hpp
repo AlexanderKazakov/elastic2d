@@ -27,11 +27,10 @@ namespace gcm {
 
 	protected:
 		Grid<TNode>* grid = nullptr;
-		virtual void snapshotImpl(const std::string& fileName) = 0;
+		virtual void snapshotImpl(const int step) = 0;
 
 	private:
 		bool enableSnapshotting = false;
-		std::string makeFileNameForSnapshot(const int step);
 	};
 }
 
