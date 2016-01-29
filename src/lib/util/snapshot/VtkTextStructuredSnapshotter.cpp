@@ -8,7 +8,7 @@ template<class TGrid>
 void VtkTextStructuredSnapshotter<TGrid>::snapshotImpl(const int step) {
 	LOG_DEBUG("Start snapshot writing to " << fileName);
 	openSnapshotFileStream(makeFileNameForSnapshot(step));
-	sGrid = static_cast<TGrid*>(this->grid);
+	sGrid = static_cast<const TGrid*>(this->grid);
 	
 	snapshotFileStream << "# vtk DataFile Version 3.0" << std::endl;
 	snapshotFileStream << "U data" << std::endl;
@@ -62,10 +62,4 @@ std::string VtkTextStructuredSnapshotter<TGrid>::makeFileNameForSnapshot(const i
 template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic1DModel>>;
 template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>;
 template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic3DModel>>;
-
-template class VtkTextStructuredSnapshotter<StructuredGrid<PlasticFlow1DModel>>;
-template class VtkTextStructuredSnapshotter<StructuredGrid<PlasticFlow2DModel>>;
-template class VtkTextStructuredSnapshotter<StructuredGrid<PlasticFlow3DModel>>;
-
 template class VtkTextStructuredSnapshotter<StructuredGrid<OrthotropicElastic3DModel>>;
-template class VtkTextStructuredSnapshotter<StructuredGrid<OrthotropicPlasticFlow3DModel>>;

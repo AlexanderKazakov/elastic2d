@@ -1,15 +1,16 @@
 #include <lib/Engine.hpp>
+#include <lib/numeric/solvers/DefaultSolver.hpp>
+#include <lib/util/snapshot/VtkTextStructuredSnapshotter.hpp>
 #include <lib/grid/StructuredGrid.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
-template<class TGrid>
-void Engine<TGrid>::initialize(const Task &task) {
+void Engine::initialize(const Task &task) {
 	LOG_INFO("Start initialization");
-	solver = new DefaultSolver<TGrid>();
+	solver = new DefaultSolver<StructuredGrid<Elastic2DModel>>();
 	solver->initialize(task);
-	snapshotter = new VtkTextStructuredSnapshotter<TGrid>();
+	snapshotter = new VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>();
 	snapshotter->initialize(task);
 
 	real tau = solver->calculateTau();
@@ -18,34 +19,19 @@ void Engine<TGrid>::initialize(const Task &task) {
 	assert_gt(requiredTime, 0);
 }
 
-template<class TGrid>
-Engine<TGrid>::~Engine() {
+Engine::~Engine() {
 	delete solver;
 	delete snapshotter;
 }
 
-template<class TGrid>
-void Engine<TGrid>::run() {
+void Engine::run() {
 	LOG_INFO("Start calculations");
 	int step = 0;
-	snapshotter->snapshot(solver->mesh, step);
+	snapshotter->snapshot(solver->getGrid(), step);
 
-	while (solver->currentTime < requiredTime) {
+	while (solver->getCurrentTime() < requiredTime) {
 		solver->nextTimeStep();
 		step++;
-		snapshotter->snapshot(solver->mesh, step);
+		snapshotter->snapshot(solver->getGrid(), step);
 	}
 }
-
-
-
-template class Engine<StructuredGrid<Elastic1DModel>>;
-template class Engine<StructuredGrid<Elastic2DModel>>;
-template class Engine<StructuredGrid<Elastic3DModel>>;
-
-template class Engine<StructuredGrid<PlasticFlow1DModel>>;
-template class Engine<StructuredGrid<PlasticFlow2DModel>>;
-template class Engine<StructuredGrid<PlasticFlow3DModel>>;
-
-template class Engine<StructuredGrid<OrthotropicElastic3DModel>>;
-template class Engine<StructuredGrid<OrthotropicPlasticFlow3DModel>>;

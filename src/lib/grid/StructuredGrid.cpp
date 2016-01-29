@@ -140,13 +140,7 @@ real StructuredGrid<TModel>::getMinimalSpatialStepImpl() const {
 template class StructuredGrid<Elastic1DModel>;
 template class StructuredGrid<Elastic2DModel>;
 template class StructuredGrid<Elastic3DModel>;
-
-template class StructuredGrid<PlasticFlow1DModel>;
-template class StructuredGrid<PlasticFlow2DModel>;
-template class StructuredGrid<PlasticFlow3DModel>;
-
 template class StructuredGrid<OrthotropicElastic3DModel>;
-template class StructuredGrid<OrthotropicPlasticFlow3DModel>;
 
 
 template<class TModel> MPI::Datatype StructuredGrid<TModel>::Node::MPI_NODE_TYPE;

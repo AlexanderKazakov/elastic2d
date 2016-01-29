@@ -1,8 +1,8 @@
 #ifndef LIBGCM_ENGINE_HPP
 #define LIBGCM_ENGINE_HPP
 
-#include <lib/util/snapshot/VtkTextStructuredSnapshotter.hpp>
-#include <lib/numeric/solvers/DefaultSolver.hpp>
+#include <lib/util/snapshot/Snapshotter.hpp>
+#include <lib/numeric/solvers/Solver.hpp>
 #include <lib/util/Logging.hpp>
 
 
@@ -10,7 +10,6 @@ namespace gcm {
 	/**
 	 * Responsible for the whole process of calculation
 	 */
-	template<class TGrid>
 	class Engine {
 	public:
 		void initialize(const Task& task);
@@ -22,7 +21,7 @@ namespace gcm {
 		void run();
 
 	protected:
-		DefaultSolver<TGrid>* solver = nullptr;
+		Solver* solver = nullptr;
 		Snapshotter* snapshotter = nullptr;
 		real requiredTime = 0;
 

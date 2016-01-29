@@ -2,7 +2,7 @@
 
 using namespace gcm;
 
-void Snapshotter::snapshot(Grid* _grid, const int step) {
+void Snapshotter::snapshot(const Grid* _grid, const int step) {
 	if (enableSnapshotting) {
 		this->grid = _grid;
 		snapshotImpl(step);

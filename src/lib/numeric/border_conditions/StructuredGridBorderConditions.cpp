@@ -108,9 +108,4 @@ template class StructuredGridBorderConditions<Elastic1DModel>;
 template class StructuredGridBorderConditions<Elastic2DModel>;
 template class StructuredGridBorderConditions<Elastic3DModel>;
 
-template class StructuredGridBorderConditions<PlasticFlow1DModel>;
-template class StructuredGridBorderConditions<PlasticFlow2DModel>;
-template class StructuredGridBorderConditions<PlasticFlow3DModel>;
-
 template class StructuredGridBorderConditions<OrthotropicElastic3DModel>;
-template class StructuredGridBorderConditions<OrthotropicPlasticFlow3DModel>;

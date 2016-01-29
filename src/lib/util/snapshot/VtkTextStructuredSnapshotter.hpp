@@ -19,7 +19,7 @@ namespace gcm {
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
-		TGrid* sGrid;
+		const TGrid* sGrid;
 
 		void writeQuantity(const std::string name,
 		                   const typename GetSetter<typename TGrid::Node::Variables>::Getter Get);

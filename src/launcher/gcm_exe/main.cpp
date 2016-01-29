@@ -1,7 +1,6 @@
 #include <lib/util/DataBus.hpp>
 #include <lib/Engine.hpp>
-#include <lib/grid/StructuredGrid.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/util/areas/AxisAlignedBoxArea.hpp>
 
 using namespace gcm;
 
@@ -13,7 +12,7 @@ int main(int argc, char** argv) {
 	DataBus::createStaticTypes();
 	USE_AND_INIT_LOGGER("gcm.main");
 
-	Engine<StructuredGrid<Elastic3DModel>> engine;
+	Engine engine;
 
 	try {
 		engine.initialize(parseTask());
@@ -32,8 +31,8 @@ Task parseTask() {
 
 	task.accuracyOrder = 2;
 
-	task.lengthes = {2, 2, 5};
-	task.sizes = {21, 21, 51};
+	task.lengthes = {2, 2, 2};
+	task.sizes = {50, 50, 50};
 
 	real rho0 = 8.0; // default density
 	real lambda0 = 12e+4; // default Lame parameter
@@ -43,11 +42,19 @@ Task parseTask() {
 	task.CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
 	task.numberOfSnaps = 20;
 
-	Task::InitialCondition::Quantity pressure;
+	/*Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 1, 2}));
-	task.initialCondition.quantities.push_back(pressure);
+	task.initialCondition.quantities.push_back(pressure);*/
+
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_BACKWARD;
+	wave.direction = 0;
+	wave.quantity = PhysicalQuantities::T::PRESSURE;
+	wave.quantityValue = 2.0;
+	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2, -1, -1}), linal::Vector3({0.5, 3, 3}));
+	task.initialCondition.waves.push_back(wave);
 
 	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 

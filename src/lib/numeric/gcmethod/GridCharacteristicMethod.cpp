@@ -32,9 +32,4 @@ template class GridCharacteristicMethod<StructuredGrid<Elastic1DModel>>;
 template class GridCharacteristicMethod<StructuredGrid<Elastic2DModel>>;
 template class GridCharacteristicMethod<StructuredGrid<Elastic3DModel>>;
 
-template class GridCharacteristicMethod<StructuredGrid<PlasticFlow1DModel>>;
-template class GridCharacteristicMethod<StructuredGrid<PlasticFlow2DModel>>;
-template class GridCharacteristicMethod<StructuredGrid<PlasticFlow3DModel>>;
-
 template class GridCharacteristicMethod<StructuredGrid<OrthotropicElastic3DModel>>;
-template class GridCharacteristicMethod<StructuredGrid<OrthotropicPlasticFlow3DModel>>;

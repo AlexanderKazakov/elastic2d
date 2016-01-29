@@ -47,10 +47,4 @@ void InitialCondition<TModel>::apply(Vector &v, const linal::Vector3 &coords) co
 template class InitialCondition<Elastic1DModel>;
 template class InitialCondition<Elastic2DModel>;
 template class InitialCondition<Elastic3DModel>;
-
-template class InitialCondition<PlasticFlow1DModel>;
-template class InitialCondition<PlasticFlow2DModel>;
-template class InitialCondition<PlasticFlow3DModel>;
-
 template class InitialCondition<OrthotropicElastic3DModel>;
-template class InitialCondition<OrthotropicPlasticFlow3DModel>;

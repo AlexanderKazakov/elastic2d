@@ -8,6 +8,8 @@ template<class TGrid>
 void DefaultSolver<TGrid>::initialize(const Task &task) {
 	LOG_INFO("Start initialization");
 	this->method = new GridCharacteristicMethod<TGrid>();
+	this->plasticFlowCorrector = new IdealPlasticFlowCorrector<TGrid>();
+	plasticFlowCorrector->initialize(task);
 
 	this->mesh = new TGrid();
 	this->mesh->initialize(task);
@@ -26,7 +28,7 @@ DefaultSolver<TGrid>::~DefaultSolver() {
 }
 
 template<class TGrid>
-void DefaultSolver<TGrid>::nextTimeStep() {
+void DefaultSolver<TGrid>::nextTimeStepImpl() {
 	LOG_INFO("Start time step " << step);
 	real tau = calculateTau();
 
@@ -50,11 +52,12 @@ void DefaultSolver<TGrid>::nextTimeStep() {
 		}
 	}
 
-	currentTime += tau;
+	plasticFlowCorrector->apply(mesh);
+
 }
 
 template<class TGrid>
-void DefaultSolver<TGrid>::stage(const int s, const real &timeStep) {
+void DefaultSolver<TGrid>::stage(const int s, const real timeStep) {
 	mesh->beforeStage();
 	method->stage(s, timeStep, mesh, newMesh); // now actual values is by pointer newMesh
 	std::swap(mesh, newMesh); // now actual values is again by pointer mesh
@@ -66,15 +69,7 @@ real DefaultSolver<TGrid>::calculateTau() const {
 	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
 }
 
-
-
 template class DefaultSolver<StructuredGrid<Elastic1DModel>>;
 template class DefaultSolver<StructuredGrid<Elastic2DModel>>;
 template class DefaultSolver<StructuredGrid<Elastic3DModel>>;
-
-template class DefaultSolver<StructuredGrid<PlasticFlow1DModel>>;
-template class DefaultSolver<StructuredGrid<PlasticFlow2DModel>>;
-template class DefaultSolver<StructuredGrid<PlasticFlow3DModel>>;
-
 template class DefaultSolver<StructuredGrid<OrthotropicElastic3DModel>>;
-template class DefaultSolver<StructuredGrid<OrthotropicPlasticFlow3DModel>>;

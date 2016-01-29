@@ -2,6 +2,7 @@
 #define LIBGCM_TEST_WRAPPERS_HPP
 
 #include <lib/Engine.hpp>
+#include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/grid/StructuredGrid.hpp>
 
 namespace gcm {
@@ -76,7 +77,7 @@ namespace gcm {
 	};
 
 	template<class TGrid>
-	class EngineWrapper : public Engine<TGrid> {
+	class EngineWrapper : public Engine {
 	public:
 		DefaultSolverWrapper<TGrid>* getSolver() const {
 			return static_cast<DefaultSolverWrapper<TGrid>*>(this->solver);

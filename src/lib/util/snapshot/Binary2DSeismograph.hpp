@@ -14,22 +14,23 @@ namespace gcm {
 	class Binary2DSeismograph {
 	public:
 
-		void startSeismo(TGrid* grid);
+		void startSeismo(const TGrid* grid);
 		void finishSeismo();
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.Binary2DSeismograph");
+		typedef float output_precision;
 		int seismoNumber = 0;
 
-		real* surface = nullptr; // values storage on current time step to write
+		output_precision* surface = nullptr; // values storage on current time step to write
 
-		void writeNextTimeStep(TGrid* grid);
+		void writeNextTimeStep(const TGrid* grid);
 
 		std::fstream seismoFileStream;
 		void openSeismoFileStream(const std::string& fileName);
 		void closeSeismoFileStream();
 
-		std::string makeFileNameForSeismo(TGrid* grid);
+		std::string makeFileNameForSeismo(const TGrid* grid);
 	};
 }
 

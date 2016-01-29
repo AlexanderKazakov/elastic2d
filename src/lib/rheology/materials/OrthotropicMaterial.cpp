@@ -4,19 +4,29 @@
 using namespace gcm;
 
 
-OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<real> list) : rho(_rho) {
-	int i = 0;
-	for(auto& r : list) {
-		c[i] = r;
-		i++;
-	}
-}
+OrthotropicMaterial::OrthotropicMaterial() { }
 
 OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	rho = isotropic.rho;
+	yieldStrength = isotropic.yieldStrength;
 	c11 = c22 = c33 = isotropic.lambda + 2 * isotropic.mu;
 	c44 = c55 = c66 = isotropic.mu;
 	c12 = c13 = c23 = isotropic.lambda;
+}
+
+OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<real> list) : rho(_rho) {
+	int i = 0;
+	for(auto& r : list) {
+		c[i++] = r;
+	}
+}
+
+OrthotropicMaterial::OrthotropicMaterial(const real _rho, const real _yieldStrength, std::initializer_list<real> list) :
+		rho(_rho), yieldStrength(_yieldStrength) {
+	int i = 0;
+	for(auto& r : list) {
+		c[i++] = r;
+	}
 }
 
 void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial> &m) const {

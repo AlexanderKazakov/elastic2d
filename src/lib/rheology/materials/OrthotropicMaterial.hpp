@@ -10,14 +10,11 @@ namespace gcm {
 	class IsotropicMaterial;
 	template<typename TVariables, class TMaterial> class GcmMatrices;
 
-	/**
-	 * Orthotropic elastic materials
-	 */
 	class OrthotropicMaterial {
 	public:
-		real rho;
+		real rho = 0; // density
 		union {
-			real c[9];
+			real c[9]; // elastic coefficients
 			struct {
 				real c11, c12, c13,
 				          c22, c23,
@@ -28,8 +25,12 @@ namespace gcm {
 			};
 		};
 
-		OrthotropicMaterial(const real _rho, std::initializer_list<real>);
+		real yieldStrength = 0; // plasticity parameters
+
+		OrthotropicMaterial();
 		OrthotropicMaterial(const IsotropicMaterial& isotropic);
+		OrthotropicMaterial(const real _rho, std::initializer_list<real>);
+		OrthotropicMaterial(const real _rho, const real _yieldStrenght, std::initializer_list<real>);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>& m) const;

@@ -40,11 +40,5 @@ void DataBus::createStaticTypes() {
 	createStaticType<StructuredGrid<Elastic1DModel>::Node>();
 	createStaticType<StructuredGrid<Elastic2DModel>::Node>();
 	createStaticType<StructuredGrid<Elastic3DModel>::Node>();
-
-	createStaticType<StructuredGrid<PlasticFlow1DModel>::Node>();
-	createStaticType<StructuredGrid<PlasticFlow2DModel>::Node>();
-	createStaticType<StructuredGrid<PlasticFlow3DModel>::Node>();
-
 	createStaticType<StructuredGrid<OrthotropicElastic3DModel>::Node>();
-	createStaticType<StructuredGrid<OrthotropicPlasticFlow3DModel>::Node>();
 }

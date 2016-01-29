@@ -4,12 +4,12 @@
 using namespace gcm;
 
 template<class TGrid>
-void Binary2DSeismograph<TGrid>::startSeismo(TGrid* grid) {
+void Binary2DSeismograph<TGrid>::startSeismo(const TGrid* grid) {
 	static_assert(TGrid::DIMENSIONALITY == 2, "This is seismograph for 2D");
 	LOG_DEBUG("Start seismo writing to " << makeFileNameForSeismo());
 	openSeismoFileStream(makeFileNameForSeismo(grid));
 	int sizeY = grid->sizes(1);
-	surface = new real[sizeY];
+	surface = new output_precision[sizeY];
 	seismoNumber++;
 }
 
@@ -20,13 +20,13 @@ void Binary2DSeismograph<TGrid>::finishSeismo() {
 }
 
 template<class TGrid>
-void Binary2DSeismograph<TGrid>::writeNextTimeStep(TGrid* grid) {
+void Binary2DSeismograph<TGrid>::writeNextTimeStep(const TGrid* grid) {
 	int sizeY = grid->sizes(1);
 	for (int y = 0; y < sizeY; y++) {
-		surface[y] = grid->get(0, y, 0).u.getPressure();
+		surface[y] = (output_precision) grid->get(0, y, 0).u.getPressure();
 	}
 
-	auto bufferSize = (std::streamsize) (sizeY * sizeof(real));
+	auto bufferSize = (std::streamsize) (sizeY * sizeof(output_precision));
 	auto previousNumberOfBytes = seismoFileStream.tellp();
 	assert_true(seismoFileStream.write(reinterpret_cast<char*>(surface), bufferSize));
 	auto currentNumberOfBytes = seismoFileStream.tellp();
@@ -45,13 +45,11 @@ void Binary2DSeismograph<TGrid>::closeSeismoFileStream() {
 }
 
 template <class TGrid>
-std::string Binary2DSeismograph<TGrid>::makeFileNameForSeismo(TGrid* grid) {
+std::string Binary2DSeismograph<TGrid>::makeFileNameForSeismo(const TGrid* grid) {
 	char buffer[50];
 	sprintf(buffer, "%s%02d%s%05d%s", "seismo/core", grid->getRank(), "_seismo", seismoNumber, ".vtk");
 	return std::string(buffer);
 }
 
 
-
 template class Binary2DSeismograph<StructuredGrid<Elastic2DModel>>;
-template class Binary2DSeismograph<StructuredGrid<PlasticFlow2DModel>>;

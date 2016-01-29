@@ -13,6 +13,7 @@ namespace gcm {
 	template<class TGrid> class GridCharacteristicMethod;
 	template<class TGrid> class VtkTextStructuredSnapshotter;
 	template<class TGrid> class Binary2DSeismograph;
+	template<class TGrid> class IdealPlasticFlowCorrector;
 
 	template<class TModel>
 	class StructuredGrid : public Grid {
@@ -63,6 +64,7 @@ namespace gcm {
 			                   + (z + accuracyOrder) ];
 		};
 
+	public:
 		/**
 		 * Operator to iterate relatively real nodes.
 		 * Read only access
@@ -77,6 +79,7 @@ namespace gcm {
 			                   + (z + accuracyOrder) ];
 		};
 
+	protected:
 		/* Equal-distance spatial interpolator */
 		Interpolator<Vector> interpolator;
 
@@ -120,10 +123,12 @@ namespace gcm {
 		};
 
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
-		friend class VtkTextStructuredSnapshotter<StructuredGrid>;
 		friend class GridCharacteristicMethod<StructuredGrid>;
+		friend class IdealPlasticFlowCorrector<StructuredGrid>;
 		friend class DefaultSolver<StructuredGrid>;
 		friend class StructuredGridBorderConditions<TModel>;
+		// it's better than crete million get()
+		friend class VtkTextStructuredSnapshotter<StructuredGrid>;
 		friend class Binary2DSeismograph<StructuredGrid>;
 	};
 }
