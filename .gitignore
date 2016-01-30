@@ -1,4 +1,8 @@
 build/*
+build
+snaps
+snaps/*
+seismo
+seismo/*
 .idea/*
-snaps/*.vtk
 *.log

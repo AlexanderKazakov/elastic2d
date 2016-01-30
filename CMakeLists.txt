@@ -52,7 +52,7 @@ find_package (Threads REQUIRED)
 # source files
 include_directories(src)
 file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/gcm_exe/*.cpp")
-file(GLOB_RECURSE INVERSE_PROBLEM_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/inverse_problem/*.cpp")
+file(GLOB_RECURSE SEISMO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/seismo/*.cpp")
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
@@ -64,9 +64,13 @@ add_library(gcm SHARED ${LIB_SOURCES})
 add_executable(gcm_exe ${GCM_EXE_SOURCES})
 target_link_libraries(gcm_exe gcm ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES})
 
+# gcm_seismo
+add_executable(gcm_seismo ${SEISMO_SOURCES})
+target_link_libraries(gcm_seismo gcm ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES})
+
 # tests
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
-target_link_libraries(gcm_tests     gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})
+target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
 # tests on mpi
 add_executable(gcm_mpi_tests ${TEST_MPI_FILE})

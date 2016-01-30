@@ -15,11 +15,11 @@ namespace gcm {
 		 * snapshotting performed by writing data to file as a text.
 		 * VTK library is not necessary for such snapshotting.
 		 */
-		virtual void snapshotImpl(const int step) override;
+		virtual void snapshotImpl(const Grid* _grid, const int step) override;
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.VtkTextStructuredSnapshotter");
-		const TGrid* sGrid;
+		const TGrid* grid;
 
 		void writeQuantity(const std::string name,
 		                   const typename GetSetter<typename TGrid::Node::Variables>::Getter Get);

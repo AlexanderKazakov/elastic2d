@@ -5,7 +5,7 @@
 using namespace gcm;
 
 template<class TGrid>
-void DefaultSolver<TGrid>::initialize(const Task &task) {
+void DefaultSolver<TGrid>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 	this->method = new GridCharacteristicMethod<TGrid>();
 	this->plasticFlowCorrector = new IdealPlasticFlowCorrector<TGrid>();

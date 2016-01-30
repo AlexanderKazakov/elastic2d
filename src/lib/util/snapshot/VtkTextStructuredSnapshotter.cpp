@@ -5,19 +5,19 @@
 using namespace gcm;
 
 template<class TGrid>
-void VtkTextStructuredSnapshotter<TGrid>::snapshotImpl(const int step) {
-	LOG_DEBUG("Start snapshot writing to " << fileName);
+void VtkTextStructuredSnapshotter<TGrid>::snapshotImpl(const Grid* _grid, const int step) {
+	LOG_DEBUG("Start snapshot writing to " << makeFileNameForSnapshot(step));
+	grid = static_cast<const TGrid*>(_grid);
 	openSnapshotFileStream(makeFileNameForSnapshot(step));
-	sGrid = static_cast<const TGrid*>(this->grid);
-	
+
 	snapshotFileStream << "# vtk DataFile Version 3.0" << std::endl;
 	snapshotFileStream << "U data" << std::endl;
 	snapshotFileStream << "ASCII" << std::endl;
 	snapshotFileStream << "DATASET STRUCTURED_POINTS" << std::endl;
-	snapshotFileStream << "DIMENSIONS " << sGrid->sizes(0) << " " << sGrid->sizes(1) << " " << sGrid->sizes(2) << std::endl;
-	snapshotFileStream << "SPACING " << sGrid->h(0) << " " << sGrid->h(1) << " " << sGrid->h(2) << std::endl;
-	snapshotFileStream << "ORIGIN " << sGrid->startR(0) << " " << sGrid->startR(1) << " " << sGrid->startR(2) << std::endl;
-	snapshotFileStream << "POINT_DATA " << sGrid->sizes(0) * sGrid->sizes(1) * sGrid->sizes(2) << std::endl;
+	snapshotFileStream << "DIMENSIONS " << grid->sizes(0) << " " << grid->sizes(1) << " " << grid->sizes(2) << std::endl;
+	snapshotFileStream << "SPACING " << grid->h(0) << " " << grid->h(1) << " " << grid->h(2) << std::endl;
+	snapshotFileStream << "ORIGIN " << grid->startR(0) << " " << grid->startR(1) << " " << grid->startR(2) << std::endl;
+	snapshotFileStream << "POINT_DATA " << grid->sizes(0) * grid->sizes(1) * grid->sizes(2) << std::endl;
 
 	for (auto& quantity : TGrid::Vector::QUANTITIES) {
 		writeQuantity(PhysicalQuantities::NAME.at(quantity.first), quantity.second.Get);
@@ -31,10 +31,10 @@ void VtkTextStructuredSnapshotter<TGrid>::writeQuantity(const std::string name,
                       const typename GetSetter<typename TGrid::Node::Variables>::Getter Get) {
 	snapshotFileStream << "SCALARS " << name << " double" << std::endl;
 	snapshotFileStream << "LOOKUP_TABLE default" << std::endl;
-	for (int z = 0; z < sGrid->sizes(2); z++) {
-		for (int y = 0; y < sGrid->sizes(1); y++) {
-			for (int x = 0; x < sGrid->sizes(0); x++) {
-				snapshotFileStream << Get(sGrid->get(x, y, z).u) << std::endl;
+	for (int z = 0; z < grid->sizes(2); z++) {
+		for (int y = 0; y < grid->sizes(1); y++) {
+			for (int x = 0; x < grid->sizes(0); x++) {
+				snapshotFileStream << Get(grid->get(x, y, z).u) << std::endl;
 			}
 		}
 	}
@@ -54,7 +54,7 @@ void VtkTextStructuredSnapshotter<TGrid>::closeSnapshotFileStream() {
 template <class TGrid>
 std::string VtkTextStructuredSnapshotter<TGrid>::makeFileNameForSnapshot(const int step) {
 	char buffer[50];
-	sprintf(buffer, "%s%02d%s%05d%s", "snaps/core", this->grid->getRank(), "_snapshot", step, ".vtk");
+	sprintf(buffer, "%s%02d%s%05d%s", "snaps/core", MPI::COMM_WORLD.Get_rank(), "_snapshot", step, ".vtk");
 	return std::string(buffer);
 }
 

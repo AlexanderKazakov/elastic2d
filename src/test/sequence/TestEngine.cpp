@@ -31,6 +31,7 @@ TEST(Engine, run)
 	task.initialCondition.waves.push_back(wave);
 
 	EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
+	engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	engine.initialize(task);
 	StructuredGrid<Elastic2DModel>::Vector sWave = engine.getSolver()->getMesh()->getNodeForTest(task.sizes(0) / 2, 3, 0).u;
 	engine.run();
@@ -64,6 +65,7 @@ TEST(Engine, TwoLayersDifferentRho)
 		task.initialCondition.waves.push_back(wave);
 
 		EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
+		engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 		engine.initialize(task);
 
 		real rho2rho0 = rho2rho0Initial * pow(2, i);
@@ -142,6 +144,7 @@ TEST(Engine, TwoLayersDifferentE)
 		task.initialCondition.waves.push_back(wave);
 
 		EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
+		engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 		engine.initialize(task);
 
 		real rho2rho0 = 1;

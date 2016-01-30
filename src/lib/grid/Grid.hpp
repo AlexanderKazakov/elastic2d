@@ -13,22 +13,38 @@ namespace gcm {
 	class Grid {
 	public:
 		/** @param task properties and initial conditions etc */
-		void initialize(const Task &task);
+		void initialize(const Task &task) {
+			rank = MPI::COMM_WORLD.Get_rank();
+			numberOfWorkers = MPI::COMM_WORLD.Get_size();
+
+			if (task.forceSequence) {
+				rank = 0;
+				numberOfWorkers = 1;
+			}
+
+			initializeImpl(task);
+			applyInitialConditions(task);
+		};
 		virtual ~Grid() { };
 
+		/** @warning this is not always just MPI-rank (see forceSequence) */
 		int getRank() const {
 			assert_ge(rank, 0);
 			assert_lt(rank, numberOfWorkers);
 			return rank;
 		};
+		/** @warning this is not always just MPI-numberOfWorkers (see forceSequence) */
 		int getNumberOfWorkers() const {
 			assert_gt(numberOfWorkers, 0);
 			return numberOfWorkers;
 		};
+
+		/** @return maximal in modulus eigenvalue among all nodes all GcmMatrices of the mesh */
 		real getMaximalLambda() const {
 			assert_gt(maximalLambda, 0.0);
 			return maximalLambda;
 		};
+		/** @return minimal spatial step for Courant condition */
 		real getMinimalSpatialStep() const {
 			real minH = this->getMinimalSpatialStepImpl();
 			assert_gt(minH, 0.0);

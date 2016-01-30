@@ -13,12 +13,17 @@ namespace gcm {
 	class Engine {
 	public:
 		void initialize(const Task& task);
-		~Engine();
 
 		/**
 		 * Perform calculation of the task
 		 */
 		void run();
+
+
+		Snapshotter* getSnapshotter() const { return snapshotter; };
+		void setSnapshotter(Snapshotter* _snapshotter) { snapshotter = _snapshotter; };
+		Solver* getSolver() const { return solver; };
+		void setSolver(Solver* _solver) { solver = _solver; };
 
 	protected:
 		Solver* solver = nullptr;

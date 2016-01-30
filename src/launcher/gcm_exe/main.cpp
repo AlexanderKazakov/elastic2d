@@ -1,6 +1,10 @@
 #include <lib/util/DataBus.hpp>
 #include <lib/Engine.hpp>
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
+#include <lib/rheology/models/Model.hpp>
+#include <lib/grid/StructuredGrid.hpp>
+#include <lib/numeric/solvers/DefaultSolver.hpp>
+#include <lib/util/snapshot/VtkTextStructuredSnapshotter.hpp>
 
 using namespace gcm;
 
@@ -13,6 +17,8 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
+	engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
+	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>());
 
 	try {
 		engine.initialize(parseTask());
@@ -29,18 +35,23 @@ int main(int argc, char** argv) {
 Task parseTask() {
 	Task task;
 
-	task.accuracyOrder = 2;
+	task.accuracyOrder = 3;
 
-	task.lengthes = {2, 2, 2};
-	task.sizes = {50, 50, 50};
+	task.lengthes = {4, 2, 2};
+	task.sizes = {40, 10, 1};
 
-	real rho0 = 8.0; // default density
-	real lambda0 = 12e+4; // default Lame parameter
-	real mu0 = 77e+3; // default Lame parameter
-	task.material = IsotropicMaterial(rho0, lambda0, mu0);
+	real rho0 = 4; // default density
+	real lambda0 = 2; // default Lame parameter
+	real mu0 = 1; // default Lame parameter
+	real yieldStrength0 = 1;
+	task.material = IsotropicMaterial(rho0, lambda0, mu0, yieldStrength0);
+	task.plasticityFlowCorrector = true;
 
-	task.CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
-	task.numberOfSnaps = 20;
+	task.CourantNumber = 1.9; // number from Courant–Friedrichs–Lewy condition
+
+	task.enableSnapshotting = true;
+	task.numberOfSnaps = 10;
+	task.stepsPerSnap = 3;
 
 	/*Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -49,16 +60,14 @@ Task parseTask() {
 	task.initialCondition.quantities.push_back(pressure);*/
 
 	Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::T::P_BACKWARD;
+	wave.waveType = Waves::T::P_FORWARD;
 	wave.direction = 0;
 	wave.quantity = PhysicalQuantities::T::PRESSURE;
-	wave.quantityValue = 2.0;
+	wave.quantityValue = 10.0;
 	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2, -1, -1}), linal::Vector3({0.5, 3, 3}));
 	task.initialCondition.waves.push_back(wave);
 
 	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
-
-	task.enableSnapshotting = true;
 
 	return task;
 }

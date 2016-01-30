@@ -15,7 +15,7 @@ namespace gcm {
 	template<class TGrid>
 	class DefaultSolver : public Solver {
 	public:
-		virtual void initialize(const Task& task) override;
+		virtual void initializeImpl(const Task& task) override;
 		virtual void nextTimeStepImpl() override;
 		~DefaultSolver();
 

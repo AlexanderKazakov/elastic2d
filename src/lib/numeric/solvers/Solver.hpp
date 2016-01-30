@@ -13,7 +13,11 @@ namespace gcm {
 	 */
 	class Solver {
 	public:
-		virtual void initialize(const Task& task) = 0;
+		virtual void initialize(const Task& task) {
+			currentTime = 0.0; // solver can be used for several calculations
+			initializeImpl(task);
+		};
+		virtual void initializeImpl(const Task &task) = 0;
 		virtual void nextTimeStepImpl() = 0;
 		virtual ~Solver() { };
 

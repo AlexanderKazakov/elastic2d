@@ -47,8 +47,7 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<
 	                      0, 0, 0.5, 0.5, 0,
 	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0,
 	                      0, 0, 0.5 * sqrt(mu * rho), -0.5 * sqrt(mu * rho), 0,
-	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu),
-	                      -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, -lambda});
+	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, -lambda});
 
 
 	m.m[1].A.initialize({0, 0, 0, -1.0 / rho, 0,
@@ -68,8 +67,7 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<
 
 	m.m[1].U1.initialize({0, 0, 0.5, 0.5, 0,
 	                      0.5, 0.5, 0, 0, 0,
-	                      (0.5 * lambda) / sqrt((lambda + 2 * mu) / rho),
-	                      -(0.5 * lambda) / sqrt((lambda + 2 * mu) / rho), 0, 0, 1.0,
+	                      (0.5 * lambda) / sqrt((lambda + 2 * mu) / rho), -(0.5 * lambda) / sqrt((lambda + 2 * mu) / rho), 0, 0, 1.0,
 	                      0, 0, 0.5 * sqrt(mu * rho), -0.5 * sqrt(mu * rho), 0,
 	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0});
 }
@@ -103,15 +101,12 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<
 	m.m[0].U1.initialize({0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
 	                      0, 0, 0.5, 0, 0.5, 0, 0, 0, 0,
 	                      0, 0, 0, 0.5, 0, 0.5, 0, 0, 0,
-	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0, 0, 0, 0,
-	                      0,
+	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0, 0, 0, 0, 0,
 	                      0, 0, 0.5 * sqrt(mu * rho), 0, -0.5 * sqrt(mu * rho), 0, 0, 0, 0,
 	                      0, 0, 0, 0.5 * sqrt(mu * rho), 0, -0.5 * sqrt(mu * rho), 0, 0, 0,
-	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu),
-	                      -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 1, 0, 0,
+	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 1, 0, 0,
 	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
-	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu),
-	                      -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 0, 0, 1});
+	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 0, 0, 1});
 
 
 	m.m[1].A.initialize({0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
@@ -141,15 +136,12 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<
 	m.m[1].U1.initialize({0, 0, 0.5, 0, 0.5, 0, 0, 0, 0,
 	                      0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
 	                      0, 0, 0, 0.5, 0, 0.5, 0, 0, 0,
-	                      (0.5 * lambda) / sqrt((lambda + 2 * mu) / rho),
-	                      -(0.5 * lambda) / sqrt((lambda + 2 * mu) / rho), 0, 0, 0, 0, 1, 0, 0,
+	                      (0.5 * lambda) / sqrt((lambda + 2 * mu) / rho), -(0.5 * lambda) / sqrt((lambda + 2 * mu) / rho), 0, 0, 0, 0, 1, 0, 0,
 	                      0, 0, 0.5 * sqrt(mu * rho), 0, -0.5 * sqrt(mu * rho), 0, 0, 0, 0,
 	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
-	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0,
-	                      0, 0, 0, 0, 0, 0,
+	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0, 0, 0, 0, 0,
 	                      0, 0, 0, 0.5 * sqrt(mu * rho), 0, -0.5 * sqrt(mu * rho), 0, 0, 0,
-	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu),
-	                      -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 0, 0, 1});
+	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 0, 0, 1});
 
 
 	m.m[2].A.initialize({0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,
@@ -179,15 +171,12 @@ void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<
 	m.m[2].U1.initialize({0, 0, 0.5, 0, 0.5, 0, 0, 0, 0,
 	                      0, 0, 0, 0.5, 0, 0.5, 0, 0, 0,
 	                      0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu),
-	                      -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 1, 0, 0,
+	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 1, 0, 0,
 	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
 	                      0, 0, 0.5 * sqrt(mu * rho), 0, -0.5 * sqrt(mu * rho), 0, 0, 0, 0,
-	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu),
-	                      -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 0, 0, 1,
+	                      (0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), -(0.5 * sqrt(rho) * lambda) / sqrt(lambda + 2 * mu), 0, 0, 0, 0, 0, 0, 1,
 	                      0, 0, 0, 0.5 * sqrt(mu * rho), 0, -0.5 * sqrt(mu * rho), 0, 0, 0,
-	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0,
-	                      0, 0, 0, 0, 0, 0});
+	                      0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0, 0, 0, 0, 0});
 }
 
 IsotropicMaterial IsotropicMaterial::generateRandomMaterial() {

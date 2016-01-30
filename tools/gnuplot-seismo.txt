@@ -1,0 +1,11 @@
+reset
+set term png
+set output "seismo/seismo.png"
+
+unset key
+set x2label "surface"
+set x2tics
+set ylabel "time"
+set yrange [] reverse
+
+plot 'seismo/core00_seismo00000.bin' binary matrix with image axes x2y1

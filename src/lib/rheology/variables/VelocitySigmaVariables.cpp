@@ -2,6 +2,8 @@
 
 using namespace gcm;
 
+// TODO - to MACRO:
+
 template<> const std::map<PhysicalQuantities::T, GetSetter<VelocitySigmaVariables<1>>> VelocitySigmaVariables<1>::QUANTITIES = {
 		{PhysicalQuantities::T::Vx,       GetSetter<VelocitySigmaVariables<1>>(VelocitySigmaVariables<1>::GetVelocity<0>, VelocitySigmaVariables<1>::SetVelocity<0>)},
 		{PhysicalQuantities::T::Sxx,      GetSetter<VelocitySigmaVariables<1>>(VelocitySigmaVariables<1>::GetSigma<0, 0>, VelocitySigmaVariables<1>::SetSigma<0, 0>)},

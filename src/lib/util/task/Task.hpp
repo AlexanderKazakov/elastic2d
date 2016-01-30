@@ -30,7 +30,8 @@ namespace gcm {
 		IsotropicMaterial material;
 
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
-		int numberOfSnaps = 0; // how many snaps to calculate
+		int numberOfSnaps = 0;
+		int stepsPerSnap = 1;
 		real T = 0.0; // optional, required time if (numberOfSnaps == 0)
 
 		bool splittingSecondOrder = false;

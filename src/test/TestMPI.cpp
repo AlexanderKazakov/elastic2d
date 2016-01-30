@@ -99,6 +99,7 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	// calculate in sequence
 	task.forceSequence = true;
 	EngineWrapper<StructuredGrid<Elastic2DModel>> sequenceEngine;
+	sequenceEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
@@ -106,6 +107,7 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
 	EngineWrapper<StructuredGrid<Elastic2DModel>> mpiEngine;
+	mpiEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 
