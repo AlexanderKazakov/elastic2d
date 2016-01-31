@@ -46,20 +46,34 @@ namespace gcm {
 		};
 		/** @return minimal spatial step for Courant condition */
 		real getMinimalSpatialStep() const {
-			real minH = this->getMinimalSpatialStepImpl();
-			assert_gt(minH, 0.0);
-			return minH;
+			assert_gt(minimalSpatialStep, 0.0);
+			return minimalSpatialStep;
 		};
+
+		void beforeStage() { beforeStageImpl(); };
+		void afterStage() { afterStageImpl(); };
+		void beforeStep() {
+			recalculateMinimalSpatialStep();
+			recalculateMaximalLambda();
+			beforeStepImpl();
+		};
+		void afterStep() { afterStepImpl(); };
 
 	protected:
 		int rank = -1; // index of core
 		int numberOfWorkers = -1; // number of cores
 
 		real maximalLambda = 0.0; // maximal in modulus eigenvalue among all nodes all GcmMatrices of the mesh
+		real minimalSpatialStep = 0.0; // minimal spatial step over all mesh
 
 		virtual void initializeImpl(const Task &task) = 0;
+		virtual void beforeStageImpl() = 0;
+		virtual void afterStageImpl() = 0;
+		virtual void beforeStepImpl() = 0;
+		virtual void afterStepImpl() = 0;
+		virtual void recalculateMinimalSpatialStep() = 0;
+		virtual void recalculateMaximalLambda() = 0;
 		virtual void applyInitialConditions(const Task &task) = 0;
-		virtual real getMinimalSpatialStepImpl() const = 0;
 		virtual void applyBorderConditions() = 0;
 	};
 }

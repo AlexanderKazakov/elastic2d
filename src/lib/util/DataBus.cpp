@@ -1,6 +1,6 @@
 #include <lib/util/DataBus.hpp>
+#include <lib/grid/nodes/Nodes.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/grid/StructuredGrid.hpp>
 
 using namespace gcm;
 
@@ -37,8 +37,8 @@ void createStaticType() {
 }
 
 void DataBus::createStaticTypes() {
-	createStaticType<StructuredGrid<Elastic1DModel>::Node>();
-	createStaticType<StructuredGrid<Elastic2DModel>::Node>();
-	createStaticType<StructuredGrid<Elastic3DModel>::Node>();
-	createStaticType<StructuredGrid<OrthotropicElastic3DModel>::Node>();
+	createStaticType<NodeMatrix<Elastic1DModel>>();
+	createStaticType<NodeMatrix<Elastic2DModel>>();
+	createStaticType<NodeMatrix<Elastic3DModel>>();
+	createStaticType<NodeMatrix<OrthotropicElastic3DModel>>();
 }

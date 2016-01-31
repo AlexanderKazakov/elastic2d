@@ -28,7 +28,7 @@ void VtkTextStructuredSnapshotter<TGrid>::snapshotImpl(const Grid* _grid, const 
 
 template<class TGrid>
 void VtkTextStructuredSnapshotter<TGrid>::writeQuantity(const std::string name,
-                      const typename GetSetter<typename TGrid::Node::Variables>::Getter Get) {
+                      const typename GetSetter<typename TGrid::NODE::Variables>::Getter Get) {
 	snapshotFileStream << "SCALARS " << name << " double" << std::endl;
 	snapshotFileStream << "LOOKUP_TABLE default" << std::endl;
 	for (int z = 0; z < grid->sizes(2); z++) {
@@ -59,7 +59,7 @@ std::string VtkTextStructuredSnapshotter<TGrid>::makeFileNameForSnapshot(const i
 }
 
 
-template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic1DModel>>;
-template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>;
-template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic3DModel>>;
-template class VtkTextStructuredSnapshotter<StructuredGrid<OrthotropicElastic3DModel>>;
+template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic1DModel>>;
+template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic2DModel>>;
+template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic3DModel>>;
+template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<OrthotropicElastic3DModel>>;

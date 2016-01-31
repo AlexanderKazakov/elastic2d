@@ -7,8 +7,8 @@
 
 using namespace gcm;
 
-template<class TModel>
-void StructuredGrid<TModel>::initializeImpl(const Task &task) {
+template<template<class> class TNode, class TModel>
+void StructuredGrid<TNode, TModel>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_ge(accuracyOrder, 1);
@@ -42,10 +42,11 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 		node.matrix = gcmMatricesPtr;
 	}
 	maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
+	minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
+template<template<class> class TNode, class TModel>
+void StructuredGrid<TNode, TModel>::applyInitialConditions(const Task& task) {
 	InitialCondition<TModel> initialCondition;
 	initialCondition.initialize(task);
 
@@ -58,14 +59,14 @@ void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
 	}
 }
 
-template<class TModel>
-typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValuesAround
+template<template<class> class TNode, class TModel>
+typename StructuredGrid<TNode, TModel>::Matrix StructuredGrid<TNode, TModel>::interpolateValuesAround
 		(const int stage, const int x, const int y, const int z, const Vector& dx) const {
 
 	Matrix ans;
 	std::vector<Vector> src( (unsigned long) (accuracyOrder + 1) );
 	Vector res;
-	for (int k = 0; k < Node::Vector::M; k++) {
+	for (int k = 0; k < Vector::M; k++) {
 		findSourcesForInterpolation(stage, x, y, z, dx(k), src);
 		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h(stage));
 		ans.setColumn(k, res);
@@ -74,8 +75,8 @@ typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValue
 	return ans;
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
+template<template<class> class TNode, class TModel>
+void StructuredGrid<TNode, TModel>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
                                                          const real &dx, std::vector<Vector>& src) const {
 
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
@@ -86,19 +87,14 @@ void StructuredGrid<TModel>::findSourcesForInterpolation(const int stage, const 
 	}
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::beforeStage() {
+template<template<class> class TNode, class TModel>
+void StructuredGrid<TNode, TModel>::beforeStageImpl() {
 	exchangeNodesWithNeighbors();
 	applyBorderConditions();
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::afterStage() {
-
-}
-
-template<class TModel>
-void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
+template<template<class> class TNode, class TModel>
+void StructuredGrid<TNode, TModel>::exchangeNodesWithNeighbors() {
 	LOG_DEBUG("Start data exchange with neighbor cores");
 	if (this->numberOfWorkers == 1) return;
 
@@ -106,41 +102,32 @@ void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
 	unsigned long nodesSize = this->nodes.size();
 
 	if (this->rank == 0) {
-		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank + 1, 1,
-		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank + 1, 1,
+		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
+		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else if (this->rank == this->numberOfWorkers - 1) {
-		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank - 1, 1,
-		             &(this->nodes[0]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank - 1, 1,
+		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
+		             &(this->nodes[0]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else {
-		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank + 1, 1,
-		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank + 1, 1,
+		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
+		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank - 1, 1,
-		             &(this->nodes[0]), sizeOfBuffer, Node::MPI_NODE_TYPE, this->rank - 1, 1,
+		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
+		             &(this->nodes[0]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 }
 
-template<class TModel>
-void StructuredGrid<TModel>::applyBorderConditions() {
+template<template<class> class TNode, class TModel>
+void StructuredGrid<TNode, TModel>::applyBorderConditions() {
 	borderConditions.applyBorderConditions(this);
 }
 
-template<class TModel>
-real StructuredGrid<TModel>::getMinimalSpatialStepImpl() const {
-	return fmin(h(0), fmin(h(1), h(2)));
-}
+template class StructuredGrid<NodeMatrix, Elastic1DModel>;
+template class StructuredGrid<NodeMatrix, Elastic2DModel>;
+template class StructuredGrid<NodeMatrix, Elastic3DModel>;
+template class StructuredGrid<NodeMatrix, OrthotropicElastic3DModel>;
 
-
-
-template class StructuredGrid<Elastic1DModel>;
-template class StructuredGrid<Elastic2DModel>;
-template class StructuredGrid<Elastic3DModel>;
-template class StructuredGrid<OrthotropicElastic3DModel>;
-
-
-template<class TModel> MPI::Datatype StructuredGrid<TModel>::Node::MPI_NODE_TYPE;

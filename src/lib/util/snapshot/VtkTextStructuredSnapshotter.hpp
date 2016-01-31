@@ -22,7 +22,7 @@ namespace gcm {
 		const TGrid* grid;
 
 		void writeQuantity(const std::string name,
-		                   const typename GetSetter<typename TGrid::Node::Variables>::Getter Get);
+		                   const typename GetSetter<typename TGrid::NODE::Variables>::Getter Get);
 
 		std::fstream snapshotFileStream;
 		void openSnapshotFileStream(const std::string& fileName);

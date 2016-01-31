@@ -29,7 +29,7 @@ namespace gcm {
 		bool enable = false;
 		real yieldStrength = 0;
 
-		void apply(typename TGrid::Node &node) const {
+		void apply(typename TGrid::NODE &node) const {
 			real pressure = node.u.getPressure();
 			real J2 = node.u.getJ2();
 			// Correction parameter

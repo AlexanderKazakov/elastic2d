@@ -5,15 +5,13 @@
 #include <lib/util/task/Task.hpp>
 
 namespace gcm {
-	template<class TModel> class StructuredGrid;
-
-	template<class TModel>
+	template<class TGrid>
 	class StructuredGridBorderConditions {
 		std::map<CUBIC_BORDERS, BorderCondition::T> borderConditions;
 
 	public:
 		void initialize(const Task& task);
-		void applyBorderConditions(StructuredGrid<TModel>* mesh);
+		void applyBorderConditions(TGrid* mesh);
 
 	};
 }

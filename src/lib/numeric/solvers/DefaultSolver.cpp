@@ -30,6 +30,7 @@ DefaultSolver<TGrid>::~DefaultSolver() {
 template<class TGrid>
 void DefaultSolver<TGrid>::nextTimeStepImpl() {
 	LOG_INFO("Start time step " << step);
+	mesh->beforeStep();
 	real tau = calculateTau();
 
 	if (splittingSecondOrder) {
@@ -53,7 +54,7 @@ void DefaultSolver<TGrid>::nextTimeStepImpl() {
 	}
 
 	plasticFlowCorrector->apply(mesh);
-
+	mesh->afterStep();
 }
 
 template<class TGrid>
@@ -69,7 +70,7 @@ real DefaultSolver<TGrid>::calculateTau() const {
 	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
 }
 
-template class DefaultSolver<StructuredGrid<Elastic1DModel>>;
-template class DefaultSolver<StructuredGrid<Elastic2DModel>>;
-template class DefaultSolver<StructuredGrid<Elastic3DModel>>;
-template class DefaultSolver<StructuredGrid<OrthotropicElastic3DModel>>;
+template class DefaultSolver<DefaultStructuredGrid<Elastic1DModel>>;
+template class DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>;
+template class DefaultSolver<DefaultStructuredGrid<Elastic3DModel>>;
+template class DefaultSolver<DefaultStructuredGrid<OrthotropicElastic3DModel>>;

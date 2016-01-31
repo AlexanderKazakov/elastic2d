@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
-	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>());
+	engine.setSolver(new DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>());
+	engine.setSnapshotter(new VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic2DModel>>());
 
 	try {
 		engine.initialize(parseTask());

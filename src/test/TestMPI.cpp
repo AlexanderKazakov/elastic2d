@@ -4,7 +4,6 @@
 #include <lib/util/DataBus.hpp>
 #include <lib/util/task/Task.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/grid/StructuredGrid.hpp>
 
 
 using namespace gcm;
@@ -68,9 +67,9 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiNodeTypes, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-		StructuredGrid<Elastic1DModel>::Node,
-		StructuredGrid<Elastic2DModel>::Node,
-		StructuredGrid<Elastic3DModel>::Node> AllImplementations;
+		NodeMatrix<Elastic1DModel>,
+		NodeMatrix<Elastic2DModel>,
+		NodeMatrix<Elastic3DModel>> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiNodeTypes, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
@@ -98,28 +97,27 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	EngineWrapper<StructuredGrid<Elastic2DModel>> sequenceEngine;
-	sequenceEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
+	EngineWrapper<DefaultStructuredGrid<Elastic2DModel>> sequenceEngine;
+	sequenceEngine.setSolver(new DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>());
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	EngineWrapper<StructuredGrid<Elastic2DModel>> mpiEngine;
-	mpiEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
+	EngineWrapper<DefaultStructuredGrid<Elastic2DModel>> mpiEngine;
+	mpiEngine.setSolver(new DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>());
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 
 	// check that parallel result is equal to sequence result
-	for (int x = 0; x < mpiEngine.getSolver()->getMesh()->getXForTest(); x++) {
-		for (int y = 0; y < mpiEngine.getSolver()->getMesh()->getYForTest(); y++) {
-			ASSERT_EQ(mpiEngine.getSolver()->getMesh()->getNodeForTest(x, y, 0).u,
-			          sequenceEngine.getSolver()->getMesh()->getNodeForTest
-					          (x + mpiEngine.getSolver()->getMesh()->getStartXForTest(), y, 0).u) <<
-								"x = " << x <<
-								" global x = " << x + mpiEngine.getSolver()->getMesh()->getStartXForTest()
-			                    << " y = " << y << std::endl;
+	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
+	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
+	for (int x = 0; x < mpiMesh->getXForTest(); x++) {
+		for (int y = 0; y < mpiMesh->getYForTest(); y++) {
+			ASSERT_EQ(mpiMesh->getNodeForTest(x, y, 0).u,
+			          sequenceMesh->getNodeForTest (x + mpiMesh->getStartXForTest(), y, 0).u)
+					<< "x = " << x << " global x = " << x + mpiMesh->getStartXForTest() << " y = " << y << std::endl;
 		}
 	}
 }
