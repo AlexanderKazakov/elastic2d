@@ -5,4 +5,6 @@
 #define GET_MACRO_2(_1, _2, MACRO_NAME, ...) MACRO_NAME
 #define GET_MACRO_3(_1, _2, _3, MACRO_NAME, ...) MACRO_NAME
 
+#define SUPPRESS_WUNUSED(x) assert_true(sizeof(x))
+
 #endif /* MACROS_HPP */

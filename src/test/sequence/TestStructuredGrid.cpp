@@ -27,7 +27,7 @@ TEST(StructuredGrid, initialize) {
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
 			for (int z = 0; z < task.sizes(2); z++) {
-				for (int i = 0; i < DefaultStructuredGrid<Elastic2DModel>::Vector::M; i++) {
+				for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
 					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z).u(i), 0.0);
 				}
 			}
@@ -66,10 +66,10 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 			}
 		}
 
-		std::vector<DefaultStructuredGrid<Elastic2DModel>::Vector> src((unsigned long)task.accuracyOrder + 1);
+		std::vector<StructuredGrid<Elastic2DModel>::Vector> src((unsigned long)task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
 			structuredGrid.findSourcesForInterpolationForTest(stage, 1, 1, 0, dx, src);
-			for (int i = 0; i < DefaultStructuredGrid<Elastic2DModel>::Vector::M; i++) {
+			for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
 				ASSERT_EQ(src[0](i), (i == 2 || i == 4) ? 1.0 : 0.0);
 				ASSERT_EQ(src[1](i), 0.0);
 			}
@@ -109,11 +109,11 @@ TEST(StructuredGrid, interpolateValuesAround)
 			}
 		}
 
-		DefaultStructuredGrid<Elastic2DModel>::Vector dx({-1, 1, -0.5, 0.5, 0});
-		DefaultStructuredGrid<Elastic2DModel>::Matrix matrix =
+		StructuredGrid<Elastic2DModel>::Vector dx({-1, 1, -0.5, 0.5, 0});
+		StructuredGrid<Elastic2DModel>::Matrix matrix =
 				structuredGrid.interpolateValuesAroundForTest(stage, 1, 1, 0, dx);
 
-		for (int i = 0; i < DefaultStructuredGrid<Elastic2DModel>::Vector::M; i++) {
+		for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
 			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx

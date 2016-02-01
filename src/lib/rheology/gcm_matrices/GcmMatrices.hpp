@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include <lib/linal/Linal.hpp>
+#include <lib/linal/LinalRoutines.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Concepts.hpp>
 #include <lib/config.hpp>

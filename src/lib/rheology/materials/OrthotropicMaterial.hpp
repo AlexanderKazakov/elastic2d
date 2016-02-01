@@ -27,10 +27,14 @@ namespace gcm {
 
 		real yieldStrength = 0; // plasticity parameters
 
+		real continualDamageParameter = 0; // parameter in continual damage equation
+
 		OrthotropicMaterial();
 		OrthotropicMaterial(const IsotropicMaterial& isotropic);
 		OrthotropicMaterial(const real _rho, std::initializer_list<real>);
-		OrthotropicMaterial(const real _rho, const real _yieldStrenght, std::initializer_list<real>);
+		OrthotropicMaterial(const real _rho, const real _yieldStrength, std::initializer_list<real>);
+		OrthotropicMaterial(const real _rho, const real _yieldStrength, const real _continualDamageParameter,
+		                    std::initializer_list<real>);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>& m) const;

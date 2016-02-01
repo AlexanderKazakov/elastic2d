@@ -23,6 +23,10 @@ void VtkTextStructuredSnapshotter<TGrid>::snapshotImpl(const Grid* _grid, const 
 		writeQuantity(PhysicalQuantities::NAME.at(quantity.first), quantity.second.Get);
 	}
 
+	for (auto& quantity : TGrid::Model::InternalOde::QUANTITIES) {
+		writeQuantity(PhysicalQuantities::NAME.at(quantity.first), quantity.second.Get);
+	}
+
 	closeSnapshotFileStream();
 }
 
@@ -35,6 +39,20 @@ void VtkTextStructuredSnapshotter<TGrid>::writeQuantity(const std::string name,
 		for (int y = 0; y < grid->sizes(1); y++) {
 			for (int x = 0; x < grid->sizes(0); x++) {
 				snapshotFileStream << Get(grid->get(x, y, z).u) << std::endl;
+			}
+		}
+	}
+}
+
+template<class TGrid>
+void VtkTextStructuredSnapshotter<TGrid>::writeQuantity(const std::string name,
+                                                        const typename GetSetter<typename TGrid::Model::InternalOde::Variables>::Getter Get) {
+	snapshotFileStream << "SCALARS " << name << " double" << std::endl;
+	snapshotFileStream << "LOOKUP_TABLE default" << std::endl;
+	for (int z = 0; z < grid->sizes(2); z++) {
+		for (int y = 0; y < grid->sizes(1); y++) {
+			for (int x = 0; x < grid->sizes(0); x++) {
+				snapshotFileStream << Get(grid->get(x, y, z)) << std::endl;
 			}
 		}
 	}
@@ -59,7 +77,9 @@ std::string VtkTextStructuredSnapshotter<TGrid>::makeFileNameForSnapshot(const i
 }
 
 
-template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic1DModel>>;
-template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic2DModel>>;
-template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic3DModel>>;
-template class VtkTextStructuredSnapshotter<DefaultStructuredGrid<OrthotropicElastic3DModel>>;
+template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic1DModel>>;
+template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>;
+template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic3DModel>>;
+template class VtkTextStructuredSnapshotter<StructuredGrid<OrthotropicElastic3DModel>>;
+template class VtkTextStructuredSnapshotter<StructuredGrid<ContinualDamageElastic2DModel>>;
+template class VtkTextStructuredSnapshotter<StructuredGrid<IdealPlastic2DModel>>;

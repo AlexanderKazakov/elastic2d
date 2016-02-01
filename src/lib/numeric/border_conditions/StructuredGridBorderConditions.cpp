@@ -104,7 +104,9 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 
 
 
-template class StructuredGridBorderConditions<DefaultStructuredGrid<Elastic1DModel>>;
-template class StructuredGridBorderConditions<DefaultStructuredGrid<Elastic2DModel>>;
-template class StructuredGridBorderConditions<DefaultStructuredGrid<Elastic3DModel>>;
-template class StructuredGridBorderConditions<DefaultStructuredGrid<OrthotropicElastic3DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<Elastic1DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<Elastic2DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<Elastic3DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<OrthotropicElastic3DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<ContinualDamageElastic2DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<IdealPlastic2DModel>>;

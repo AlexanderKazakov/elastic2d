@@ -4,19 +4,21 @@ using namespace gcm;
 
 
 const std::map<PhysicalQuantities::T, std::string> PhysicalQuantities::NAME = {
-		{PhysicalQuantities::T::Vx,       "Vx"},
-		{PhysicalQuantities::T::Vy,       "Vy"},
-		{PhysicalQuantities::T::Vz,       "Vz"},
+		{PhysicalQuantities::T::Vx,             "Vx"},
+		{PhysicalQuantities::T::Vy,             "Vy"},
+		{PhysicalQuantities::T::Vz,             "Vz"},
 
-		{PhysicalQuantities::T::Sxx,      "Sxx"},
-		{PhysicalQuantities::T::Sxy,      "Sxy"},
-		{PhysicalQuantities::T::Sxz,      "Sxz"},
-		{PhysicalQuantities::T::Syy,      "Syy"},
-		{PhysicalQuantities::T::Syz,      "Syz"},
-		{PhysicalQuantities::T::Szz,      "Szz"},
+		{PhysicalQuantities::T::Sxx,            "Sxx"},
+		{PhysicalQuantities::T::Sxy,            "Sxy"},
+		{PhysicalQuantities::T::Sxz,            "Sxz"},
+		{PhysicalQuantities::T::Syy,            "Syy"},
+		{PhysicalQuantities::T::Syz,            "Syz"},
+		{PhysicalQuantities::T::Szz,            "Szz"},
 
-		{PhysicalQuantities::T::RHO,      "rho"},
-		{PhysicalQuantities::T::PRESSURE, "pressure"},
+		{PhysicalQuantities::T::RHO,            "rho"},
+		{PhysicalQuantities::T::PRESSURE,       "pressure"},
+
+		{PhysicalQuantities::T::DAMAGE_MEASURE, "damage_measure"},
 };
 
 

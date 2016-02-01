@@ -23,4 +23,6 @@ mkdir seismo
 echo "Start ./build/gcm_seismo with $np processes ..."
 mpirun -np $np ./build/gcm_seismo
 
+gnuplot tools/gnuplot-seismo.txt && eog seismo/seismo.png
+
 

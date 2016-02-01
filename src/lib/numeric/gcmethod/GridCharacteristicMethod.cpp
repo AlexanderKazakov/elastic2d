@@ -28,7 +28,9 @@ void GridCharacteristicMethod<TGrid>::stage(const int s, const real& timeStep,
 }
 
 
-template class GridCharacteristicMethod<DefaultStructuredGrid<Elastic1DModel>>;
-template class GridCharacteristicMethod<DefaultStructuredGrid<Elastic2DModel>>;
-template class GridCharacteristicMethod<DefaultStructuredGrid<Elastic3DModel>>;
-template class GridCharacteristicMethod<DefaultStructuredGrid<OrthotropicElastic3DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<Elastic1DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<Elastic2DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<Elastic3DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<OrthotropicElastic3DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<ContinualDamageElastic2DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<IdealPlastic2DModel>>;

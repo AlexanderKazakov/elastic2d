@@ -37,8 +37,9 @@ void createStaticType() {
 }
 
 void DataBus::createStaticTypes() {
-	createStaticType<NodeMatrix<Elastic1DModel>>();
-	createStaticType<NodeMatrix<Elastic2DModel>>();
-	createStaticType<NodeMatrix<Elastic3DModel>>();
-	createStaticType<NodeMatrix<OrthotropicElastic3DModel>>();
+	createStaticType<Node<Elastic1DModel>>();
+	createStaticType<Node<Elastic2DModel>>();
+	createStaticType<Node<Elastic3DModel>>();
+	createStaticType<Node<OrthotropicElastic3DModel>>();
+	createStaticType<Node<ContinualDamageElastic2DModel>>();
 }

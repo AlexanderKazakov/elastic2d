@@ -15,9 +15,13 @@ namespace gcm {
 
 		real yieldStrength = 0; // plasticity parameter
 
+		real continualDamageParameter = 0; // parameter in continual damage equation
+
 		IsotropicMaterial();
 		IsotropicMaterial(const real _rho, const real _lambda, const real _mu);
-		IsotropicMaterial(const real _rho, const real _lambda, const real _mu, const real _yieldStrenght);
+		IsotropicMaterial(const real _rho, const real _lambda, const real _mu, const real _yieldStrength);
+		IsotropicMaterial(const real _rho, const real _lambda, const real _mu,
+		                  const real _yieldStrength, const real _continualDamageParameter);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>& m) const;

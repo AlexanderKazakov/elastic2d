@@ -24,6 +24,9 @@ namespace gcm {
 		void writeQuantity(const std::string name,
 		                   const typename GetSetter<typename TGrid::NODE::Variables>::Getter Get);
 
+		void writeQuantity(const std::string name,
+		            const typename GetSetter<typename TGrid::Model::InternalOde::Variables>::Getter Get);
+
 		std::fstream snapshotFileStream;
 		void openSnapshotFileStream(const std::string& fileName);
 		void closeSnapshotFileStream();

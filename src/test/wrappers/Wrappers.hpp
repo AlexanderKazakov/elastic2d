@@ -12,7 +12,7 @@ namespace gcm {
 	 */
 
 	template<class TModel>
-	class StructuredGridWrapper : public DefaultStructuredGrid<TModel> {
+	class StructuredGridWrapper : public StructuredGrid<TModel> {
 	public:
 		real getH0ForTest() const { return this->h(0); };
 
@@ -24,19 +24,19 @@ namespace gcm {
 
 		int getStartXForTest() const { return this->globalStartXindex; };
 
-		const typename DefaultStructuredGrid<TModel>::NODE &getNodeForTest(const int x, const int y, const int z) const {
+		const typename StructuredGrid<TModel>::NODE &getNodeForTest(const int x, const int y, const int z) const {
 			return this->get(x, y, z);
 		};
 
-		typename DefaultStructuredGrid<TModel>::Matrix interpolateValuesAroundForTest
+		typename StructuredGrid<TModel>::Matrix interpolateValuesAroundForTest
 				(const int stage, const int x, const int y, const int z,
-				 const typename DefaultStructuredGrid<TModel>::Vector& dx) const {
+				 const typename StructuredGrid<TModel>::Vector& dx) const {
 			return this->interpolateValuesAround(stage, x, y, z, dx);
 		};
 
 		void findSourcesForInterpolationForTest
 				(const int stage, const int x, const int y, const int z, const real &dx,
-				 std::vector<typename DefaultStructuredGrid<TModel>::Vector>& src) const {
+				 std::vector<typename StructuredGrid<TModel>::Vector>& src) const {
 			return this->findSourcesForInterpolation(stage, x, y, z, dx, src);
 		};
 

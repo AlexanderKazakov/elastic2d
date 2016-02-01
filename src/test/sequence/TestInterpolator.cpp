@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <cmath>
 
-#include <lib/linal/Linal.hpp>
+#include <lib/linal/LinalRoutines.hpp>
 #include <lib/numeric/interpolation/Interpolator.hpp>
 
 #define MAX_ACCURACY_ORDER 20

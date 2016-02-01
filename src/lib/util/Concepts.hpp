@@ -33,6 +33,8 @@ namespace gcm {
 			RHO /* Density */,
 			PRESSURE /* Pressure = -Sxx (1D), -(Sxx + Syy)/2 (2D), -(Sxx + Syy + Szz)/3 (3D) */,
 
+			DAMAGE_MEASURE /* from continual damage model */,
+
 			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 		};
 

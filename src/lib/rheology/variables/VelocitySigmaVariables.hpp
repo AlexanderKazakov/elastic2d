@@ -1,7 +1,7 @@
 #ifndef LIBGCM_VELOCITYSIGMAVARIABLES_HPP
 #define LIBGCM_VELOCITYSIGMAVARIABLES_HPP
 
-#include <lib/linal/Linal.hpp>
+#include <lib/linal/LinalRoutines.hpp>
 #include <lib/rheology/variables/GetSetter.hpp>
 #include <lib/util/Concepts.hpp>
 
@@ -37,9 +37,9 @@ namespace gcm {
 		void setPressure(const real& pressure);
 
 		/**
-		 * Second deviator tensor invariant
+		 * Second tensor deviator invariant
 		 * J2 == sqrt( 0.5 * s_{ij}*s_{ij} ),
-		 * where s_{ij} == sigma{ij} - pressure * delta_{ij}
+		 * where s_{ij} == sigma_{ij} + pressure * (i == j)
 		 */
 		real getJ2() const;
 

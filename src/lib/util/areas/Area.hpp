@@ -2,7 +2,7 @@
 #define LIBGCM_AREA_HPP
 
 #include <lib/linal/special/Vector3.hpp>
-#include <lib/linal/Linal.hpp>
+#include <lib/linal/LinalRoutines.hpp>
 
 namespace gcm {
 	class Area {

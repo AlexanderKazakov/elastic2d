@@ -48,3 +48,5 @@ template class InitialCondition<Elastic1DModel>;
 template class InitialCondition<Elastic2DModel>;
 template class InitialCondition<Elastic3DModel>;
 template class InitialCondition<OrthotropicElastic3DModel>;
+template class InitialCondition<ContinualDamageElastic2DModel>;
+template class InitialCondition<IdealPlastic2DModel>;

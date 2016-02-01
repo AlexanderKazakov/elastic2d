@@ -14,24 +14,24 @@ namespace gcm {
 	template<class TGrid> class GridCharacteristicMethod;
 	template<class TGrid> class VtkTextStructuredSnapshotter;
 	template<class TGrid> class Binary2DSeismograph;
-	template<class TGrid> class IdealPlasticFlowCorrector;
 
-	template<class TModel> class NodeMatrix;
+	template<typename TModel, template<typename> class GcmMatricesStorage> class Node;
 
 	/**
 	 * Non-movable structured rectangular grid
 	 * @tparam TNode building block of mesh
 	 * @tparam TModel rheology model
 	 */
-	template<template<class> class TNode, class TModel>
+	template<typename TModel,
+			template<typename> class GcmMatricesStorage = DefaultGcmMatricesStorage>
 	class StructuredGrid : public Grid {
 	public:
 		typedef TModel Model;
-		typedef TNode<Model> NODE;
+		typedef Node<TModel, GcmMatricesStorage> NODE;
 		typedef typename NODE::Vector Vector;
 		typedef typename NODE::GCM_MATRICES GCM_MATRICES;
 		typedef typename GCM_MATRICES::Matrix Matrix;
-		static const int DIMENSIONALITY = TModel::Variables::DIMENSIONALITY;
+		static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
 
 	protected:
 		/* Node storage */
@@ -122,16 +122,12 @@ namespace gcm {
 
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
 		friend class GridCharacteristicMethod<StructuredGrid>;
-		friend class IdealPlasticFlowCorrector<StructuredGrid>;
 		friend class DefaultSolver<StructuredGrid>;
 		friend class StructuredGridBorderConditions<StructuredGrid>;
-		// it's better than create million get()
+		// it's better than create million gets
 		friend class VtkTextStructuredSnapshotter<StructuredGrid>;
 		friend class Binary2DSeismograph<StructuredGrid>;
 	};
-
-	template<class TModel>
-	using DefaultStructuredGrid = StructuredGrid<NodeMatrix, TModel>;
 }
 
 #endif // LIBGCM_STRUCTUREDGRID_HPP

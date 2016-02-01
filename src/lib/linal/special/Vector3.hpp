@@ -1,7 +1,7 @@
 #ifndef LIBGCM_LINAL_VECTOR3_HPP
 #define LIBGCM_LINAL_VECTOR3_HPP
 
-#include <lib/linal/Linal.hpp>
+#include <lib/linal/LinalRoutines.hpp>
 
 namespace gcm {
 	namespace linal {

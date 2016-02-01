@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	engine.setSolver(new DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>());
-	engine.setSnapshotter(new VtkTextStructuredSnapshotter<DefaultStructuredGrid<Elastic2DModel>>());
+	engine.setSolver(new DefaultSolver<StructuredGrid<IdealPlastic2DModel>>());
+	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<IdealPlastic2DModel>>());
 
 	try {
 		engine.initialize(parseTask());
@@ -44,7 +44,9 @@ Task parseTask() {
 	real lambda0 = 2; // default Lame parameter
 	real mu0 = 1; // default Lame parameter
 	real yieldStrength0 = 1;
+	real continualDamageParameter0 = 1;
 	task.material = IsotropicMaterial(rho0, lambda0, mu0, yieldStrength0);
+	task.material.continualDamageParameter = continualDamageParameter0;
 	task.plasticityFlowCorrector = true;
 
 	task.CourantNumber = 1.9; // number from Courant–Friedrichs–Lewy condition

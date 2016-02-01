@@ -31,10 +31,10 @@ TEST(Solver, StageXForward)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		DefaultSolverWrapper<DefaultStructuredGrid<Elastic2DModel>> solver;
+		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		DefaultStructuredGrid<Elastic2DModel>::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
-		DefaultStructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
+		StructuredGrid<Elastic2DModel>::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
+		StructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -73,10 +73,10 @@ TEST(Solver, StageY)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		DefaultSolverWrapper<DefaultStructuredGrid<Elastic2DModel>> solver;
+		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		DefaultStructuredGrid<Elastic2DModel>::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
-		DefaultStructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
+		StructuredGrid<Elastic2DModel>::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
+		StructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -113,11 +113,11 @@ TEST(Solver, StageYSxx)
 		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.1, begin, end);
 		task.initialCondition.quantities.push_back(quantity);
 
-		DefaultSolverWrapper<DefaultStructuredGrid<Elastic2DModel>> solver;
+		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		DefaultStructuredGrid<Elastic2DModel>::Vector sxxOnly = solver.getMesh()->getNodeForTest
+		StructuredGrid<Elastic2DModel>::Vector sxxOnly = solver.getMesh()->getNodeForTest
 				(task.sizes(0) / 2, task.sizes(1) / 2, 0).u;
-		DefaultStructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
+		StructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {

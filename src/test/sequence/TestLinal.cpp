@@ -1,4 +1,4 @@
-#include <lib/linal/Linal.hpp>
+#include <lib/linal/LinalRoutines.hpp>
 #include <lib/linal/special/Matrix33.hpp>
 #include <lib/linal/special/Matrix22.hpp>
 #include <lib/linal/special/Vector3.hpp>

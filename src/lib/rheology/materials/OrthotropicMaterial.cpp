@@ -9,6 +9,7 @@ OrthotropicMaterial::OrthotropicMaterial() { }
 OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	rho = isotropic.rho;
 	yieldStrength = isotropic.yieldStrength;
+	continualDamageParameter = isotropic.continualDamageParameter;
 	c11 = c22 = c33 = isotropic.lambda + 2 * isotropic.mu;
 	c44 = c55 = c66 = isotropic.mu;
 	c12 = c13 = c23 = isotropic.lambda;
@@ -23,6 +24,15 @@ OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<
 
 OrthotropicMaterial::OrthotropicMaterial(const real _rho, const real _yieldStrength, std::initializer_list<real> list) :
 		rho(_rho), yieldStrength(_yieldStrength) {
+	int i = 0;
+	for(auto& r : list) {
+		c[i++] = r;
+	}
+}
+
+OrthotropicMaterial::OrthotropicMaterial(const real _rho, const real _yieldStrength, const real _continualDamageParameter,
+                                         std::initializer_list<real> list) :
+		rho(_rho), yieldStrength(_yieldStrength), continualDamageParameter(_continualDamageParameter) {
 	int i = 0;
 	for(auto& r : list) {
 		c[i++] = r;
@@ -60,11 +70,9 @@ void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariable
 	                      0, 0, 0, 0, 0.5 * sqrt(c11) * sqrt(rho), -0.5 * sqrt(c11) * sqrt(rho), 0, 0, 0,
 	                      0.5 * sqrt(c66) * sqrt(rho), -0.5 * sqrt(c66) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
 	                      0, 0, 0.5 * sqrt(c55) * sqrt(rho), -0.5 * sqrt(c55) * sqrt(rho), 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c12 * sqrt(rho)) / sqrt(c11),
-	                      -(0.5 * c12 * sqrt(rho)) / sqrt(c11), 1, 0, 0,
+	                      0, 0, 0, 0, (0.5 * c12 * sqrt(rho)) / sqrt(c11), -(0.5 * c12 * sqrt(rho)) / sqrt(c11), 1, 0, 0,
 	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
-	                      0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c11), -(0.5 * c13 * sqrt(rho)) / sqrt(c11), 0, 0,
-	                      1});
+	                      0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c11), -(0.5 * c13 * sqrt(rho)) / sqrt(c11), 0, 0, 1});
 
 
 	m.m[1].A.initialize({0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
@@ -99,8 +107,7 @@ void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariable
 	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
 	                      0, 0, 0, 0, 0.5 * sqrt(c22) * sqrt(rho), -0.5 * sqrt(c22) * sqrt(rho), 0, 0, 0,
 	                      0, 0, 0.5 * sqrt(c44) * sqrt(rho), -0.5 * sqrt(c44) * sqrt(rho), 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c22), -(0.5 * c23 * sqrt(rho)) / sqrt(c22), 0, 0,
-	                      1});
+	                      0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c22), -(0.5 * c23 * sqrt(rho)) / sqrt(c22), 0, 0, 1});
 
 
 	m.m[2].A.initialize({0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,
@@ -130,12 +137,10 @@ void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariable
 	m.m[2].U1.initialize({0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
 	                      0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
 	                      0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c33),
-	                      -(0.5 * c13 * sqrt(rho)) / sqrt(c33), 1, 0, 0,
+	                      0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c33), -(0.5 * c13 * sqrt(rho)) / sqrt(c33), 1, 0, 0,
 	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
 	                      0.5 * sqrt(c55) * sqrt(rho), -0.5 * sqrt(c55) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c33), -(0.5 * c23 * sqrt(rho)) / sqrt(c33), 0, 0,
-	                      1,
+	                      0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c33), -(0.5 * c23 * sqrt(rho)) / sqrt(c33), 0, 0, 1,
 	                      0, 0, 0.5 * sqrt(c44) * sqrt(rho), -0.5 * sqrt(c44) * sqrt(rho), 0, 0, 0, 0, 0,
 	                      0, 0, 0, 0, 0.5 * sqrt(c33) * sqrt(rho), -0.5 * sqrt(c33) * sqrt(rho), 0, 0, 0});
 }

@@ -11,6 +11,11 @@ IsotropicMaterial::IsotropicMaterial(const real _rho, const real _lambda, const 
 IsotropicMaterial::IsotropicMaterial(const real _rho, const real _lambda, const real _mu, const real _yieldStrength) :
 		rho(_rho), lambda(_lambda), mu(_mu), yieldStrength(_yieldStrength) { }
 
+IsotropicMaterial::IsotropicMaterial(const real _rho, const real _lambda, const real _mu,
+                                     const real _yieldStrength, const real _continualDamageParameter) :
+		rho(_rho), lambda(_lambda), mu(_mu), yieldStrength(_yieldStrength),
+		continualDamageParameter(_continualDamageParameter) { }
+
 void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial> &m) const {
 	real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 

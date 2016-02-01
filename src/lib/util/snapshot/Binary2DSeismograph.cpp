@@ -72,4 +72,4 @@ void Binary2DSeismograph<TGrid>::writeHeadOfTable() {
 	writeSurfaceToBuffer();
 }
 
-template class Binary2DSeismograph<DefaultStructuredGrid<Elastic2DModel>>;
+template class Binary2DSeismograph<StructuredGrid<Elastic2DModel>>;

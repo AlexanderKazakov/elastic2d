@@ -30,16 +30,29 @@ namespace gcm {
 		bool splittingSecondOrder = false; // use or not time second order approach in splitting method
 
 		GridCharacteristicMethod<TGrid>* method = nullptr;
-		IdealPlasticFlowCorrector<TGrid>* plasticFlowCorrector = nullptr;
+		/*IdealPlasticFlowCorrector<TGrid>*/
+		typename TGrid::Model::Corrector* corrector = nullptr;
+		typename TGrid::Model::InternalOde* internalOde = nullptr;
 
-		/** After calculation of step, actual values are always here */
+		/** Actual values are always here */
 		TGrid* mesh = nullptr;
 		/** This is auxiliary mesh */
 		TGrid* newMesh = nullptr;
+		bool odeShiftedFromPde = false;
 
 		USE_AND_INIT_LOGGER("gcm.DefaultSolver");
 
 		void stage(const int s, const real timeStep);
+		/**
+		 * Make the most actual at the moment PDE values
+		 * to be at the same mesh with the most actual at the moment ODE values.
+		 * TODO - remove this brainfuck
+		 * @warning this function fixes situation just for now,
+		 * when some more complicated splitting or rheology or coordinates appears it will be broken
+		 */
+		void fixVariablesOrder();
+		void internalOdeNextStep(const real timeStep);
+		void applyCorrectors();
 
 	};
 }

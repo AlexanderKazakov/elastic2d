@@ -7,8 +7,8 @@
 
 using namespace gcm;
 
-template<template<class> class TNode, class TModel>
-void StructuredGrid<TNode, TModel>::initializeImpl(const Task &task) {
+template<typename TModel, template<typename> class GcmMatricesStorage>
+void StructuredGrid<TModel, GcmMatricesStorage>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_ge(accuracyOrder, 1);
@@ -45,8 +45,8 @@ void StructuredGrid<TNode, TModel>::initializeImpl(const Task &task) {
 	minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
 }
 
-template<template<class> class TNode, class TModel>
-void StructuredGrid<TNode, TModel>::applyInitialConditions(const Task& task) {
+template<typename TModel, template<typename> class GcmMatricesStorage>
+void StructuredGrid<TModel, GcmMatricesStorage>::applyInitialConditions(const Task& task) {
 	InitialCondition<TModel> initialCondition;
 	initialCondition.initialize(task);
 
@@ -59,8 +59,8 @@ void StructuredGrid<TNode, TModel>::applyInitialConditions(const Task& task) {
 	}
 }
 
-template<template<class> class TNode, class TModel>
-typename StructuredGrid<TNode, TModel>::Matrix StructuredGrid<TNode, TModel>::interpolateValuesAround
+template<typename TModel, template<typename> class GcmMatricesStorage>
+typename StructuredGrid<TModel, GcmMatricesStorage>::Matrix StructuredGrid<TModel, GcmMatricesStorage>::interpolateValuesAround
 		(const int stage, const int x, const int y, const int z, const Vector& dx) const {
 
 	Matrix ans;
@@ -75,8 +75,8 @@ typename StructuredGrid<TNode, TModel>::Matrix StructuredGrid<TNode, TModel>::in
 	return ans;
 }
 
-template<template<class> class TNode, class TModel>
-void StructuredGrid<TNode, TModel>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
+template<typename TModel, template<typename> class GcmMatricesStorage>
+void StructuredGrid<TModel, GcmMatricesStorage>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
                                                          const real &dx, std::vector<Vector>& src) const {
 
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
@@ -87,14 +87,14 @@ void StructuredGrid<TNode, TModel>::findSourcesForInterpolation(const int stage,
 	}
 }
 
-template<template<class> class TNode, class TModel>
-void StructuredGrid<TNode, TModel>::beforeStageImpl() {
+template<typename TModel, template<typename> class GcmMatricesStorage>
+void StructuredGrid<TModel, GcmMatricesStorage>::beforeStageImpl() {
 	exchangeNodesWithNeighbors();
 	applyBorderConditions();
 }
 
-template<template<class> class TNode, class TModel>
-void StructuredGrid<TNode, TModel>::exchangeNodesWithNeighbors() {
+template<typename TModel, template<typename> class GcmMatricesStorage>
+void StructuredGrid<TModel, GcmMatricesStorage>::exchangeNodesWithNeighbors() {
 	LOG_DEBUG("Start data exchange with neighbor cores");
 	if (this->numberOfWorkers == 1) return;
 
@@ -121,13 +121,15 @@ void StructuredGrid<TNode, TModel>::exchangeNodesWithNeighbors() {
 	}
 }
 
-template<template<class> class TNode, class TModel>
-void StructuredGrid<TNode, TModel>::applyBorderConditions() {
+template<typename TModel, template<typename> class GcmMatricesStorage>
+void StructuredGrid<TModel, GcmMatricesStorage>::applyBorderConditions() {
 	borderConditions.applyBorderConditions(this);
 }
 
-template class StructuredGrid<NodeMatrix, Elastic1DModel>;
-template class StructuredGrid<NodeMatrix, Elastic2DModel>;
-template class StructuredGrid<NodeMatrix, Elastic3DModel>;
-template class StructuredGrid<NodeMatrix, OrthotropicElastic3DModel>;
+template class StructuredGrid<Elastic1DModel>;
+template class StructuredGrid<Elastic2DModel>;
+template class StructuredGrid<ContinualDamageElastic2DModel>;
+template class StructuredGrid<IdealPlastic2DModel>;
+template class StructuredGrid<Elastic3DModel>;
+template class StructuredGrid<OrthotropicElastic3DModel>;
 

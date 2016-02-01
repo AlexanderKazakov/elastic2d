@@ -67,9 +67,11 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiNodeTypes, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-		NodeMatrix<Elastic1DModel>,
-		NodeMatrix<Elastic2DModel>,
-		NodeMatrix<Elastic3DModel>> AllImplementations;
+		Node<Elastic1DModel>,
+		Node<Elastic2DModel>,
+		Node<Elastic3DModel>,
+		Node<OrthotropicElastic3DModel>,
+		Node<ContinualDamageElastic2DModel>> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiNodeTypes, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
@@ -97,16 +99,16 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	EngineWrapper<DefaultStructuredGrid<Elastic2DModel>> sequenceEngine;
-	sequenceEngine.setSolver(new DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>());
+	EngineWrapper<StructuredGrid<Elastic2DModel>> sequenceEngine;
+	sequenceEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	EngineWrapper<DefaultStructuredGrid<Elastic2DModel>> mpiEngine;
-	mpiEngine.setSolver(new DefaultSolver<DefaultStructuredGrid<Elastic2DModel>>());
+	EngineWrapper<StructuredGrid<Elastic2DModel>> mpiEngine;
+	mpiEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 
