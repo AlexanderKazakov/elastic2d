@@ -12,10 +12,12 @@ IF(VERBOSE_MAKE)
     set(CMAKE_VERBOSE_MAKEFILE ON)
 ENDIF()
 
-# Profiling (default is not)
-option(PROFILE "PROFILE" OFF)
-IF(PROFILE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+# add "-g"
+option(DEBUGG "DEBUGG" OFF)
+IF(DEBUGG)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -g")
 ENDIF()
 
 # Additional optimization (default is not)
