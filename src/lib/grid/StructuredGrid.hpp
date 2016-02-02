@@ -5,7 +5,7 @@
 
 #include <lib/grid/Grid.hpp>
 #include <lib/grid/nodes/Nodes.hpp>
-#include <lib/linal/special/VectorInt.hpp>
+#include <lib/linal/linal.hpp>
 #include <lib/numeric/interpolation/Interpolator.hpp>
 #include <lib/numeric/border_conditions/StructuredGridBorderConditions.hpp>
 

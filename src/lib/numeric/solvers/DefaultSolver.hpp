@@ -6,7 +6,7 @@
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
 #include <lib/grid/Grid.hpp>
-#include <lib/rheology/correctors/IdealPlasticFlowCorrector.hpp>
+#include <lib/rheology/correctors/correctors.hpp>
 
 namespace gcm {
 	/**

@@ -94,7 +94,7 @@ namespace gcm {
 
 		template<int TM>
 		Matrix<TM, TM, SymmetricMatrixContainer<TM>> Matrix<TM, TM, SymmetricMatrixContainer<TM>>::invert() const {
-			THROW_UNSUPPORTED("TODO");
+			return GslUtils::invertSymmetric(*this);
 		}
 
 		template<int TM>

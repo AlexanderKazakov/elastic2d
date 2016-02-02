@@ -1,4 +1,4 @@
-#include <lib/rheology/ode/DummyOde.hpp>
+#include <lib/rheology/ode/ode.hpp>
 
 using namespace gcm;
 

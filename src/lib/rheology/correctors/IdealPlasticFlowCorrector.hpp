@@ -14,7 +14,8 @@ namespace gcm {
 		static const bool NonTrivial = true;
 
 		void initialize(const Task &task) {
-			yieldStrength = task.material.yieldStrength;
+			yieldStrength = task.yieldStrength;
+			assert_gt(yieldStrength, 0.0);
 		};
 
 		real yieldStrength = 0;

@@ -1,12 +1,14 @@
 #ifndef LIBGCM_ORTHOTROPICMATERIAL_HPP
 #define LIBGCM_ORTHOTROPICMATERIAL_HPP
 
-
-#include <lib/util/Types.hpp>
-#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
 #include <initializer_list>
 
+#include <lib/util/Types.hpp>
+#include <lib/rheology/variables/variables.hpp>
+
 namespace gcm {
+	class Task;
+
 	class IsotropicMaterial;
 	template<typename TVariables, class TMaterial> class GcmMatrices;
 
@@ -29,12 +31,12 @@ namespace gcm {
 
 		real continualDamageParameter = 0; // parameter in continual damage equation
 
-		OrthotropicMaterial();
+		OrthotropicMaterial(const OrthotropicMaterial& other) = default;
 		OrthotropicMaterial(const IsotropicMaterial& isotropic);
-		OrthotropicMaterial(const real _rho, std::initializer_list<real>);
-		OrthotropicMaterial(const real _rho, const real _yieldStrength, std::initializer_list<real>);
-		OrthotropicMaterial(const real _rho, const real _yieldStrength, const real _continualDamageParameter,
-		                    std::initializer_list<real>);
+		OrthotropicMaterial(const real _rho = 0, std::initializer_list<real> = {0,0,0,0,0,0,0,0,0},
+		                    const real _yieldStrength = 0, const real _continualDamageParameter = 0);
+
+		void initialize(const Task& task);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>& m) const;

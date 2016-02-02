@@ -1,9 +1,4 @@
-#include <lib/linal/LinalRoutines.hpp>
-#include <lib/linal/special/Matrix33.hpp>
-#include <lib/linal/special/Matrix22.hpp>
-#include <lib/linal/special/Vector3.hpp>
-#include <lib/linal/special/VectorInt.hpp>
-#include <lib/linal/special/RotationMatrix.hpp>
+#include <lib/linal/linal.hpp>
 
 #include <gtest/gtest.h>
 #include <cmath>

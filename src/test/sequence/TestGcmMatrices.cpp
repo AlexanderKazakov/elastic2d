@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <lib/rheology/gcm_matrices/GcmMatrices.hpp>
-#include <lib/rheology/materials/OrthotropicMaterial.hpp>
-#include <lib/rheology/materials/IsotropicMaterial.hpp>
+#include <lib/rheology/materials/materials.hpp>
 
 using namespace gcm;
 using namespace gcm::linal;

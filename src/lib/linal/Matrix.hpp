@@ -6,13 +6,9 @@
 #include <string.h>
 #include <cmath>
 
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-
 #include <lib/util/Types.hpp>
 #include <lib/util/Assertion.hpp>
+#include <lib/util/GslUtils.hpp>
 
 
 namespace gcm {
@@ -157,33 +153,7 @@ namespace gcm {
 
 		template<int TM, int TN, typename Container>
 		Matrix<TN, TM, Container> Matrix<TM, TN, Container>::invert() const {
-			// TODO - move to some "gsl-utils"
-			Matrix<TN, TM, Container> result;
-
-			gsl_matrix *Z1 = gsl_matrix_alloc(TM, TM);
-			gsl_matrix *Z = gsl_matrix_alloc(TM, TM);
-			gsl_permutation *perm = gsl_permutation_alloc(TM);
-			int k;
-
-			for (int i = 0; i < TM; i++)
-				for (int j = 0; j < TM; j++)
-					gsl_matrix_set(Z1, (size_t)i, (size_t)j, (*this)(i, j));
-
-			if (gsl_linalg_LU_decomp(Z1, perm, &k))
-				THROW_INVALID_ARG("gsl_linalg_LU_decomp failed");
-
-			if (gsl_linalg_LU_invert(Z1, perm, Z))
-				THROW_INVALID_ARG("gsl_linalg_LU_invert failed");
-
-			for (int i = 0; i < TM; i++)
-				for (int j = 0; j < TM; j++)
-					result(i, j) = gsl_matrix_get(Z, (size_t)i, (size_t)j);
-
-			gsl_permutation_free(perm);
-			gsl_matrix_free(Z);
-			gsl_matrix_free(Z1);
-
-			return result;
+			return GslUtils::invert(*this);
 		}
 
 		template<int TM, int TN, typename Container>

@@ -1,5 +1,5 @@
 #include <lib/numeric/interpolation/Interpolator.hpp>
-#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
+#include <lib/rheology/variables/variables.hpp>
 
 using namespace gcm;
 

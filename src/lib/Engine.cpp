@@ -1,8 +1,4 @@
 #include <lib/Engine.hpp>
-#include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/util/snapshot/VtkTextStructuredSnapshotter.hpp>
-#include <lib/grid/StructuredGrid.hpp>
-#include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 

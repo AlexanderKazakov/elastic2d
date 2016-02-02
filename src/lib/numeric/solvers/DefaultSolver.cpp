@@ -113,3 +113,6 @@ template class DefaultSolver<StructuredGrid<Elastic3DModel>>;
 template class DefaultSolver<StructuredGrid<OrthotropicElastic3DModel>>;
 template class DefaultSolver<StructuredGrid<ContinualDamageElastic2DModel>>;
 template class DefaultSolver<StructuredGrid<IdealPlastic2DModel>>;
+
+template class DefaultSolver<StructuredGrid<SuperDuperModel>>;
+

@@ -1,10 +1,9 @@
 #include <lib/rheology/materials/OrthotropicMaterial.hpp>
 #include <lib/rheology/materials/IsotropicMaterial.hpp>
+#include <lib/util/task/Task.hpp>
 
 using namespace gcm;
 
-
-OrthotropicMaterial::OrthotropicMaterial() { }
 
 OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	rho = isotropic.rho;
@@ -15,28 +14,17 @@ OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	c12 = c13 = c23 = isotropic.lambda;
 }
 
-OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<real> list) : rho(_rho) {
-	int i = 0;
-	for(auto& r : list) {
-		c[i++] = r;
-	}
-}
-
-OrthotropicMaterial::OrthotropicMaterial(const real _rho, const real _yieldStrength, std::initializer_list<real> list) :
-		rho(_rho), yieldStrength(_yieldStrength) {
-	int i = 0;
-	for(auto& r : list) {
-		c[i++] = r;
-	}
-}
-
-OrthotropicMaterial::OrthotropicMaterial(const real _rho, const real _yieldStrength, const real _continualDamageParameter,
-                                         std::initializer_list<real> list) :
+OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<real> list,
+                                         const real _yieldStrength, const real _continualDamageParameter) :
 		rho(_rho), yieldStrength(_yieldStrength), continualDamageParameter(_continualDamageParameter) {
 	int i = 0;
 	for(auto& r : list) {
 		c[i++] = r;
 	}
+}
+
+void OrthotropicMaterial::initialize(const Task &task) {
+	*this = task.orthotropicMaterial;
 }
 
 void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial> &m) const {

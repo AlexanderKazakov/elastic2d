@@ -32,5 +32,5 @@ Matrix33 gcm::linal::getZRotationMatrix(real angle) {
 	                });
 }
 
-#undef rcos
 #undef rsin
+#undef rcos

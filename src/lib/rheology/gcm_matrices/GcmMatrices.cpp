@@ -1,19 +1,18 @@
 #include <lib/rheology/gcm_matrices/GcmMatrices.hpp>
-#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
-#include <lib/rheology/materials/IsotropicMaterial.hpp>
-#include <lib/rheology/materials/OrthotropicMaterial.hpp>
+#include <lib/rheology/variables/variables.hpp>
+#include <lib/rheology/materials/materials.hpp>
 
 using namespace gcm;
 
 
 template<>
-const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::WAVE_COLUMNS = {
+const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>::WAVE_COLUMNS = {
 		{Waves::T::P_FORWARD,  0},
 		{Waves::T::P_BACKWARD, 1}
 };
 
 template<>
-const std::map<Waves::T, int /* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS = {
+const std::map<Waves::T, int/* number of column in U1 */> GcmMatrices<VelocitySigmaVariables<2>, IsotropicMaterial>::WAVE_COLUMNS = {
 		{Waves::T::P_FORWARD,   1},
 		{Waves::T::P_BACKWARD,  0},
 		{Waves::T::S1_FORWARD,  3},

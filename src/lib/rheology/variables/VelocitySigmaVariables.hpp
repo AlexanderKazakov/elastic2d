@@ -1,7 +1,7 @@
 #ifndef LIBGCM_VELOCITYSIGMAVARIABLES_HPP
 #define LIBGCM_VELOCITYSIGMAVARIABLES_HPP
 
-#include <lib/linal/LinalRoutines.hpp>
+#include <lib/linal/linal.hpp>
 #include <lib/rheology/variables/GetSetter.hpp>
 #include <lib/util/Concepts.hpp>
 

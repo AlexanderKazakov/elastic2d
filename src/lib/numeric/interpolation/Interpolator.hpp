@@ -2,7 +2,7 @@
 #define LIBGCM_INTERPOLATOR_HPP
 
 #include <vector>
-#include <lib/linal/LinalRoutines.hpp>
+#include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
 
 

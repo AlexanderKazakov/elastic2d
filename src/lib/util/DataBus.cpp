@@ -42,4 +42,5 @@ void DataBus::createStaticTypes() {
 	createStaticType<Node<Elastic3DModel>>();
 	createStaticType<Node<OrthotropicElastic3DModel>>();
 	createStaticType<Node<ContinualDamageElastic2DModel>>();
+	createStaticType<Node<SuperDuperModel>>();
 }

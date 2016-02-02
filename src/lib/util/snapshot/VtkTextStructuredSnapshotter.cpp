@@ -83,3 +83,5 @@ template class VtkTextStructuredSnapshotter<StructuredGrid<Elastic3DModel>>;
 template class VtkTextStructuredSnapshotter<StructuredGrid<OrthotropicElastic3DModel>>;
 template class VtkTextStructuredSnapshotter<StructuredGrid<ContinualDamageElastic2DModel>>;
 template class VtkTextStructuredSnapshotter<StructuredGrid<IdealPlastic2DModel>>;
+
+template class VtkTextStructuredSnapshotter<StructuredGrid<SuperDuperModel>>;

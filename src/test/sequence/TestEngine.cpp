@@ -12,7 +12,7 @@ TEST(Engine, run)
 	Task task;
 	task.accuracyOrder = 5;
 	task.CourantNumber = 4.5;
-	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
+	task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.sizes(0) = 20;
 	task.sizes(1) = 40;
 	task.lengthes = {7, 3, 1};
@@ -48,7 +48,7 @@ TEST(Engine, TwoLayersDifferentRho)
 		Task task;
 		task.accuracyOrder = 3;
 		task.CourantNumber = 1.5;
-		task.material = IsotropicMaterial(1.0, 2.0, 0.8);
+		task.isotropicMaterial = IsotropicMaterial(1.0, 2.0, 0.8);
 		task.sizes(0) = 50;
 		task.sizes(1) = 100;
 		task.lengthes = {2, 1, 1};
@@ -86,9 +86,9 @@ TEST(Engine, TwoLayersDifferentRho)
 		StructuredGrid<Elastic2DModel>::NODE transfer =
 				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
 
-		real rho0 = task.material.rho;
-		real lambda0 = task.material.lambda;
-		real mu0 = task.material.mu;
+		real rho0 = task.isotropicMaterial.rho;
+		real lambda0 = task.isotropicMaterial.lambda;
+		real mu0 = task.isotropicMaterial.mu;
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0); // acoustic impedance
 
@@ -127,7 +127,7 @@ TEST(Engine, TwoLayersDifferentE)
 		Task task;
 		task.accuracyOrder = 3;
 		task.CourantNumber = 1.5;
-		task.material = IsotropicMaterial(1.0, 2.0, 0.8);
+		task.isotropicMaterial = IsotropicMaterial(1.0, 2.0, 0.8);
 		task.sizes(0) = 50;
 		task.sizes(1) = 100;
 		task.lengthes = {2, 1, 1};
@@ -165,9 +165,9 @@ TEST(Engine, TwoLayersDifferentE)
 		StructuredGrid<Elastic2DModel>::NODE transfer =
 				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
 
-		real rho0 = task.material.rho;
-		real lambda0 = task.material.lambda;
-		real mu0 = task.material.mu;
+		real rho0 = task.isotropicMaterial.rho;
+		real lambda0 = task.isotropicMaterial.lambda;
+		real mu0 = task.isotropicMaterial.mu;
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0); // acoustic impedance
 

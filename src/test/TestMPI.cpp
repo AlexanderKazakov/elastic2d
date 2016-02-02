@@ -71,7 +71,8 @@ typedef Types<
 		Node<Elastic2DModel>,
 		Node<Elastic3DModel>,
 		Node<OrthotropicElastic3DModel>,
-		Node<ContinualDamageElastic2DModel>> AllImplementations;
+		Node<ContinualDamageElastic2DModel>,
+		Node<SuperDuperModel>> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiNodeTypes, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
@@ -82,7 +83,7 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	Task task;
 	task.accuracyOrder = 2;
 	task.CourantNumber = 1.8;
-	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
+	task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 
 	task.sizes(0) = 20;
 	task.sizes(1) = 10;

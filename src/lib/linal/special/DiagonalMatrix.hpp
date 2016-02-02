@@ -1,9 +1,6 @@
 #ifndef LIBGCM_LINAL_DIAGONALMATRIX_HPP
 #define LIBGCM_LINAL_DIAGONALMATRIX_HPP
 
-#include <lib/linal/Matrix.hpp>
-
-
 namespace gcm {
 	namespace linal {
 		/**

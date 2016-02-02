@@ -1,10 +1,10 @@
 #ifndef LIBGCM_MODEL_HPP
 #define LIBGCM_MODEL_HPP
 
-#include <lib/rheology/materials/Materials.hpp>
-#include <lib/rheology/variables/Variables.hpp>
-#include <lib/rheology/ode/ODE.hpp>
-#include <lib/rheology/correctors/Corrector.hpp>
+#include <lib/rheology/materials/materials.hpp>
+#include <lib/rheology/variables/variables.hpp>
+#include <lib/rheology/ode/ode.hpp>
+#include <lib/rheology/correctors/correctors.hpp>
 
 namespace gcm {
 
@@ -35,6 +35,9 @@ namespace gcm {
 
 	typedef Model<VelocitySigmaVariables<3>, IsotropicMaterial> Elastic3DModel;
 	typedef Model<VelocitySigmaVariables<3>, OrthotropicMaterial> OrthotropicElastic3DModel;
+
+	typedef Model<VelocitySigmaVariables<3>, OrthotropicMaterial,
+			ContinualDamageOde, IdealPlasticFlowCorrector> SuperDuperModel;
 }
 
 #endif //LIBGCM_MODEL_HPP

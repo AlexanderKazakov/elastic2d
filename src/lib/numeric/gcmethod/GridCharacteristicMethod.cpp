@@ -34,3 +34,4 @@ template class GridCharacteristicMethod<StructuredGrid<Elastic3DModel>>;
 template class GridCharacteristicMethod<StructuredGrid<OrthotropicElastic3DModel>>;
 template class GridCharacteristicMethod<StructuredGrid<ContinualDamageElastic2DModel>>;
 template class GridCharacteristicMethod<StructuredGrid<IdealPlastic2DModel>>;
+template class GridCharacteristicMethod<StructuredGrid<SuperDuperModel>>;

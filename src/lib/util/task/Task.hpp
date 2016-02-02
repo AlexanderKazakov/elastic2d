@@ -5,12 +5,11 @@
 #include <memory>
 #include <vector>
 
-#include <lib/linal/special/VectorInt.hpp>
+#include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Concepts.hpp>
 #include <lib/util/areas/SphereArea.hpp>
-#include <lib/rheology/materials/IsotropicMaterial.hpp>
-#include <lib/rheology/materials/OrthotropicMaterial.hpp>
+#include <lib/rheology/materials/materials.hpp>
 
 namespace gcm {
 	/**
@@ -27,7 +26,10 @@ namespace gcm {
 		linal::VectorInt<3> sizes = {1, 1, 1}; // number of nodes along each direction
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node
 
-		IsotropicMaterial material;
+		real continualDamageParameter = 0;
+		real yieldStrength = 0;
+		IsotropicMaterial isotropicMaterial;
+		OrthotropicMaterial orthotropicMaterial;
 
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
 		int numberOfSnaps = 0;
@@ -38,8 +40,6 @@ namespace gcm {
 		bool enableSnapshotting = false;
 		bool forceSequence = false; // if true make the grid thinking that the number of
 		// processes is one, even if it isn't so actually
-
-		bool plasticityFlowCorrector = false;
 
 		/**
 		 * All listed here initial conditions will be applied in sequence, not rewriting but adding to each other

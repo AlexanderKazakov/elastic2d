@@ -110,3 +110,4 @@ template class StructuredGridBorderConditions<StructuredGrid<Elastic3DModel>>;
 template class StructuredGridBorderConditions<StructuredGrid<OrthotropicElastic3DModel>>;
 template class StructuredGridBorderConditions<StructuredGrid<ContinualDamageElastic2DModel>>;
 template class StructuredGridBorderConditions<StructuredGrid<IdealPlastic2DModel>>;
+template class StructuredGridBorderConditions<StructuredGrid<SuperDuperModel>>;

@@ -2,9 +2,10 @@
 #define LIBGCM_ISOTROPICMATERIAL_HPP
 
 #include <lib/rheology/gcm_matrices/GcmMatrices.hpp>
-#include <lib/rheology/variables/VelocitySigmaVariables.hpp>
+#include <lib/rheology/variables/variables.hpp>
 
 namespace gcm {
+	class Task;
 
 	class IsotropicMaterial {
 	public:
@@ -17,11 +18,11 @@ namespace gcm {
 
 		real continualDamageParameter = 0; // parameter in continual damage equation
 
-		IsotropicMaterial();
-		IsotropicMaterial(const real _rho, const real _lambda, const real _mu);
-		IsotropicMaterial(const real _rho, const real _lambda, const real _mu, const real _yieldStrength);
-		IsotropicMaterial(const real _rho, const real _lambda, const real _mu,
-		                  const real _yieldStrength, const real _continualDamageParameter);
+		IsotropicMaterial(const IsotropicMaterial& other) = default;
+		IsotropicMaterial(const real _rho = 0, const real _lambda = 0, const real _mu = 0,
+		                  const real _yieldStrength = 0, const real _continualDamageParameter = 0);
+		
+		void initialize(const Task& task);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>& m) const;

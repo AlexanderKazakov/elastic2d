@@ -23,7 +23,8 @@ namespace gcm {
 		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; };
 
 		void initialize(const Task &task) {
-			parameter = task.material.continualDamageParameter;
+			parameter = task.continualDamageParameter;
+			assert_gt(parameter, 0.0);
 		};
 
 		/**

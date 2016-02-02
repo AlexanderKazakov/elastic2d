@@ -14,7 +14,7 @@ TEST(Solver, StageXForward)
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
-		task.material = IsotropicMaterial(4.0, 2.0, 0.5);
+		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 10;
 		task.sizes(1) = 10;
 		task.lengthes = {2, 3, 1};
@@ -56,7 +56,7 @@ TEST(Solver, StageY)
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 1.0;
-		task.material = IsotropicMaterial(4.0, 2.0, 0.5);
+		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 10;
 		task.sizes(1) = 10;
 		task.lengthes = {3, 2, 1};
@@ -98,7 +98,7 @@ TEST(Solver, StageYSxx)
 		Task task;
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 0.7;
-		task.material = IsotropicMaterial(4.0, 2.0, 0.5);
+		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 20;
 		task.sizes(1) = 10;
 		task.lengthes = {7, 3, 1};

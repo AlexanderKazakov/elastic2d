@@ -1,7 +1,7 @@
 #ifndef LIBGCM_LINAL_MATRIX22_HPP
 #define LIBGCM_LINAL_MATRIX22_HPP
 
-#include <lib/linal/LinalRoutines.hpp>
+#include <lib/linal/Matrix.hpp>
 
 namespace gcm {
 	namespace linal {

@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	engine.setSolver(new DefaultSolver<StructuredGrid<IdealPlastic2DModel>>());
-	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<IdealPlastic2DModel>>());
+	engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
+	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());
 
 	try {
 		engine.initialize(parseTask());
@@ -35,39 +35,39 @@ int main(int argc, char** argv) {
 Task parseTask() {
 	Task task;
 
-	task.accuracyOrder = 3;
+	task.accuracyOrder = 2;
 
-	task.lengthes = {4, 2, 2};
-	task.sizes = {40, 10, 1};
+	task.lengthes = {4, 2, 1};
+	task.sizes = {100, 50, 25};
 
-	real rho0 = 4; // default density
-	real lambda0 = 2; // default Lame parameter
-	real mu0 = 1; // default Lame parameter
-	real yieldStrength0 = 1;
-	real continualDamageParameter0 = 1;
-	task.material = IsotropicMaterial(rho0, lambda0, mu0, yieldStrength0);
-	task.material.continualDamageParameter = continualDamageParameter0;
-	task.plasticityFlowCorrector = true;
+	real rho = 4; // default density
+	real lambda = 2; // default Lame parameter
+	real mu = 1; // default Lame parameter
+	task.yieldStrength = 1;
+	task.continualDamageParameter = 1;
+	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, task.yieldStrength, task.continualDamageParameter);
+	task.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10},
+	                                               task.yieldStrength, task.continualDamageParameter);
 
-	task.CourantNumber = 1.9; // number from Courant–Friedrichs–Lewy condition
+	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 10;
-	task.stepsPerSnap = 3;
+	task.numberOfSnaps = 20;
+	task.stepsPerSnap = 2;
 
-	/*Task::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 2.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 1, 2}));
-	task.initialCondition.quantities.push_back(pressure);*/
+	pressure.value = 10.0;
+	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({2, 1, 0.5}));
+	task.initialCondition.quantities.push_back(pressure);
 
-	Task::InitialCondition::Wave wave;
+	/*Task::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::P_FORWARD;
 	wave.direction = 0;
 	wave.quantity = PhysicalQuantities::T::PRESSURE;
 	wave.quantityValue = 10.0;
 	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2, -1, -1}), linal::Vector3({0.5, 3, 3}));
-	task.initialCondition.waves.push_back(wave);
+	task.initialCondition.waves.push_back(wave);*/
 
 	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 

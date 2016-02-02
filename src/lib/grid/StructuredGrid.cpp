@@ -37,7 +37,9 @@ void StructuredGrid<TModel, GcmMatricesStorage>::initializeImpl(const Task &task
 
 	this->nodes.resize( (unsigned long) (sizes(0) + 2 * accuracyOrder) * (sizes(1) + 2 * accuracyOrder) * (sizes(2) + 2 * accuracyOrder) );
 
-	auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>(task.material);
+	typename TModel::Material material;
+	material.initialize(task);
+	auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>(material);
 	for (auto& node : nodes) {
 		node.matrix = gcmMatricesPtr;
 	}
@@ -127,9 +129,13 @@ void StructuredGrid<TModel, GcmMatricesStorage>::applyBorderConditions() {
 }
 
 template class StructuredGrid<Elastic1DModel>;
+
 template class StructuredGrid<Elastic2DModel>;
 template class StructuredGrid<ContinualDamageElastic2DModel>;
 template class StructuredGrid<IdealPlastic2DModel>;
+
 template class StructuredGrid<Elastic3DModel>;
 template class StructuredGrid<OrthotropicElastic3DModel>;
+
+template class StructuredGrid<SuperDuperModel>;
 

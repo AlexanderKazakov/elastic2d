@@ -14,7 +14,9 @@ void InitialCondition<TModel>::initialize(const Task &task) {
 
 	for (auto& wave : task.initialCondition.waves) {
 		assert_lt(wave.direction, TModel::DIMENSIONALITY);
-		GCM_MATRICES gcmMatrices(task.material); 
+		typename TModel::Material material;
+		material.initialize(task);
+		GCM_MATRICES gcmMatrices(material);
 		auto A = gcmMatrices.A(wave.direction);
 		int columnNumber = GCM_MATRICES::WAVE_COLUMNS.at(wave.waveType);
 		Vector tmp;
@@ -50,3 +52,5 @@ template class InitialCondition<Elastic3DModel>;
 template class InitialCondition<OrthotropicElastic3DModel>;
 template class InitialCondition<ContinualDamageElastic2DModel>;
 template class InitialCondition<IdealPlastic2DModel>;
+
+template class InitialCondition<SuperDuperModel>;

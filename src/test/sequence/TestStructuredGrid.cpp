@@ -11,7 +11,7 @@ TEST(StructuredGrid, initialize) {
 	Task task;
 	task.accuracyOrder = 3;
 	task.CourantNumber = 0.7;
-	task.material = IsotropicMaterial(4.0, 2.0, 0.5);
+	task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.sizes(0) = 7;
 	task.sizes(1) = 9;
 	task.lengthes = {20, 8, 1};
@@ -39,7 +39,7 @@ TEST(StructuredGrid, initialize) {
 TEST(StructuredGrid, findSourcesForInterpolation)
 {
 	Task task;
-	task.material = IsotropicMaterial(2.0, 2.0, 1.0);
+	task.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
 
 	task.sizes(0) = task.sizes(1) = 3;
 	task.accuracyOrder = 1;
@@ -82,7 +82,7 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 TEST(StructuredGrid, interpolateValuesAround)
 {
 	Task task;
-	task.material = IsotropicMaterial(2.0, 2.0, 1.0);
+	task.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
 
 	task.sizes(0) = task.sizes(1) = 3;
 	task.accuracyOrder = 1;
