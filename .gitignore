@@ -2,7 +2,7 @@ build/*
 build
 snaps
 snaps/*
-seismo
-seismo/*
+seismos
+seismos/*
 .idea/*
 *.log
