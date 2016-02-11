@@ -4,6 +4,7 @@ using namespace gcm;
 
 
 const std::map<PhysicalQuantities::T, std::string> PhysicalQuantities::NAME = {
+		{PhysicalQuantities::T::VELOCITY,       "Velocity"},
 		{PhysicalQuantities::T::Vx,             "Vx"},
 		{PhysicalQuantities::T::Vy,             "Vy"},
 		{PhysicalQuantities::T::Vz,             "Vz"},

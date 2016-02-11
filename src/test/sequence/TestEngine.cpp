@@ -32,10 +32,9 @@ TEST(Engine, run)
 	EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
 	engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	engine.initialize(task);
-	StructuredGrid<Elastic2DModel>::Vector sWave =
-			engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, 3, 0).u;
+	auto sWave = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, 3, 0);
 	engine.run();
-	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, 22, 0).u);
+	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, 22, 0));
 }
 
 
@@ -72,19 +71,15 @@ TEST(Engine, TwoLayersDifferentRho)
 		real lambda2lambda0 = 1;
 		real mu2mu0 = 1;
 		engine.getSolverForTest()->getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
-		engine.getSolverForTest()->getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		StructuredGrid<Elastic2DModel>::NODE init =
-				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto init = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		engine.run();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		StructuredGrid<Elastic2DModel>::NODE reflect =
-				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
-		StructuredGrid<Elastic2DModel>::NODE transfer =
-				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
+		auto reflect = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto transfer = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.isotropicMaterial.rho;
 		real lambda0 = task.isotropicMaterial.lambda;
@@ -99,17 +94,17 @@ TEST(Engine, TwoLayersDifferentRho)
 		real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 		real Z = sqrt(E * rho); // acoustic impedance
 
-		ASSERT_NEAR(reflect.u.sigma(1, 1) / init.u.sigma(1, 1),
+		ASSERT_NEAR(reflect.sigma(1, 1) / init.sigma(1, 1),
 		            (Z - Z0) / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(reflect.u.V[1] / init.u.V[1],
+		ASSERT_NEAR(reflect.V[1] / init.V[1],
 		            (Z0 - Z) / (Z + Z0),
 		            1e-2);
 
-		ASSERT_NEAR(transfer.u.sigma(1, 1) / init.u.sigma(1, 1),
+		ASSERT_NEAR(transfer.sigma(1, 1) / init.sigma(1, 1),
 		            2 * Z / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(transfer.u.V[1] / init.u.V[1],
+		ASSERT_NEAR(transfer.V[1] / init.V[1],
 		            2 * Z0 / (Z + Z0),
 		            1e-2);
 
@@ -151,19 +146,15 @@ TEST(Engine, TwoLayersDifferentE)
 		real lambda2lambda0 = E2E0Initial * pow(2, i);
 		real mu2mu0 = E2E0Initial * pow(2, i);
 		engine.getSolverForTest()->getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
-		engine.getSolverForTest()->getNewMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		StructuredGrid<Elastic2DModel>::NODE init =
-				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto init = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		engine.run();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		StructuredGrid<Elastic2DModel>::NODE reflect =
-				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, leftNodeIndex, 0);
-		StructuredGrid<Elastic2DModel>::NODE transfer =
-				engine.getSolverForTest()->getMesh()->getNodeForTest(task.sizes(0) / 2, rightNodeIndex, 0);
+		auto reflect = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto transfer = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.isotropicMaterial.rho;
 		real lambda0 = task.isotropicMaterial.lambda;
@@ -178,17 +169,17 @@ TEST(Engine, TwoLayersDifferentE)
 		real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 		real Z = sqrt(E * rho); // acoustic impedance
 
-		ASSERT_NEAR(reflect.u.sigma(1, 1) / init.u.sigma(1, 1),
+		ASSERT_NEAR(reflect.sigma(1, 1) / init.sigma(1, 1),
 		            (Z - Z0) / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(reflect.u.V[1] / init.u.V[1],
+		ASSERT_NEAR(reflect.V[1] / init.V[1],
 		            (Z0 - Z) / (Z + Z0),
 		            1e-2);
 
-		ASSERT_NEAR(transfer.u.sigma(1, 1) / init.u.sigma(1, 1),
+		ASSERT_NEAR(transfer.sigma(1, 1) / init.sigma(1, 1),
 		            2 * Z / (Z + Z0),
 		            1e-2);
-		ASSERT_NEAR(transfer.u.V[1] / init.u.V[1],
+		ASSERT_NEAR(transfer.V[1] / init.V[1],
 		            2 * Z0 / (Z + Z0),
 		            1e-2);
 

@@ -4,7 +4,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 
 set(WARNING_FLAGS "-Wall -Wextra -Wsign-conversion -Wconversion -Wundef -Wcast-align -Wwrite-strings -Wlogical-op -Wmissing-declarations -Wredundant-decls -Wshadow -Woverloaded-virtual")
 set(ADDITIONAL_OPTIMIZATION_FLAGS "-march=native -Ofast -msse3 -ffast-math -funroll-loops")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pipe ${WARNING_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pipe ${WARNING_FLAGS} -frounding-math -fsignaling-nans")
 
 # Show compiler output (default is not)
 option(VERBOSE_MAKE "VERBOSE_MAKE" OFF)
@@ -51,6 +51,21 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # This is for gtest too
 find_package (Threads REQUIRED)
 
+# CGAL library
+find_package(CGAL REQUIRED)
+include_directories(${CGAL_INCLUDE_DIRS})
+
+# VTK library
+find_package(VTK REQUIRED)
+INCLUDE(${VTK_USE_FILE})
+if(VTK_MAJOR_VERSION EQUAL 5)
+    set(CONFIG_VTK_5 1)
+elseif (VTK_MAJOR_VERSION EQUAL 6)
+    set(CONFIG_VTK_6 1)
+else()
+    message(FATAL_ERROR "Unsupported VTK version found: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+endif()
+
 # source files
 include_directories(src)
 file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/gcm_exe/*.cpp")
@@ -58,22 +73,27 @@ file(GLOB_RECURSE SEISMO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/seismo/
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
+set(TEST_CGAL_FILES src/test/cgal/TestCgal.cpp src/test/sequence/TestMain.cpp)
 
 # libgcm
 add_library(gcm SHARED ${LIB_SOURCES})
 
 # gcm_exe
 add_executable(gcm_exe ${GCM_EXE_SOURCES})
-target_link_libraries(gcm_exe gcm ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES})
+target_link_libraries(gcm_exe gcm ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # gcm_seismo
 add_executable(gcm_seismo ${SEISMO_SOURCES})
-target_link_libraries(gcm_seismo gcm ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES})
+target_link_libraries(gcm_seismo gcm ${MPI_CXX_LIBRARIES} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
-target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})
+target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests on mpi
 add_executable(gcm_mpi_tests ${TEST_MPI_FILE})
-target_link_libraries(gcm_mpi_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES})
+target_link_libraries(gcm_mpi_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
+
+#tests on cgal
+add_executable(cgal_tests ${TEST_CGAL_FILES})
+target_link_libraries(cgal_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})

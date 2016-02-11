@@ -6,7 +6,7 @@
 namespace gcm {
 
 	/**
-	 * The struct is made for classes like snapshotters, initial condition setters, etc.
+	 * The structs below are made for classes like snapshotters, initial condition setters, etc.
 	 *
 	 * It provides unified for *all types* of Variables interface to information about their physical quantities.
 	 * And so let one to get/set some quantity in an object of Variables without knowledge of its structure:
@@ -23,6 +23,18 @@ namespace gcm {
 		typedef void (*Setter)(const real& value, Variables& variablesToSetTo);
 
 		GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { };
+
+		Getter Get;
+		Setter Set;
+	};
+
+
+	template<typename Variables>
+	struct Vector3GetSetter {
+		typedef linal::Vector3 (*Getter)(const Variables& variablesToGetFrom);
+		typedef void (*Setter)(const linal::Vector3& value, Variables& variablesToSetTo);
+
+		Vector3GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { };
 
 		Getter Get;
 		Setter Set;

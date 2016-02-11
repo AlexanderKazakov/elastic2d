@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <test/wrappers/Wrappers.hpp>
 
-#include <lib/util/DataBus.hpp>
 #include <lib/util/task/Task.hpp>
 #include <lib/rheology/models/Model.hpp>
 
@@ -9,9 +8,9 @@
 using namespace gcm;
 
 template<class TNode>
-class TestMpiNodeTypes : public testing::Test {
+class TestMpiConnection : public testing::Test {
 protected:
-	void testMpiNodeTypes() {
+	void testMpiConnection() {
 		int rank = MPI::COMM_WORLD.Get_rank();
 		int numberOfWorkers = MPI::COMM_WORLD.Get_size();
 
@@ -21,34 +20,34 @@ protected:
 		TNode rightNodes[testNumberOfNodes];
 
 		for (int k = 0; k < testNumberOfNodes; k++) {
-			for (int i = 0; i < TNode::Vector::M; i++) {
-				leftNodes[k].u(i) = rightNodes[k].u(i) = rank;
+			for (int i = 0; i < TNode::M; i++) {
+				leftNodes[k](i) = rightNodes[k](i) = rank;
 			}
 		}
 
 		if (numberOfWorkers > 1) {
 			if (rank == 0) {
-				MPI_Sendrecv_replace(rightNodes, testNumberOfNodes, TNode::MPI_NODE_TYPE,
+				MPI_Sendrecv_replace(rightNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
 				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			} else if (rank == numberOfWorkers - 1) {
-				MPI_Sendrecv_replace(leftNodes, testNumberOfNodes, TNode::MPI_NODE_TYPE,
+				MPI_Sendrecv_replace(leftNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
 				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			} else {
-				MPI_Sendrecv_replace(rightNodes, testNumberOfNodes, TNode::MPI_NODE_TYPE,
+				MPI_Sendrecv_replace(rightNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
 				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-				MPI_Sendrecv_replace(leftNodes, testNumberOfNodes, TNode::MPI_NODE_TYPE,
+				MPI_Sendrecv_replace(leftNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
 				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			}
 
 			for (int k = 0; k < testNumberOfNodes; k++) {
-				for (int i = 0; i < TNode::Vector::M; i++) {
+				for (int i = 0; i < TNode::M; i++) {
 					if (rank == 0) {
-						ASSERT_EQ(rightNodes[k].u(i), rank + 1);
+						ASSERT_EQ(rightNodes[k](i), rank + 1);
 					} else if (rank == numberOfWorkers - 1) {
-						ASSERT_EQ(leftNodes[k].u(i), rank - 1);
+						ASSERT_EQ(leftNodes[k](i), rank - 1);
 					} else {
-						ASSERT_EQ(leftNodes[k].u(i), rank - 1);
-						ASSERT_EQ(rightNodes[k].u(i), rank + 1);
+						ASSERT_EQ(leftNodes[k](i), rank - 1);
+						ASSERT_EQ(rightNodes[k](i), rank + 1);
 					}
 				}
 			}
@@ -59,22 +58,20 @@ protected:
 /** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc for explaination */
 #if GTEST_HAS_TYPED_TEST_P
 using testing::Types;
-TYPED_TEST_CASE_P(TestMpiNodeTypes);
-TYPED_TEST_P(TestMpiNodeTypes, MPI_NODE_TYPE) {
-	this->testMpiNodeTypes();
+TYPED_TEST_CASE_P(TestMpiConnection);
+TYPED_TEST_P(TestMpiConnection, MPI_NODE_TYPE) {
+	this->testMpiConnection();
 }
-REGISTER_TYPED_TEST_CASE_P(TestMpiNodeTypes, MPI_NODE_TYPE);
+REGISTER_TYPED_TEST_CASE_P(TestMpiConnection, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-		Node<Elastic1DModel>,
-		Node<Elastic2DModel>,
-		Node<Elastic3DModel>,
-		Node<OrthotropicElastic3DModel>,
-		Node<ContinualDamageElastic2DModel>,
-		Node<SuperDuperModel>> AllImplementations;
+		StructuredGrid<Elastic1DModel>::PdeVector,
+		StructuredGrid<ContinualDamageElastic2DModel>::PdeVector,
+		StructuredGrid<OrthotropicElastic3DModel>::PdeVector
+> AllImplementations;
 
-INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiNodeTypes, AllImplementations);
+INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
 
 
@@ -116,10 +113,10 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	// check that parallel result is equal to sequence result
 	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
 	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
-	for (int x = 0; x < mpiMesh->getXForTest(); x++) {
-		for (int y = 0; y < mpiMesh->getYForTest(); y++) {
-			ASSERT_EQ(mpiMesh->getNodeForTest(x, y, 0).u,
-			          sequenceMesh->getNodeForTest (x + mpiMesh->getStartXForTest(), y, 0).u)
+	for (int x = 0; x < mpiMesh->getSizesForTest()(0); x++) {
+		for (int y = 0; y < mpiMesh->getSizesForTest()(1); y++) {
+			ASSERT_EQ(mpiMesh->get(x, y, 0),
+			          sequenceMesh->get(x + mpiMesh->getStartXForTest(), y, 0))
 					<< "x = " << x << " global x = " << x + mpiMesh->getStartXForTest() << " y = " << y << std::endl;
 		}
 	}
@@ -128,7 +125,6 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
-	DataBus::createStaticTypes();
 
 	testing::InitGoogleTest(&argc, argv);
 	int allTestsResult = RUN_ALL_TESTS();

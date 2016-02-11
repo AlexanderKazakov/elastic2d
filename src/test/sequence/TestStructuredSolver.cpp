@@ -33,13 +33,13 @@ TEST(Solver, StageXForward)
 
 		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		StructuredGrid<Elastic2DModel>::Vector pWave = solver.getMesh()->getNodeForTest(2, 0, 0).u;
-		StructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
+		auto pWave = solver.getMesh()->get(2, 0, 0);
+		StructuredGrid<Elastic2DModel>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ( solver.getMesh()->getNodeForTest(x, y, 0).u,
+					ASSERT_EQ(solver.getMesh()->get(x, y, 0),
 					           (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -75,13 +75,13 @@ TEST(Solver, StageY)
 
 		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		StructuredGrid<Elastic2DModel>::Vector pWave = solver.getMesh()->getNodeForTest(0, 2, 0).u;
-		StructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
+		auto pWave = solver.getMesh()->get(0, 2, 0);
+		StructuredGrid<Elastic2DModel>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->getNodeForTest(x, y, 0).u,
+					ASSERT_EQ(solver.getMesh()->get(x, y, 0),
 					          (y == 2 + i || y == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -99,31 +99,28 @@ TEST(Solver, StageYSxx)
 		task.accuracyOrder = accuracyOrder;
 		task.CourantNumber = 0.7;
 		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
-		task.sizes(0) = 20;
-		task.sizes(1) = 10;
-		task.lengthes = {7, 3, 1};
+		task.sizes(0) = 11;
+		task.sizes(1) = 11;
+		task.lengthes = {1, 1, 1};
 		task.numberOfSnaps = 1;
-		task.T = 100.0;
 
 		Task::InitialCondition::Quantity quantity;
 		quantity.physicalQuantity = PhysicalQuantities::T::Sxx;
 		quantity.value = 10;
-		linal::Vector3 begin({3.684, 1.666, -1});
-		linal::Vector3 end({3.684, 1.666, 1});
-		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.1, begin, end);
+		linal::Vector3 begin({0.5, 0.5, -1});
+		linal::Vector3 end({0.5, 0.5, 1});
+		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.01, begin, end);
 		task.initialCondition.quantities.push_back(quantity);
 
 		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		StructuredGrid<Elastic2DModel>::Vector sxxOnly = solver.getMesh()->getNodeForTest
-				(task.sizes(0) / 2, task.sizes(1) / 2, 0).u;
-		StructuredGrid<Elastic2DModel>::Vector zero({0, 0, 0, 0, 0});
+		auto sxxOnly = solver.getMesh()->get(5, 5, 0);
+		StructuredGrid<Elastic2DModel>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->getNodeForTest(x, y, 0).u,
-					          (x == task.sizes(0) / 2 && y == task.sizes(1) / 2 ) ? sxxOnly : zero)
+					ASSERT_EQ(solver.getMesh()->get(x, y, 0), (x == 5 && y == 5 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}

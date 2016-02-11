@@ -86,6 +86,15 @@ namespace gcm {
 				this->values[i++] = value;
 		}
 
+		/** @return multiplication of all elements */
+		template<int TM>
+		long int directProduct(const Matrix<TM, 1, VectorIntContainer<TM>>& m) {
+			long int ans = 1;
+			for (int i = 0; i < TM; i++) {
+				ans *= m(i);
+			}
+			return ans;
+		};
 	};
 };
 

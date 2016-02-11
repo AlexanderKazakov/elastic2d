@@ -4,7 +4,6 @@
 #include <mpi.h>
 
 #include <lib/grid/Grid.hpp>
-#include <lib/grid/nodes/Nodes.hpp>
 #include <lib/linal/linal.hpp>
 #include <lib/numeric/interpolation/Interpolator.hpp>
 #include <lib/numeric/border_conditions/StructuredGridBorderConditions.hpp>
@@ -12,30 +11,33 @@
 namespace gcm {
 	template<class TGrid> class DefaultSolver;
 	template<class TGrid> class GridCharacteristicMethod;
-	template<class TGrid> class VtkTextStructuredSnapshotter;
+	template<class TGrid> class VtkStructuredSnapshotter;
 	template<class TGrid> class Binary2DSeismograph;
-
-	template<typename TModel, template<typename> class GcmMatricesStorage> class Node;
 
 	/**
 	 * Non-movable structured rectangular grid
-	 * @tparam TNode building block of mesh
 	 * @tparam TModel rheology model
 	 */
-	template<typename TModel,
-			template<typename> class GcmMatricesStorage = DefaultGcmMatricesStorage>
+	template<typename TModel>
 	class StructuredGrid : public Grid {
 	public:
-		typedef TModel Model;
-		typedef Node<TModel, GcmMatricesStorage> NODE;
-		typedef typename NODE::Vector Vector;
-		typedef typename NODE::GCM_MATRICES GCM_MATRICES;
+		typedef          TModel               Model;
+		typedef typename Model::Vector        PdeVector;
+		typedef typename Model::OdeVariables  OdeVariables;
+		typedef typename Model::GCM_MATRICES  GCM_MATRICES;
 		typedef typename GCM_MATRICES::Matrix Matrix;
+
 		static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
 
 	protected:
-		/* Node storage */
-		std::vector<NODE> nodes;
+		/**
+		 * Data storage. Real values plus auxiliary values on borders.
+		 * "...New" means on the next time layer.
+		 */
+		std::vector<PdeVector>     pdeVectors;
+		std::vector<PdeVector>     pdeVectorsNew;
+		std::vector<GCM_MATRICES*> gcmMatrices;
+		std::vector<OdeVariables>  odeValues;
 
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
@@ -49,38 +51,24 @@ namespace gcm {
 
 		StructuredGridBorderConditions<StructuredGrid> borderConditions;
 		
-		/**
-		 * Operator to iterate relatively to real nodes.
-		 * Read / write access
-		 * @param x x index < sizes(0)
-		 * @param y y index < sizes(1)
-		 * @param z z index < sizes(2)
-		 */
-		inline NODE &operator()(const int x, const int y, const int z) {
-			return this->nodes[ (unsigned long)
-			                     (2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)
-			                   + (2 * accuracyOrder + sizes(2)) * (y + accuracyOrder)
-			                   + (z + accuracyOrder) ];
+		/** Read / write access to real actual PDE vectors */
+		inline PdeVector &operator()(const int x, const int y, const int z) {
+			return this->pdeVectors[getIndex(x, y, z)];
 		};
 
 	public:
-		/**
-		 * Operator to iterate relatively real nodes.
-		 * Read only access
-		 * @param x x index < sizes(0)
-		 * @param y y index < sizes(1)
-		 * @param z z index < sizes(2)
-		 */
-		inline const NODE &get(const int x, const int y, const int z) const {
-			return this->nodes[ (unsigned long)
-			                     (2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)
-			                   + (2 * accuracyOrder + sizes(2)) * (y + accuracyOrder)
-			                   + (z + accuracyOrder) ];
+		/** Read-only access to real actual PDE vectors */
+		inline const PdeVector& get(const int x, const int y, const int z) const {
+			return this->pdeVectors[getIndex(x, y, z)];
+		};
+		/** Read-only access to real GCM matrices */
+		inline GCM_MATRICES* getMatrix(const int x, const int y, const int z) const {
+			return this->gcmMatrices[getIndex(x, y, z)];
 		};
 
 	protected:
 		/* Equal-distance spatial interpolator */
-		Interpolator<Vector> interpolator;
+		Interpolator<PdeVector> interpolator;
 
 		/**
 		 * Interpolate nodal values in specified points.
@@ -95,7 +83,7 @@ namespace gcm {
 		 * @return Matrix with interpolated nodal values in columns
 		 */
 		Matrix interpolateValuesAround
-				(const int stage, const int x, const int y, const int z, const Vector& dx) const;
+				(const int stage, const int x, const int y, const int z, const PdeVector& dx) const;
 
 		/**
 		 * Place in src nodal values which are necessary for
@@ -103,7 +91,20 @@ namespace gcm {
 		 * in values is equal to src.size()
 		 */
 		void findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
-		                                 const real &dx, std::vector<Vector>& src) const;
+		                                 const real &dx, std::vector<PdeVector>& src) const;
+
+		/**
+		 * @param x x index < sizes(0)
+		 * @param y y index < sizes(1)
+		 * @param z z index < sizes(2)
+		 * @return plain index in std::vector
+		 */
+		unsigned long getIndex(const int x, const int y, const int z) const {
+			return (unsigned long)
+			         (2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)
+			       + (2 * accuracyOrder + sizes(2)) * (y + accuracyOrder)
+			       + (z + accuracyOrder);
+		}
 
 		virtual void initializeImpl(const Task &task) override;
 		virtual void applyInitialConditions(const Task& task) override;
@@ -125,7 +126,7 @@ namespace gcm {
 		friend class DefaultSolver<StructuredGrid>;
 		friend class StructuredGridBorderConditions<StructuredGrid>;
 		// it's better than create million gets
-		friend class VtkTextStructuredSnapshotter<StructuredGrid>;
+		friend class VtkStructuredSnapshotter<StructuredGrid>;
 		friend class Binary2DSeismograph<StructuredGrid>;
 	};
 }

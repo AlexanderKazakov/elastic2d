@@ -7,8 +7,8 @@
 
 using namespace gcm;
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-void StructuredGrid<TModel, GcmMatricesStorage>::initializeImpl(const Task &task) {
+template<typename TModel>
+void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_ge(accuracyOrder, 1);
@@ -35,40 +35,49 @@ void StructuredGrid<TModel, GcmMatricesStorage>::initializeImpl(const Task &task
 	
 	borderConditions.initialize(task);
 
-	this->nodes.resize( (unsigned long) (sizes(0) + 2 * accuracyOrder) * (sizes(1) + 2 * accuracyOrder) * (sizes(2) + 2 * accuracyOrder) );
+	this->pdeVectors.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
+	memset(&(pdeVectors[0]), 0, pdeVectors.size() * sizeof(PdeVector));
 
+	this->pdeVectorsNew.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
+	memset(&(pdeVectorsNew[0]), 0, pdeVectorsNew.size() * sizeof(PdeVector));
+
+	this->odeValues.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
+	memset(&(odeValues[0]), 0, odeValues.size() * sizeof(OdeVariables));
+
+	this->gcmMatrices.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
+	memset(&(gcmMatrices[0]), 0, gcmMatrices.size() * sizeof(GCM_MATRICES*));
 	typename TModel::Material material;
 	material.initialize(task);
-	auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>(material);
-	for (auto& node : nodes) {
-		node.matrix = gcmMatricesPtr;
+	auto gcmMatricesPtr = new GCM_MATRICES(material);
+	for (auto& matrix : this->gcmMatrices) {
+		matrix = gcmMatricesPtr;
 	}
 	maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
 	minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
 }
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-void StructuredGrid<TModel, GcmMatricesStorage>::applyInitialConditions(const Task& task) {
+template<typename TModel>
+void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
 	InitialCondition<TModel> initialCondition;
 	initialCondition.initialize(task);
 
 	for (int x = 0; x < sizes(0); x++) {
 		for (int y = 0; y < sizes(1); y++) {
 			for (int z = 0; z < sizes(2); z++) {
-				initialCondition.apply((*this)(x, y, z).u, getCoordinates(x, y, z));
+				initialCondition.apply((*this)(x, y, z), getCoordinates(x, y, z));
 			}
 		}
 	}
 }
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-typename StructuredGrid<TModel, GcmMatricesStorage>::Matrix StructuredGrid<TModel, GcmMatricesStorage>::interpolateValuesAround
-		(const int stage, const int x, const int y, const int z, const Vector& dx) const {
+template<typename TModel>
+typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValuesAround
+		(const int stage, const int x, const int y, const int z, const PdeVector& dx) const {
 
 	Matrix ans;
-	std::vector<Vector> src( (unsigned long) (accuracyOrder + 1) );
-	Vector res;
-	for (int k = 0; k < Vector::M; k++) {
+	std::vector<PdeVector> src( (unsigned long) (accuracyOrder + 1) );
+	PdeVector res;
+	for (int k = 0; k < PdeVector::M; k++) {
 		findSourcesForInterpolation(stage, x, y, z, dx(k), src);
 		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h(stage));
 		ans.setColumn(k, res);
@@ -77,54 +86,55 @@ typename StructuredGrid<TModel, GcmMatricesStorage>::Matrix StructuredGrid<TMode
 	return ans;
 }
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-void StructuredGrid<TModel, GcmMatricesStorage>::findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
-                                                         const real &dx, std::vector<Vector>& src) const {
+template<typename TModel>
+void StructuredGrid<TModel>::findSourcesForInterpolation
+		(const int stage, const int x, const int y, const int z,
+		 const real &dx, std::vector<PdeVector>& src) const {
 
 	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	const int alongZ = (stage == 2) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
-		src[(unsigned long)k] = get(x + alongX * k, y + alongY * k, z + alongZ * k).u;
+		src[(unsigned long)k] = get(x + alongX * k, y + alongY * k, z + alongZ * k);
 	}
 }
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-void StructuredGrid<TModel, GcmMatricesStorage>::beforeStageImpl() {
+template<typename TModel>
+void StructuredGrid<TModel>::beforeStageImpl() {
 	exchangeNodesWithNeighbors();
 	applyBorderConditions();
 }
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-void StructuredGrid<TModel, GcmMatricesStorage>::exchangeNodesWithNeighbors() {
+template<typename TModel>
+void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
 	LOG_DEBUG("Start data exchange with neighbor cores");
 	if (this->numberOfWorkers == 1) return;
 
-	int sizeOfBuffer = this->accuracyOrder * (sizes(1) + 2 * this->accuracyOrder) * (sizes(2) + 2 * this->accuracyOrder);
-	unsigned long nodesSize = this->nodes.size();
+	int bufferSize = this->accuracyOrder * (sizes(1) + 2 * this->accuracyOrder) * (sizes(2) + 2 * this->accuracyOrder);
+	unsigned long size = this->pdeVectors.size();
 
 	if (this->rank == 0) {
-		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
-		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
+		MPI_Sendrecv(&(this->pdeVectors[size - 2 * bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
+		             &(this->pdeVectors[size - bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else if (this->rank == this->numberOfWorkers - 1) {
-		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
-		             &(this->nodes[0]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
+		MPI_Sendrecv(&(this->pdeVectors[(unsigned long)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
+		             &(this->pdeVectors[0]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else {
-		MPI_Sendrecv(&(this->nodes[nodesSize - 2 * sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
-		             &(this->nodes[nodesSize - sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank + 1, 1,
+		MPI_Sendrecv(&(this->pdeVectors[size - 2 * bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
+		             &(this->pdeVectors[size - bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-		MPI_Sendrecv(&(this->nodes[(unsigned long)sizeOfBuffer]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
-		             &(this->nodes[0]), sizeOfBuffer, NODE::MPI_NODE_TYPE, this->rank - 1, 1,
+		MPI_Sendrecv(&(this->pdeVectors[(unsigned long)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
+		             &(this->pdeVectors[0]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 }
 
-template<typename TModel, template<typename> class GcmMatricesStorage>
-void StructuredGrid<TModel, GcmMatricesStorage>::applyBorderConditions() {
+template<typename TModel>
+void StructuredGrid<TModel>::applyBorderConditions() {
 	borderConditions.applyBorderConditions(this);
 }
 

@@ -19,6 +19,7 @@ namespace gcm {
 	struct PhysicalQuantities {
 		/** Type */
 		enum class T {
+			VELOCITY /* Velocity vector */,
 			Vx /* Velocity component along x-axis */,
 			Vy /* Velocity component along y-axis */,
 			Vz /* Velocity component along z-axis */,

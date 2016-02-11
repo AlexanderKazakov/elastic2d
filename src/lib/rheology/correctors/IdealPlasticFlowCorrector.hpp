@@ -22,15 +22,15 @@ namespace gcm {
 
 		template<typename TNode>
 		void apply(TNode &node) const {
-			real pressure = node.u.getPressure();
-			real J2 = node.u.getJ2();
+			real pressure = node.getPressure();
+			real J2 = node.getJ2();
 			// Correction parameter
 			real x = J2 / yieldStrength;
 
 			if (x > 1) {
-				for (int i = 0; i < TNode::Variables::DIMENSIONALITY; i++) {
-					for (int j = 0; j < TNode::Variables::DIMENSIONALITY; j++) {
-						node.u.sigma(i, j) = (node.u.sigma(i, j) + (i == j) * pressure) / x - (i == j) * pressure;
+				for (int i = 0; i < TNode::DIMENSIONALITY; i++) {
+					for (int j = 0; j < TNode::DIMENSIONALITY; j++) {
+						node.sigma(i, j) = (node.sigma(i, j) + (i == j) * pressure) / x - (i == j) * pressure;
 					}
 				}
 			}

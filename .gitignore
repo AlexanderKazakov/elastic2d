@@ -6,3 +6,11 @@ seismos
 seismos/*
 .idea/*
 *.log
+CMakeFiles
+CMakeCache.txt
+Makefile
+gcm_exe
+gcm_tests
+gcm_mpi_tests
+gcm_seismo
+cgal_tests

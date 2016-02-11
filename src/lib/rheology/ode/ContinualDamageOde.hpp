@@ -1,7 +1,6 @@
 #ifndef LIBGCM_CONTINUALDAMAGEODE_HPP
 #define LIBGCM_CONTINUALDAMAGEODE_HPP
 
-#include <type_traits>
 #include <cmath>
 
 #include <lib/util/Types.hpp>
@@ -32,25 +31,20 @@ namespace gcm {
 		 * Given ODE values from current will be moved to previous.
 		 * Given ODE values from previous will be discarded.
 		 */
-		template<typename TNode>
-		void nextStep(TNode& current, TNode& previous, const real timeStep) {
-			static_assert(std::is_same<typename TNode::Model::OdeVariables, Variables>::value,
-			              "ODE called for another's variables");
-
-			real currentHi = current.hi;
-			current.hi += timeStep * dHiDt(current, previous, timeStep);
-			previous.hi = currentHi;
+		template<typename PDEVariables>
+		void nextStep(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
+			odeVariables.hi += timeStep * dHiDt(odeVariables, pdeVariables, timeStep);
 		}
 
 		/**
 		 * This is stupid model just for demonstration
 		 * @return time-derivative of damage measure
 		 */
-		template<typename TNode>
-		real dHiDt(TNode& current, TNode& previous, const real timeStep) {
+		template<typename PDEVariables>
+		real dHiDt(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
+			SUPPRESS_WUNUSED(odeVariables);
 			SUPPRESS_WUNUSED(timeStep);
-			SUPPRESS_WUNUSED(previous);
-			return fabs(current.u.getPressure()) * parameter;
+			return fabs(pdeVariables.getPressure()) * parameter;
 		}
 
 	protected:

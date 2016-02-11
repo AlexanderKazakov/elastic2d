@@ -8,7 +8,7 @@
 namespace gcm {
 
 	/**
-	 * The most popular gcm variables - velocity and symmetric tension tensor components
+	 * Velocity and symmetric tension tensor components
 	 * @tparam Dimensionality space dimensionality
 	 */
 	template<int Dimensionality>
@@ -48,12 +48,14 @@ namespace gcm {
 		 */
 		static const std::map<PhysicalQuantities::T,
 				GetSetter<VelocitySigmaVariables<Dimensionality>>> QUANTITIES;
+		static const std::map<PhysicalQuantities::T,
+				Vector3GetSetter<VelocitySigmaVariables<Dimensionality>>> VECTORS;
 
-		template<int i> static real GetVelocity(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
+		template<int i> static real GetV(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
 			static_assert(i < Dimensionality, "Index out of range");
 			return variablesToGetFrom.V[i];
 		};
-		template<int i> static void SetVelocity(const real& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
+		template<int i> static void SetV(const real& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
 			static_assert(i < Dimensionality, "Index out of range");
 			variablesToSetTo.V[i] = value;
 		};
@@ -72,6 +74,19 @@ namespace gcm {
 		};
 		static void SetPressure(const real& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
 			variablesToSetTo.setPressure(value);
+		};
+
+		static linal::Vector3 GetVelocity(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
+			linal::Vector3 ans = {0, 0, 0};
+			for (int i = 0; i < Dimensionality; i++) {
+				ans(i) = variablesToGetFrom.V[i];
+			}
+			return ans;
+		};
+		static void SetVelocity(const linal::Vector3& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
+			for (int i = 0; i < Dimensionality; i++) {
+				variablesToSetTo.V[i] = value(i);
+			}
 		};
 
 	};

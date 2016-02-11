@@ -17,10 +17,10 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 			for (int z = 0; z < mesh->sizes(2); z++) {
 				for (int i = 1; i <= mesh->accuracyOrder; i++) {
 					for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
-						(*mesh)(-i, y, z).u.V[j] = mesh->get(i, y, z).u.V[j];
+						(*mesh)(-i, y, z).V[j] = mesh->get(i, y, z).V[j];
 					}
 					for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
-						(*mesh)(-i, y, z).u.S[j] = -mesh->get(i, y, z).u.S[j];
+						(*mesh)(-i, y, z).S[j] = -mesh->get(i, y, z).S[j];
 					}
 				}
 			}
@@ -32,10 +32,10 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 			for (int z = 0; z < mesh->sizes(2); z++) {
 				for (int i = 1; i <= mesh->accuracyOrder; i++) {
 					for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
-						(*mesh)(mesh->sizes(0) - 1 + i, y, z).u.V[j] = mesh->get(mesh->sizes(0) - 1 - i, y, z).u.V[j];
+						(*mesh)(mesh->sizes(0) - 1 + i, y, z).V[j] = mesh->get(mesh->sizes(0) - 1 - i, y, z).V[j];
 					}
 					for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
-						(*mesh)(mesh->sizes(0) - 1 + i, y, z).u.S[j] = -mesh->get(mesh->sizes(0) - 1 - i, y, z).u.S[j];
+						(*mesh)(mesh->sizes(0) - 1 + i, y, z).S[j] = -mesh->get(mesh->sizes(0) - 1 - i, y, z).S[j];
 					}
 				}
 			}
@@ -47,10 +47,10 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 			for (int z = 0; z < mesh->sizes(2); z++) {
 				for (int i = 1; i <= mesh->accuracyOrder; i++) {
 					for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
-						(*mesh)(x, -i, z).u.V[j] = mesh->get(x, i, z).u.V[j];
+						(*mesh)(x, -i, z).V[j] = mesh->get(x, i, z).V[j];
 					}
 					for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
-						(*mesh)(x, -i, z).u.S[j] = -mesh->get(x, i, z).u.S[j];
+						(*mesh)(x, -i, z).S[j] = -mesh->get(x, i, z).S[j];
 					}
 				}
 			}
@@ -61,10 +61,10 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 			for (int z = 0; z < mesh->sizes(2); z++) {
 				for (int i = 1; i <= mesh->accuracyOrder; i++) {
 					for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
-						(*mesh)(x, mesh->sizes(1) - 1 + i, z).u.V[j] = mesh->get(x, mesh->sizes(1) - 1 - i, z).u.V[j];
+						(*mesh)(x, mesh->sizes(1) - 1 + i, z).V[j] = mesh->get(x, mesh->sizes(1) - 1 - i, z).V[j];
 					}
 					for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
-						(*mesh)(x, mesh->sizes(1) - 1 + i, z).u.S[j] = -mesh->get(x, mesh->sizes(1) - 1 - i, z).u.S[j];
+						(*mesh)(x, mesh->sizes(1) - 1 + i, z).S[j] = -mesh->get(x, mesh->sizes(1) - 1 - i, z).S[j];
 					}
 				}
 			}
@@ -76,10 +76,10 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 			for (int y = 0; y < mesh->sizes(1); y++) {
 				for (int i = 1; i <= mesh->accuracyOrder; i++) {
 					for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
-						(*mesh)(x, y, -i).u.V[j] = mesh->get(x, y, i).u.V[j];
+						(*mesh)(x, y, -i).V[j] = mesh->get(x, y, i).V[j];
 					}
 					for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
-						(*mesh)(x, y, -i).u.S[j] = -mesh->get(x, y, i).u.S[j];
+						(*mesh)(x, y, -i).S[j] = -mesh->get(x, y, i).S[j];
 					}
 				}
 			}
@@ -90,10 +90,10 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 			for (int y = 0; y < mesh->sizes(1); y++) {
 				for (int i = 1; i <= mesh->accuracyOrder; i++) {
 					for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
-						(*mesh)(x, y, mesh->sizes(2) - 1 + i).u.V[j] = mesh->get(x, y, mesh->sizes(2) - 1 - i).u.V[j];
+						(*mesh)(x, y, mesh->sizes(2) - 1 + i).V[j] = mesh->get(x, y, mesh->sizes(2) - 1 - i).V[j];
 					}
 					for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
-						(*mesh)(x, y, mesh->sizes(2) - 1 + i).u.S[j] = -mesh->get(x, y, mesh->sizes(2) - 1 - i).u.S[j];
+						(*mesh)(x, y, mesh->sizes(2) - 1 + i).S[j] = -mesh->get(x, y, mesh->sizes(2) - 1 - i).S[j];
 					}
 				}
 			}

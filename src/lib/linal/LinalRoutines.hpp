@@ -241,12 +241,11 @@ namespace gcm {
 		 * @tparam TN Second matrix dimension.
 		 * @tparam Container Container type of matrix.
 		 * @param m Matrix to multiply.
-		 * @param x Scalar to multiply by.
 		 *
 		 * @return Result of scalar multiplication.
 		 */
-		template<int TM, int TN, typename Container>
-		Matrix<TM, TN, Container> operator*(const Matrix<TM, TN, Container> &m, const real x) {
+		template<int TM, int TN, typename Container, typename TMultiplier>
+		Matrix<TM, TN, Container> operator*(const Matrix<TM, TN, Container> &m, const TMultiplier x) {
 			Matrix<TM, TN, Container> result;
 
 			for (int i = 0; i < TM; i++)
@@ -262,20 +261,19 @@ namespace gcm {
 		 * @tparam TM First matrix dimesion.
 		 * @tparam TN Second matrix dimension.
 		 * @tparam Container Container type of matrix.
-		 * @param x Scalar to multiply by.
 		 * @param m Matrix to multiply.
 		 *
 		 * @return Result of scalar multiplication.
 		 */
-		template<int TM, int TN, typename Container>
-		Matrix<TM, TN, Container> operator*(const real x, const Matrix<TM, TN, Container> &m) {
+		template<int TM, int TN, typename Container, typename TMultiplier>
+		Matrix<TM, TN, Container> operator*(const TMultiplier x, const Matrix<TM, TN, Container> &m) {
 			return m * x;
 		}
 
 		/**
 		 * Performs scalar division.
 		 *
-		 * @tparam TM First matrix dimesion.
+		 * @tparam TM First matrix dimension.
 		 * @tparam TN Second matrix dimension.
 		 * @tparam Container Container type of matrix.
 		 * @param m Matrix to divide.
@@ -402,6 +400,18 @@ namespace gcm {
 
 			return result;
 		}
+
+		/** @return multiplication of all elements */
+		template<int TM, int TN, typename Container>
+		real directProduct(const Matrix<TM, TN, Container>& m) {
+			real ans = 1;
+			for (int i = 0; i < TM; i++) {
+				for (int j = 0; j < TN; j++) {
+					ans *= m(i, j);
+				}
+			}
+			return ans;
+		};
 
 	};
 };

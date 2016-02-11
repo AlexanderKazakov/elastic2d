@@ -1,4 +1,3 @@
-#include <lib/util/DataBus.hpp>
 #include <lib/Engine.hpp>
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
 #include <lib/rheology/models/Model.hpp>

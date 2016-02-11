@@ -1,10 +1,8 @@
-#include <lib/util/DataBus.hpp>
 #include <lib/Engine.hpp>
-#include <lib/util/areas/AxisAlignedBoxArea.hpp>
 #include <lib/rheology/models/Model.hpp>
 #include <lib/grid/StructuredGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/util/snapshot/VtkTextStructuredSnapshotter.hpp>
+#include <lib/util/snapshot/VtkStructuredSnapshotter.hpp>
 #include <chrono>
 
 using namespace gcm;
@@ -15,23 +13,23 @@ Task parseTaskDemo();
 
 int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
-	DataBus::createStaticTypes();
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	/*engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
-	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());*/
-	engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
-	engine.setSnapshotter(new VtkTextStructuredSnapshotter<StructuredGrid<Elastic2DModel>>());
+	engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
+	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());
+	/*engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
+	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<Elastic2DModel>>());*/
 
 	try {
-		engine.initialize(parseTask());
+		engine.initialize(parseTaskDemo());
 
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+		auto t1 = std::chrono::high_resolution_clock::now();
 		engine.run();
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+		auto t2 = std::chrono::high_resolution_clock::now();
+
 		long int duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-		std::cout << "Time of calculation = " << duration << std::endl;
+		std::cout << "Time of calculation, microseconds = " << duration << std::endl;
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
 	}
@@ -46,8 +44,8 @@ Task parseTask() {
 
 	task.accuracyOrder = 2;
 
-	task.lengthes = {4, 2, 1};
-	task.sizes = {501, 501, 1};
+	task.lengthes = {2, 2, 1};
+	task.sizes = {21, 21, 1};
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter
@@ -60,14 +58,14 @@ Task parseTask() {
 
 	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
-	task.enableSnapshotting = false;
-	task.numberOfSnaps = 250;
+	task.enableSnapshotting = true;
+	task.numberOfSnaps = 20;
 	task.stepsPerSnap = 1;
 
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({2, 1, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 1, 0}));
 	task.initialCondition.quantities.push_back(pressure);
 
 	/*Task::InitialCondition::Wave wave;
@@ -103,8 +101,8 @@ Task parseTaskDemo() {
 	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 20;
-	task.stepsPerSnap = 2;
+	task.numberOfSnaps = 10;
+	task.stepsPerSnap = 1;
 
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;

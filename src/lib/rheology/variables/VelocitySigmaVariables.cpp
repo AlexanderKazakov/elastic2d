@@ -2,27 +2,34 @@
 
 using namespace gcm;
 
-#define GETSETTER_VELOCITY_PAIR(q, d, i) {PhysicalQuantities::T::q, GetSetter<VelocitySigmaVariables<d>> \
-		(VelocitySigmaVariables<d>::GetVelocity<i>, VelocitySigmaVariables<d>::SetVelocity<i>)}
+#define GETSETTER_V_PAIR(q, d, i) {PhysicalQuantities::T::q, GetSetter<VelocitySigmaVariables<d>> \
+		(VelocitySigmaVariables<d>::GetV<i>, VelocitySigmaVariables<d>::SetV<i>)}
 
 #define GETSETTER_SIGMA_PAIR(q, d, i, j) {PhysicalQuantities::T::q, GetSetter<VelocitySigmaVariables<d>> \
 		(VelocitySigmaVariables<d>::GetSigma<i, j>, VelocitySigmaVariables<d>::SetSigma<i, j>)}
+
+#define VELOCITY_GETSETTER(d) \
+template<> const std::map<PhysicalQuantities::T, Vector3GetSetter<VelocitySigmaVariables<d>>> \
+		VelocitySigmaVariables<d>::VECTORS = { \
+				{PhysicalQuantities::T::VELOCITY, Vector3GetSetter<VelocitySigmaVariables<d>> \
+						(VelocitySigmaVariables<d>::GetVelocity, VelocitySigmaVariables<d>::SetVelocity)} };
 
 
 template<> const std::map<PhysicalQuantities::T, GetSetter<VelocitySigmaVariables<1>>>
 		VelocitySigmaVariables<1>::QUANTITIES = {
 
-		GETSETTER_VELOCITY_PAIR(Vx, 1, 0),
+		GETSETTER_V_PAIR(Vx, 1, 0),
         GETSETTER_SIGMA_PAIR(Sxx, 1, 0, 0),
 		{PhysicalQuantities::T::PRESSURE, GetSetter<VelocitySigmaVariables<1>>
 				(VelocitySigmaVariables<1>::GetPressure, VelocitySigmaVariables<1>::SetPressure)}
 };
+VELOCITY_GETSETTER(1)
 
 template<> const std::map<PhysicalQuantities::T, GetSetter<VelocitySigmaVariables<2>>>
 		VelocitySigmaVariables<2>::QUANTITIES = {
 
-		GETSETTER_VELOCITY_PAIR(Vx, 2, 0),
-		GETSETTER_VELOCITY_PAIR(Vy, 2, 1),
+		GETSETTER_V_PAIR(Vx, 2, 0),
+		GETSETTER_V_PAIR(Vy, 2, 1),
 
 		GETSETTER_SIGMA_PAIR(Sxx, 2, 0, 0),
 		GETSETTER_SIGMA_PAIR(Sxy, 2, 0, 1),
@@ -30,13 +37,14 @@ template<> const std::map<PhysicalQuantities::T, GetSetter<VelocitySigmaVariable
 		{PhysicalQuantities::T::PRESSURE, GetSetter<VelocitySigmaVariables<2>>
 				(VelocitySigmaVariables<2>::GetPressure, VelocitySigmaVariables<2>::SetPressure)}
 };
+VELOCITY_GETSETTER(2)
 
 template<> const std::map<PhysicalQuantities::T, GetSetter<VelocitySigmaVariables<3>>>
 		VelocitySigmaVariables<3>::QUANTITIES = {
 
-		GETSETTER_VELOCITY_PAIR(Vx, 3, 0),
-		GETSETTER_VELOCITY_PAIR(Vy, 3, 1),
-		GETSETTER_VELOCITY_PAIR(Vz, 3, 2),
+		GETSETTER_V_PAIR(Vx, 3, 0),
+		GETSETTER_V_PAIR(Vy, 3, 1),
+		GETSETTER_V_PAIR(Vz, 3, 2),
 
 		GETSETTER_SIGMA_PAIR(Sxx, 3, 0, 0),
 		GETSETTER_SIGMA_PAIR(Sxy, 3, 0, 1),
@@ -47,9 +55,12 @@ template<> const std::map<PhysicalQuantities::T, GetSetter<VelocitySigmaVariable
 		{PhysicalQuantities::T::PRESSURE, GetSetter<VelocitySigmaVariables<3>>
 				(VelocitySigmaVariables<3>::GetPressure, VelocitySigmaVariables<3>::SetPressure)}
 };
+VELOCITY_GETSETTER(3)
 
 #undef GETSETTER_SIGMA_PAIR
-#undef GETSETTER_VELOCITY_PAIR
+#undef GETSETTER_V_PAIR
+#undef VELOCITY_GETSETTER
+
 
 template<int Dimensionality>
 real VelocitySigmaVariables<Dimensionality>::getPressure() const {

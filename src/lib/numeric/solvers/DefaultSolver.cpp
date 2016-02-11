@@ -7,16 +7,15 @@ using namespace gcm;
 template<class TGrid>
 void DefaultSolver<TGrid>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
+
 	method = new GridCharacteristicMethod<TGrid>();
 	corrector = new typename TGrid::Model::Corrector();
 	corrector->initialize(task);
 	internalOde = new typename TGrid::Model::InternalOde();
 	internalOde->initialize(task);
 
-	mesh = new TGrid();
-	mesh->initialize(task);
-	newMesh = new TGrid();
-	newMesh->initialize(task);
+	grid = new TGrid();
+	grid->initialize(task);
 
 	CourantNumber = task.CourantNumber;
 	splittingSecondOrder = task.splittingSecondOrder;
@@ -27,14 +26,13 @@ DefaultSolver<TGrid>::~DefaultSolver() {
 	delete method;
 	delete corrector;
 	delete internalOde;
-	delete mesh;
-	delete newMesh;
+	delete grid;
 }
 
 template<class TGrid>
 void DefaultSolver<TGrid>::nextTimeStepImpl() {
 	LOG_INFO("Start time step " << step);
-	mesh->beforeStep();
+	grid->beforeStep();
 	real tau = calculateTau();
 
 	if (splittingSecondOrder) {
@@ -56,55 +54,42 @@ void DefaultSolver<TGrid>::nextTimeStepImpl() {
 			stage(s, tau);
 		}
 	}
-	fixVariablesOrder();
 
 	internalOdeNextStep(tau);
 	applyCorrectors();
-	mesh->afterStep();
+	grid->afterStep();
 }
 
 template<class TGrid>
 void DefaultSolver<TGrid>::stage(const int s, const real timeStep) {
-	mesh->beforeStage();
-	method->stage(s, timeStep, mesh, newMesh); // now actual PDE values is by pointer newMesh
-	odeShiftedFromPde = !odeShiftedFromPde; // but actual ODE values wasn't moved
-	std::swap(mesh, newMesh); // now actual PDE values is again by pointer mesh
-	mesh->afterStage();
-}
-
-template<class TGrid>
-void DefaultSolver<TGrid>::fixVariablesOrder() {
-	if (odeShiftedFromPde /*&& TGrid::Model::InternalOde::NonTrivial*/) {
-		assert_eq(mesh->nodes.size(), newMesh->nodes.size());
-		for (unsigned long i = 0; i < mesh->nodes.size(); i++) {
-			std::swap(mesh->nodes[i].u, newMesh->nodes[i].u);
-		}
-		std::swap(mesh, newMesh);
-	}
+	grid->beforeStage();
+	method->stage(s, timeStep, grid); // now actual PDE values is in pdeVectorsNew
+	std::swap(grid->pdeVectors, grid->pdeVectorsNew); // return them back to pdeVectors
+	grid->afterStage();
 }
 
 template<class TGrid>
 void DefaultSolver<TGrid>::internalOdeNextStep(const real timeStep) {
 	if (TGrid::Model::InternalOde::NonTrivial) {
-		assert_eq(mesh->nodes.size(), newMesh->nodes.size());
-		for (unsigned long i = 0; i < mesh->nodes.size(); i++) {
-			internalOde->nextStep(mesh->nodes[i], newMesh->nodes[i], timeStep);
+		assert_eq(grid->pdeVectors.size(), grid->odeValues.size());
+		for (unsigned long i = 0; i < grid->odeValues.size(); i++) {
+			internalOde->nextStep(grid->odeValues[i], grid->pdeVectors[i], timeStep);
 		}
 	}
-};
+}
 
 template<class TGrid>
 void DefaultSolver<TGrid>::applyCorrectors() {
 	if (TGrid::Model::Corrector::NonTrivial) {
-		for (auto& node : mesh->nodes) {
-			corrector->apply(node);
+		for (auto& PdeVector : grid->pdeVectors) {
+			corrector->apply(PdeVector);
 		}
 	}
 }
 
 template<class TGrid>
 real DefaultSolver<TGrid>::calculateTau() const {
-	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
+	return CourantNumber * grid->getMinimalSpatialStep() / grid->getMaximalLambda();
 }
 
 template class DefaultSolver<StructuredGrid<Elastic1DModel>>;

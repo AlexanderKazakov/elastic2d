@@ -20,15 +20,15 @@ TEST(StructuredGrid, initialize) {
 
 	StructuredGridWrapper<Elastic2DModel> structuredGrid;
 	structuredGrid.initialize(task);
-	ASSERT_NEAR(structuredGrid.getH0ForTest(), 3.333333333, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(structuredGrid.getH1ForTest(), 1.0, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getHForTest()(0), 3.333333333, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(structuredGrid.getHForTest()(1), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(structuredGrid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(structuredGrid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
 			for (int z = 0; z < task.sizes(2); z++) {
-				for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
-					ASSERT_EQ(structuredGrid.getNodeForTest(x, y, z).u(i), 0.0);
+				for (int i = 0; i < StructuredGrid<Elastic2DModel>::PdeVector::M; i++) {
+					ASSERT_EQ(structuredGrid.get(x, y, z)(i), 0.0);
 				}
 			}
 		}
@@ -58,18 +58,18 @@ TEST(StructuredGrid, findSourcesForInterpolation)
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[0], 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[1], 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 1), 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).V[0], 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).V[1], 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).sigma(0, 1), 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
-		std::vector<StructuredGrid<Elastic2DModel>::Vector> src((unsigned long)task.accuracyOrder + 1);
+		std::vector<StructuredGrid<Elastic2DModel>::PdeVector> src((unsigned long)task.accuracyOrder + 1);
 		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
 			structuredGrid.findSourcesForInterpolationForTest(stage, 1, 1, 0, dx, src);
-			for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
+			for (int i = 0; i < StructuredGrid<Elastic2DModel>::PdeVector::M; i++) {
 				ASSERT_EQ(src[0](i), (i == 2 || i == 4) ? 1.0 : 0.0);
 				ASSERT_EQ(src[1](i), 0.0);
 			}
@@ -101,19 +101,19 @@ TEST(StructuredGrid, interpolateValuesAround)
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[0], 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.V[1], 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(0, 1), 0.0);
-				ASSERT_EQ(structuredGrid.getNodeForTest(x, y, 0).u.sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).V[0], 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).V[1], 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).sigma(0, 1), 0.0);
+				ASSERT_EQ(structuredGrid.get(x, y, 0).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
-		StructuredGrid<Elastic2DModel>::Vector dx({-1, 1, -0.5, 0.5, 0});
+		StructuredGrid<Elastic2DModel>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
 		StructuredGrid<Elastic2DModel>::Matrix matrix =
 				structuredGrid.interpolateValuesAroundForTest(stage, 1, 1, 0, dx);
 
-		for (int i = 0; i < StructuredGrid<Elastic2DModel>::Vector::M; i++) {
+		for (int i = 0; i < StructuredGrid<Elastic2DModel>::PdeVector::M; i++) {
 			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx

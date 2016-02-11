@@ -22,10 +22,10 @@ namespace gcm {
 			SUPPRESS_WUNUSED(task);
 		};
 
-		template<typename TNode>
-		void nextStep(TNode& current, TNode& previous, const real timeStep) {
-			SUPPRESS_WUNUSED(current);
-			SUPPRESS_WUNUSED(previous);
+		template<typename PDEVariables>
+		void nextStep(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
+			SUPPRESS_WUNUSED(odeVariables);
+			SUPPRESS_WUNUSED(pdeVariables);
 			SUPPRESS_WUNUSED(timeStep);
 		};
 	};
