@@ -72,4 +72,10 @@ void Binary2DSeismograph<TGrid>::writeHeadOfTable() {
 	writeSurfaceToBuffer();
 }
 
+template <class TGrid>
+void Binary2DSeismograph<TGrid>::initializeImpl(const Task &task) {
+	SUPPRESS_WUNUSED(task);
+}
+
+
 template class Binary2DSeismograph<StructuredGrid<Elastic2DModel>>;

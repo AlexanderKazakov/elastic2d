@@ -28,11 +28,13 @@ namespace gcm {
 		void initialize(const Task& task) {
 			enableSnapshotting = task.enableSnapshotting;
 			stepsPerSnap = task.stepsPerSnap;
+			initializeImpl(task);
 		};
 		virtual ~Snapshotter() { };
 
 	protected:
 		virtual void snapshotImpl(const Grid* grid, const int step) = 0;
+		virtual void initializeImpl(const Task& task) = 0;
 
 	private:
 		bool enableSnapshotting = false;

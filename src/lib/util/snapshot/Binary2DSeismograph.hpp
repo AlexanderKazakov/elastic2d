@@ -18,6 +18,7 @@ namespace gcm {
 		void finishSeismo();
 
 	protected:
+		virtual void initializeImpl(const Task &task) override;
 		virtual void snapshotImpl(const Grid* grid, const int step);
 
 	private:

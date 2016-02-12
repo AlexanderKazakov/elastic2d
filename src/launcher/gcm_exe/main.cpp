@@ -78,6 +78,8 @@ Task parseTask() {
 
 //	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 
+	task.quantitiesToWrite = {PhysicalQuantities::T::PRESSURE};
+
 	return task;
 }
 
@@ -119,6 +121,8 @@ Task parseTaskDemo() {
 	task.initialCondition.waves.push_back(wave);*/
 
 	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
+
+	task.quantitiesToWrite = {PhysicalQuantities::T::PRESSURE};
 
 	return task;
 }

@@ -82,6 +82,8 @@ namespace gcm {
 				{CUBIC_BORDERS::Z_LEFT,  BorderCondition::T::NON_REFLECTION},
 				{CUBIC_BORDERS::Z_RIGHT, BorderCondition::T::NON_REFLECTION}
 		};
+
+		std::vector<PhysicalQuantities::T> quantitiesToWrite = { };
 	};
 }
 
