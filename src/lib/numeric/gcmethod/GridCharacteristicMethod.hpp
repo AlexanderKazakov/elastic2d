@@ -5,6 +5,9 @@
 #include <lib/util/Logging.hpp>
 #include <lib/util/Types.hpp>
 
+#include <lib/grid/Cgal2DGrid.hpp>
+#include <lib/rheology/models/Model.hpp>
+
 namespace gcm {
 	template<class TGrid>
 	class GridCharacteristicMethod {
@@ -16,7 +19,7 @@ namespace gcm {
 		 * @param mesh grid on current time layer
 		 * @param newMesh grid on next time layer
 		 */
-		void stage(const int s, const real &timeStep, TGrid *mesh) {
+		void stage(const int s, const real &timeStep, TGrid* mesh) {
 			LOG_DEBUG("Start stage " << s << " timeStep = " << timeStep);
 
 			for (int x = 0; x < mesh->sizes(0); x++) {
@@ -39,6 +42,12 @@ namespace gcm {
 		};
 
 		USE_AND_INIT_LOGGER("gcm.MpiStructuredSolver");
+	};
+
+	template<>
+	class GridCharacteristicMethod<Cgal2DGrid<Elastic2DModel>> {
+	public:
+		void stage(const int s, const real &timeStep, Cgal2DGrid<Elastic2DModel>* mesh) {};
 	};
 }
 

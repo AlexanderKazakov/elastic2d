@@ -1,9 +1,13 @@
+#include <chrono>
+
 #include <lib/Engine.hpp>
 #include <lib/rheology/models/Model.hpp>
 #include <lib/grid/StructuredGrid.hpp>
+#include <lib/grid/Cgal2DGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/util/snapshot/VtkStructuredSnapshotter.hpp>
-#include <chrono>
+#include <lib/util/snapshot/VtkCgal2DSnapshotter.hpp>
+
 
 using namespace gcm;
 
@@ -16,13 +20,15 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
-	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());
+	/*engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
+	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());*/
 	/*engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<Elastic2DModel>>());*/
+	engine.setSolver(new DefaultSolver<Cgal2DGrid<Elastic2DModel>>());
+	engine.setSnapshotter(new VtkCgal2DSnapshotter<Cgal2DGrid<Elastic2DModel>>());
 
 	try {
-		engine.initialize(parseTaskDemo());
+		engine.initialize(parseTask/*Demo*/());
 
 		auto t1 = std::chrono::high_resolution_clock::now();
 		engine.run();
@@ -44,8 +50,8 @@ Task parseTask() {
 
 	task.accuracyOrder = 2;
 
-	task.lengthes = {2, 2, 1};
-	task.sizes = {21, 21, 1};
+	task.lengthes = {1, 1, 1};
+	task.sizes = {3, 3, 1};
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter
@@ -59,7 +65,7 @@ Task parseTask() {
 	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 20;
+	task.numberOfSnaps = 2;
 	task.stepsPerSnap = 1;
 
 	Task::InitialCondition::Quantity pressure;

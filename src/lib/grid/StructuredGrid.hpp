@@ -34,10 +34,10 @@ namespace gcm {
 		 * Data storage. Real values plus auxiliary values on borders.
 		 * "...New" means on the next time layer.
 		 */
-		std::vector<PdeVector>     pdeVectors;
-		std::vector<PdeVector>     pdeVectorsNew;
-		std::vector<GCM_MATRICES*> gcmMatrices;
-		std::vector<OdeVariables>  odeValues;
+		StdVectorStorage<PdeVector>     pdeVectors;
+		StdVectorStorage<PdeVector>     pdeVectorsNew;
+		StdVectorStorage<GCM_MATRICES*> gcmMatrices;
+		StdVectorStorage<OdeVariables>  odeValues;
 
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
@@ -97,14 +97,28 @@ namespace gcm {
 		 * @param x x index < sizes(0)
 		 * @param y y index < sizes(1)
 		 * @param z z index < sizes(2)
-		 * @return plain index in std::vector
+		 * @return index in std::vector
 		 */
-		unsigned long getIndex(const int x, const int y, const int z) const {
-			return (unsigned long)
+		size_t getIndex(const int x, const int y, const int z) const {
+			return (size_t)
 			         (2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)
 			       + (2 * accuracyOrder + sizes(2)) * (y + accuracyOrder)
 			       + (z + accuracyOrder);
-		}
+		};
+
+		void getXYZ(const size_t i) {
+			size_t x = i / (sizes(1) * sizes(2));
+			size_t restForYZ = i - x * (sizes(1) * sizes(2));
+			size_t y = restForYZ / sizes(2);
+			size_t z = restForYZ - y * sizes(2);
+		};
+
+		size_t sizeOfRealNodes() {
+			return (size_t) linal::directProduct(sizes);
+		};
+		size_t sizeOfAllNodes() {
+			return (size_t)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1}));
+		};
 
 		virtual void initializeImpl(const Task &task) override;
 		virtual void applyInitialConditions(const Task& task) override;

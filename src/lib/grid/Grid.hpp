@@ -3,6 +3,7 @@
 
 #include <mpi.h>
 
+#include <lib/util/storage/StdVectorStorage.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
 

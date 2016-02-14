@@ -12,6 +12,8 @@ namespace gcm {
 		 */
 		AxisAlignedBoxArea(const linal::Vector3& _min, const linal::Vector3& _max);
 		virtual bool contains(const linal::Vector3& coords) const override;
+		linal::Vector3 getMin() const { return min; };
+		linal::Vector3 getMax() const { return max; };
 	private:
 		linal::Vector3 min; // the nearest point to origin of coordinates
 		linal::Vector3 max; // the farthest point from origin of coordinates

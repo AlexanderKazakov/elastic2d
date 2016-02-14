@@ -35,17 +35,11 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	
 	borderConditions.initialize(task);
 
-	this->pdeVectors.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
-	memset(&(pdeVectors[0]), 0, pdeVectors.size() * sizeof(PdeVector));
+	this->pdeVectors.zeroInitialize(sizeOfAllNodes());
+	this->pdeVectorsNew.zeroInitialize(sizeOfAllNodes());
+	this->odeValues.zeroInitialize(sizeOfAllNodes());
+	this->gcmMatrices.zeroInitialize(sizeOfAllNodes());
 
-	this->pdeVectorsNew.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
-	memset(&(pdeVectorsNew[0]), 0, pdeVectorsNew.size() * sizeof(PdeVector));
-
-	this->odeValues.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
-	memset(&(odeValues[0]), 0, odeValues.size() * sizeof(OdeVariables));
-
-	this->gcmMatrices.resize((unsigned long)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1})));
-	memset(&(gcmMatrices[0]), 0, gcmMatrices.size() * sizeof(GCM_MATRICES*));
 	typename TModel::Material material;
 	material.initialize(task);
 	auto gcmMatricesPtr = new GCM_MATRICES(material);
@@ -75,7 +69,7 @@ typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValue
 		(const int stage, const int x, const int y, const int z, const PdeVector& dx) const {
 
 	Matrix ans;
-	std::vector<PdeVector> src( (unsigned long) (accuracyOrder + 1) );
+	std::vector<PdeVector> src( (size_t) (accuracyOrder + 1) );
 	PdeVector res;
 	for (int k = 0; k < PdeVector::M; k++) {
 		findSourcesForInterpolation(stage, x, y, z, dx(k), src);
@@ -95,7 +89,7 @@ void StructuredGrid<TModel>::findSourcesForInterpolation
 	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
 	const int alongZ = (stage == 2) * ( (dx > 0) ? 1 : -1 );
 	for (int k = 0; k < src.size(); k++) {
-		src[(unsigned long)k] = get(x + alongX * k, y + alongY * k, z + alongZ * k);
+		src[(size_t)k] = get(x + alongX * k, y + alongY * k, z + alongZ * k);
 	}
 }
 
@@ -111,7 +105,7 @@ void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
 	if (this->numberOfWorkers == 1) return;
 
 	int bufferSize = this->accuracyOrder * (sizes(1) + 2 * this->accuracyOrder) * (sizes(2) + 2 * this->accuracyOrder);
-	unsigned long size = this->pdeVectors.size();
+	size_t size = this->pdeVectors.size();
 
 	if (this->rank == 0) {
 		MPI_Sendrecv(&(this->pdeVectors[size - 2 * bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
@@ -119,7 +113,7 @@ void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 	} else if (this->rank == this->numberOfWorkers - 1) {
-		MPI_Sendrecv(&(this->pdeVectors[(unsigned long)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
+		MPI_Sendrecv(&(this->pdeVectors[(size_t)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             &(this->pdeVectors[0]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
@@ -127,7 +121,7 @@ void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
 		MPI_Sendrecv(&(this->pdeVectors[size - 2 * bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
 		             &(this->pdeVectors[size - bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank + 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-		MPI_Sendrecv(&(this->pdeVectors[(unsigned long)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
+		MPI_Sendrecv(&(this->pdeVectors[(size_t)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             &(this->pdeVectors[0]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 	}

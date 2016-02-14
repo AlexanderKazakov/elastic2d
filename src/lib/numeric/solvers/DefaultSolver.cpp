@@ -1,5 +1,6 @@
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/grid/StructuredGrid.hpp>
+#include <lib/grid/Cgal2DGrid.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
@@ -100,4 +101,6 @@ template class DefaultSolver<StructuredGrid<ContinualDamageElastic2DModel>>;
 template class DefaultSolver<StructuredGrid<IdealPlastic2DModel>>;
 
 template class DefaultSolver<StructuredGrid<SuperDuperModel>>;
+
+template class DefaultSolver<Cgal2DGrid<Elastic2DModel>>;
 
