@@ -16,39 +16,28 @@ namespace gcm {
 		 * Do grid-characteristic stage of splitting method
 		 * @param s direction
 		 * @param timeStep time step
-		 * @param mesh grid on current time layer
-		 * @param newMesh grid on next time layer
+		 * @param grid grid to perform calculation
 		 */
-		void stage(const int s, const real &timeStep, TGrid* mesh) {
+		void stage(const int s, const real &timeStep, TGrid* grid) {
 			LOG_DEBUG("Start stage " << s << " timeStep = " << timeStep);
 
-			for (int x = 0; x < mesh->sizes(0); x++) {
-				for (int y = 0; y < mesh->sizes(1); y++) {
-					for (int z = 0; z < mesh->sizes(2); z++) {
+			for (auto it : *grid) {
+				// points to interpolate values on previous time layer
+				auto dx = -timeStep * linal::diag(grid->matrix(it)->A(s).L);
 
-						// points to interpolate values on previous time layer
-						auto dx = - timeStep * linal::diag(mesh->getMatrix(x, y, z)->A(s).L);
-
-						mesh->pdeVectorsNew[mesh->getIndex(x, y, z)] =
-								/* new values = U1 * Riemann solvers */
-								mesh->getMatrix(x, y, z)->A(s).U1 *
-								/* Riemann solvers = U * old values */
-								mesh->getMatrix(x, y, z)->A(s).U.diagonalMultiply
-										/* old values are in columns of the matrix */
-										(mesh->interpolateValuesAround(s, x, y, z, dx));
-					}
-				}
+				grid->_pdeNew(it) =
+						/* new values = U1 * Riemann solvers */
+						grid->matrix(it)->A(s).U1 *
+						/* Riemann solvers = U * old values */
+						grid->matrix(it)->A(s).U.diagonalMultiply
+								/* old values are in columns of the matrix */
+								(grid->interpolateValuesAround(s, it, dx));
 			}
 		};
 
 		USE_AND_INIT_LOGGER("gcm.MpiStructuredSolver");
 	};
 
-	template<>
-	class GridCharacteristicMethod<Cgal2DGrid<Elastic2DModel>> {
-	public:
-		void stage(const int s, const real &timeStep, Cgal2DGrid<Elastic2DModel>* mesh) {};
-	};
 }
 
 #endif // LIBGCM_GRIDCHARACTERISTICMETHOD_HPP

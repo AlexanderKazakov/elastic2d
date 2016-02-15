@@ -73,8 +73,8 @@ template<class TGrid>
 void DefaultSolver<TGrid>::internalOdeNextStep(const real timeStep) {
 	if (TGrid::Model::InternalOde::NonTrivial) {
 		assert_eq(grid->pdeVectors.size(), grid->odeValues.size());
-		for (unsigned long i = 0; i < grid->odeValues.size(); i++) {
-			internalOde->nextStep(grid->odeValues[i], grid->pdeVectors[i], timeStep);
+		for (auto it : *grid) {
+			internalOde->nextStep(grid->_ode(it), grid->pde(it), timeStep);
 		}
 	}
 }
@@ -82,8 +82,8 @@ void DefaultSolver<TGrid>::internalOdeNextStep(const real timeStep) {
 template<class TGrid>
 void DefaultSolver<TGrid>::applyCorrectors() {
 	if (TGrid::Model::Corrector::NonTrivial) {
-		for (auto& PdeVector : grid->pdeVectors) {
-			corrector->apply(PdeVector);
+		for (auto it : *grid) {
+			corrector->apply(grid->_pde(it));
 		}
 	}
 }
@@ -102,5 +102,5 @@ template class DefaultSolver<StructuredGrid<IdealPlastic2DModel>>;
 
 template class DefaultSolver<StructuredGrid<SuperDuperModel>>;
 
-template class DefaultSolver<Cgal2DGrid<Elastic2DModel>>;
+//template class DefaultSolver<Cgal2DGrid<Elastic2DModel>>;
 

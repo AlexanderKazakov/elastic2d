@@ -32,9 +32,9 @@ TEST(Engine, run)
 	EngineWrapper<StructuredGrid<Elastic2DModel>> engine;
 	engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	engine.initialize(task);
-	auto sWave = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, 3, 0);
+	auto sWave = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, 3, 0);
 	engine.run();
-	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, 22, 0));
+	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, 22, 0));
 }
 
 
@@ -73,13 +73,13 @@ TEST(Engine, TwoLayersDifferentRho)
 		engine.getSolverForTest()->getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		auto init = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto init = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		engine.run();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		auto reflect = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
-		auto transfer = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, rightNodeIndex, 0);
+		auto reflect = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto transfer = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.isotropicMaterial.rho;
 		real lambda0 = task.isotropicMaterial.lambda;
@@ -148,13 +148,13 @@ TEST(Engine, TwoLayersDifferentE)
 		engine.getSolverForTest()->getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		auto init = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto init = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, leftNodeIndex, 0);
 
 		engine.run();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		auto reflect = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, leftNodeIndex, 0);
-		auto transfer = engine.getSolverForTest()->getMesh()->get(task.sizes(0) / 2, rightNodeIndex, 0);
+		auto reflect = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto transfer = engine.getSolverForTest()->getMesh()->pde(task.sizes(0) / 2, rightNodeIndex, 0);
 
 		real rho0 = task.isotropicMaterial.rho;
 		real lambda0 = task.isotropicMaterial.lambda;

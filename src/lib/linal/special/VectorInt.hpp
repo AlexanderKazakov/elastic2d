@@ -44,7 +44,7 @@ namespace gcm {
 			 * @return reference to modified matrix instance
 			 */
 			template<typename Container2>
-			Matrix<TM, 1, VectorIntContainer<TM>> &operator=(const Matrix<TM, 1, Container2> &m2) {
+			Matrix<TM, 1, VectorIntContainer<TM>>& operator=(const Matrix<TM, 1, Container2> &m2) {
 				static_assert(this->SIZE == m2.SIZE, "Containers must have equal size");
 				for (int i = 0; i < M; i++) {
 					(*this)(i) = (int) m2(i);
@@ -69,6 +69,16 @@ namespace gcm {
 			/** Read/write access to vector component */
 			int &operator()(const int i) {
 				return this->values[i];
+			};
+
+			bool operator==(const Matrix<TM, 1, VectorIntContainer<TM>>& m2) const {
+				for (int i = 0; i < TM; i++)
+					if ((*this)(i) != m2(i))
+						return false;
+				return true;
+			};
+			bool operator!=(const Matrix<TM, 1, VectorIntContainer<TM>>& m2) const {
+				return !((*this) == m2);
 			};
 
 		protected:

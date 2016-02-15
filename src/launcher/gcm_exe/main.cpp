@@ -20,21 +20,21 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	/*engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
-	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());*/
+	engine.setSolver(new DefaultSolver<StructuredGrid<SuperDuperModel>>());
+	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<SuperDuperModel>>());
 	/*engine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
 	engine.setSnapshotter(new VtkStructuredSnapshotter<StructuredGrid<Elastic2DModel>>());*/
-	engine.setSolver(new DefaultSolver<Cgal2DGrid<Elastic2DModel>>());
-	engine.setSnapshotter(new VtkCgal2DSnapshotter<Cgal2DGrid<Elastic2DModel>>());
+	/*engine.setSolver(new DefaultSolver<Cgal2DGrid<Elastic2DModel>>());
+	engine.setSnapshotter(new VtkCgal2DSnapshotter<Cgal2DGrid<Elastic2DModel>>());*/
 
 	try {
-		engine.initialize(parseTask/*Demo*/());
+		engine.initialize(parseTaskDemo());
 
 		auto t1 = std::chrono::high_resolution_clock::now();
 		engine.run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 
-		long int duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 		std::cout << "Time of calculation, microseconds = " << duration << std::endl;
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
@@ -51,7 +51,7 @@ Task parseTask() {
 	task.accuracyOrder = 2;
 
 	task.lengthes = {1, 1, 1};
-	task.sizes = {3, 3, 1};
+	task.sizes = {11, 11, 1};
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter
@@ -65,7 +65,7 @@ Task parseTask() {
 	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 2;
+	task.numberOfSnaps = 11;
 	task.stepsPerSnap = 1;
 
 	Task::InitialCondition::Quantity pressure;

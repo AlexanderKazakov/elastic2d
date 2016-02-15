@@ -16,15 +16,11 @@ void VtkStructuredSnapshotter<TGrid>::snapshotImpl(const Grid* _grid, const int 
 	// TODO - in this approach, we create a structure of size of the whole mesh,
 	// and then write it, allocate size of mesh at every time step is not a good idea
 	auto points = vtkSmartPointer<vtkPoints>::New();
-	points->Allocate(linal::directProduct(grid->sizes), 0);
-	for (int z = 0; z < grid->sizes(2); z++) {
-		for (int y = 0; y < grid->sizes(1); y++) {
-			for (int x = 0; x < grid->sizes(0); x++) {
-				auto coords = grid->getCoordinates(x, y, z);
-				real point[3] = {coords(0), coords(1), coords(2)};
-				points->InsertNextPoint(point);
-			}
-		}
+	points->Allocate((vtkIdType)grid->sizeOfRealNodes(), 0);
+	for (auto it = grid->vtkBegin(); it != grid->vtkEnd(); ++it) {
+		auto coords = grid->coords(it);
+		real point[3] = {coords(0), coords(1), coords(2)};
+		points->InsertNextPoint(point);
 	}
 	vtkStrGrid->SetPoints(points);
 

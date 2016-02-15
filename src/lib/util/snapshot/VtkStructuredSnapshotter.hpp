@@ -19,29 +19,24 @@ namespace gcm {
 		const TGrid* grid;
 		vtkSmartPointer<vtkStructuredGrid> vtkStrGrid;
 
-		typedef void (VtkStructuredSnapshotter::*InsertFunc)(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
-		                                                     const int x, const int y, const int z);
+		typedef void (VtkStructuredSnapshotter::*InsertFunc)(PhysicalQuantities::T quantity,
+				vtkSmartPointer<vtkFloatArray> vtkArr, const typename TGrid::VtkIterator& it);
 
 		void writeQuantity(PhysicalQuantities::T quantity, InsertFunc insertFunc, const int numOfComponents) {
 			auto vtkArr = vtkSmartPointer<vtkFloatArray>::New();
 			vtkArr->SetNumberOfComponents(numOfComponents);
 			vtkArr->Allocate(linal::directProduct(grid->sizes), 0);
 			vtkArr->SetName(PhysicalQuantities::NAME.at(quantity).c_str());
-
-			for (int z = 0; z < grid->sizes(2); z++) {
-				for (int y = 0; y < grid->sizes(1); y++) {
-					for (int x = 0; x < grid->sizes(0); x++) {
-						(this->*insertFunc)(quantity, vtkArr, x, y, z);
-					}
-				}
+			for (auto it = grid->vtkBegin(); it != grid->vtkEnd(); ++it) {
+				(this->*insertFunc)(quantity, vtkArr, it);
 			}
 			vtkStrGrid->GetPointData()->AddArray(vtkArr);
 		};
 
 		void insertVector(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
-		                         const int x, const int y, const int z) {
+		                  const typename TGrid::VtkIterator& it) {
 			auto Get = TGrid::PdeVector::VECTORS.at(quantity).Get;
-			auto linalVec = Get(grid->get(x, y, z));
+			auto linalVec = Get(grid->pde(it));
 			float vtkVec[VtkVecSize];
 			for (int i = 0; i < VtkVecSize; i++) {
 				vtkVec[i] = (float) linalVec(i);
@@ -50,15 +45,15 @@ namespace gcm {
 		};
 
 		void insertQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
-		                           const int x, const int y, const int z) {
+		                    const typename TGrid::VtkIterator& it) {
 			auto Get = TGrid::PdeVector::QUANTITIES.at(quantity).Get;
-			vtkArr->InsertNextValue((float)Get(grid->get(x, y, z)));
+			vtkArr->InsertNextValue((float)Get(grid->pde(it)));
 		};
 
 		void insertOdeQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
-		                              const int x, const int y, const int z) {
+		                       const typename TGrid::VtkIterator& it) {
 			auto Get = TGrid::Model::InternalOde::QUANTITIES.at(quantity).Get;
-			vtkArr->InsertNextValue((float)Get(grid->odeValues[grid->getIndex(x, y, z)]));
+			vtkArr->InsertNextValue((float)Get(grid->ode(it)));
 		};
 
 		std::string makeFileNameForSnapshot(const int step);

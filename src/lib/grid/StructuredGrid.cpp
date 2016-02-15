@@ -23,7 +23,6 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	// in order to keep specified in task number of nodes
 	if (this->rank == this->numberOfWorkers - 1) sizes(0) = task.sizes(0) - numberOfNodesAlongXPerOneCore * (this->numberOfWorkers - 1);
 	startR(0) += (this->rank * numberOfNodesAlongXPerOneCore) * h(0); // mpi parallel along X axis
-	globalStartXindex = this->rank * numberOfNodesAlongXPerOneCore; // for testing
 	// MPI - (end)
 
 	for (int j = 0; j < 3; j++) {
@@ -43,8 +42,8 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 	typename TModel::Material material;
 	material.initialize(task);
 	auto gcmMatricesPtr = new GCM_MATRICES(material);
-	for (auto& matrix : this->gcmMatrices) {
-		matrix = gcmMatricesPtr;
+	for (auto& gcmMatrix : this->gcmMatrices) {
+		gcmMatrix = gcmMatricesPtr;
 	}
 	maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
 	minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
@@ -55,24 +54,20 @@ void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
 	InitialCondition<TModel> initialCondition;
 	initialCondition.initialize(task);
 
-	for (int x = 0; x < sizes(0); x++) {
-		for (int y = 0; y < sizes(1); y++) {
-			for (int z = 0; z < sizes(2); z++) {
-				initialCondition.apply((*this)(x, y, z), getCoordinates(x, y, z));
-			}
-		}
+	for (auto it : *this) {
+		initialCondition.apply(_pde(it), coords(it));
 	}
 }
 
 template<typename TModel>
 typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValuesAround
-		(const int stage, const int x, const int y, const int z, const PdeVector& dx) const {
+		(const int stage, const Iterator& it, const PdeVector& dx) const {
 
 	Matrix ans;
 	std::vector<PdeVector> src( (size_t) (accuracyOrder + 1) );
 	PdeVector res;
 	for (int k = 0; k < PdeVector::M; k++) {
-		findSourcesForInterpolation(stage, x, y, z, dx(k), src);
+		findSourcesForInterpolation(stage, it, dx(k), src);
 		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h(stage));
 		ans.setColumn(k, res);
 	}
@@ -82,14 +77,12 @@ typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValue
 
 template<typename TModel>
 void StructuredGrid<TModel>::findSourcesForInterpolation
-		(const int stage, const int x, const int y, const int z,
-		 const real &dx, std::vector<PdeVector>& src) const {
+		(const int stage, const Iterator& it, const real &dx, std::vector<PdeVector>& src) const {
 
-	const int alongX = (stage == 0) * ( (dx > 0) ? 1 : -1 );
-	const int alongY = (stage == 1) * ( (dx > 0) ? 1 : -1 );
-	const int alongZ = (stage == 2) * ( (dx > 0) ? 1 : -1 );
+	Iterator shift({0, 0, 0}, sizes);
+	shift(stage) = (dx > 0) ? 1 : -1;
 	for (int k = 0; k < src.size(); k++) {
-		src[(size_t)k] = get(x + alongX * k, y + alongY * k, z + alongZ * k);
+		src[(size_t)k] = pde(it + shift * k);
 	}
 }
 

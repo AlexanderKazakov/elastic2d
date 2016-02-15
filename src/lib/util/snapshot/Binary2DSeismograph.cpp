@@ -29,7 +29,7 @@ void Binary2DSeismograph<TGrid>::snapshotImpl(const Grid* _grid, const int step)
 	assert_eq(grid->sizes(1), sizeY);
 	surface[0] = step * tau;
 	for (int y = 0; y < sizeY; y++) {
-		surface[y + 1] = (output_precision) grid->get(0, y, 0).getPressure();
+		surface[y + 1] = (output_precision) grid->pde(0, y, 0).getPressure();
 	}
 	writeSurfaceToBuffer();
 }

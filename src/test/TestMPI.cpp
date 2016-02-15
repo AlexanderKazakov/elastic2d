@@ -113,11 +113,13 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	// check that parallel result is equal to sequence result
 	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
 	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
+
+	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / MPI::COMM_WORLD.Get_size());
+	int startX = MPI::COMM_WORLD.Get_rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->getSizesForTest()(0); x++) {
 		for (int y = 0; y < mpiMesh->getSizesForTest()(1); y++) {
-			ASSERT_EQ(mpiMesh->get(x, y, 0),
-			          sequenceMesh->get(x + mpiMesh->getStartXForTest(), y, 0))
-					<< "x = " << x << " global x = " << x + mpiMesh->getStartXForTest() << " y = " << y << std::endl;
+			ASSERT_EQ(mpiMesh->pde(x, y, 0), sequenceMesh->pde(x + startX, y, 0))
+					<< "x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
 		}
 	}
 }

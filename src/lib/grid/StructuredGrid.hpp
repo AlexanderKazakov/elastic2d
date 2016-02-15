@@ -29,6 +29,85 @@ namespace gcm {
 
 		static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
 
+		struct Iterator : public linal::VectorInt<3> {
+			linal::VectorInt<3> bounds = {0, 0, 0};
+			Iterator(const linal::VectorInt<3> indices_, const linal::VectorInt<3> bounds_) {
+				(*this) = indices_;
+				bounds = bounds_;
+			};
+			const Iterator& operator*() { return *this; };
+			using linal::VectorInt<3>::Matrix;
+			using linal::VectorInt<3>::operator=;
+		};
+
+		/** slow-X fast-Z memory access efficient iterator */
+		struct ForwardIterator : public Iterator {
+			using Iterator::Iterator;
+			Iterator& operator++() {
+				!increment(2) && !increment(1) && ((*this)(0)++);
+				return (*this);
+			};
+		private:
+			int increment(const int i) {
+				(*this)(i) = ((*this)(i) + 1) % this->bounds(i);
+				return (*this)(i);
+			};
+		};
+		ForwardIterator begin() const { return ForwardIterator({0, 0, 0}, sizes); };
+		ForwardIterator end() const { return ForwardIterator({sizes(0), 0, 0}, sizes); };
+
+		/** slow-Z fast-X iterator */
+		struct VtkIterator : public Iterator {
+			using Iterator::Iterator;
+			VtkIterator& operator++() {
+				!increment(0) && !increment(1) && ((*this)(2)++);
+				return (*this);
+			};
+		private:
+			int increment(const int i) {
+				(*this)(i) = ((*this)(i) + 1) % this->bounds(i);
+				return (*this)(i);
+			};
+		};
+		VtkIterator vtkBegin() const { return VtkIterator({0, 0, 0}, sizes); };
+		VtkIterator vtkEnd() const { return VtkIterator({0, 0, sizes(2)}, sizes); };
+
+		/** Read-only access to real actual PDE vectors */
+		const PdeVector& pde(const int x, const int y, const int z) const {
+			return this->pdeVectors[getIndex(x, y, z)];
+		};
+		const PdeVector& pde(const Iterator& it) const {
+			return this->pdeVectors[getIndex(it)];
+		};
+		/** Read-only access to real actual ODE values */
+		const OdeVariables& ode(const int x, const int y, const int z) const {
+			return this->odeValues[getIndex(x, y, z)];
+		};
+		const OdeVariables& ode(const Iterator& it) const {
+			return this->odeValues[getIndex(it)];
+		};
+		/** Read-only access to real GCM matrices */
+		GCM_MATRICES* matrix(const int x, const int y, const int z) const {
+			return this->gcmMatrices[getIndex(x, y, z)];
+		};
+		GCM_MATRICES* matrix(const Iterator& it) const {
+			return this->gcmMatrices[getIndex(it)];
+		};
+		/** Read-only access to real coordinates */
+		const linal::Vector3 coords(const int x, const int y, const int z) const {
+			return startR + linal::plainMultiply(linal::VectorInt<3>({x, y, z}), h);
+		};
+		const linal::Vector3 coords(const Iterator& it) const {
+			return startR + linal::plainMultiply(it, h);
+		};
+
+		size_t sizeOfRealNodes() const {
+			return (size_t) linal::directProduct(sizes);
+		};
+		size_t sizeOfAllNodes() const {
+			return (size_t)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1}));
+		};
+
 	protected:
 		/**
 		 * Data storage. Real values plus auxiliary values on borders.
@@ -43,33 +122,35 @@ namespace gcm {
 
 		linal::VectorInt<3> sizes = {0, 0, 0}; // numbers of nodes along each direction (on this core)
 
-		// the grid is divided equally along x-axis among processes
-		int globalStartXindex = 0; // global x-index of the first real node of the grid
-
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node of the grid
 		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction
 
 		StructuredGridBorderConditions<StructuredGrid> borderConditions;
 		
 		/** Read / write access to real actual PDE vectors */
-		inline PdeVector &operator()(const int x, const int y, const int z) {
+		PdeVector& _pde(const int x, const int y, const int z) {
 			return this->pdeVectors[getIndex(x, y, z)];
+		};
+		PdeVector& _pde(const Iterator& it) {
+			return this->pdeVectors[getIndex(it)];
+		};
+		OdeVariables& _ode(const Iterator& it) {
+			return this->odeValues[getIndex(it)];
+		};
+		PdeVector& _pdeNew(const int x, const int y, const int z) {
+			return this->pdeVectorsNew[getIndex(x, y, z)];
+		};
+		PdeVector& _pdeNew(const Iterator& it) {
+			return this->pdeVectorsNew[getIndex(it)];
+		};
+		GCM_MATRICES*& _matrix(const int x, const int y, const int z) {
+			return this->gcmMatrices[getIndex(x, y, z)];
+		};
+		GCM_MATRICES*& _matrix(const Iterator& it) {
+			return this->gcmMatrices[getIndex(it)];
 		};
 
 	public:
-		/** Read-only access to real actual PDE vectors */
-		inline const PdeVector& get(const int x, const int y, const int z) const {
-			return this->pdeVectors[getIndex(x, y, z)];
-		};
-		/** Read-only access to real GCM matrices */
-		inline GCM_MATRICES* getMatrix(const int x, const int y, const int z) const {
-			return this->gcmMatrices[getIndex(x, y, z)];
-		};
-
-	protected:
-		/* Equal-distance spatial interpolator */
-		Interpolator<PdeVector> interpolator;
-
 		/**
 		 * Interpolate nodal values in specified points.
 		 * Interpolated value for k-th point in vector dx are
@@ -82,17 +163,24 @@ namespace gcm {
 		 * values should be interpolated
 		 * @return Matrix with interpolated nodal values in columns
 		 */
-		Matrix interpolateValuesAround
-				(const int stage, const int x, const int y, const int z, const PdeVector& dx) const;
+		Matrix interpolateValuesAround(const int stage, const Iterator& it, const PdeVector& dx) const;
 
 		/**
 		 * Place in src nodal values which are necessary for
 		 * interpolation in specified point. The number of placed
 		 * in values is equal to src.size()
 		 */
-		void findSourcesForInterpolation(const int stage, const int x, const int y, const int z,
+		void findSourcesForInterpolation(const int stage, const Iterator& it,
 		                                 const real &dx, std::vector<PdeVector>& src) const;
 
+	protected:
+		/**
+		 * @param it begin() <= iterator < end()
+		 * @return index in std::vector
+		 */
+		size_t getIndex(const Iterator& it) const {
+			return getIndex(it(0), it(1), it(2));
+		};
 		/**
 		 * @param x x index < sizes(0)
 		 * @param y y index < sizes(1)
@@ -106,19 +194,9 @@ namespace gcm {
 			       + (z + accuracyOrder);
 		};
 
-		void getXYZ(const size_t i) {
-			size_t x = i / (sizes(1) * sizes(2));
-			size_t restForYZ = i - x * (sizes(1) * sizes(2));
-			size_t y = restForYZ / sizes(2);
-			size_t z = restForYZ - y * sizes(2);
-		};
 
-		size_t sizeOfRealNodes() {
-			return (size_t) linal::directProduct(sizes);
-		};
-		size_t sizeOfAllNodes() {
-			return (size_t)linal::directProduct(sizes + 2 * accuracyOrder * linal::VectorInt<3>({1, 1, 1}));
-		};
+		/* Equal-distance spatial interpolator */
+		Interpolator<PdeVector> interpolator;
 
 		virtual void initializeImpl(const Task &task) override;
 		virtual void applyInitialConditions(const Task& task) override;
@@ -131,9 +209,6 @@ namespace gcm {
 
 		void exchangeNodesWithNeighbors();
 		virtual void applyBorderConditions() override;
-		linal::Vector3 getCoordinates(const int x, const int y, const int z) const {
-			return startR + linal::plainMultiply(linal::VectorInt<3>({x, y, z}), h);
-		};
 
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
 		friend class GridCharacteristicMethod<StructuredGrid>;

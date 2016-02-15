@@ -33,13 +33,13 @@ TEST(Solver, StageXForward)
 
 		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		auto pWave = solver.getMesh()->get(2, 0, 0);
+		auto pWave = solver.getMesh()->pde(2, 0, 0);
 		StructuredGrid<Elastic2DModel>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->get(x, y, 0),
+					ASSERT_EQ(solver.getMesh()->pde(x, y, 0),
 					           (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -75,13 +75,13 @@ TEST(Solver, StageY)
 
 		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		auto pWave = solver.getMesh()->get(0, 2, 0);
+		auto pWave = solver.getMesh()->pde(0, 2, 0);
 		StructuredGrid<Elastic2DModel>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->get(x, y, 0),
+					ASSERT_EQ(solver.getMesh()->pde(x, y, 0),
 					          (y == 2 + i || y == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -114,13 +114,13 @@ TEST(Solver, StageYSxx)
 
 		DefaultSolverWrapper<StructuredGrid<Elastic2DModel>> solver;
 		solver.initialize(task);
-		auto sxxOnly = solver.getMesh()->get(5, 5, 0);
+		auto sxxOnly = solver.getMesh()->pde(5, 5, 0);
 		StructuredGrid<Elastic2DModel>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->get(x, y, 0), (x == 5 && y == 5 ) ? sxxOnly : zero)
+					ASSERT_EQ(solver.getMesh()->pde(x, y, 0), (x == 5 && y == 5 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}
