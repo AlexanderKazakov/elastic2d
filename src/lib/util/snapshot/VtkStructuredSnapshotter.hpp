@@ -12,7 +12,7 @@ namespace gcm {
 	template<class TGrid>
 	class VtkStructuredSnapshotter : public VtkSnapshotter {
 	protected:
-		virtual void snapshotImpl(const Grid* _grid, const int step) override;
+		virtual void snapshotImpl(const AbstractGrid* _grid, const int step) override;
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.VtkStructuredSnapshotter");

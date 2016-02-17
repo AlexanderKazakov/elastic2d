@@ -2,6 +2,7 @@
 
 #include <lib/util/areas/SphereArea.hpp>
 #include <lib/grid/StructuredGrid.hpp>
+#include <lib/numeric/gcmethod/GcmHandler.hpp>
 #include <test/wrappers/Wrappers.hpp>
 #include <lib/rheology/models/Model.hpp>
 
@@ -18,64 +19,20 @@ TEST(StructuredGrid, initialize) {
 	task.numberOfSnaps = 5;
 	task.T = 100.0;
 
-	StructuredGridWrapper<Elastic2DModel> grid;
+	MeshWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> grid;
 	grid.initialize(task);
-	ASSERT_NEAR(grid.getHForTest()(0), 3.333333333, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(grid.getHForTest()(1), 1.0, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(grid.getH()(0), 3.333333333, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(grid.getH()(1), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
 			for (int z = 0; z < task.sizes(2); z++) {
-				for (int i = 0; i < StructuredGrid<Elastic2DModel>::PdeVector::M; i++) {
-					ASSERT_EQ(grid.pde(x, y, z)(i), 0.0);
+				for (int i = 0; i < DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector::M; i++) {
+					ASSERT_EQ(grid.getPde(x, y, z)(i), 0.0);
 				}
 			}
 		}
-	}
-}
-
-
-TEST(StructuredGrid, findSourcesForInterpolation)
-{
-	Task task;
-	task.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
-
-	task.sizes(0) = task.sizes(1) = 3;
-	task.accuracyOrder = 1;
-	task.lengthes = {2.0, 2.0, 1.0}; // h_x = h_y = 1.0
-
-	Task::InitialCondition::Quantity quantity;
-	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	quantity.value = -1.0;
-	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
-	task.initialCondition.quantities.push_back(quantity);
-
-	for (int stage = 0; stage <= 1; stage++) {
-
-		StructuredGridWrapper<Elastic2DModel> grid;
-		grid.initialize(task);
-		for (int x = 0; x < task.sizes(0); x++) {
-			for (int y = 0; y < task.sizes(1); y++) {
-				// check that values is set properly
-				ASSERT_EQ(grid.pde(x, y, 0).V[0], 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).V[1], 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).sigma(0, 1), 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
-			}
-		}
-
-		StructuredGrid<Elastic2DModel>::Iterator it({1, 1, 0}, grid.getSizesForTest());
-		std::vector<StructuredGrid<Elastic2DModel>::PdeVector> src((size_t)task.accuracyOrder + 1);
-		for (real dx = -1.0; dx <= 1.0; dx += 0.5) {
-			grid.findSourcesForInterpolation(stage, it, dx, src);
-			for (int i = 0; i < StructuredGrid<Elastic2DModel>::PdeVector::M; i++) {
-				ASSERT_EQ(src[0](i), (i == 2 || i == 4) ? 1.0 : 0.0);
-				ASSERT_EQ(src[1](i), 0.0);
-			}
-		}
-
 	}
 }
 
@@ -97,25 +54,25 @@ TEST(StructuredGrid, interpolateValuesAround)
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		StructuredGridWrapper<Elastic2DModel> grid;
+		MeshWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> grid;
 		grid.initialize(task);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
-				ASSERT_EQ(grid.pde(x, y, 0).V[0], 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).V[1], 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).sigma(0, 1), 0.0);
-				ASSERT_EQ(grid.pde(x, y, 0).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(grid.getPde(x, y, 0).V[0], 0.0);
+				ASSERT_EQ(grid.getPde(x, y, 0).V[1], 0.0);
+				ASSERT_EQ(grid.getPde(x, y, 0).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(grid.getPde(x, y, 0).sigma(0, 1), 0.0);
+				ASSERT_EQ(grid.getPde(x, y, 0).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
-		StructuredGrid<Elastic2DModel>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
-		StructuredGrid<Elastic2DModel>::Iterator it({1, 1, 0}, grid.getSizesForTest());
-		StructuredGrid<Elastic2DModel>::Matrix matrix =
-				grid.interpolateValuesAround(stage, it, dx);
+		DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
+		DefaultGrid<Elastic2DModel, StructuredGrid>::Iterator it({1, 1, 0}, grid.getSizes());
+		DefaultGrid<Elastic2DModel, StructuredGrid>::Matrix matrix =
+				GcmHandler<Elastic2DModel, StructuredGrid>::interpolateValuesAround(grid, stage, it, dx);
 
-		for (int i = 0; i < StructuredGrid<Elastic2DModel>::PdeVector::M; i++) {
+		for (int i = 0; i < DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector::M; i++) {
 			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx

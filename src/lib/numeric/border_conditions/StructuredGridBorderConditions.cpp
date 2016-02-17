@@ -1,5 +1,6 @@
 #include <lib/numeric/border_conditions/StructuredGridBorderConditions.hpp>
 #include <lib/grid/StructuredGrid.hpp>
+#include <lib/grid/DefaultGrid.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
@@ -10,8 +11,10 @@ void StructuredGridBorderConditions<TGrid>::initialize(const Task &task) {
 }
 
 template<class TGrid>
-void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
-	if (mesh->getRank() == 0 &&
+void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) const {
+	SUPPRESS_WUNUSED(mesh);
+	// TODO
+/*	if (mesh->getRank() == 0 &&
 	    borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::T::FREE_BORDER) {
 		for (int y = 0; y < mesh->sizes(1); y++) {
 			for (int z = 0; z < mesh->sizes(2); z++) {
@@ -98,16 +101,57 @@ void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) {
 				}
 			}
 		}
-	}
+	}*/
 
 }
 
+/*template<class TGrid>
+void StructuredGridBorderConditions<TGrid>::applyBorderConditions(TGrid* mesh) const {
+	applyBorderCondition(0, true, mesh, CUBIC_BORDERS::X_LEFT);
+	applyBorderCondition(0, false, mesh, CUBIC_BORDERS::X_RIGHT);
+	applyBorderCondition(1, true, mesh, CUBIC_BORDERS::Y_LEFT);
+	applyBorderCondition(1, false, mesh, CUBIC_BORDERS::Y_RIGHT);
+	applyBorderCondition(2, true, mesh, CUBIC_BORDERS::Z_LEFT);
+	applyBorderCondition(2, false, mesh, CUBIC_BORDERS::Z_RIGHT);
+}*/
+/*template<class TGrid>
+void StructuredGridBorderConditions<TGrid>::applyBorderCondition
+		(const int direction, const bool leftCorner, TGrid* mesh, CUBIC_BORDERS border) const {
+	if (direction == 0) {
+		if ( ( leftCorner && mesh->getRank() != 0) ||
+		     (!leftCorner && mesh->getRank() != mesh->getNumberOfWorkers() - 1) )
+			return;
+	}
+	if (borderConditions.at(border) != BorderCondition::T::FREE_BORDER) return;
+	if (mesh->sizes(direction) <= 1) return;
 
+	auto sizes = mesh->sizes; sizes(direction) = mesh->accuracyOrder;
+	typename TGrid::ForwardIterator begin({0,0,0}, sizes);
+	typename TGrid::ForwardIterator end({sizes(0),0,0}, sizes);
 
-template class StructuredGridBorderConditions<StructuredGrid<Elastic1DModel>>;
-template class StructuredGridBorderConditions<StructuredGrid<Elastic2DModel>>;
-template class StructuredGridBorderConditions<StructuredGrid<Elastic3DModel>>;
-template class StructuredGridBorderConditions<StructuredGrid<OrthotropicElastic3DModel>>;
-template class StructuredGridBorderConditions<StructuredGrid<ContinualDamageElastic2DModel>>;
-template class StructuredGridBorderConditions<StructuredGrid<IdealPlastic2DModel>>;
-template class StructuredGridBorderConditions<StructuredGrid<SuperDuperModel>>;
+	for (auto it = begin; it != end; ++it) {
+		typename TGrid::ForwardIterator from = it;
+		typename TGrid::ForwardIterator to = it;
+		if (leftCorner) {
+			from(direction) =   from(direction) + 1;
+			to(direction)   = - to(direction) + 1;
+		} else {
+			from(direction) = mesh->sizes(direction) - from(direction);
+			from(direction) = mesh->sizes(direction) + to(direction);
+		}
+		for (int j = 0; j < TGrid::DIMENSIONALITY; j++) {
+			mesh->_pde(to).V[j] = mesh->pde(from).V[j];
+		}
+		for (int j = 0; j < (TGrid::DIMENSIONALITY * (TGrid::DIMENSIONALITY + 1)) / 2; j++) {
+			mesh->_pde(to).S[j] = -mesh->pde(from).S[j];
+		}
+	}
+}*/
+
+template class StructuredGridBorderConditions<DefaultGrid<Elastic1DModel, StructuredGrid>>;
+template class StructuredGridBorderConditions<DefaultGrid<Elastic2DModel, StructuredGrid>>;
+template class StructuredGridBorderConditions<DefaultGrid<Elastic3DModel, StructuredGrid>>;
+template class StructuredGridBorderConditions<DefaultGrid<OrthotropicElastic3DModel, StructuredGrid>>;
+template class StructuredGridBorderConditions<DefaultGrid<ContinualDamageElastic2DModel, StructuredGrid>>;
+template class StructuredGridBorderConditions<DefaultGrid<IdealPlastic2DModel, StructuredGrid>>;
+template class StructuredGridBorderConditions<DefaultGrid<SuperDuperModel, StructuredGrid>>;

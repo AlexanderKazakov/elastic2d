@@ -3,110 +3,73 @@
 
 #include <mpi.h>
 
-#include <lib/grid/Grid.hpp>
+#include <lib/grid/AbstractGrid.hpp>
 #include <lib/linal/linal.hpp>
 #include <lib/util/storage/Cgal2DTriangulationStorage.hpp>
 #include <lib/util/snapshot/VtkCgal2DSnapshotter.hpp>
 
 
 namespace gcm {
-	template<class TGrid> class DefaultSolver;
-	template<class TGrid> class GridCharacteristicMethod;
-
 	/**
-	 * 2D movable unstructured triangle grid
-	 * @tparam TModel rheology model
+	 * 2D movable unstructured triangle grid by CGAL library
 	 */
-	template<typename TModel>
-	class Cgal2DGrid : public Grid {
+	class Cgal2DGrid : public AbstractGrid {
 	public:
-		typedef          TModel               Model;
-		typedef typename Model::Vector        PdeVector;
-		typedef typename Model::OdeVariables  OdeVariables;
-		typedef typename Model::GCM_MATRICES  GCM_MATRICES;
-		typedef typename GCM_MATRICES::Matrix Matrix;
-
-		static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
+		struct Iterator {
+			size_t iter = 0;
+			Iterator(size_t value) : iter(value) { };
+			const Iterator& operator*() { return *this; };
+			Iterator& operator++() {
+				iter++;
+				return (*this);
+			};
+		};
+		typedef Iterator ForwardIterator;
+		ForwardIterator begin() const { return 0; };
+		ForwardIterator end() const { return sizeOfRealNodes(); };
+		typedef Iterator VtkIterator;
+		VtkIterator vtkBegin() const { return begin(); };
+		VtkIterator vtkEnd() const { return end(); };
 
 	protected:
 		/**
-		 * Data storage. Real values plus auxiliary values on borders.
-		 * "...New" means on the next time layer.
+		 * @param it begin() <= iterator < end()
+		 * @return index in std::vector
 		 */
-		StdVectorStorage<PdeVector>     pdeVectors;
-		StdVectorStorage<PdeVector>     pdeVectorsNew;
-		StdVectorStorage<GCM_MATRICES*> gcmMatrices;
-		StdVectorStorage<OdeVariables>  odeValues;
-		/** Coordinates, cells, etc ... */
-		Cgal2DTriangulationStorage      mesh;
-
-		linal::VectorInt<3> sizes = {0, 0, 0}; // numbers of nodes along each direction (on this core)
-		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node of the grid
-		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction
-
-		/** Read / write access to real actual PDE vectors */
-		inline PdeVector &operator()(const size_t i) {
-			return this->pdeVectors[i];
+		size_t getIndex(const Iterator& it) const {
+			return it.iter;
 		};
+		/** Coordinates, cells, etc ... */
+		Cgal2DTriangulationStorage mesh;
 
 	public:
-		/** @return number of nodes */
-		size_t size() const {
+		/** Read-only access to real coordinates */
+		const linal::Vector3 coords(const Iterator& it) const {
+			return mesh.getCoordinates(it.iter);
+		};
+
+		size_t sizeOfRealNodes() const {
 			return mesh.verticesSize();
 		};
-		/** Read-only access to real actual PDE vectors */
-		inline const PdeVector& get(const size_t i) const {
-			return this->pdeVectors[i];
-		};
-		/** Read-only access to real GCM matrices */
-		inline GCM_MATRICES* getMatrix(const size_t i) const {
-			return this->gcmMatrices[i];
+		size_t sizeOfAllNodes() const {
+			return sizeOfRealNodes();
 		};
 
 	protected:
 
-		/**
-		 * Interpolate nodal values in specified points.
-		 * Interpolated value for k-th point in vector dx are
-		 * stored in k-th column of returned Matrix.
-		 * @param stage direction
-		 * @param x x-index of the reference node
-		 * @param y y-index of the reference node
-		 * @param z z-index of the reference node
-		 * @param dx Vector of distances from reference node on which
-		 * values should be interpolated
-		 * @return Matrix with interpolated nodal values in columns
-		 */
-		Matrix interpolateValuesAround(const int stage, const size_t i, const PdeVector& dx) const;
-
-		/**
-		 * Place in src nodal values which are necessary for
-		 * interpolation in specified point. The number of placed
-		 * in values is equal to src.size()
-		 */
-		void findSourcesForInterpolation(const int stage, const size_t i, const real &dx,
-		                                 std::vector<PdeVector>& src) const;
-
 		virtual void initializeImpl(const Task &task) override;
-		virtual void applyInitialConditions(const Task& task) override;
-		virtual void beforeStageImpl() override;
+		virtual void beforeStageImpl() override { };
 		virtual void afterStageImpl() override { };
 		virtual void beforeStepImpl() override { };
 		virtual void afterStepImpl() override { };
-		virtual void recalculateMinimalSpatialStep() override { };
-		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ };
+		virtual void recalculateMinimalSpatialStep() override { /* TODO for movable grid */ };
 
-		void exchangeNodesWithNeighbors();
-		virtual void applyBorderConditions() override;
-		linal::Vector3 getCoordinates(const size_t i) const {
-			return mesh.getCoordinates(i);
-		};
+		virtual void applyInitialConditions(const Task& task) = 0;
+		virtual void recalculateMaximalLambda() = 0;
+
+		virtual void initializeImplImpl(const Task& task) = 0;
 
 		USE_AND_INIT_LOGGER("gcm.Cgal2DGrid");
-		friend class GridCharacteristicMethod<Cgal2DGrid>;
-		friend class DefaultSolver<Cgal2DGrid>;
-		// it's better than create million gets
-		friend class VtkCgal2DSnapshotter<Cgal2DGrid>;
 	};
 }
 

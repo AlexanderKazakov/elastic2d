@@ -6,7 +6,7 @@
 #include <lib/util/task/Task.hpp>
 
 namespace gcm {
-	class Grid;
+	class AbstractGrid;
 
 	/**
 	 * Class for handling complete time step
@@ -28,7 +28,7 @@ namespace gcm {
 		};
 
 		/** @return grid with actual values */
-		virtual Grid* getGrid() const = 0;
+		virtual AbstractGrid* getGrid() const = 0;
 
 		/** Calculate time step from Courant–Friedrichs–Lewy condition */
 		virtual real calculateTau() const = 0;

@@ -15,9 +15,9 @@ int main(int argc, char **argv) {
 	USE_AND_INIT_LOGGER("gcm.seismo");
 
 	Engine engine;
-	auto solver = new DefaultSolver<StructuredGrid<Elastic2DModel>>();
+	auto solver = new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>();
 	engine.setSolver(solver);
-	auto seismograph = new Binary2DSeismograph<StructuredGrid<Elastic2DModel>>();
+	auto seismograph = new Binary2DSeismograph<DefaultGrid<Elastic2DModel, StructuredGrid>>();
 	engine.setSnapshotter(seismograph);
 
 	const int numberOfStatements = 1;

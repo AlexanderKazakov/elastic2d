@@ -5,7 +5,7 @@
 #include <lib/numeric/gcmethod/GridCharacteristicMethod.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
-#include <lib/grid/Grid.hpp>
+#include <lib/grid/AbstractGrid.hpp>
 #include <lib/rheology/correctors/correctors.hpp>
 
 namespace gcm {
@@ -21,7 +21,7 @@ namespace gcm {
 
 		virtual real calculateTau() const override;
 
-		virtual Grid* getGrid() const {
+		virtual AbstractGrid* getGrid() const {
 			return grid;
 		};
 

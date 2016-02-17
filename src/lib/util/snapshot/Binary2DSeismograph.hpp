@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include <lib/grid/StructuredGrid.hpp>
+#include <lib/grid/DefaultGrid.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/snapshot/Snapshotter.hpp>
 
@@ -19,7 +19,7 @@ namespace gcm {
 
 	protected:
 		virtual void initializeImpl(const Task &task) override;
-		virtual void snapshotImpl(const Grid* grid, const int step);
+		virtual void snapshotImpl(const AbstractGrid* grid, const int step);
 
 	private:
 		USE_AND_INIT_LOGGER("gcm.Binary2DSeismograph");

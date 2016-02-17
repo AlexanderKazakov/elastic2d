@@ -1,12 +1,13 @@
 #include <lib/util/snapshot/VtkStructuredSnapshotter.hpp>
 #include <lib/grid/StructuredGrid.hpp>
+#include <lib/grid/DefaultGrid.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 
 using namespace gcm;
 
 template<class TGrid>
-void VtkStructuredSnapshotter<TGrid>::snapshotImpl(const Grid* _grid, const int step) {
+void VtkStructuredSnapshotter<TGrid>::snapshotImpl(const AbstractGrid* _grid, const int step) {
 	LOG_DEBUG("Start snapshot writing to " << makeFileNameForSnapshot(step));
 	grid = static_cast<const TGrid*>(_grid);
 
@@ -52,10 +53,10 @@ std::string VtkStructuredSnapshotter<TGrid>::makeFileNameForSnapshot(const int s
 }
 
 
-template class VtkStructuredSnapshotter<StructuredGrid<Elastic1DModel>>;
-template class VtkStructuredSnapshotter<StructuredGrid<Elastic2DModel>>;
-template class VtkStructuredSnapshotter<StructuredGrid<Elastic3DModel>>;
-template class VtkStructuredSnapshotter<StructuredGrid<OrthotropicElastic3DModel>>;
-template class VtkStructuredSnapshotter<StructuredGrid<ContinualDamageElastic2DModel>>;
-template class VtkStructuredSnapshotter<StructuredGrid<IdealPlastic2DModel>>;
-template class VtkStructuredSnapshotter<StructuredGrid<SuperDuperModel>>;
+template class VtkStructuredSnapshotter<DefaultGrid<Elastic1DModel, StructuredGrid>>;
+template class VtkStructuredSnapshotter<DefaultGrid<Elastic2DModel, StructuredGrid>>;
+template class VtkStructuredSnapshotter<DefaultGrid<Elastic3DModel, StructuredGrid>>;
+template class VtkStructuredSnapshotter<DefaultGrid<OrthotropicElastic3DModel, StructuredGrid>>;
+template class VtkStructuredSnapshotter<DefaultGrid<ContinualDamageElastic2DModel, StructuredGrid>>;
+template class VtkStructuredSnapshotter<DefaultGrid<IdealPlastic2DModel, StructuredGrid>>;
+template class VtkStructuredSnapshotter<DefaultGrid<SuperDuperModel, StructuredGrid>>;

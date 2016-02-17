@@ -6,7 +6,7 @@
 using namespace gcm;
 
 template<class TGrid>
-void VtkCgal2DSnapshotter<TGrid>::snapshotImpl(const Grid* _grid, const int step) {
+void VtkCgal2DSnapshotter<TGrid>::snapshotImpl(const AbstractGrid* _grid, const int step) {
 	LOG_DEBUG("Start snapshot writing to " << makeFileNameForSnapshot(step));
 	grid = static_cast<const TGrid*>(_grid);
 
@@ -34,6 +34,6 @@ std::string VtkCgal2DSnapshotter<TGrid>::makeFileNameForSnapshot(const int step)
 }
 
 
-template class VtkCgal2DSnapshotter<Cgal2DGrid<Elastic2DModel>>;
+/*template class VtkCgal2DSnapshotter<Cgal2DGrid<Elastic2DModel>>;
 template class VtkCgal2DSnapshotter<Cgal2DGrid<ContinualDamageElastic2DModel>>;
-template class VtkCgal2DSnapshotter<Cgal2DGrid<IdealPlastic2DModel>>;
+template class VtkCgal2DSnapshotter<Cgal2DGrid<IdealPlastic2DModel>>;*/

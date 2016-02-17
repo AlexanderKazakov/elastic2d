@@ -17,7 +17,7 @@ namespace gcm {
 			quantitiesToWrite = task.quantitiesToWrite;
 		};
 
-		virtual void snapshotImpl(const Grid* _grid, const int step) = 0;
+		virtual void snapshotImpl(const AbstractGrid* _grid, const int step) = 0;
 
 	};
 }

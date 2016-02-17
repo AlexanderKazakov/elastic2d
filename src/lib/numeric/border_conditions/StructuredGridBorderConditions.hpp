@@ -11,7 +11,8 @@ namespace gcm {
 
 	public:
 		void initialize(const Task& task);
-		void applyBorderConditions(TGrid* mesh);
+		void applyBorderConditions(TGrid* mesh) const;
+		void applyBorderCondition(const int direction, const bool leftCorner, TGrid* mesh, CUBIC_BORDERS border) const;
 
 	};
 }

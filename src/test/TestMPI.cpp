@@ -66,9 +66,9 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiConnection, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-		StructuredGrid<Elastic1DModel>::PdeVector,
-		StructuredGrid<ContinualDamageElastic2DModel>::PdeVector,
-		StructuredGrid<OrthotropicElastic3DModel>::PdeVector
+		Elastic1DModel::/*Pde*/Vector,
+		ContinualDamageElastic2DModel::/*Pde*/Vector,
+		OrthotropicElastic3DModel::/*Pde*/Vector
 > AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementations);
@@ -97,16 +97,16 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	EngineWrapper<StructuredGrid<Elastic2DModel>> sequenceEngine;
-	sequenceEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
+	EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> sequenceEngine;
+	sequenceEngine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	EngineWrapper<StructuredGrid<Elastic2DModel>> mpiEngine;
-	mpiEngine.setSolver(new DefaultSolver<StructuredGrid<Elastic2DModel>>());
+	EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> mpiEngine;
+	mpiEngine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 
@@ -116,9 +116,9 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / MPI::COMM_WORLD.Get_size());
 	int startX = MPI::COMM_WORLD.Get_rank() * numberOfNodesAlongXPerOneCore;
-	for (int x = 0; x < mpiMesh->getSizesForTest()(0); x++) {
-		for (int y = 0; y < mpiMesh->getSizesForTest()(1); y++) {
-			ASSERT_EQ(mpiMesh->pde(x, y, 0), sequenceMesh->pde(x + startX, y, 0))
+	for (int x = 0; x < mpiMesh->getSizes()(0); x++) {
+		for (int y = 0; y < mpiMesh->getSizes()(1); y++) {
+			ASSERT_EQ(mpiMesh->getPde(x, y, 0), sequenceMesh->getPde(x + startX, y, 0))
 					<< "x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
 		}
 	}

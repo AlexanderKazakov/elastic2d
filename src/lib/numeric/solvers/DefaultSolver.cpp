@@ -1,5 +1,6 @@
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/grid/StructuredGrid.hpp>
+#include <lib/grid/DefaultGrid.hpp>
 #include <lib/grid/Cgal2DGrid.hpp>
 #include <lib/rheology/models/Model.hpp>
 
@@ -93,14 +94,14 @@ real DefaultSolver<TGrid>::calculateTau() const {
 	return CourantNumber * grid->getMinimalSpatialStep() / grid->getMaximalLambda();
 }
 
-template class DefaultSolver<StructuredGrid<Elastic1DModel>>;
-template class DefaultSolver<StructuredGrid<Elastic2DModel>>;
-template class DefaultSolver<StructuredGrid<Elastic3DModel>>;
-template class DefaultSolver<StructuredGrid<OrthotropicElastic3DModel>>;
-template class DefaultSolver<StructuredGrid<ContinualDamageElastic2DModel>>;
-template class DefaultSolver<StructuredGrid<IdealPlastic2DModel>>;
+template class DefaultSolver<DefaultGrid<Elastic1DModel, StructuredGrid>>;
+template class DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>;
+template class DefaultSolver<DefaultGrid<Elastic3DModel, StructuredGrid>>;
+template class DefaultSolver<DefaultGrid<OrthotropicElastic3DModel, StructuredGrid>>;
+template class DefaultSolver<DefaultGrid<ContinualDamageElastic2DModel, StructuredGrid>>;
+template class DefaultSolver<DefaultGrid<IdealPlastic2DModel, StructuredGrid>>;
 
-template class DefaultSolver<StructuredGrid<SuperDuperModel>>;
+template class DefaultSolver<DefaultGrid<SuperDuperModel, StructuredGrid>>;
 
 //template class DefaultSolver<Cgal2DGrid<Elastic2DModel>>;
 

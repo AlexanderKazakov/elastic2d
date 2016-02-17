@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include <lib/grid/Grid.hpp>
+#include <lib/grid/AbstractGrid.hpp>
 
 namespace gcm {
 	/**
@@ -15,7 +15,7 @@ namespace gcm {
 		 * Write snapshot for specified time step
 		 * @param step number of time step
 		 */
-		void snapshot(const Grid* grid, const int step) {
+		void snapshot(const AbstractGrid* grid, const int step) {
 			if (enableSnapshotting && step % stepsPerSnap == 0) {
 				snapshotImpl(grid, step);
 			}
@@ -33,7 +33,7 @@ namespace gcm {
 		virtual ~Snapshotter() { };
 
 	protected:
-		virtual void snapshotImpl(const Grid* grid, const int step) = 0;
+		virtual void snapshotImpl(const AbstractGrid* grid, const int step) = 0;
 		virtual void initializeImpl(const Task& task) = 0;
 
 	private:

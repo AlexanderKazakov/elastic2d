@@ -7,13 +7,14 @@
 
 using namespace gcm;
 
-template<typename TModel>
-void StructuredGrid<TModel>::initializeImpl(const Task &task) {
+
+void StructuredGrid::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_ge(accuracyOrder, 1);
 
 	h = linal::plainDivision(task.lengthes, task.sizes - linal::VectorInt<3>({1, 1, 1}));
+	this->minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
 	sizes = task.sizes;
 	startR = task.startR;
 
@@ -31,70 +32,21 @@ void StructuredGrid<TModel>::initializeImpl(const Task &task) {
 		assert_eq(h(j), h(j)); // this is supposed to catch NaN
 		assert_eq(startR(j), startR(j));
 	}
-	
-	borderConditions.initialize(task);
+//	borderConditions.initialize(task);
 
-	this->pdeVectors.zeroInitialize(sizeOfAllNodes());
-	this->pdeVectorsNew.zeroInitialize(sizeOfAllNodes());
-	this->odeValues.zeroInitialize(sizeOfAllNodes());
-	this->gcmMatrices.zeroInitialize(sizeOfAllNodes());
-
-	typename TModel::Material material;
-	material.initialize(task);
-	auto gcmMatricesPtr = new GCM_MATRICES(material);
-	for (auto& gcmMatrix : this->gcmMatrices) {
-		gcmMatrix = gcmMatricesPtr;
-	}
-	maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
-	minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
+	initializeImplImpl(task);
 }
 
-template<typename TModel>
-void StructuredGrid<TModel>::applyInitialConditions(const Task& task) {
-	InitialCondition<TModel> initialCondition;
-	initialCondition.initialize(task);
 
-	for (auto it : *this) {
-		initialCondition.apply(_pde(it), coords(it));
-	}
-}
-
-template<typename TModel>
-typename StructuredGrid<TModel>::Matrix StructuredGrid<TModel>::interpolateValuesAround
-		(const int stage, const Iterator& it, const PdeVector& dx) const {
-
-	Matrix ans;
-	std::vector<PdeVector> src( (size_t) (accuracyOrder + 1) );
-	PdeVector res;
-	for (int k = 0; k < PdeVector::M; k++) {
-		findSourcesForInterpolation(stage, it, dx(k), src);
-		interpolator.minMaxInterpolate(res, src, fabs(dx(k)) / h(stage));
-		ans.setColumn(k, res);
-	}
-
-	return ans;
-}
-
-template<typename TModel>
-void StructuredGrid<TModel>::findSourcesForInterpolation
-		(const int stage, const Iterator& it, const real &dx, std::vector<PdeVector>& src) const {
-
-	Iterator shift({0, 0, 0}, sizes);
-	shift(stage) = (dx > 0) ? 1 : -1;
-	for (int k = 0; k < src.size(); k++) {
-		src[(size_t)k] = pde(it + shift * k);
-	}
-}
-
-template<typename TModel>
-void StructuredGrid<TModel>::beforeStageImpl() {
+void StructuredGrid::beforeStageImpl() {
 	exchangeNodesWithNeighbors();
-	applyBorderConditions();
+//	borderConditions.applyBorderConditions(this);
 }
 
-template<typename TModel>
-void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
-	LOG_DEBUG("Start data exchange with neighbor cores");
+
+void StructuredGrid::exchangeNodesWithNeighbors() {
+	// TODO - move it to DataBus
+	/*LOG_DEBUG("Start data exchange with neighbor cores");
 	if (this->numberOfWorkers == 1) return;
 
 	int bufferSize = this->accuracyOrder * (sizes(1) + 2 * this->accuracyOrder) * (sizes(2) + 2 * this->accuracyOrder);
@@ -117,22 +69,5 @@ void StructuredGrid<TModel>::exchangeNodesWithNeighbors() {
 		MPI_Sendrecv(&(this->pdeVectors[(size_t)bufferSize]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             &(this->pdeVectors[0]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, this->rank - 1, 1,
 		             MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-	}
+	}*/
 }
-
-template<typename TModel>
-void StructuredGrid<TModel>::applyBorderConditions() {
-	borderConditions.applyBorderConditions(this);
-}
-
-template class StructuredGrid<Elastic1DModel>;
-
-template class StructuredGrid<Elastic2DModel>;
-template class StructuredGrid<ContinualDamageElastic2DModel>;
-template class StructuredGrid<IdealPlastic2DModel>;
-
-template class StructuredGrid<Elastic3DModel>;
-template class StructuredGrid<OrthotropicElastic3DModel>;
-
-template class StructuredGrid<SuperDuperModel>;
-

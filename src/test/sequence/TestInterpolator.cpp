@@ -2,17 +2,17 @@
 #include <cmath>
 
 #include <lib/linal/linal.hpp>
-#include <lib/numeric/interpolation/Interpolator.hpp>
+#include <lib/numeric/interpolation/EqualDistanceLineInterpolator.hpp>
 
 #define MAX_ACCURACY_ORDER 20
 
 using namespace gcm;
 using namespace gcm::linal;
 
-TEST(Interpolator, Const)
+TEST(EqualDistanceLineInterpolator, Const)
 {
 	const int N = 5;
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 	for (int i = 0; i <= MAX_ACCURACY_ORDER; i++) {
 		Vector<N> res;
 		std::vector<Vector<N>> src((unsigned int)(i + 1));
@@ -32,10 +32,10 @@ TEST(Interpolator, Const)
 }
 
 
-TEST(Interpolator, Linear)
+TEST(EqualDistanceLineInterpolator, Linear)
 {
 	const int N = 9;
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 	for (int k = 0; k <= MAX_ACCURACY_ORDER; k++) {
 		Vector<N> res;
 		std::vector<Vector<N>> src((unsigned int)(k + 1));
@@ -55,10 +55,10 @@ TEST(Interpolator, Linear)
 }
 
 
-TEST(Interpolator, Quadratic)
+TEST(EqualDistanceLineInterpolator, Quadratic)
 {
 	const int N = 9;
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 
 	for(real q = 0.0; q <= 2.0; q+= 0.1) {
 		Vector<N> res;
@@ -74,10 +74,10 @@ TEST(Interpolator, Quadratic)
 }
 
 
-TEST(Interpolator, MinMax)
+TEST(EqualDistanceLineInterpolator, MinMax)
 {
 	const int N = 2;
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 	Vector<N> res;
 	std::vector<Vector<N>> src(3);
 	src[0](0) = -9.0; src[1](0) = -1.0; src[2](0) = -1.0;
@@ -89,10 +89,10 @@ TEST(Interpolator, MinMax)
 }
 
 
-TEST(Interpolator, MinMaxFifthOrder)
+TEST(EqualDistanceLineInterpolator, MinMaxFifthOrder)
 {
 	const int N = 2;
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 
 	// minmax interpolation
 	for (real q = 0.0; q <= 5.0; q+= 0.1) {
@@ -114,14 +114,14 @@ TEST(Interpolator, MinMaxFifthOrder)
 }
 
 
-TEST(Interpolator, TenthOrder)
+TEST(EqualDistanceLineInterpolator, TenthOrder)
 {
 	const int N = 2;
 	auto func = [](real x) {
 		return x * x * x * x * x * x * x * x * x * x + 4 * x * x * x * x * x * x * x * x * x -
 		       25 * x * x * x * x * x * x * x + 2 * x * x * x * x * x - 3 * x * x + 5;
 	};
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 	Vector<N> res;
 	std::vector<Vector<N>> src(11);
 	for (real q = 0; q < 11.0; q += 0.1) {
@@ -134,10 +134,10 @@ TEST(Interpolator, TenthOrder)
 }
 
 
-TEST(Interpolator, Exceptions)
+TEST(EqualDistanceLineInterpolator, Exceptions)
 {
 	const int N = 5;
-	Interpolator<Vector<N>> interpolator;
+	EqualDistanceLineInterpolator<Vector<N>> interpolator;
 	Vector<N> res;
 	std::vector<Vector<N>> src(2);
 	ASSERT_ANY_THROW(interpolator.minMaxInterpolate(res, src, -0.3));

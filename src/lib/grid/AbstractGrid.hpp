@@ -1,9 +1,8 @@
-#ifndef LIBGCM_GRID_HPP
-#define LIBGCM_GRID_HPP
+#ifndef LIBGCM_ABSTRACTGRID_HPP
+#define LIBGCM_ABSTRACTGRID_HPP
 
 #include <mpi.h>
 
-#include <lib/util/storage/StdVectorStorage.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
 
@@ -11,7 +10,7 @@ namespace gcm {
 	/**
 	 * Base class for all grids
 	 */
-	class Grid {
+	class AbstractGrid {
 	public:
 		/** @param task properties and initial conditions etc */
 		void initialize(const Task &task) {
@@ -26,7 +25,7 @@ namespace gcm {
 			initializeImpl(task);
 			applyInitialConditions(task);
 		};
-		virtual ~Grid() { };
+		virtual ~AbstractGrid() { };
 
 		/** @warning this is not always just MPI-rank (see forceSequence) */
 		int getRank() const {
@@ -34,7 +33,7 @@ namespace gcm {
 			assert_lt(rank, numberOfWorkers);
 			return rank;
 		};
-		/** @warning this is not always just MPI-numberOfWorkers (see forceSequence) */
+		/** @warning this is not always just MPI-size (see forceSequence) */
 		int getNumberOfWorkers() const {
 			assert_gt(numberOfWorkers, 0);
 			return numberOfWorkers;
@@ -68,15 +67,17 @@ namespace gcm {
 		real minimalSpatialStep = 0.0; // minimal spatial step over all mesh
 
 		virtual void initializeImpl(const Task &task) = 0;
+		virtual void applyInitialConditions(const Task& task) = 0;
+
 		virtual void beforeStageImpl() = 0;
 		virtual void afterStageImpl() = 0;
 		virtual void beforeStepImpl() = 0;
 		virtual void afterStepImpl() = 0;
+
 		virtual void recalculateMinimalSpatialStep() = 0;
 		virtual void recalculateMaximalLambda() = 0;
-		virtual void applyInitialConditions(const Task &task) = 0;
-		virtual void applyBorderConditions() = 0;
+
 	};
 }
 
-#endif // LIBGCM_GRID_HPP
+#endif // LIBGCM_ABSTRACTGRID_HPP
