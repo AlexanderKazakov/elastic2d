@@ -60,7 +60,7 @@ void Binary2DSeismograph<TGrid>::closeSeismoFileStream() {
 template <class TGrid>
 std::string Binary2DSeismograph<TGrid>::makeFileNameForSeismo() {
 	char buffer[50];
-	sprintf(buffer, "%s%02d%s%05d%s", "seismo/core", MPI::COMM_WORLD.Get_rank(), "_seismo", seismoNumber, ".bin");
+	sprintf(buffer, "%s%02d%s%05d%s", "seismos/core", MPI::COMM_WORLD.Get_rank(), "_seismo", seismoNumber, ".bin");
 	return std::string(buffer);
 }
 
