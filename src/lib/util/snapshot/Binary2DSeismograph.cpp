@@ -1,6 +1,6 @@
 #include <lib/util/snapshot/Binary2DSeismograph.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/grid/StructuredGrid.hpp>
+#include <lib/mesh/CubicGrid.hpp>
 
 using namespace gcm;
 
@@ -30,8 +30,7 @@ void Binary2DSeismograph<TGrid>::snapshotImpl(const AbstractGrid* _grid, const i
 	assert_eq(grid->sizes(1), sizeY);
 	surface[0] = step * tau;
 	for (int y = 0; y < sizeY; y++) {
-		// todo - fix it with border iterator
-//		surface[y + 1] = (output_precision) grid->pde(0, y, 0).getPressure();
+		surface[y + 1] = (output_precision) grid->pde(linal::VectorInt<3>({0, y, 0})).getPressure();
 	}
 	writeSurfaceToBuffer();
 }
@@ -80,4 +79,4 @@ void Binary2DSeismograph<TGrid>::initializeImpl(const Task &task) {
 }
 
 
-template class Binary2DSeismograph<DefaultGrid<Elastic2DModel, StructuredGrid>>;
+template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>;

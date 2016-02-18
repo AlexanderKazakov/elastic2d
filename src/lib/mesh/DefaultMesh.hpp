@@ -1,24 +1,24 @@
-#ifndef LIBGCM_DEFAULTGRID_HPP
-#define LIBGCM_DEFAULTGRID_HPP
+#ifndef LIBGCM_DEFAULTMESH_HPP
+#define LIBGCM_DEFAULTMESH_HPP
 
-#include <lib/util/storage/StdVectorStorage.hpp>
 #include <lib/util/task/InitialCondition.hpp>
 
 namespace gcm {
-	template<typename TModel, typename TGrid> class GcmHandler;
-	template<typename TGrid> class Binary2DSeismograph;
-	template<typename TGrid> class VtkStructuredSnapshotter;
-	template<typename TGrid> class DefaultSolver;
-	template<typename TGrid> class GridCharacteristicMethod;
+	template<typename TMesh> class Binary2DSeismograph;
+	template<typename TMesh> class DefaultSolver;
+	template<typename TMesh> class GridCharacteristicMethod;
+	template<typename TModel, typename TGrid> struct GcmHandler;
+	template<typename TModel, typename TGrid> struct DataBus;
+	template<typename TModel, typename TGrid> struct BorderConditions;
 
 	/**
-	 * Grid that implement the approach when all nodal data are stored 
+	 * Mesh that implement the approach when all nodal data are stored
 	 * in separated vectors not in one node
 	 * @tparam TModel  rheology model
 	 * @tparam TGrid   geometric aspects
 	 */
 	template<typename TModel, typename TGrid>
-	class DefaultGrid : public TGrid {
+	class DefaultMesh : public TGrid {
 	public:
 		typedef          TModel               Model;
 		typedef typename Model::Vector        PdeVector;
@@ -27,8 +27,9 @@ namespace gcm {
 		typedef typename GCM_MATRICES::Matrix Matrix;
 
 		static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
-		
-		typedef typename TGrid::Iterator      Iterator;
+
+		typedef          TGrid                Grid;
+		typedef typename Grid::Iterator       Iterator;
 
 		typedef GcmHandler<TModel, TGrid>     GCM_HANDLER;
 		
@@ -68,17 +69,17 @@ namespace gcm {
 		 * Data storage. Real values plus auxiliary values on borders.
 		 * "...New" means on the next time layer.
 		 */
-		StdVectorStorage<PdeVector>     pdeVectors;
-		StdVectorStorage<PdeVector>     pdeVectorsNew;
-		StdVectorStorage<GCM_MATRICES*> gcmMatrices;
-		StdVectorStorage<OdeVariables>  odeValues;
+		std::vector<PdeVector>     pdeVectors;
+		std::vector<PdeVector>     pdeVectorsNew;
+		std::vector<GCM_MATRICES*> gcmMatrices;
+		std::vector<OdeVariables>  odeValues;
 
 		virtual void initializeImplImpl(const Task& task) override {
-			this->pdeVectors.zeroInitialize(this->sizeOfAllNodes());
-			this->pdeVectorsNew.zeroInitialize(this->sizeOfAllNodes());
-			this->gcmMatrices.zeroInitialize(this->sizeOfAllNodes());
+			zeroInitialize(pdeVectors, this->sizeOfAllNodes());
+			zeroInitialize(pdeVectorsNew, this->sizeOfAllNodes());
+			zeroInitialize(gcmMatrices, this->sizeOfAllNodes());
 			if (Model::InternalOde::NonTrivial)
-				this->odeValues.zeroInitialize(this->sizeOfAllNodes());
+				zeroInitialize(odeValues, this->sizeOfAllNodes());
 
 			typename TModel::Material material;
 			material.initialize(task);
@@ -98,12 +99,20 @@ namespace gcm {
 
 		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ };
 
+		template<typename T>
+		void zeroInitialize(std::vector<T>& stdVec, size_t InitSize) {
+			stdVec.resize(InitSize);
+			memset(&(stdVec[0]), 0, stdVec.size() * sizeof(T));
+		};
+		
+
+		friend class Binary2DSeismograph<DefaultMesh>; // todo replace
+		friend class DefaultSolver<DefaultMesh>;
+		friend class GridCharacteristicMethod<DefaultMesh>;
 		friend class GcmHandler<TModel, TGrid>;
-		friend class Binary2DSeismograph<DefaultGrid>;
-		friend class VtkStructuredSnapshotter<DefaultGrid>;
-		friend class DefaultSolver<DefaultGrid>;
-		friend class GridCharacteristicMethod<DefaultGrid>;
+		friend class DataBus<TModel, TGrid>;
+		friend class BorderConditions<TModel, TGrid>;
 	};
 }
 
-#endif // LIBGCM_DEFAULTGRID_HPP
+#endif // LIBGCM_DEFAULTMESH_HPP

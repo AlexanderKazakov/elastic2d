@@ -31,7 +31,7 @@ mpirun -np $np ./build/gcm_exe
 if ((run_paraview)); then
     echo "Run Paraview ..."
     if (($np == 1)); then
-        paraview --data=snaps/core00_snapshot..vts
+        paraview --data=core00meshstep..vts
     else
         paraview
     fi

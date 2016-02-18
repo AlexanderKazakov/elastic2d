@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include <lib/grid/AbstractGrid.hpp>
+#include <lib/mesh/AbstractGrid.hpp>
 
 namespace gcm {
 	/**
@@ -21,10 +21,6 @@ namespace gcm {
 			}
 		};
 
-		/**
-		 * @param grid pointer to the grid for dump
-		 * @param enableSnapshotting dump or do not dump snaps
-		 */
 		void initialize(const Task& task) {
 			enableSnapshotting = task.enableSnapshotting;
 			stepsPerSnap = task.stepsPerSnap;

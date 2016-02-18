@@ -97,16 +97,16 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	// calculate in sequence
 	task.forceSequence = true;
-	EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> sequenceEngine;
-	sequenceEngine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> sequenceEngine;
+	sequenceEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> mpiEngine;
-	mpiEngine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> mpiEngine;
+	mpiEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 

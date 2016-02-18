@@ -1,19 +1,17 @@
-#ifndef LIBGCM_STRUCTUREDGRID_HPP
-#define LIBGCM_STRUCTUREDGRID_HPP
+#ifndef LIBGCM_CUBICGRID_HPP
+#define LIBGCM_CUBICGRID_HPP
 
-#include <mpi.h>
-
-#include <lib/grid/AbstractGrid.hpp>
+#include <lib/mesh/StructuredGrid.hpp>
 #include <lib/linal/linal.hpp>
-#include <lib/numeric/border_conditions/StructuredGridBorderConditions.hpp>
 
 namespace gcm {
 	/**
 	 * Non-movable structured rectangular grid
 	 * @tparam TModel rheology model
 	 */
-	class StructuredGrid : public AbstractGrid {
+	class CubicGrid : public StructuredGrid {
 	public:
+		virtual ~CubicGrid() { };
 		struct Iterator : public linal::VectorInt<3> {
 			linal::VectorInt<3> bounds = {0, 0, 0};
 			Iterator(const linal::VectorInt<3> indices_, const linal::VectorInt<3> bounds_) {
@@ -98,23 +96,19 @@ namespace gcm {
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node of the grid
 		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction
 
-		StructuredGridBorderConditions<StructuredGrid> borderConditions;
-		void exchangeNodesWithNeighbors();
-
 		virtual void initializeImpl(const Task &task) override;
-		virtual void beforeStageImpl() override;
+		virtual void beforeStageImpl() override { };
 		virtual void afterStageImpl() override { };
 		virtual void beforeStepImpl() override { };
 		virtual void afterStepImpl() override { };
-		virtual void recalculateMinimalSpatialStep() override { };
 
 		virtual void recalculateMaximalLambda() = 0;
 		virtual void applyInitialConditions(const Task& task) = 0;
 
 		virtual void initializeImplImpl(const Task& task) = 0;
 
-		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
+		USE_AND_INIT_LOGGER("gcm.CubicGrid");
 	};
 }
 
-#endif // LIBGCM_STRUCTUREDGRID_HPP
+#endif // LIBGCM_CUBICGRID_HPP

@@ -31,10 +31,10 @@ TEST(Solver, StageXForward)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		DefaultSolverWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> solver;
+		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
 		solver.initialize(task);
 		auto pWave = solver.getMesh()->getPde(2, 0, 0);
-		DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector zero({0, 0, 0, 0, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -73,10 +73,10 @@ TEST(Solver, StageY)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		DefaultSolverWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> solver;
+		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
 		solver.initialize(task);
 		auto pWave = solver.getMesh()->getPde(0, 2, 0);
-		DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector zero({0, 0, 0, 0, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -112,10 +112,10 @@ TEST(Solver, StageYSxx)
 		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.01, begin, end);
 		task.initialCondition.quantities.push_back(quantity);
 
-		DefaultSolverWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> solver;
+		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
 		solver.initialize(task);
 		auto sxxOnly = solver.getMesh()->getPde(5, 5, 0);
-		DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector zero({0, 0, 0, 0, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {

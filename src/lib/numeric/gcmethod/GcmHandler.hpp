@@ -2,9 +2,9 @@
 #define LIBGCM_GCMHANDLER_HPP
 
 #include <lib/linal/linal.hpp>
-#include <lib/grid/DefaultGrid.hpp>
-#include <lib/grid/StructuredGrid.hpp>
-#include <lib/grid/Cgal2DGrid.hpp>
+#include <lib/mesh/DefaultMesh.hpp>
+#include <lib/mesh/CubicGrid.hpp>
+#include <lib/mesh/Cgal2DGrid.hpp>
 #include <lib/numeric/interpolation/EqualDistanceLineInterpolator.hpp>
 
 
@@ -14,7 +14,7 @@ namespace gcm {
 	 */
 	template<typename TModel, typename TGrid>
 	struct GcmHandler {
-		typedef DefaultGrid<TModel, TGrid>           Grid;
+		typedef DefaultMesh<TModel, TGrid>           Grid;
 		typedef typename Grid::Matrix                Matrix;
 		typedef typename Grid::PdeVector             PdeVector;
 		typedef typename Grid::Iterator              Iterator;
@@ -30,20 +30,12 @@ namespace gcm {
 		 * @return Matrix with interpolated nodal values in columns
 		 */
 		static Matrix interpolateValuesAround(const Grid& grid, const int stage, const Iterator& it,
-		                                      const PdeVector& dx) {
-			SUPPRESS_WUNUSED(grid);
-			SUPPRESS_WUNUSED(stage);
-			SUPPRESS_WUNUSED(it);
-			SUPPRESS_WUNUSED(dx);
-			Matrix ans;
-			linal::clear(ans);
-			return ans;
-		}
+		                                      const PdeVector& dx);
 	};
 
 	template<typename TModel>
-	struct GcmHandler<TModel, StructuredGrid> {
-		typedef DefaultGrid<TModel, StructuredGrid>  Grid;
+	struct GcmHandler<TModel, CubicGrid> {
+		typedef DefaultMesh<TModel, CubicGrid>       Grid;
 		typedef typename Grid::Matrix                Matrix;
 		typedef typename Grid::PdeVector             PdeVector;
 		typedef typename Grid::Iterator              Iterator;
@@ -63,6 +55,26 @@ namespace gcm {
 				EqualDistanceLineInterpolator<PdeVector>::minMaxInterpolate(res, src, fabs(dx(k)) / grid.h(stage));
 				ans.setColumn(k, res);
 			}
+			return ans;
+		};
+	};
+
+	template<typename TModel>
+	struct GcmHandler<TModel, Cgal2DGrid> {
+		typedef DefaultMesh<TModel, Cgal2DGrid>      Grid;
+		typedef typename Grid::Matrix                Matrix;
+		typedef typename Grid::PdeVector             PdeVector;
+		typedef typename Grid::Iterator              Iterator;
+
+		/** See the comment under */
+		static Matrix interpolateValuesAround(const Grid& grid, const int stage,
+		                                      const Iterator& it, const PdeVector& dx) {
+			SUPPRESS_WUNUSED(grid);
+			SUPPRESS_WUNUSED(stage);
+			SUPPRESS_WUNUSED(it);
+			SUPPRESS_WUNUSED(dx);
+			Matrix ans;
+			linal::clear(ans);
 			return ans;
 		};
 	};

@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
 #include <lib/util/areas/SphereArea.hpp>
-#include <lib/grid/StructuredGrid.hpp>
+#include <lib/mesh/CubicGrid.hpp>
 #include <lib/numeric/gcmethod/GcmHandler.hpp>
 #include <test/wrappers/Wrappers.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
-TEST(StructuredGrid, initialize) {
+TEST(CubicGrid, initialize) {
 	Task task;
 	task.accuracyOrder = 3;
 	task.CourantNumber = 0.7;
@@ -19,7 +19,7 @@ TEST(StructuredGrid, initialize) {
 	task.numberOfSnaps = 5;
 	task.T = 100.0;
 
-	MeshWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> grid;
+	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid;
 	grid.initialize(task);
 	ASSERT_NEAR(grid.getH()(0), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getH()(1), 1.0, EQUALITY_TOLERANCE);
@@ -28,7 +28,7 @@ TEST(StructuredGrid, initialize) {
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
 			for (int z = 0; z < task.sizes(2); z++) {
-				for (int i = 0; i < DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector::M; i++) {
+				for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector::M; i++) {
 					ASSERT_EQ(grid.getPde(x, y, z)(i), 0.0);
 				}
 			}
@@ -37,7 +37,7 @@ TEST(StructuredGrid, initialize) {
 }
 
 
-TEST(StructuredGrid, interpolateValuesAround)
+TEST(CubicGrid, interpolateValuesAround)
 {
 	Task task;
 	task.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
@@ -54,7 +54,7 @@ TEST(StructuredGrid, interpolateValuesAround)
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		MeshWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> grid;
+		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid;
 		grid.initialize(task);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -67,12 +67,12 @@ TEST(StructuredGrid, interpolateValuesAround)
 			}
 		}
 
-		DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
-		DefaultGrid<Elastic2DModel, StructuredGrid>::Iterator it({1, 1, 0}, grid.getSizes());
-		DefaultGrid<Elastic2DModel, StructuredGrid>::Matrix matrix =
-				GcmHandler<Elastic2DModel, StructuredGrid>::interpolateValuesAround(grid, stage, it, dx);
+		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid>::Iterator it({1, 1, 0}, grid.getSizes());
+		DefaultMesh<Elastic2DModel, CubicGrid>::Matrix matrix =
+				GcmHandler<Elastic2DModel, CubicGrid>::interpolateValuesAround(grid, stage, it, dx);
 
-		for (int i = 0; i < DefaultGrid<Elastic2DModel, StructuredGrid>::PdeVector::M; i++) {
+		for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector::M; i++) {
 			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
 			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx

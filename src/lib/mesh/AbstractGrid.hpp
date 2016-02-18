@@ -50,6 +50,8 @@ namespace gcm {
 			return minimalSpatialStep;
 		};
 
+		std::string getId() const { return id; };
+
 		void beforeStage() { beforeStageImpl(); };
 		void afterStage() { afterStageImpl(); };
 		void beforeStep() {
@@ -60,6 +62,7 @@ namespace gcm {
 		void afterStep() { afterStepImpl(); };
 
 	protected:
+		std::string id = "mesh"; // name of the mesh
 		int rank = -1; // index of core
 		int numberOfWorkers = -1; // number of cores
 

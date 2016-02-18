@@ -29,8 +29,8 @@ TEST(Engine, run)
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	task.initialCondition.waves.push_back(wave);
 
-	EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> engine;
-	engine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> engine;
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
 	engine.initialize(task);
 	auto sWave = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, 3, 0);
 	engine.run();
@@ -63,8 +63,8 @@ TEST(Engine, TwoLayersDifferentRho)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> engine;
-		engine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> engine;
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
 		engine.initialize(task);
 
 		real rho2rho0 = rho2rho0Initial * pow(2, i);
@@ -138,8 +138,8 @@ TEST(Engine, TwoLayersDifferentE)
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		task.initialCondition.waves.push_back(wave);
 
-		EngineWrapper<DefaultGrid<Elastic2DModel, StructuredGrid>> engine;
-		engine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> engine;
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
 		engine.initialize(task);
 
 		real rho2rho0 = 1;

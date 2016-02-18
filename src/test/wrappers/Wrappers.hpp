@@ -3,7 +3,7 @@
 
 #include <lib/Engine.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/grid/StructuredGrid.hpp>
+#include <lib/mesh/CubicGrid.hpp>
 
 namespace gcm {
 	/**
@@ -55,7 +55,7 @@ namespace gcm {
 		real getTauForTest() const { return this->calculateTau(); };
 
 		MeshWrapper<TGrid>* getMesh() const {
-			return static_cast<MeshWrapper<TGrid>*>(this->grid);
+			return static_cast<MeshWrapper<TGrid>*>(this->mesh);
 		};
 	};
 

@@ -2,11 +2,8 @@
 
 #include <lib/Engine.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/grid/StructuredGrid.hpp>
-#include <lib/grid/Cgal2DGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/util/snapshot/VtkStructuredSnapshotter.hpp>
-#include <lib/util/snapshot/VtkCgal2DSnapshotter.hpp>
+#include <lib/util/snapshot/VtkSnapshotter.hpp>
 
 
 using namespace gcm;
@@ -20,12 +17,12 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	engine.setSolver(new DefaultSolver<DefaultGrid<SuperDuperModel, StructuredGrid>>());
-	engine.setSnapshotter(new VtkStructuredSnapshotter<DefaultGrid<SuperDuperModel, StructuredGrid>>());
-	engine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>());
-	engine.setSnapshotter(new VtkStructuredSnapshotter<DefaultGrid<Elastic2DModel, StructuredGrid>>());
-	/*engine.setSolver(new DefaultSolver<DefaultGrid<Elastic2DModel, Cgal2DGrid>>());
-	engine.setSnapshotter(new VtkCgal2DSnapshotter<DefaultGrid<Elastic2DModel, Cgal2DGrid>>());*/
+	engine.setSolver(new DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<SuperDuperModel, CubicGrid>>());
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	/*engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());*/
 
 	try {
 		engine.initialize(parseTask/*Demo*/());
@@ -51,7 +48,7 @@ Task parseTask() {
 	task.accuracyOrder = 2;
 
 	task.lengthes = {1, 1, 1};
-	task.sizes = {51, 21, 1};
+	task.sizes = {21, 21, 1};
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter
@@ -112,7 +109,7 @@ Task parseTaskDemo() {
 	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 10;
+	task.numberOfSnaps = 20;
 	task.stepsPerSnap = 1;
 
 	Task::InitialCondition::Quantity pressure;

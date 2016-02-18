@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include <lib/grid/DefaultGrid.hpp>
+#include <lib/mesh/DefaultMesh.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/snapshot/Snapshotter.hpp>
 

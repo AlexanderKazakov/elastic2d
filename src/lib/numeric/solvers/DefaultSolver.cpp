@@ -1,44 +1,42 @@
 #include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/grid/StructuredGrid.hpp>
-#include <lib/grid/DefaultGrid.hpp>
-#include <lib/grid/Cgal2DGrid.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
 
-template<class TGrid>
-void DefaultSolver<TGrid>::initializeImpl(const Task &task) {
+template<class TMesh>
+void DefaultSolver<TMesh>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 
-	method = new GridCharacteristicMethod<TGrid>();
-	corrector = new typename TGrid::Model::Corrector();
+	method = new GridCharacteristicMethod<TMesh>();
+	corrector = new typename Model::Corrector();
 	corrector->initialize(task);
-	internalOde = new typename TGrid::Model::InternalOde();
+	internalOde = new typename Model::InternalOde();
 	internalOde->initialize(task);
+	borderConditions.initialize(task);
 
-	grid = new TGrid();
-	grid->initialize(task);
+	mesh = new TMesh();
+	mesh->initialize(task);
 
 	CourantNumber = task.CourantNumber;
 	splittingSecondOrder = task.splittingSecondOrder;
 }
 
-template<class TGrid>
-DefaultSolver<TGrid>::~DefaultSolver() {
+template<class TMesh>
+DefaultSolver<TMesh>::~DefaultSolver() {
 	delete method;
 	delete corrector;
 	delete internalOde;
-	delete grid;
+	delete mesh;
 }
 
-template<class TGrid>
-void DefaultSolver<TGrid>::nextTimeStepImpl() {
+template<class TMesh>
+void DefaultSolver<TMesh>::nextTimeStepImpl() {
 	LOG_INFO("Start time step " << step);
-	grid->beforeStep();
+	mesh->beforeStep();
 	real tau = calculateTau();
 
 	if (splittingSecondOrder) {
-		switch (TGrid::DIMENSIONALITY) {
+		switch (TMesh::DIMENSIONALITY) {
 			case 1:
 				stage(0, tau);
 				break;
@@ -52,56 +50,58 @@ void DefaultSolver<TGrid>::nextTimeStepImpl() {
 				break;
 		}
 	} else {
-		for (int s = 0; s < TGrid::DIMENSIONALITY; s++) {
+		for (int s = 0; s < TMesh::DIMENSIONALITY; s++) {
 			stage(s, tau);
 		}
 	}
 
 	internalOdeNextStep(tau);
 	applyCorrectors();
-	grid->afterStep();
+	mesh->afterStep();
 }
 
-template<class TGrid>
-void DefaultSolver<TGrid>::stage(const int s, const real timeStep) {
-	grid->beforeStage();
-	method->stage(s, timeStep, grid); // now actual PDE values is in pdeVectorsNew
-	std::swap(grid->pdeVectors, grid->pdeVectorsNew); // return them back to pdeVectors
-	grid->afterStage();
+template<class TMesh>
+void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
+	DataBus<Model, Grid>::exchangeNodesWithNeighbors(mesh);
+	borderConditions.applyBorderConditions(mesh);
+	mesh->beforeStage();
+	method->stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
+	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return them back to pdeVectors
+	mesh->afterStage();
 }
 
-template<class TGrid>
-void DefaultSolver<TGrid>::internalOdeNextStep(const real timeStep) {
-	if (TGrid::Model::InternalOde::NonTrivial) {
-		assert_eq(grid->pdeVectors.size(), grid->odeValues.size());
-		for (auto it : *grid) {
-			internalOde->nextStep(grid->_ode(it), grid->pde(it), timeStep);
+template<class TMesh>
+void DefaultSolver<TMesh>::internalOdeNextStep(const real timeStep) {
+	if (TMesh::Model::InternalOde::NonTrivial) {
+		assert_eq(mesh->pdeVectors.size(), mesh->odeValues.size());
+		for (auto it : *mesh) {
+			internalOde->nextStep(mesh->_ode(it), mesh->pde(it), timeStep);
 		}
 	}
 }
 
-template<class TGrid>
-void DefaultSolver<TGrid>::applyCorrectors() {
-	if (TGrid::Model::Corrector::NonTrivial) {
-		for (auto it : *grid) {
-			corrector->apply(grid->_pde(it));
+template<class TMesh>
+void DefaultSolver<TMesh>::applyCorrectors() {
+	if (TMesh::Model::Corrector::NonTrivial) {
+		for (auto it : *mesh) {
+			corrector->apply(mesh->_pde(it));
 		}
 	}
 }
 
-template<class TGrid>
-real DefaultSolver<TGrid>::calculateTau() const {
-	return CourantNumber * grid->getMinimalSpatialStep() / grid->getMaximalLambda();
+template<class TMesh>
+real DefaultSolver<TMesh>::calculateTau() const {
+	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
 }
 
-template class DefaultSolver<DefaultGrid<Elastic1DModel, StructuredGrid>>;
-template class DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>;
-template class DefaultSolver<DefaultGrid<Elastic3DModel, StructuredGrid>>;
-template class DefaultSolver<DefaultGrid<OrthotropicElastic3DModel, StructuredGrid>>;
-template class DefaultSolver<DefaultGrid<ContinualDamageElastic2DModel, StructuredGrid>>;
-template class DefaultSolver<DefaultGrid<IdealPlastic2DModel, StructuredGrid>>;
+template class DefaultSolver<DefaultMesh<Elastic1DModel, CubicGrid>>;
+template class DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>;
+template class DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>;
+template class DefaultSolver<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>;
+template class DefaultSolver<DefaultMesh<ContinualDamageElastic2DModel, CubicGrid>>;
+template class DefaultSolver<DefaultMesh<IdealPlastic2DModel, CubicGrid>>;
 
-template class DefaultSolver<DefaultGrid<SuperDuperModel, StructuredGrid>>;
+template class DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>;
 
-//template class DefaultSolver<Cgal2DGrid<Elastic2DModel>>;
+template class DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>;
 

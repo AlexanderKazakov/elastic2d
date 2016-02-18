@@ -1,7 +1,7 @@
 #include <lib/Engine.hpp>
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/grid/StructuredGrid.hpp>
+#include <lib/mesh/CubicGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/util/snapshot/Binary2DSeismograph.hpp>
 
@@ -15,9 +15,9 @@ int main(int argc, char **argv) {
 	USE_AND_INIT_LOGGER("gcm.seismo");
 
 	Engine engine;
-	auto solver = new DefaultSolver<DefaultGrid<Elastic2DModel, StructuredGrid>>();
+	auto solver = new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>();
 	engine.setSolver(solver);
-	auto seismograph = new Binary2DSeismograph<DefaultGrid<Elastic2DModel, StructuredGrid>>();
+	auto seismograph = new Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>();
 	engine.setSnapshotter(seismograph);
 
 	const int numberOfStatements = 1;
