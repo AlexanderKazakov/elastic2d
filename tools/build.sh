@@ -16,7 +16,7 @@ cmake_line="cmake .."
 while getopts ":dcopvg" option; do
     case "${option}" in
         c)
-            rm -rf build
+            rm -rf build CMakeCache.txt CMakeFiles/ cmake_install.cmake
             mkdir build
             ;;
         d)

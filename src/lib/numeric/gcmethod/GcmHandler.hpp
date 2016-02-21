@@ -5,7 +5,7 @@
 #include <lib/mesh/DefaultMesh.hpp>
 #include <lib/mesh/CubicGrid.hpp>
 #include <lib/mesh/Cgal2DGrid.hpp>
-#include <lib/numeric/interpolation/EqualDistanceLineInterpolator.hpp>
+#include <lib/numeric/interpolation/interpolation.hpp>
 
 
 namespace gcm {
@@ -65,16 +65,25 @@ namespace gcm {
 		typedef typename Grid::Matrix                Matrix;
 		typedef typename Grid::PdeVector             PdeVector;
 		typedef typename Grid::Iterator              Iterator;
+		typedef typename Grid::Triangle              Triangle;
 
 		/** See the comment under */
 		static Matrix interpolateValuesAround(const Grid& grid, const int stage,
 		                                      const Iterator& it, const PdeVector& dx) {
-			SUPPRESS_WUNUSED(grid);
-			SUPPRESS_WUNUSED(stage);
-			SUPPRESS_WUNUSED(it);
-			SUPPRESS_WUNUSED(dx);
 			Matrix ans;
-			linal::clear(ans);
+			for (int k = 0; k < PdeVector::M; k++) {
+				linal::Vector2 shift({(stage == 0) * dx(k), (stage == 1) * dx(k)});
+				auto t = grid.findOwnerTriangle(it, shift);
+				PdeVector u; linal::clear(u);
+				if (t.inner) {
+					u = TriangleInterpolator<PdeVector>::interpolate(
+							grid.coords2d(t.p[0]), grid.pde(t.p[0]),
+							grid.coords2d(t.p[1]), grid.pde(t.p[1]),
+							grid.coords2d(t.p[2]), grid.pde(t.p[2]),
+							grid.coords2d(it) + shift);
+				}
+				ans.setColumn(k, u);
+			}
 			return ans;
 		};
 	};

@@ -14,3 +14,8 @@ gcm_tests
 gcm_mpi_tests
 gcm_seismo
 cgal_tests
+nbproject
+nbproject/*
+cmake_install.cmake
+compile_commands.json
+libgcm.so

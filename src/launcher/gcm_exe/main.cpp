@@ -17,12 +17,12 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	engine.setSolver(new DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<SuperDuperModel, CubicGrid>>());
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	/*engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());*/
+	/*engine.setSolver(new DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<SuperDuperModel, CubicGrid>>());*/
+	/*engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());*/
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
 
 	try {
 		engine.initialize(parseTask/*Demo*/());
@@ -48,7 +48,7 @@ Task parseTask() {
 	task.accuracyOrder = 2;
 
 	task.lengthes = {1, 1, 1};
-	task.sizes = {21, 21, 1};
+	task.sizes = {11, 11, 1};
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter
@@ -62,13 +62,13 @@ Task parseTask() {
 	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 51;
+	task.numberOfSnaps = 21;
 	task.stepsPerSnap = 1;
 
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({0.5, 0.5, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.4, linal::Vector3({0.5, 0.5, 0}));
 	task.initialCondition.quantities.push_back(pressure);
 
 	/*Task::InitialCondition::Wave wave;

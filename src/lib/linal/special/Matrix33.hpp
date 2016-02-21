@@ -63,6 +63,23 @@ namespace gcm {
 		 * @return matrix determinant
 		 */
 		real determinant(const Matrix33 &m);
+
+		/**
+		 * Arbitrary type 3x3 determinant
+		 */
+		template<
+				typename T11, typename T12, typename T13,
+				typename T21, typename T22, typename T23,
+				typename T31, typename T32, typename T33
+				>
+		auto determinant(const T11& m11, const T12& m12, const T13& m13,
+		                 const T21& m21, const T22& m22, const T23& m23,
+		                 const T31& m31, const T32& m32, const T33& m33) 
+		-> decltype(m11 * m22 * m33) {
+			return m11 * (m22 * m33 - m23 * m32)
+			     - m12 * (m21 * m33 - m23 * m31)
+			     + m13 * (m21 * m32 - m22 * m31);
+		};
 	};
 };
 

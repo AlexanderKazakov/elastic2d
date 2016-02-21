@@ -1,5 +1,5 @@
-#ifndef LIBGCM_INTERPOLATOR_HPP
-#define LIBGCM_INTERPOLATOR_HPP
+#ifndef LIBGCM_EQUALDISTANCELINEINTERPOLATOR_HPP
+#define LIBGCM_EQUALDISTANCELINEINTERPOLATOR_HPP
 
 #include <vector>
 #include <lib/linal/linal.hpp>
@@ -11,7 +11,7 @@ namespace gcm {
 	class EqualDistanceLineInterpolator {
 	public:
 		/**
-		 * Interpolation by interpolate function with minmax limiter.
+		 * Interpolation with minmax limiter.
 		 * @param res value to interpolate
 		 * @param src known values at equal distances, @warning it will be overwritten(!)
 		 * @param q relative distance between first source point and point to interpolate.
@@ -67,4 +67,4 @@ namespace gcm {
 	};
 }
 
-#endif //LIBGCM_INTERPOLATOR_HPP
+#endif // LIBGCM_EQUALDISTANCELINEINTERPOLATOR_HPP

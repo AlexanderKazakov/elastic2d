@@ -5,6 +5,7 @@
 #include <vtkXMLUnstructuredGridWriter.h>
 
 #include <lib/mesh/AbstractGrid.hpp>
+#include <lib/mesh/Elements.hpp>
 
 namespace gcm {
 	/**
@@ -17,6 +18,7 @@ namespace gcm {
 
 		struct Iterator {
 			size_t iter = 0;
+			Iterator() : iter(0) { };
 			Iterator(size_t value) : iter(value) { };
 			const Iterator& operator*() { return *this; };
 			bool operator!=(const Iterator& other) const {

@@ -2,7 +2,7 @@
 #include <cmath>
 
 #include <lib/linal/linal.hpp>
-#include <lib/numeric/interpolation/EqualDistanceLineInterpolator.hpp>
+#include <lib/numeric/interpolation/interpolation.hpp>
 
 #define MAX_ACCURACY_ORDER 20
 

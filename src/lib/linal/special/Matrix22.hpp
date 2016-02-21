@@ -31,6 +31,19 @@ namespace gcm {
 		 * @return matrix determinant
 		 */
 		real determinant(const Matrix22 &m);
+		
+		/**
+		 * Arbitrary type determinant
+         */
+		template<
+				typename T11, typename T12,
+				typename T21, typename T22
+				>
+		auto determinant(const T11& m11, const T12& m12, 
+		                 const T21& m21, const T22& m22)
+		-> decltype(m11 * m22) {
+			return m11 * m22 - m12 * m21;
+		};
 	};
 };
 
