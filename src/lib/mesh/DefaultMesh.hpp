@@ -4,11 +4,11 @@
 #include <lib/util/task/InitialCondition.hpp>
 
 namespace gcm {
-	template<typename TMesh> class Binary2DSeismograph;
 	template<typename TMesh> class DefaultSolver;
 	template<typename TMesh> class GridCharacteristicMethod;
 	template<typename TModel, typename TGrid> struct GcmHandler;
 	template<typename TModel, typename TGrid> struct DataBus;
+	template<typename TModel, typename TGrid> struct MeshMover;
 	template<typename TModel, typename TGrid> struct BorderConditions;
 
 	/**
@@ -106,11 +106,11 @@ namespace gcm {
 		};
 		
 
-		friend class Binary2DSeismograph<DefaultMesh>; // todo replace
 		friend class DefaultSolver<DefaultMesh>;
 		friend class GridCharacteristicMethod<DefaultMesh>;
 		friend class GcmHandler<TModel, TGrid>;
 		friend class DataBus<TModel, TGrid>;
+		friend class MeshMover<TModel, TGrid>;
 		friend class BorderConditions<TModel, TGrid>;
 	};
 }

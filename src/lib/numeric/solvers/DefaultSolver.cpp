@@ -57,6 +57,7 @@ void DefaultSolver<TMesh>::nextTimeStepImpl() {
 
 	internalOdeNextStep(tau);
 	applyCorrectors();
+	moveMesh(tau);
 	mesh->afterStep();
 }
 
@@ -64,10 +65,8 @@ template<class TMesh>
 void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
 	DataBus<Model, Grid>::exchangeNodesWithNeighbors(mesh);
 	borderConditions.applyBorderConditions(mesh);
-	mesh->beforeStage();
 	method->stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
 	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return them back to pdeVectors
-	mesh->afterStage();
 }
 
 template<class TMesh>
@@ -90,6 +89,11 @@ void DefaultSolver<TMesh>::applyCorrectors() {
 }
 
 template<class TMesh>
+void DefaultSolver<TMesh>::moveMesh(const real timeStep) {
+	MeshMover<Model, Grid>::moveMesh(*mesh, timeStep);
+}
+
+template<class TMesh>
 real DefaultSolver<TMesh>::calculateTau() const {
 	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
 }
@@ -100,7 +104,6 @@ template class DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>;
 template class DefaultSolver<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>;
 template class DefaultSolver<DefaultMesh<ContinualDamageElastic2DModel, CubicGrid>>;
 template class DefaultSolver<DefaultMesh<IdealPlastic2DModel, CubicGrid>>;
-
 template class DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>;
 
 template class DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>;

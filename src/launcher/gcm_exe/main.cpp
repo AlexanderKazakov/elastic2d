@@ -49,6 +49,7 @@ Task parseTask() {
 
 	task.lengthes = {1, 1, 1};
 	task.sizes = {11, 11, 1};
+	task.spatialStep = 0.4;
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter

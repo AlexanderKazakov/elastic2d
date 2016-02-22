@@ -1,7 +1,7 @@
 #ifndef LIBGCM_CUBICGRID_HPP
 #define LIBGCM_CUBICGRID_HPP
 
-#include <lib/mesh/StructuredGrid.hpp>
+#include <lib/mesh/grid/StructuredGrid.hpp>
 #include <lib/linal/linal.hpp>
 
 namespace gcm {
@@ -97,10 +97,6 @@ namespace gcm {
 		linal::Vector<3> h = {0, 0, 0}; // spatial steps along each direction
 
 		virtual void initializeImpl(const Task &task) override;
-		virtual void beforeStageImpl() override { };
-		virtual void afterStageImpl() override { };
-		virtual void beforeStepImpl() override { };
-		virtual void afterStepImpl() override { };
 
 		virtual void recalculateMaximalLambda() = 0;
 		virtual void applyInitialConditions(const Task& task) = 0;

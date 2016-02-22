@@ -1,4 +1,4 @@
-#include <lib/mesh/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/Cgal2DGrid.hpp>
 
 using namespace gcm;
 
@@ -6,6 +6,7 @@ using namespace gcm;
 void Cgal2DGrid::initializeImpl(const Task &task) {
 	SUPPRESS_WUNUSED(task);
 	LOG_INFO("Start initialization");
+	minimalSpatialStep = task.spatialStep;
 	triangulate();
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
@@ -49,7 +50,9 @@ void Cgal2DGrid::triangulate() {
 	std::cout << "Meshing the triangulation..." << std::endl;
 	Mesher mesher(triangulation);
 	mesher.set_seeds(listOfSeeds.begin(), listOfSeeds.end());
-	mesher.set_criteria(Criteria(0.125, 0.2));
+	Criteria meshingCriteria; 
+	meshingCriteria.set_size_bound(minimalSpatialStep);
+	mesher.set_criteria(meshingCriteria);
 	mesher.refine_mesh();
 	std::cout << "Number of vertices: " << triangulation.number_of_vertices() << std::endl;
 	std::cout << "Number of faces: " << triangulation.number_of_faces() << std::endl;

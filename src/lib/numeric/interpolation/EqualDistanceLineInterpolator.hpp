@@ -20,7 +20,7 @@ namespace gcm {
 			// where is the point to interpolate
 			unsigned long k = (unsigned long) q;
 			// check that we perform interpolation, not extrapolation
-			assert_le(k, src.size() - 1); // todo - replace assert for performance?
+			assert_le(k, src.size() - 1);
 			assert_ge(q, 0);
 			// yield values for limiter
 			TVector maximum, minimum;

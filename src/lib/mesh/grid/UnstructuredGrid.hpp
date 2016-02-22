@@ -4,7 +4,7 @@
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 
-#include <lib/mesh/AbstractGrid.hpp>
+#include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/mesh/Elements.hpp>
 
 namespace gcm {
@@ -34,10 +34,6 @@ namespace gcm {
 
 	protected:
 		virtual void initializeImpl(const Task &task) = 0;
-		virtual void beforeStageImpl() = 0;
-		virtual void afterStageImpl() = 0;
-		virtual void beforeStepImpl() = 0;
-		virtual void afterStepImpl() = 0;
 
 		virtual void recalculateMinimalSpatialStep() = 0;
 

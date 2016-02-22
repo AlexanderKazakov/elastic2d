@@ -1,7 +1,7 @@
 #include <lib/Engine.hpp>
 #include <lib/util/areas/AxisAlignedBoxArea.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/mesh/CubicGrid.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/util/snapshot/Binary2DSeismograph.hpp>
 

@@ -1,6 +1,6 @@
 #include <lib/util/snapshot/Binary2DSeismograph.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/mesh/CubicGrid.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
 
 using namespace gcm;
 
@@ -26,8 +26,8 @@ void Binary2DSeismograph<TGrid>::finishSeismo() {
 
 template<class TGrid>
 void Binary2DSeismograph<TGrid>::snapshotImpl(const AbstractGrid* _grid, const int step) {
-	const TGrid* grid = static_cast<const TGrid*>(_grid);
-	assert_eq(grid->sizes(1), sizeY);
+	const TGrid* grid = dynamic_cast<const TGrid*>(_grid);
+	assert_eq(grid->getSizes()(1), sizeY);
 	surface[0] = step * tau;
 	for (int y = 0; y < sizeY; y++) {
 		surface[y + 1] = (output_precision) grid->pde(linal::VectorInt<3>({0, y, 0})).getPressure();

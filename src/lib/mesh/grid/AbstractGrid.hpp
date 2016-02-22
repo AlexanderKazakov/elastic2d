@@ -52,14 +52,11 @@ namespace gcm {
 
 		std::string getId() const { return id; };
 
-		void beforeStage() { beforeStageImpl(); };
-		void afterStage() { afterStageImpl(); };
 		void beforeStep() {
 			recalculateMinimalSpatialStep();
 			recalculateMaximalLambda();
-			beforeStepImpl();
 		};
-		void afterStep() { afterStepImpl(); };
+		void afterStep() { };
 
 	protected:
 		std::string id = "mesh"; // name of the mesh
@@ -71,11 +68,6 @@ namespace gcm {
 
 		virtual void initializeImpl(const Task &task) = 0;
 		virtual void applyInitialConditions(const Task& task) = 0;
-
-		virtual void beforeStageImpl() = 0;
-		virtual void afterStageImpl() = 0;
-		virtual void beforeStepImpl() = 0;
-		virtual void afterStepImpl() = 0;
 
 		virtual void recalculateMinimalSpatialStep() = 0;
 		virtual void recalculateMaximalLambda() = 0;

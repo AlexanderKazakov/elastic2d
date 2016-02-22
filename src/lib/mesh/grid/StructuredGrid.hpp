@@ -4,7 +4,7 @@
 #include <vtkStructuredGrid.h>
 #include <vtkXMLStructuredGridWriter.h>
 
-#include <lib/mesh/AbstractGrid.hpp>
+#include <lib/mesh/grid/AbstractGrid.hpp>
 
 namespace gcm {
 	/**
@@ -18,10 +18,6 @@ namespace gcm {
 		virtual ~StructuredGrid() { };
 	protected:
 		virtual void initializeImpl(const Task &task) = 0;
-		virtual void beforeStageImpl() = 0;
-		virtual void afterStageImpl() = 0;
-		virtual void beforeStepImpl() = 0;
-		virtual void afterStepImpl() = 0;
 
 		virtual void recalculateMinimalSpatialStep() override { };
 

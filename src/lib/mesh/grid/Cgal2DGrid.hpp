@@ -8,7 +8,7 @@
 #include <CGAL/Delaunay_mesh_size_criteria_2.h>
 #include <CGAL/lloyd_optimize_mesh_3.h>
 
-#include <lib/mesh/UnstructuredGrid.hpp>
+#include <lib/mesh/grid/UnstructuredGrid.hpp>
 #include <lib/linal/linal.hpp>
 
 namespace gcm {
@@ -35,6 +35,7 @@ namespace gcm {
 		typedef CDT::Vertex_handle                                  VertexHandle;
 		typedef CDT::Face_handle                                    FaceHandle;
 		typedef CDT::Geom_traits::Vector_2                          CgalVector2;
+		typedef CDT::Triangle                                       CgalTriangle2;
 		typedef CDT::Point                                          Point;
 		typedef CDT::Finite_faces_iterator                          FiniteFacesIterator;
 		typedef CDT::Line_face_circulator                           LineFaceCirculator;
@@ -52,16 +53,6 @@ namespace gcm {
 		CellIterator cellBegin() const { return CellIterator(triangulation.finite_faces_end(), realFaceTester, triangulation.finite_faces_begin()); };
 		CellIterator cellEnd() const { return CellIterator(triangulation.finite_faces_end(), realFaceTester, triangulation.finite_faces_end()); };
 
-	protected:
-		/**
-		 * @param it begin() <= iterator < end()
-		 * @return index in std::vector
-		 */
-		size_t getIndex(const Iterator& it) const {
-			return it.iter;
-		};
-
-	public:
 		/** Read-only access to real coordinates with auxiliary 0 at z */
 		const linal::Vector3 coords(const Iterator& it) const {
 			auto point = vertexHandles[it.iter]->point();
@@ -73,6 +64,22 @@ namespace gcm {
 			return {point.x(), point.y()};
 		};
 
+	protected:
+		/** Move specified point on specified distance */
+		void move(const Iterator& it, const linal::Vector2& d) {
+			auto& point = vertexHandles[it.iter]->point();
+			point = point + CgalVector2(d(0), d(1));
+		};
+		
+		/**
+		 * @param it begin() <= iterator < end()
+		 * @return index in std::vector
+		 */
+		size_t getIndex(const Iterator& it) const {
+			return it.iter;
+		};
+		
+	public:
 		/** @return indices of all vertices in vertexHandles which specified cell owns */
 		void getVerticesOfCell(const CellIterator& it, int (&vertices)[3]) const {
 			for( int i = 0; i < 3; i++) {
@@ -112,11 +119,9 @@ namespace gcm {
 			return triangulation.locate(q, beginVertex->incident_faces());
 		};
 
-		virtual void beforeStageImpl() override { };
-		virtual void afterStageImpl() override { };
-		virtual void beforeStepImpl() override { };
-		virtual void afterStepImpl() override { };
-		virtual void recalculateMinimalSpatialStep() override { minimalSpatialStep = 1; /* TODO  */ };
+		virtual void recalculateMinimalSpatialStep() override {
+			// TODO for movable grids
+		};
 
 		virtual void applyInitialConditions(const Task& task) = 0;
 		virtual void recalculateMaximalLambda() = 0;

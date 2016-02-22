@@ -6,8 +6,9 @@
 #include <lib/numeric/border_conditions/BorderConditions.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
-#include <lib/mesh/AbstractGrid.hpp>
+#include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/mesh/DataBus.hpp>
+#include <lib/mesh/MeshMover.hpp>
 #include <lib/rheology/correctors/correctors.hpp>
 
 namespace gcm {
@@ -46,6 +47,7 @@ namespace gcm {
 		void stage(const int s, const real timeStep);
 		void internalOdeNextStep(const real timeStep);
 		void applyCorrectors();
+		void moveMesh(const real timeStep);
 
 	};
 }

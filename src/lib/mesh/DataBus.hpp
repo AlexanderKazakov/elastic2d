@@ -2,8 +2,8 @@
 #define LIBGCM_DATABUS_HPP
 
 
-#include <lib/mesh/CubicGrid.hpp>
-#include <lib/mesh/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
+#include <lib/mesh/grid/Cgal2DGrid.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
 
 namespace gcm {

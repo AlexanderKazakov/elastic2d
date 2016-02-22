@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include <lib/mesh/AbstractGrid.hpp>
+#include <lib/mesh/grid/AbstractGrid.hpp>
 
 namespace gcm {
 	/**

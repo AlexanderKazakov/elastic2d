@@ -1,7 +1,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include <lib/mesh/CubicGrid.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/util/task/InitialCondition.hpp>
 #include <lib/rheology/models/Model.hpp>
 

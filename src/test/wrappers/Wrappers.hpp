@@ -3,7 +3,7 @@
 
 #include <lib/Engine.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/mesh/CubicGrid.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
 
 namespace gcm {
 	/**
