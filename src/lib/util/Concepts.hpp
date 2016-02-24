@@ -75,9 +75,8 @@ namespace gcm {
 		/** string names of concepts */
 		static const std::map<T, std::string> NAME;
 	};
-
-	/* Six faces of axis-aligned cube */
-	enum class CUBIC_BORDERS {X_LEFT, X_RIGHT, Y_LEFT, Y_RIGHT, Z_LEFT, Z_RIGHT};
+	
+	enum class DIRECTION {X = 0, Y = 1, Z = 2};
 };
 
 

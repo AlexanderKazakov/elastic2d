@@ -20,13 +20,18 @@ namespace gcm {
 		typedef typename Mesh::Matrix                Matrix;
 		typedef typename Mesh::PdeVector             PdeVector;
 		typedef typename Mesh::Iterator              Iterator;
+		typedef typename Mesh::PartIterator          PartIterator;
 
-		std::map<CUBIC_BORDERS, BorderCondition::T> borderConditions;
-
-	public:
 		void initialize(const Task& task);
 		void applyBorderConditions(Mesh* mesh) const;
-		
+	private:
+		std::map<DIRECTION, 
+			std::pair<BorderCondition::T, BorderCondition::T>> borderConditions;
+
+		void handleSide(Mesh* mesh, DIRECTION direction, 
+		                const bool onTheRight) const;
+		void handleSlice(Mesh* mesh, PartIterator realIter,
+		                             PartIterator virtIter) const;
 	};
 
 	template<typename TModel>

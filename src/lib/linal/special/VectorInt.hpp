@@ -14,6 +14,8 @@ namespace gcm {
 
 		template<int TM>
 		using VectorInt = Matrix<TM, 1, VectorIntContainer<TM>>;
+		typedef linal::VectorInt<2> Int2;
+		typedef linal::VectorInt<3> Int3;
 
 		/**
 		 * Vector of integers

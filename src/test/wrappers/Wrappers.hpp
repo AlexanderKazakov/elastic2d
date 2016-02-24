@@ -18,7 +18,7 @@ namespace gcm {
 		typedef typename TMesh::Iterator Iterator;
 
 		PdeVector getPde(const int x, const int y, const int z) const {
-			auto it = Iterator({x, y, z}, this->sizes);
+			auto it = Iterator({x, y, z});
 			return this->pde(it);
 		};
 		GCM_MATRICES* getMatrix(const int x, const int y, const int z) const {

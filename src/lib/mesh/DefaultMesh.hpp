@@ -21,7 +21,7 @@ namespace gcm {
 	class DefaultMesh : public TGrid {
 	public:
 		typedef          TModel               Model;
-		typedef typename Model::Vector        PdeVector;
+		typedef typename Model::PdeVector     PdeVector;
 		typedef typename Model::OdeVariables  OdeVariables;
 		typedef typename Model::GCM_MATRICES  GCM_MATRICES;
 		typedef typename GCM_MATRICES::Matrix Matrix;

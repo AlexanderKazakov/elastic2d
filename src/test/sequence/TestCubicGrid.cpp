@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/areas/SphereArea.hpp>
+#include <lib/util/areas/areas.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/numeric/gcmethod/GcmHandler.hpp>
 #include <test/wrappers/Wrappers.hpp>
@@ -33,6 +33,47 @@ TEST(CubicGrid, initialize) {
 				}
 			}
 		}
+	}
+}
+
+TEST(CubicGrid, PartIterator) {
+	Task task;
+	task.accuracyOrder = 2;
+	int X = 5, Y = 7, Z = 6;
+	task.sizes = {X, Y, Z};
+	task.lengthes = {20, 8, 1};
+	
+	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid>> grid;
+	grid.initialize(task);
+	
+	int counter = 0;
+	for (auto it = grid.slice(DIRECTION::Z, 3); it != it.end(); ++it) {
+		counter++;
+	}
+	ASSERT_EQ(X * Y, counter);
+	counter = 0;
+	CubicGrid::Int3 min = {2, 2, 3}, max = {4, 3, 6};
+	for (auto it = grid.box(min, max); it != it.end(); ++it) {
+		counter++;
+	}
+	ASSERT_EQ(linal::directProduct(max-min), counter);
+	auto partIter = grid.box({0, 0, 0}, grid.getSizes());
+	for (auto it : grid) {
+		ASSERT_EQ(it, *partIter);
+		++partIter;
+	}
+	for (int a = 1; a <= grid.getAccuracyOrder(); a++) {
+		auto direction = DIRECTION::X;
+		int d = (int)direction, d1 = (d+1)%3, d2 = (d+2)%3;
+		auto realIter = grid.slice(direction,  a);
+		auto virtIter = grid.slice(direction, -a);
+		while (realIter != realIter.end()) {
+			ASSERT_EQ(realIter(d1),  virtIter(d1));
+			ASSERT_EQ(realIter(d2),  virtIter(d2));
+			ASSERT_EQ(realIter(d), - virtIter(d));
+			++realIter; ++virtIter;
+		}
+		ASSERT_EQ(virtIter.end(), virtIter);
 	}
 }
 

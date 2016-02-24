@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/areas/AxisAlignedBoxArea.hpp>
-#include <lib/util/areas/StraightBoundedCylinderArea.hpp>
+#include <lib/util/areas/areas.hpp>
 
 #include <test/wrappers/Wrappers.hpp>
 #include <lib/rheology/models/Model.hpp>

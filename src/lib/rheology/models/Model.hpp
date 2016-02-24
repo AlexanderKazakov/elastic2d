@@ -8,22 +8,19 @@
 
 namespace gcm {
 
-	/**
-	 * Covers rheology aspects
-	 */
 	template<typename TVariables, typename TMaterial, typename TInternalOde = DummyOde, typename TCorrector = DummyCorrector>
 	struct Model {
-		typedef TVariables   Variables;
-		typedef TMaterial    Material;
-		typedef TInternalOde InternalOde;
-		typedef TCorrector   Corrector;
+		typedef TVariables           PdeVariables;
+		typedef TMaterial            Material;
+		typedef TInternalOde         InternalOde;
+		typedef TCorrector           Corrector;
 
-		static const int DIMENSIONALITY = Variables::DIMENSIONALITY;
-		static const int PDE_SIZE = Variables::SIZE;
+		static const int DIMENSIONALITY = PdeVariables::DIMENSIONALITY;
+		static const int PDE_SIZE = PdeVariables::SIZE;
 
-		typedef linal::Vector<PDE_SIZE, Variables> Vector;
-		typedef GcmMatrices<Variables, Material>   GCM_MATRICES;
-		typedef typename InternalOde::Variables    OdeVariables;
+		typedef linal::Vector<PDE_SIZE, PdeVariables>         PdeVector;
+		typedef GcmMatrices<PdeVariables, Material>           GCM_MATRICES;
+		typedef typename InternalOde::Variables               OdeVariables;
 	};
 
 

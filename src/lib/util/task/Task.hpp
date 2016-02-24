@@ -8,7 +8,7 @@
 #include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Concepts.hpp>
-#include <lib/util/areas/SphereArea.hpp>
+#include <lib/util/areas/areas.hpp>
 #include <lib/rheology/materials/materials.hpp>
 
 namespace gcm {
@@ -75,13 +75,10 @@ namespace gcm {
 		} initialCondition;
 
 		// border conditions for cubic body
-		std::map<CUBIC_BORDERS, BorderCondition::T> borderConditions = {
-				{CUBIC_BORDERS::X_LEFT,  BorderCondition::T::NON_REFLECTION},
-				{CUBIC_BORDERS::X_RIGHT, BorderCondition::T::NON_REFLECTION},
-				{CUBIC_BORDERS::Y_LEFT,  BorderCondition::T::NON_REFLECTION},
-				{CUBIC_BORDERS::Y_RIGHT, BorderCondition::T::NON_REFLECTION},
-				{CUBIC_BORDERS::Z_LEFT,  BorderCondition::T::NON_REFLECTION},
-				{CUBIC_BORDERS::Z_RIGHT, BorderCondition::T::NON_REFLECTION}
+		std::map<DIRECTION, std::pair<BorderCondition::T, BorderCondition::T>> borderConditions = {
+				{DIRECTION::X, {BorderCondition::T::NON_REFLECTION, BorderCondition::T::NON_REFLECTION}},
+				{DIRECTION::Y, {BorderCondition::T::NON_REFLECTION, BorderCondition::T::NON_REFLECTION}},
+				{DIRECTION::Z, {BorderCondition::T::NON_REFLECTION, BorderCondition::T::NON_REFLECTION}}
 		};
 
 		std::vector<PhysicalQuantities::T> quantitiesToWrite = { };

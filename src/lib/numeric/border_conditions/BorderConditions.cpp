@@ -10,106 +10,50 @@ void BorderConditions<TModel, CubicGrid>::initialize(const Task &task) {
 
 template<typename TModel>
 void BorderConditions<TModel, CubicGrid>::applyBorderConditions(Mesh* mesh) const {
-	// TODO - make it beautiful with some slice iterator
-	if (mesh->getRank() == 0 &&
-	    borderConditions.at(CUBIC_BORDERS::X_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int y = 0; y < mesh->sizes(1); y++) {
-			for (int z = 0; z < mesh->sizes(2); z++) {
-				for (int i = 1; i <= mesh->accuracyOrder; i++) {
-					for (int j = 0; j < Mesh::DIMENSIONALITY; j++) {
-						mesh->_pde(linal::VectorInt<3>({-i, y, z})).V[j] =
-								mesh->pde(linal::VectorInt<3>({i, y, z})).V[j];
-					}
-					for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-						mesh->_pde(linal::VectorInt<3>({-i, y, z})).S[j] =
-								-mesh->pde(linal::VectorInt<3>({i, y, z})).S[j];
-					}
-				}
-			}
+	for (const auto& direction : borderConditions) {
+		if ((int)direction.first >= Mesh::DIMENSIONALITY) break;
+		switch (direction.second.first) { // left
+			case BorderCondition::T::FREE_BORDER:
+				handleSide(mesh, direction.first, false); break;
+			default: break;
+		}
+		switch (direction.second.second) { // right
+			case BorderCondition::T::FREE_BORDER:
+				handleSide(mesh, direction.first, true); break;
+			default: break;
 		}
 	}
-	if (mesh->getRank() == mesh->getNumberOfWorkers() - 1 &&
-	    borderConditions.at(CUBIC_BORDERS::X_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int y = 0; y < mesh->sizes(1); y++) {
-			for (int z = 0; z < mesh->sizes(2); z++) {
-				for (int i = 1; i <= mesh->accuracyOrder; i++) {
-					for (int j = 0; j < Mesh::DIMENSIONALITY; j++) {
-						mesh->_pde(linal::VectorInt<3>({mesh->sizes(0) - 1 + i, y, z})).V[j] =
-								mesh->pde(linal::VectorInt<3>({mesh->sizes(0) - 1 - i, y, z})).V[j];
-					}
-					for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-						mesh->_pde(linal::VectorInt<3>({mesh->sizes(0) - 1 + i, y, z})).S[j] =
-								-mesh->pde(linal::VectorInt<3>({mesh->sizes(0) - 1 - i, y, z})).S[j];
-					}
-				}
-			}
-		}
-	}
+}
 
-	if (mesh->sizes(1) != 1 && borderConditions.at(CUBIC_BORDERS::Y_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < mesh->sizes(0); x++) {
-			for (int z = 0; z < mesh->sizes(2); z++) {
-				for (int i = 1; i <= mesh->accuracyOrder; i++) {
-					for (int j = 0; j < Mesh::DIMENSIONALITY; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, -i, z})).V[j] =
-								mesh->pde(linal::VectorInt<3>({x, i, z})).V[j];
-					}
-					for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, -i, z})).S[j] =
-								-mesh->pde(linal::VectorInt<3>({x, i, z})).S[j];
-					}
-				}
-			}
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::handleSide(Mesh* mesh,
+		DIRECTION direction, const bool onTheRight) const {
+	if (direction == DIRECTION::X && !onTheRight 
+		&& mesh->getRank() != 0) return;
+	if (direction == DIRECTION::X &&  onTheRight 
+		&& mesh->getRank() != mesh->getNumberOfWorkers() - 1) return;
+	
+	for (int a = 1; a <= mesh->getAccuracyOrder(); a++) {
+		int realSlice = a, virtSlice = -a;
+		if (onTheRight) {
+			realSlice = mesh->getSizes()((int)direction) - 1 - a;
+			virtSlice = mesh->getSizes()((int)direction) - 1 + a;
 		}
+		auto realIter = mesh->slice(direction, realSlice);
+		auto virtIter = mesh->slice(direction, virtSlice);
+		handleSlice(mesh, realIter, virtIter);
 	}
-	if (mesh->sizes(1) != 1 && borderConditions.at(CUBIC_BORDERS::Y_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < mesh->sizes(0); x++) {
-			for (int z = 0; z < mesh->sizes(2); z++) {
-				for (int i = 1; i <= mesh->accuracyOrder; i++) {
-					for (int j = 0; j < Mesh::DIMENSIONALITY; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, mesh->sizes(1) - 1 + i, z})).V[j] =
-								mesh->pde(linal::VectorInt<3>({x, mesh->sizes(1) - 1 - i, z})).V[j];
-					}
-					for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, mesh->sizes(1) - 1 + i, z})).S[j] =
-								-mesh->pde(linal::VectorInt<3>({x, mesh->sizes(1) - 1 - i, z})).S[j];
-					}
-				}
-			}
-		}
-	}
+}
 
-	if (mesh->sizes(2) != 1 && borderConditions.at(CUBIC_BORDERS::Z_LEFT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < mesh->sizes(0); x++) {
-			for (int y = 0; y < mesh->sizes(1); y++) {
-				for (int i = 1; i <= mesh->accuracyOrder; i++) {
-					for (int j = 0; j < Mesh::DIMENSIONALITY; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, y, -i})).V[j] =
-								mesh->pde(linal::VectorInt<3>({x, y, i})).V[j];
-					}
-					for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, y, -i})).S[j] =
-								-mesh->pde(linal::VectorInt<3>({x, y, i})).S[j];
-					}
-				}
-			}
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::handleSlice(Mesh* mesh,
+		PartIterator realIter, PartIterator virtIter) const {
+	while (realIter != realIter.end()) {
+		mesh->_pde(virtIter) = mesh->pde(realIter);
+		for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
+			mesh->_pde(virtIter).S[j] *= -1;
 		}
-	}
-	if (mesh->sizes(2) != 1 && borderConditions.at(CUBIC_BORDERS::Z_RIGHT) == BorderCondition::T::FREE_BORDER) {
-		for (int x = 0; x < mesh->sizes(0); x++) {
-			for (int y = 0; y < mesh->sizes(1); y++) {
-				for (int i = 1; i <= mesh->accuracyOrder; i++) {
-					for (int j = 0; j < Mesh::DIMENSIONALITY; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, y, mesh->sizes(2) - 1 + i})).V[j] =
-								mesh->pde(linal::VectorInt<3>({x, y, mesh->sizes(2) - 1 - i})).V[j];
-					}
-					for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-						mesh->_pde(linal::VectorInt<3>({x, y, mesh->sizes(2) - 1 + i})).S[j] =
-								-mesh->pde(linal::VectorInt<3>({x, y, mesh->sizes(2) - 1 - i})).S[j];
-					}
-				}
-			}
-		}
+		++realIter; ++virtIter;
 	}
 }
 

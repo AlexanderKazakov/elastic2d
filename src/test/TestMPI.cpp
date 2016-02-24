@@ -66,9 +66,9 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiConnection, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-		Elastic1DModel::/*Pde*/Vector,
-		ContinualDamageElastic2DModel::/*Pde*/Vector,
-		OrthotropicElastic3DModel::/*Pde*/Vector
+		Elastic1DModel::PdeVector,
+		ContinualDamageElastic2DModel::PdeVector,
+		OrthotropicElastic3DModel::PdeVector
 > AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementations);
@@ -93,7 +93,8 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 0.5, 0}));
 	task.initialCondition.quantities.push_back(pressure);
 
-	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
+	task.borderConditions.at(DIRECTION::X) = {BorderCondition::T::FREE_BORDER, 
+	                                          BorderCondition::T::FREE_BORDER};
 
 	// calculate in sequence
 	task.forceSequence = true;

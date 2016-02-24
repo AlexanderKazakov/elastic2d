@@ -13,7 +13,7 @@ void CubicGrid::initializeImpl(const Task &task) {
 	accuracyOrder = task.accuracyOrder; // order of accuracy of spatial interpolation
 	assert_ge(accuracyOrder, 1);
 
-	h = linal::plainDivision(task.lengthes, task.sizes - linal::VectorInt<3>({1, 1, 1}));
+	h = linal::plainDivision(task.lengthes, task.sizes - Int3({1, 1, 1}));
 	this->minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
 	sizes = task.sizes;
 	startR = task.startR;

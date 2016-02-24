@@ -1,5 +1,5 @@
 #include <lib/Engine.hpp>
-#include <lib/util/areas/AxisAlignedBoxArea.hpp>
+#include <lib/util/areas/areas.hpp>
 #include <lib/rheology/models/Model.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
@@ -59,7 +59,8 @@ Task parseTask() {
 	task.numberOfSnaps = 100;
 	task.stepsPerSnap = 1;
 
-	task.borderConditions.at(CUBIC_BORDERS::Y_RIGHT) = BorderCondition::T::FREE_BORDER;
+	task.borderConditions.at(DIRECTION::Y) = {BorderCondition::T::FREE_BORDER, 
+	                                          BorderCondition::T::FREE_BORDER};
 
 	Task::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::P_FORWARD;

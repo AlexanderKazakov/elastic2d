@@ -4,6 +4,7 @@
 #include <lib/rheology/models/Model.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/util/snapshot/VtkSnapshotter.hpp>
+#include <lib/util/areas/areas.hpp>
 
 
 using namespace gcm;
@@ -19,10 +20,10 @@ int main(int argc, char** argv) {
 	Engine engine;
 	/*engine.setSolver(new DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>());
 	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<SuperDuperModel, CubicGrid>>());*/
-	/*engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());*/
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
+//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
+//	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
 
 	try {
 		engine.initialize(parseTask/*Demo*/());
@@ -60,27 +61,28 @@ Task parseTask() {
 	task.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10},
 	                                               task.yieldStrength, task.continualDamageParameter);
 
-	task.CourantNumber = 0.9; // number from Courant–Friedrichs–Lewy condition
+	task.CourantNumber = 1.0; // number from Courant–Friedrichs–Lewy condition
 
 	task.enableSnapshotting = true;
 	task.numberOfSnaps = 21;
 	task.stepsPerSnap = 1;
 
-	Task::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.4, linal::Vector3({0.5, 0.5, 0}));
-	task.initialCondition.quantities.push_back(pressure);
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 10.0;
+//	pressure.area = std::make_shared<SphereArea>(0.4, linal::Vector3({0.5, 0.5, 0}));
+//	task.initialCondition.quantities.push_back(pressure);
 
-	/*Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::T::P_FORWARD;
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_BACKWARD;
 	wave.direction = 0;
 	wave.quantity = PhysicalQuantities::T::PRESSURE;
 	wave.quantityValue = 10.0;
 	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2, -1, -1}), linal::Vector3({0.5, 3, 3}));
-	task.initialCondition.waves.push_back(wave);*/
+	task.initialCondition.waves.push_back(wave);
 
-	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
+	task.borderConditions.at(DIRECTION::X) = {BorderCondition::T::FREE_BORDER, 
+	                                          BorderCondition::T::NON_REFLECTION};
 
 	task.quantitiesToWrite = {PhysicalQuantities::T::PRESSURE,
 	                          PhysicalQuantities::T::Sxx,
@@ -126,8 +128,6 @@ Task parseTaskDemo() {
 	wave.quantityValue = 10.0;
 	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2, -1, -1}), linal::Vector3({0.5, 3, 3}));
 	task.initialCondition.waves.push_back(wave);*/
-
-	task.borderConditions.at(CUBIC_BORDERS::X_LEFT) = BorderCondition::T::FREE_BORDER;
 
 	task.quantitiesToWrite = {PhysicalQuantities::T::PRESSURE};
 
