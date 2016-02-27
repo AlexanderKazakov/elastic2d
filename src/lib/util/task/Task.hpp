@@ -7,7 +7,7 @@
 
 #include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
-#include <lib/util/Concepts.hpp>
+#include <lib/util/Enum.hpp>
 #include <lib/util/areas/areas.hpp>
 #include <lib/rheology/materials/materials.hpp>
 
@@ -27,8 +27,6 @@ namespace gcm {
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node
 		real spatialStep = 0; // effective spatial step for unstructured grids
 
-		real continualDamageParameter = 0;
-		real yieldStrength = 0;
 		IsotropicMaterial isotropicMaterial;
 		OrthotropicMaterial orthotropicMaterial;
 
@@ -39,11 +37,12 @@ namespace gcm {
 
 		bool splittingSecondOrder = false;
 		bool enableSnapshotting = false;
-		bool forceSequence = false; // if true make the grid thinking that the number of
+		bool forceSequence = false; // if true make meshes thinking that the number of
 		// processes is one, even if it isn't so actually
 
 		/**
-		 * All listed here initial conditions will be applied in sequence, not rewriting but adding to each other
+		 * All listed here initial conditions will be applied in sequence, 
+		 * not rewriting but adding to each other
 		 */
 		struct InitialCondition {
 
@@ -74,14 +73,14 @@ namespace gcm {
 
 		} initialCondition;
 
-		// border conditions for cubic body
-		std::map<DIRECTION, std::pair<BorderCondition::T, BorderCondition::T>> borderConditions = {
-				{DIRECTION::X, {BorderCondition::T::NON_REFLECTION, BorderCondition::T::NON_REFLECTION}},
-				{DIRECTION::Y, {BorderCondition::T::NON_REFLECTION, BorderCondition::T::NON_REFLECTION}},
-				{DIRECTION::Z, {BorderCondition::T::NON_REFLECTION, BorderCondition::T::NON_REFLECTION}}
+		struct BorderCondition {
+			typedef std::function<real(real)> TimeDependency;
+			std::shared_ptr<Area> area;
+			std::map<PhysicalQuantities::T, TimeDependency> values;
 		};
-
-		std::vector<PhysicalQuantities::T> quantitiesToWrite = { };
+		std::vector<BorderCondition> borderConditions = {};
+		
+		std::vector<PhysicalQuantities::T> quantitiesToWrite = {};
 	};
 }
 

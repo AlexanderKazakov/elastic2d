@@ -21,17 +21,31 @@ namespace gcm {
 		typedef typename Mesh::PdeVector             PdeVector;
 		typedef typename Mesh::Iterator              Iterator;
 		typedef typename Mesh::PartIterator          PartIterator;
+		typedef typename TModel::PdeVariables        PdeVariables;
 
+		typedef std::function<real(real)>                       TimeDependency;
+		typedef std::map<PhysicalQuantities::T, TimeDependency> Map;
+		struct Condition {
+			Condition(const std::shared_ptr<Area> area_, const Map& values_) :
+					area(area_), values(values_) { };
+			std::shared_ptr<Area> area;
+			Map values;
+		};
+		
 		void initialize(const Task& task);
-		void applyBorderConditions(Mesh* mesh) const;
+		void applyBorderConditions(Mesh* mesh_, const real time_);
+	
 	private:
-		std::map<DIRECTION, 
-			std::pair<BorderCondition::T, BorderCondition::T>> borderConditions;
-
-		void handleSide(Mesh* mesh, DIRECTION direction, 
-		                const bool onTheRight) const;
-		void handleSlice(Mesh* mesh, PartIterator realIter,
-		                             PartIterator virtIter) const;
+		// list of conditions that applied in sequence (overwriting previous)
+		std::vector<Condition> conditions;
+		// temporary values - just to not send between all the functions
+		Mesh* mesh;
+		real time;
+		int direction;
+		bool onTheRight;
+		
+		void handleSide() const;
+		void handlePoint(const PartIterator& borderIter, const Map& values) const;
 	};
 
 	template<typename TModel>
@@ -41,12 +55,8 @@ namespace gcm {
 		typedef typename Mesh::PdeVector             PdeVector;
 		typedef typename Mesh::Iterator              Iterator;
 
-		void initialize(const Task& task) {
-			SUPPRESS_WUNUSED(task);
-		};
-		void applyBorderConditions(Mesh* mesh) const {
-			SUPPRESS_WUNUSED(mesh);
-		};
+		void initialize(const Task&) { };
+		void applyBorderConditions(Mesh*, const real) const { };
 	};
 }
 

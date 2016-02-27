@@ -3,7 +3,7 @@
 
 #include <lib/linal/linal.hpp>
 #include <lib/rheology/variables/GetSetter.hpp>
-#include <lib/util/Concepts.hpp>
+#include <lib/util/Enum.hpp>
 
 namespace gcm {
 

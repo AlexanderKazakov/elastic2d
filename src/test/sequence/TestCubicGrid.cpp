@@ -47,7 +47,7 @@ TEST(CubicGrid, PartIterator) {
 	grid.initialize(task);
 	
 	int counter = 0;
-	for (auto it = grid.slice(DIRECTION::Z, 3); it != it.end(); ++it) {
+	for (auto it = grid.slice((int)DIRECTION::Z, 3); it != it.end(); ++it) {
 		counter++;
 	}
 	ASSERT_EQ(X * Y, counter);
@@ -63,8 +63,8 @@ TEST(CubicGrid, PartIterator) {
 		++partIter;
 	}
 	for (int a = 1; a <= grid.getAccuracyOrder(); a++) {
-		auto direction = DIRECTION::X;
-		int d = (int)direction, d1 = (d+1)%3, d2 = (d+2)%3;
+		int direction = 0;
+		int d = direction, d1 = (d+1)%3, d2 = (d+2)%3;
 		auto realIter = grid.slice(direction,  a);
 		auto virtIter = grid.slice(direction, -a);
 		while (realIter != realIter.end()) {

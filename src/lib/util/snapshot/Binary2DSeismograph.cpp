@@ -74,9 +74,7 @@ void Binary2DSeismograph<TGrid>::writeHeadOfTable() {
 }
 
 template <class TGrid>
-void Binary2DSeismograph<TGrid>::initializeImpl(const Task &task) {
-	SUPPRESS_WUNUSED(task);
-}
+void Binary2DSeismograph<TGrid>::initializeImpl(const Task&) { }
 
 
 template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>;

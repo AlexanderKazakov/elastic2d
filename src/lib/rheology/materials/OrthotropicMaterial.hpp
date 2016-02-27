@@ -8,7 +8,6 @@
 
 namespace gcm {
 	class Task;
-
 	class IsotropicMaterial;
 	template<typename TVariables, class TMaterial> class GcmMatrices;
 
@@ -33,8 +32,8 @@ namespace gcm {
 
 		OrthotropicMaterial(const OrthotropicMaterial& other) = default;
 		OrthotropicMaterial(const IsotropicMaterial& isotropic);
-		OrthotropicMaterial(const real _rho = 0, std::initializer_list<real> = {0,0,0,0,0,0,0,0,0},
-		                    const real _yieldStrength = 0, const real _continualDamageParameter = 0);
+		OrthotropicMaterial(const real rho_ = 0, std::initializer_list<real> = {0,0,0,0,0,0,0,0,0},
+		                    const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
 
 		void initialize(const Task& task);
 

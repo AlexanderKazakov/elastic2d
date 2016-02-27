@@ -3,14 +3,14 @@
 using namespace gcm;
 
 
-void Cgal2DGrid::initializeImpl(const Task &task) {
-	SUPPRESS_WUNUSED(task);
+void Cgal2DGrid::initializeImpl(const Task& task) {
 	LOG_INFO("Start initialization");
 	minimalSpatialStep = task.spatialStep;
 	triangulate();
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
-	for (auto it = triangulation.finite_vertices_begin(); it != triangulation.finite_vertices_end(); it++) {
+	for (auto it = triangulation.finite_vertices_begin(); 
+		it != triangulation.finite_vertices_end(); it++) {
 		auto handle = it->handle();
 		vertexHandles[vertexIndex] = handle;
 		verticesIndices.insert({handle, vertexIndex});

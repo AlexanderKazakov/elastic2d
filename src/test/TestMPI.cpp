@@ -93,9 +93,6 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 0.5, 0}));
 	task.initialCondition.quantities.push_back(pressure);
 
-	task.borderConditions.at(DIRECTION::X) = {BorderCondition::T::FREE_BORDER, 
-	                                          BorderCondition::T::FREE_BORDER};
-
 	// calculate in sequence
 	task.forceSequence = true;
 	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> sequenceEngine;

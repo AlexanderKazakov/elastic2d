@@ -18,16 +18,10 @@ namespace gcm {
 
 		static const std::map<PhysicalQuantities::T, GetSetter<Variables>> QUANTITIES;
 
-		void initialize(const Task &task) {
-			SUPPRESS_WUNUSED(task);
-		};
+		void initialize(const Task&) { };
 
 		template<typename PDEVariables>
-		void nextStep(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
-			SUPPRESS_WUNUSED(odeVariables);
-			SUPPRESS_WUNUSED(pdeVariables);
-			SUPPRESS_WUNUSED(timeStep);
-		};
+		void nextStep(Variables&, PDEVariables&, const real) { };
 	};
 };
 

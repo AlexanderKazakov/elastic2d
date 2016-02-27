@@ -14,9 +14,9 @@ OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	c12 = c13 = c23 = isotropic.lambda;
 }
 
-OrthotropicMaterial::OrthotropicMaterial(const real _rho, std::initializer_list<real> list,
-                                         const real _yieldStrength, const real _continualDamageParameter) :
-		rho(_rho), yieldStrength(_yieldStrength), continualDamageParameter(_continualDamageParameter) {
+OrthotropicMaterial::OrthotropicMaterial(const real rho_, std::initializer_list<real> list,
+                                         const real yieldStrength_, const real continualDamageParameter_) :
+		rho(rho_), yieldStrength(yieldStrength_), continualDamageParameter(continualDamageParameter_) {
 	int i = 0;
 	for(auto& r : list) {
 		c[i++] = r;

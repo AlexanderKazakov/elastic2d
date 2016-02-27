@@ -57,9 +57,7 @@ namespace gcm {
 		typedef DefaultMesh<TModel, Cgal2DGrid>      Mesh;
 		typedef typename Mesh::PdeVector             PdeVector;
 
-		static void exchangeNodesWithNeighbors(Mesh* mesh) {
-			SUPPRESS_WUNUSED(mesh); // TODO
-		};
+		static void exchangeNodesWithNeighbors(Mesh*) { };
 
 		USE_AND_INIT_LOGGER("gcm.DataBus");
 	};

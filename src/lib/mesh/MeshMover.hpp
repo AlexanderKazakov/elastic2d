@@ -13,11 +13,7 @@ namespace gcm {
 	struct MeshMover {
 		typedef DefaultMesh<TModel, TGrid>       Mesh;
 		
-		static void moveMesh(Mesh& mesh, const real timeStep) {
-			// by default, mesh is not movable
-			SUPPRESS_WUNUSED(mesh);
-			SUPPRESS_WUNUSED(timeStep);
-		};
+		static void moveMesh(Mesh&, const real) { };
 		
 		USE_AND_INIT_LOGGER("gcm.MeshMover");
 	};

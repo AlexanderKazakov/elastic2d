@@ -8,7 +8,12 @@
 
 namespace gcm {
 
-	template<typename TVariables, typename TMaterial, typename TInternalOde = DummyOde, typename TCorrector = DummyCorrector>
+	template<
+			typename TVariables, 
+			typename TMaterial, 
+			typename TInternalOde = DummyOde,
+			typename TCorrector = DummyCorrector
+			>
 	struct Model {
 		typedef TVariables           PdeVariables;
 		typedef TMaterial            Material;

@@ -69,10 +69,10 @@ namespace gcm {
 		 * Data storage. Real values plus auxiliary values on borders.
 		 * "...New" means on the next time layer.
 		 */
-		std::vector<PdeVector>     pdeVectors;
-		std::vector<PdeVector>     pdeVectorsNew;
-		std::vector<GCM_MATRICES*> gcmMatrices;
-		std::vector<OdeVariables>  odeValues;
+		std::vector<PdeVector>        pdeVectors;
+		std::vector<PdeVector>        pdeVectorsNew;
+		std::vector<GCM_MATRICES*>    gcmMatrices;
+		std::vector<OdeVariables>     odeValues;
 
 		virtual void initializeImplImpl(const Task& task) override {
 			zeroInitialize(pdeVectors, this->sizeOfAllNodes());

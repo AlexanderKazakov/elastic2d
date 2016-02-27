@@ -11,14 +11,10 @@ namespace gcm {
 	public:
 		static const bool NonTrivial = false;
 
-		void initialize(const Task &task) {
-			SUPPRESS_WUNUSED(task);
-		};
+		void initialize(const Task&) { };
 
 		template<typename TNode>
-		void apply(TNode& node) const {
-			SUPPRESS_WUNUSED(node);
-		};
+		void apply(TNode&) const { };
 	};
 };
 

@@ -4,56 +4,72 @@
 using namespace gcm;
 
 template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::initialize(const Task &task) {
-	borderConditions = task.borderConditions;
-}
-
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::applyBorderConditions(Mesh* mesh) const {
-	for (const auto& direction : borderConditions) {
-		if ((int)direction.first >= Mesh::DIMENSIONALITY) break;
-		switch (direction.second.first) { // left
-			case BorderCondition::T::FREE_BORDER:
-				handleSide(mesh, direction.first, false); break;
-			default: break;
+void BorderConditions<TModel, CubicGrid>::initialize(const Task& task) {
+	for (const auto& bc : task.borderConditions) {
+		const auto& values = bc.values;
+		for (const auto& q : values) {
+			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
 		}
-		switch (direction.second.second) { // right
-			case BorderCondition::T::FREE_BORDER:
-				handleSide(mesh, direction.first, true); break;
-			default: break;
-		}
+		conditions.push_back(Condition(bc.area, values));
 	}
 }
 
 template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::handleSide(Mesh* mesh,
-		DIRECTION direction, const bool onTheRight) const {
-	if (direction == DIRECTION::X && !onTheRight 
-		&& mesh->getRank() != 0) return;
-	if (direction == DIRECTION::X &&  onTheRight 
-		&& mesh->getRank() != mesh->getNumberOfWorkers() - 1) return;
+void BorderConditions<TModel, CubicGrid>::applyBorderConditions
+(Mesh* mesh_, const real time_) {
+	mesh = mesh_; time = time_;
+	// special for x-axis (because MPI partition along x-axis)
+	direction = 0;
+	if (mesh->getRank() == 0) {
+		onTheRight = false;
+		handleSide();
+	}
+	if (mesh->getRank() == mesh->getNumberOfWorkers() - 1) {
+		onTheRight = true;
+		handleSide();
+	}
+	// for other axes
+	for (int d = 1; d < Mesh::DIMENSIONALITY; d++) {
+		direction = d;
+		onTheRight = false;
+		handleSide();
+		onTheRight = true;
+		handleSide();
+	}
+}
+
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::handleSide() const {
+	auto borderIter = mesh->slice(direction, 0);
+	if (onTheRight)
+		borderIter = mesh->slice(direction, mesh->getSizes()(direction) - 1);
+	while (borderIter != borderIter.end()) {
+		for (const auto& condition : conditions) {
+			if (condition.area->contains(mesh->coords(borderIter))) {
+				handlePoint(borderIter, condition.values);
+			}
+		}
+		++borderIter;
+	}
+}
+
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::handlePoint
+(const PartIterator& borderIter, const Map& values) const {
 	
-	for (int a = 1; a <= mesh->getAccuracyOrder(); a++) {
-		int realSlice = a, virtSlice = -a;
-		if (onTheRight) {
-			realSlice = mesh->getSizes()((int)direction) - 1 - a;
-			virtSlice = mesh->getSizes()((int)direction) - 1 + a;
-		}
-		auto realIter = mesh->slice(direction, realSlice);
-		auto virtIter = mesh->slice(direction, virtSlice);
-		handleSlice(mesh, realIter, virtIter);
-	}
-}
-
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::handleSlice(Mesh* mesh,
-		PartIterator realIter, PartIterator virtIter) const {
-	while (realIter != realIter.end()) {
+	int innerSign = onTheRight ? -1 : 1;
+	for (int a = 1; a <= mesh->accuracyOrder; a++) {
+		auto realIter = borderIter; realIter(direction) += innerSign * a;
+		auto virtIter = borderIter; virtIter(direction) -= innerSign * a;
+	
 		mesh->_pde(virtIter) = mesh->pde(realIter);
-		for (int j = 0; j < (Mesh::DIMENSIONALITY * (Mesh::DIMENSIONALITY + 1)) / 2; j++) {
-			mesh->_pde(virtIter).S[j] *= -1;
+		for (const auto& q : values) {
+			const auto& quantity = q.first;
+			const auto& timeDependency = q.second;
+			real realValue = PdeVariables::QUANTITIES.at(quantity).Get(mesh->pde(realIter));
+			real virtValue = - realValue + 2 * timeDependency(time);
+			PdeVariables::QUANTITIES.at(quantity).Set(virtValue, mesh->_pde(virtIter));
 		}
-		++realIter; ++virtIter;
 	}
 }
 

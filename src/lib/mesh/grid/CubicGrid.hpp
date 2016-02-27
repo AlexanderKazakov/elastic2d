@@ -75,12 +75,20 @@ namespace gcm {
 			PartIterator begin() const { return PartIterator(relativeIterator.begin(), shift); };
 			PartIterator end() const { return PartIterator(relativeIterator.end(), shift); };
 		};
-		PartIterator slice(DIRECTION direction, int i) const {
-			Int3 min = {0, 0, 0}; min((int)direction) = i;
-			Int3 max = getSizes(); max((int)direction) = i + 1;
+		/** 
+		 * Iteration over slice of cube carried across specified direction through
+		 * the point with index i on that direction
+		 */
+		PartIterator slice(const int direction, const int i) const {
+			Int3 min = {0, 0, 0}; min(direction) = i;
+			Int3 max = getSizes(); max(direction) = i + 1;
 			return PartIterator(min, min, max);
 		};
-		PartIterator box(Int3 min, Int3 max) const {
+		/** 
+		 * Iteration over rectangular box of the grid 
+		 * from min INclusive to max EXclusive
+		 */
+		PartIterator box(const Int3 min, const Int3 max) const {
 			return PartIterator(min, min, max);
 		};
 

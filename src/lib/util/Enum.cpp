@@ -1,10 +1,11 @@
-#include <lib/util/Concepts.hpp>
+#include <lib/util/Enum.hpp>
 
 using namespace gcm;
 
 
 const std::map<PhysicalQuantities::T, std::string> PhysicalQuantities::NAME = {
 		{PhysicalQuantities::T::VELOCITY,       "Velocity"},
+		{PhysicalQuantities::T::FORCE,          "Force"},
 		{PhysicalQuantities::T::Vx,             "Vx"},
 		{PhysicalQuantities::T::Vy,             "Vy"},
 		{PhysicalQuantities::T::Vz,             "Vz"},
@@ -35,8 +36,4 @@ const std::map<Waves::T, std::string> Waves::NAME = {
 };
 
 
-const std::map<BorderCondition::T, std::string> BorderCondition::NAME = {
-		{BorderCondition::T::NON_REFLECTION, "non-reflection"},
-		{BorderCondition::T::FREE_BORDER,    "free-border"}
-};
 

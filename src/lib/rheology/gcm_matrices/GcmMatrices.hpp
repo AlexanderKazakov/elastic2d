@@ -5,7 +5,7 @@
 
 #include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
-#include <lib/util/Concepts.hpp>
+#include <lib/util/Enum.hpp>
 #include <lib/config.hpp>
 
 namespace gcm {

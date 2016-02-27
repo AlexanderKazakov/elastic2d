@@ -19,8 +19,8 @@ namespace gcm {
 		real continualDamageParameter = 0; // parameter in continual damage equation
 
 		IsotropicMaterial(const IsotropicMaterial& other) = default;
-		IsotropicMaterial(const real _rho = 0, const real _lambda = 0, const real _mu = 0,
-		                  const real _yieldStrength = 0, const real _continualDamageParameter = 0);
+		IsotropicMaterial(const real rho_ = 0, const real lambda_ = 0, const real mu_ = 0,
+		                  const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
 		
 		void initialize(const Task& task);
 

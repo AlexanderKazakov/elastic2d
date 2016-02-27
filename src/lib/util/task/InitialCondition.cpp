@@ -9,7 +9,7 @@ void InitialCondition<TModel>::initialize(const Task &task) {
 
 	for (auto& vectorInitCondition : task.initialCondition.vectors) {
 		assert_eq(PdeVector::M, vectorInitCondition.list.size());
-		conditions.push_back(Condition(vectorInitCondition.area, 
+		pdeConditions.push_back(PdeCondition(vectorInitCondition.area, 
 			                 PdeVector(vectorInitCondition.list)));
 	}
 
@@ -25,7 +25,7 @@ void InitialCondition<TModel>::initialize(const Task &task) {
 		real currentValue = PdeVector::QUANTITIES.at(wave.quantity).Get(tmp);
 		assert_ne(currentValue, 0.0);
 		tmp *= wave.quantityValue / currentValue;
-		conditions.push_back(Condition(wave.area, tmp));
+		pdeConditions.push_back(PdeCondition(wave.area, tmp));
 	}
 
 	for (auto& quantityInitCondition : task.initialCondition.quantities) {
@@ -33,14 +33,14 @@ void InitialCondition<TModel>::initialize(const Task &task) {
 		linal::clear(tmp);
 		PdeVector::QUANTITIES.at(quantityInitCondition.physicalQuantity).Set
 				(quantityInitCondition.value, tmp);
-		conditions.push_back(Condition(quantityInitCondition.area, tmp));
+		pdeConditions.push_back(PdeCondition(quantityInitCondition.area, tmp));
 	}
 }
 
 template<class TModel>
-void InitialCondition<TModel>::apply(PdeVector &v, const linal::Vector3 &coords) const {
+void InitialCondition<TModel>::apply(PdeVector &v, const linal::Vector3& coords) const {
 	linal::clear(v);
-	for (auto& condition : conditions) {
+	for (auto& condition : pdeConditions) {
 		if (condition.area->contains(coords)) {
 			v += condition.pdeVector;
 		}
@@ -54,5 +54,4 @@ template class InitialCondition<Elastic3DModel>;
 template class InitialCondition<OrthotropicElastic3DModel>;
 template class InitialCondition<ContinualDamageElastic2DModel>;
 template class InitialCondition<IdealPlastic2DModel>;
-
 template class InitialCondition<SuperDuperModel>;

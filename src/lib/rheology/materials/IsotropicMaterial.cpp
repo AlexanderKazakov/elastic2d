@@ -3,10 +3,10 @@
 
 using namespace gcm;
 
-IsotropicMaterial::IsotropicMaterial(const real _rho, const real _lambda, const real _mu,
-                                     const real _yieldStrength, const real _continualDamageParameter) :
-		rho(_rho), lambda(_lambda), mu(_mu), yieldStrength(_yieldStrength),
-		continualDamageParameter(_continualDamageParameter) { }
+IsotropicMaterial::IsotropicMaterial(const real rho_, const real lambda_, const real mu_,
+                                     const real yieldStrength_, const real continualDamageParameter_) :
+		rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
+		continualDamageParameter(continualDamageParameter_) { }
 
 void IsotropicMaterial::initialize(const Task &task) {
 	*this = task.isotropicMaterial;

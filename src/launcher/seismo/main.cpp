@@ -59,8 +59,6 @@ Task parseTask() {
 	task.numberOfSnaps = 100;
 	task.stepsPerSnap = 1;
 
-	task.borderConditions.at(DIRECTION::Y) = {BorderCondition::T::FREE_BORDER, 
-	                                          BorderCondition::T::FREE_BORDER};
 
 	Task::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::P_FORWARD;

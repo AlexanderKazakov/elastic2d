@@ -22,15 +22,11 @@ namespace gcm {
 		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; };
 
 		void initialize(const Task &task) {
-			parameter = task.continualDamageParameter;
+			// todo
+			parameter = task.orthotropicMaterial.continualDamageParameter;
 			assert_gt(parameter, 0.0);
 		};
 
-		/**
-		 * Calculate new ODE values and place it to current.
-		 * Given ODE values from current will be moved to previous.
-		 * Given ODE values from previous will be discarded.
-		 */
 		template<typename PDEVariables>
 		void nextStep(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
 			odeVariables.hi += timeStep * dHiDt(odeVariables, pdeVariables, timeStep);
@@ -41,9 +37,7 @@ namespace gcm {
 		 * @return time-derivative of damage measure
 		 */
 		template<typename PDEVariables>
-		real dHiDt(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
-			SUPPRESS_WUNUSED(odeVariables);
-			SUPPRESS_WUNUSED(timeStep);
+		real dHiDt(Variables&, PDEVariables& pdeVariables, const real) {
 			return fabs(pdeVariables.getPressure()) * parameter;
 		}
 

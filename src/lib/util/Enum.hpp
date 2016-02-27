@@ -19,7 +19,9 @@ namespace gcm {
 	struct PhysicalQuantities {
 		/** Type */
 		enum class T {
-			VELOCITY /* Velocity vector */,
+			VELOCITY,
+			FORCE,
+			
 			Vx /* Velocity component along x-axis */,
 			Vy /* Velocity component along y-axis */,
 			Vz /* Velocity component along z-axis */,
@@ -52,22 +54,6 @@ namespace gcm {
 			P_FORWARD, P_BACKWARD,
 			S1_FORWARD, S1_BACKWARD,
 			S2_FORWARD, S2_BACKWARD,
-
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
-
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
-	};
-
-	/**
-	 * For all types of border conditions used in the program.
-	 */
-	struct BorderCondition {
-		/** Type */
-		enum class T {
-			NON_REFLECTION,
-			FREE_BORDER,
 
 			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 		};

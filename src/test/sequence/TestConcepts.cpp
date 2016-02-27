@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/Concepts.hpp>
+#include <lib/util/Enum.hpp>
 
 using namespace gcm;
 
@@ -22,7 +22,7 @@ TYPED_TEST_P(TestConcepts, SizeOfMap) {
 REGISTER_TYPED_TEST_CASE_P(TestConcepts, SizeOfMap);
 
 // When new concept arrears, place it here
-typedef Types<PhysicalQuantities, Waves, BorderCondition> AllImplementations;
+typedef Types<PhysicalQuantities, Waves> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllConcepts, TestConcepts, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P

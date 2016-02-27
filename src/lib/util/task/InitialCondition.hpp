@@ -14,20 +14,17 @@ namespace gcm {
 		/** Convert task terms of initial conditions to own format */
 		void initialize(const Task& task);
 
-		/**
-		 * Apply initial conditions to node assume that its coordinates is coords.
-		 * We don't use smth like node.coords because some nodes don't have coords.
-		 */
+		/** Apply initial conditions to node assume that its coordinates is coords */
 		void apply(PdeVector& v, const linal::Vector3& coords) const;
 
 	private:
-		struct Condition {
-			Condition(std::shared_ptr<Area> _area, PdeVector _pdeVector) : 
-					area(_area), pdeVector(_pdeVector) { };
+		struct PdeCondition {
+			PdeCondition(std::shared_ptr<Area> area_, PdeVector pdeVector_) : 
+					area(area_), pdeVector(pdeVector_) { };
 			std::shared_ptr<Area> area;
 			PdeVector pdeVector;
 		};
-		std::vector<Condition> conditions = {};
+		std::vector<PdeCondition> pdeConditions = {};
 
 	};
 }
