@@ -1,41 +1,53 @@
 #include <lib/numeric/border_conditions/BorderConditions.hpp>
 #include <lib/rheology/models/Model.hpp>
 
+#include "lib/numeric/gcm/GridCharacteristicMethod.hpp"
+
 using namespace gcm;
 
 template<typename TModel>
 void BorderConditions<TModel, CubicGrid>::initialize(const Task& task) {
 	for (const auto& bc : task.borderConditions) {
-		const auto& values = bc.values;
-		for (const auto& q : values) {
+		for (const auto& q : bc.values) {
 			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
 		}
-		conditions.push_back(Condition(bc.area, values));
+		conditions.push_back(Condition(bc.area, bc.values));
+	}
+	for (const auto& fr : task.fractures) {
+		for (const auto& q : fr.values) {
+			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
+		}
+		int d = fr.direction;
+		int index = (int) (task.sizes(d) *
+			(fr.coordinate - task.startR(d)) / task.lengthes(d));
+		assert_gt(index, 0); assert_lt(index, task.sizes(d) - 1);
+		fractures.push_back(Fracture(d, index,   - 1, fr.area, fr.values));
+		fractures.push_back(Fracture(d, index + 1, 1, fr.area, fr.values));
 	}
 }
 
 template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::applyBorderConditions
-(Mesh* mesh_, const real time_) {
-	mesh = mesh_; time = time_;
+void BorderConditions<TModel, CubicGrid>::applyBorderBeforeStage
+(Mesh* mesh_, const real currentTime_, const real timeStep_, const int stage) {
+	// handling borders
+	mesh = mesh_; currentTime = currentTime_; timeStep = timeStep_; direction = stage;
 	// special for x-axis (because MPI partition along x-axis)
-	direction = 0;
-	if (mesh->getRank() == 0) {
-		onTheRight = false;
-		handleSide();
-	}
-	if (mesh->getRank() == mesh->getNumberOfWorkers() - 1) {
-		onTheRight = true;
-		handleSide();
+	if (direction == 0) {
+		if (mesh->getRank() == 0) {
+			onTheRight = false;
+			handleSide();
+		}
+		if (mesh->getRank() == mesh->getNumberOfWorkers() - 1) {
+			onTheRight = true;
+			handleSide();
+		}
+		return;
 	}
 	// for other axes
-	for (int d = 1; d < Mesh::DIMENSIONALITY; d++) {
-		direction = d;
-		onTheRight = false;
-		handleSide();
-		onTheRight = true;
-		handleSide();
-	}
+	onTheRight = false;
+	handleSide();
+	onTheRight = true;
+	handleSide();
 }
 
 template<typename TModel>
@@ -46,7 +58,7 @@ void BorderConditions<TModel, CubicGrid>::handleSide() const {
 	while (borderIter != borderIter.end()) {
 		for (const auto& condition : conditions) {
 			if (condition.area->contains(mesh->coords(borderIter))) {
-				handlePoint(borderIter, condition.values);
+				handleBorderPoint(borderIter, condition.values);
 			}
 		}
 		++borderIter;
@@ -54,11 +66,11 @@ void BorderConditions<TModel, CubicGrid>::handleSide() const {
 }
 
 template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::handlePoint
-(const PartIterator& borderIter, const Map& values) const {
+void BorderConditions<TModel, CubicGrid>::handleBorderPoint
+(const Iterator& borderIter, const Map& values) const {
 	
 	int innerSign = onTheRight ? -1 : 1;
-	for (int a = 1; a <= mesh->accuracyOrder; a++) {
+	for (int a = 1; a <= mesh->getAccuracyOrder(); a++) {
 		auto realIter = borderIter; realIter(direction) += innerSign * a;
 		auto virtIter = borderIter; virtIter(direction) -= innerSign * a;
 	
@@ -67,9 +79,66 @@ void BorderConditions<TModel, CubicGrid>::handlePoint
 			const auto& quantity = q.first;
 			const auto& timeDependency = q.second;
 			real realValue = PdeVariables::QUANTITIES.at(quantity).Get(mesh->pde(realIter));
-			real virtValue = - realValue + 2 * timeDependency(time);
+			real virtValue = - realValue + 2 * timeDependency(currentTime);
 			PdeVariables::QUANTITIES.at(quantity).Set(virtValue, mesh->_pde(virtIter));
 		}
+	}
+}
+
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::applyBorderAfterStage
+(Mesh* mesh_, const real currentTime_, const real timeStep_, const int stage) {
+	// handling inner fractures
+	mesh = mesh_; currentTime = currentTime_; timeStep = timeStep_; direction = stage;
+	for (const auto& fr : fractures) {
+		if (fr.direction == stage) {
+			allocateHelpMesh();
+			auto sliceIter = mesh->slice(direction, fr.index);
+			while (sliceIter != sliceIter.end()) {
+				if (fr.area->contains(mesh->coords(sliceIter))) {
+					handleFracturePoint(sliceIter, fr.values, fr.normal);
+				}
+				++sliceIter;
+			}
+			delete helpMesh;
+		}
+	}
+}
+
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::allocateHelpMesh() {
+	// warning - this is not complete cubic mesh, just an auxiliary smth
+	helpMesh = new Mesh();
+	*((CubicGrid*)helpMesh) = *((CubicGrid*)mesh);
+	helpMesh->sizes = {1, 1, 1};
+	helpMesh->sizes(direction) = mesh->getAccuracyOrder();
+	helpMesh->allocate();
+}
+
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::handleFracturePoint
+(const Iterator& iter, const Map& values, const int fracNormal) {
+	// copy values to helpMesh
+	for (int i = 0; i < 2 * mesh->getAccuracyOrder(); i++) {
+		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
+		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
+		helpMesh->_pde(helpMeshIter) = mesh->pde(realMeshIter); // todo - what if matrix depends on ode, etc?
+		helpMesh->_matrix(helpMeshIter) = mesh->matrix(realMeshIter);
+	}
+	// apply border conditions before stage on the helpMesh
+	onTheRight = false;
+	Mesh* tmpMesh = mesh;
+	mesh = helpMesh;
+	handleBorderPoint({0, 0, 0}, values);
+	mesh = tmpMesh;
+	// calculate stage on the helpMesh
+	GridCharacteristicMethod<Mesh> gcmMetod; // todo static?
+	gcmMetod.stage(direction, timeStep * fracNormal, helpMesh);
+	// copy calculated values to real mesh
+	for (int i = 0; i < mesh->getAccuracyOrder(); i++) {
+		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
+		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
+		mesh->_pdeNew(realMeshIter) = helpMesh->pdeNew(helpMeshIter);
 	}
 }
 

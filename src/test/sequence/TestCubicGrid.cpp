@@ -2,7 +2,7 @@
 
 #include <lib/util/areas/areas.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
-#include <lib/numeric/gcmethod/GcmHandler.hpp>
+#include <lib/numeric/gcm/GcmHandler.hpp>
 #include <test/wrappers/Wrappers.hpp>
 #include <lib/rheology/models/Model.hpp>
 

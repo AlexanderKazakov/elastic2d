@@ -14,10 +14,10 @@ namespace gcm {
 	 */
 	template<typename TModel, typename TGrid>
 	struct GcmHandler {
-		typedef DefaultMesh<TModel, TGrid>           Grid;
-		typedef typename Grid::Matrix                Matrix;
-		typedef typename Grid::PdeVector             PdeVector;
-		typedef typename Grid::Iterator              Iterator;
+		typedef DefaultMesh<TModel, TGrid>           Mesh;
+		typedef typename Mesh::Matrix                Matrix;
+		typedef typename Mesh::PdeVector             PdeVector;
+		typedef typename Mesh::Iterator              Iterator;
 
 		/**
 		 * Interpolate nodal values in specified points.
@@ -29,30 +29,30 @@ namespace gcm {
 		 * values should be interpolated
 		 * @return Matrix with interpolated nodal values in columns
 		 */
-		static Matrix interpolateValuesAround(const Grid& grid, const int stage, const Iterator& it,
+		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage, const Iterator& it,
 		                                      const PdeVector& dx);
 	};
 
 	template<typename TModel>
 	struct GcmHandler<TModel, CubicGrid> {
-		typedef DefaultMesh<TModel, CubicGrid>       Grid;
-		typedef typename Grid::Matrix                Matrix;
-		typedef typename Grid::PdeVector             PdeVector;
-		typedef typename Grid::Iterator              Iterator;
+		typedef DefaultMesh<TModel, CubicGrid>       Mesh;
+		typedef typename Mesh::Matrix                Matrix;
+		typedef typename Mesh::PdeVector             PdeVector;
+		typedef typename Mesh::Iterator              Iterator;
 
 		/** See the comment under */
-		static Matrix interpolateValuesAround(const Grid& grid, const int stage,
+		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
 		                                      const Iterator& it, const PdeVector& dx) {
 			Matrix ans;
-			std::vector<PdeVector> src( (size_t) (grid.getAccuracyOrder() + 1) );
+			std::vector<PdeVector> src( (size_t) (mesh.getAccuracyOrder() + 1) );
 			PdeVector res;
-			Iterator shift({0, 0, 0}, grid.getSizes());
+			Iterator shift({0, 0, 0}, mesh.getSizes());
 			for (int k = 0; k < PdeVector::M; k++) {
 				shift(stage) = (dx(k) > 0) ? 1 : -1;
 				for (int i = 0; i < src.size(); i++) {
-					src[(size_t)i] = grid.pde(it + shift * i);
+					src[(size_t)i] = mesh.pde(it + shift * i);
 				}
-				EqualDistanceLineInterpolator<PdeVector>::minMaxInterpolate(res, src, fabs(dx(k)) / grid.h(stage));
+				EqualDistanceLineInterpolator<PdeVector>::minMaxInterpolate(res, src, fabs(dx(k)) / mesh.h(stage));
 				ans.setColumn(k, res);
 			}
 			return ans;
@@ -61,26 +61,26 @@ namespace gcm {
 
 	template<typename TModel>
 	struct GcmHandler<TModel, Cgal2DGrid> {
-		typedef DefaultMesh<TModel, Cgal2DGrid>      Grid;
-		typedef typename Grid::Matrix                Matrix;
-		typedef typename Grid::PdeVector             PdeVector;
-		typedef typename Grid::Iterator              Iterator;
-		typedef typename Grid::Triangle              Triangle;
+		typedef DefaultMesh<TModel, Cgal2DGrid>      Mesh;
+		typedef typename Mesh::Matrix                Matrix;
+		typedef typename Mesh::PdeVector             PdeVector;
+		typedef typename Mesh::Iterator              Iterator;
+		typedef typename Mesh::Triangle              Triangle;
 
 		/** See the comment under */
-		static Matrix interpolateValuesAround(const Grid& grid, const int stage,
+		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
 		                                      const Iterator& it, const PdeVector& dx) {
 			Matrix ans;
 			for (int k = 0; k < PdeVector::M; k++) {
 				linal::Vector2 shift({(stage == 0) * dx(k), (stage == 1) * dx(k)});
-				auto t = grid.findOwnerTriangle(it, shift);
+				auto t = mesh.findOwnerTriangle(it, shift);
 				PdeVector u; linal::clear(u);
 				if (t.inner) {
 					u = TriangleInterpolator<PdeVector>::interpolate(
-							grid.coords2d(t.p[0]), grid.pde(t.p[0]),
-							grid.coords2d(t.p[1]), grid.pde(t.p[1]),
-							grid.coords2d(t.p[2]), grid.pde(t.p[2]),
-							grid.coords2d(it) + shift);
+							mesh.coords2d(t.p[0]), mesh.pde(t.p[0]),
+							mesh.coords2d(t.p[1]), mesh.pde(t.p[1]),
+							mesh.coords2d(t.p[2]), mesh.pde(t.p[2]),
+							mesh.coords2d(it) + shift);
 				}
 				ans.setColumn(k, u);
 			}

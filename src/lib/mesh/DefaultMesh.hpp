@@ -41,6 +41,10 @@ namespace gcm {
 		const OdeVariables& ode(const Iterator& it) const {
 			return this->odeValues[this->getIndex(it)];
 		};
+		/** Read-only access to real PDE vectors on next time layer */
+		const PdeVector& pdeNew(const Iterator& it) const {
+			return this->pdeVectorsNew[this->getIndex(it)];
+		};
 		/** Read-only access to real GCM matrices */
 		GCM_MATRICES* matrix(const Iterator& it) const {
 			return this->gcmMatrices[this->getIndex(it)];
@@ -75,11 +79,7 @@ namespace gcm {
 		std::vector<OdeVariables>     odeValues;
 
 		virtual void initializeImplImpl(const Task& task) override {
-			zeroInitialize(pdeVectors, this->sizeOfAllNodes());
-			zeroInitialize(pdeVectorsNew, this->sizeOfAllNodes());
-			zeroInitialize(gcmMatrices, this->sizeOfAllNodes());
-			if (Model::InternalOde::NonTrivial)
-				zeroInitialize(odeValues, this->sizeOfAllNodes());
+			allocate();
 
 			typename TModel::Material material;
 			material.initialize(task);
@@ -99,9 +99,16 @@ namespace gcm {
 
 		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ };
 
+		void allocate() {
+			zeroInitialize(pdeVectors, this->sizeOfAllNodes());
+			zeroInitialize(pdeVectorsNew, this->sizeOfAllNodes());
+			zeroInitialize(gcmMatrices, this->sizeOfAllNodes());
+			if (Model::InternalOde::NonTrivial)
+				zeroInitialize(odeValues, this->sizeOfAllNodes());
+		};
 		template<typename T>
-		void zeroInitialize(std::vector<T>& stdVec, size_t InitSize) {
-			stdVec.resize(InitSize);
+		static void zeroInitialize(std::vector<T>& stdVec, size_t initSize) {
+			stdVec.resize(initSize);
 			memset(&(stdVec[0]), 0, stdVec.size() * sizeof(T));
 		};
 		

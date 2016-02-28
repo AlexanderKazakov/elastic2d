@@ -18,8 +18,9 @@ namespace gcm {
 	 * Any parser just creates an object of this class and return it.
 	 */
 	class Task {
-
 	public:
+		typedef std::function<real(real)> TimeDependency;
+		
 		int accuracyOrder = 0; // order of accuracy of spatial interpolation
 
 		linal::Vector<3> lengthes = {0, 0, 0}; // lengthes of cube in each direction
@@ -74,11 +75,18 @@ namespace gcm {
 		} initialCondition;
 
 		struct BorderCondition {
-			typedef std::function<real(real)> TimeDependency;
 			std::shared_ptr<Area> area;
 			std::map<PhysicalQuantities::T, TimeDependency> values;
 		};
 		std::vector<BorderCondition> borderConditions = {};
+		
+		struct Fracture {
+			int direction;
+			real coordinate;
+			std::shared_ptr<Area> area;
+			std::map<PhysicalQuantities::T, TimeDependency> values;
+		};
+		std::vector<Fracture> fractures = {};
 		
 		std::vector<PhysicalQuantities::T> quantitiesToWrite = {};
 	};

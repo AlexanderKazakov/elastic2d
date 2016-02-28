@@ -20,7 +20,6 @@ namespace gcm {
 		typedef typename Mesh::Matrix                Matrix;
 		typedef typename Mesh::PdeVector             PdeVector;
 		typedef typename Mesh::Iterator              Iterator;
-		typedef typename Mesh::PartIterator          PartIterator;
 		typedef typename TModel::PdeVariables        PdeVariables;
 
 		typedef std::function<real(real)>                       TimeDependency;
@@ -31,21 +30,43 @@ namespace gcm {
 			std::shared_ptr<Area> area;
 			Map values;
 		};
+		struct Fracture {
+			Fracture(const int direction_, const int index_, const int normal_,
+			         std::shared_ptr<Area> area_, const Map& values_) :
+					direction(direction_), index(index_), normal(normal_), 
+					area(area_), values(values_) { };
+			int direction; // crossing axis
+			int index; // index at crossing axis
+			int normal; // -1 or 1 only
+			std::shared_ptr<Area> area; 
+			Map values; // fixed values
+		};
 		
 		void initialize(const Task& task);
-		void applyBorderConditions(Mesh* mesh_, const real time_);
+		void applyBorderBeforeStage(Mesh* mesh_, const real currentTime_, 
+		                            const real timeStep_, const int stage);
+		void applyBorderAfterStage(Mesh* mesh_, const real currentTime_, 
+		                           const real timeStep_, const int stage);
 	
 	private:
 		// list of conditions that applied in sequence (overwriting previous)
 		std::vector<Condition> conditions;
+		// list of inner fractures
+		std::vector<Fracture> fractures;
 		// temporary values - just to not send between all the functions
 		Mesh* mesh;
-		real time;
+		real currentTime;
+		real timeStep;
 		int direction;
 		bool onTheRight;
+		// auxiliary mesh for fracture calculation
+		Mesh* helpMesh;
 		
 		void handleSide() const;
-		void handlePoint(const PartIterator& borderIter, const Map& values) const;
+		void handleBorderPoint(const Iterator& borderIter, const Map& values) const;
+		void allocateHelpMesh();
+		void handleFracturePoint(const Iterator& borderIter, const Map& values,
+		                         const int fracNormal);
 	};
 
 	template<typename TModel>
@@ -56,7 +77,8 @@ namespace gcm {
 		typedef typename Mesh::Iterator              Iterator;
 
 		void initialize(const Task&) { };
-		void applyBorderConditions(Mesh*, const real) const { };
+		void applyBorderBeforeStage(Mesh*, const real, const real, const int) { };
+		void applyBorderAfterStage(Mesh*, const real, const real, const int) { };
 	};
 }
 

@@ -64,9 +64,10 @@ void DefaultSolver<TMesh>::nextTimeStepImpl() {
 template<class TMesh>
 void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
 	DataBus<Model, Grid>::exchangeNodesWithNeighbors(mesh);
-	borderConditions.applyBorderConditions(mesh, getCurrentTime());
+	borderConditions.applyBorderBeforeStage(mesh, getCurrentTime(), timeStep, s);
 	method->stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
-	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return them back to pdeVectors
+	borderConditions.applyBorderAfterStage(mesh, getCurrentTime(), timeStep, s);
+	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return actual PDE values back to pdeVectors
 }
 
 template<class TMesh>

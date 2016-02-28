@@ -61,9 +61,7 @@ namespace gcm {
 			ForwardIterator relativeIterator = {0, 0, 0};
 			Int3 shift = {0, 0, 0};
 			PartIterator(const ForwardIterator& relIter_, const Int3& shift_) :
-					Iterator(relIter_ + shift_),
-					relativeIterator(relIter_),
-					shift(shift_) { };
+				Iterator(relIter_ + shift_), relativeIterator(relIter_), shift(shift_) { };
 			PartIterator(const Int3 start, const Int3 min, const Int3 max) :
 					PartIterator(ForwardIterator(start - min, max - min), min) { };
 			using Int3::operator=;
@@ -77,11 +75,11 @@ namespace gcm {
 		};
 		/** 
 		 * Iteration over slice of cube carried across specified direction through
-		 * the point with index i on that direction
+		 * the point with specified index (index along that direction)
 		 */
-		PartIterator slice(const int direction, const int i) const {
-			Int3 min = {0, 0, 0}; min(direction) = i;
-			Int3 max = getSizes(); max(direction) = i + 1;
+		PartIterator slice(const int direction, const int index) const {
+			Int3 min = {0, 0, 0}; min(direction) = index;
+			Int3 max = getSizes(); max(direction) = index + 1;
 			return PartIterator(min, min, max);
 		};
 		/** 

@@ -9,7 +9,8 @@
 
 using namespace gcm;
 
-Task parseTaskCagi();
+Task parseTaskCagi2d();
+Task parseTaskCagi3d();
 Task parseTaskCgal();
 Task parseTaskDemo();
 
@@ -19,15 +20,15 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-	/*engine.setSolver(new DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<SuperDuperModel, CubicGrid>>());*/
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>());
+	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid>>());
+//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+//	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
 //	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
 //	engine.setSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
 
 	try {
-		engine.initialize(parseTaskCagi());
+		engine.initialize(parseTaskCagi3d());
 
 		auto t1 = std::chrono::high_resolution_clock::now();
 		engine.run();
@@ -44,14 +45,13 @@ int main(int argc, char** argv) {
 }
 
 
-Task parseTaskCagi() {
+Task parseTaskCagi2d() {
 	Task task;
-
 	task.accuracyOrder = 2;
 
-	real X = 0.016 / 2, Y = 0.004;
+	real X = 0.016, Y = 0.004;
 	task.lengthes = {X, Y, 1};
-	task.sizes = {81, 41, 1};
+	task.sizes = {401, 101, 1};
 
 	real rho = 1e+3;
 	real lambda = 3e+10;
@@ -61,47 +61,102 @@ Task parseTaskCagi() {
 	task.CourantNumber = 1.0;
 
 	task.enableSnapshotting = true;
-	task.numberOfSnaps = 121;
+	task.numberOfSnaps = 201;
 	task.stepsPerSnap = 1;
 
 	// border conditions
-	Task::BorderCondition borderCondition;
-	// x right free border
-	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({X - 1e-5, -10, -10}), linal::Vector3({10, 10, 10}));
-	borderCondition.values = {
-		{PhysicalQuantities::T::Sxx, [](real){return 0;}},
-		{PhysicalQuantities::T::Sxy, [](real){return 0;}}
-	};
-	task.borderConditions.push_back(borderCondition);
-	
-	// y up sigma
+	Task::BorderCondition borderCondition;	
+	// y up
 	real frequency = 10e+6, T = 1.0 / frequency;
 	real A = - 1e+6;
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, Y - 1e-5, -10}), linal::Vector3({10, 10, 10}));
+		(linal::Vector3({0.2*X, Y - 1e-5, -10}), linal::Vector3({0.5*X, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [A, T](real t){return (t < T) ? A : 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
 	};
 	task.borderConditions.push_back(borderCondition);
-	// y bottom fixed border
+	// y bottom
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 1e-5, 10}));
 	borderCondition.values = {
-		{PhysicalQuantities::T::Vx, [](real){return 0;}},
-		{PhysicalQuantities::T::Vy, [](real){return 0;}}
+		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
+		{PhysicalQuantities::T::Syy, [](real){return 0;}}
 	};
 	task.borderConditions.push_back(borderCondition);
-
 	
-//	Task::InitialCondition::Wave wave;
-//	wave.waveType = Waves::T::P_FORWARD;
-//	wave.direction = 0;
-//	wave.quantity = PhysicalQuantities::T::PRESSURE;
-//	wave.quantityValue = 10.0;
-//	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2*X, -10, -10}), linal::Vector3({0.4*X, 10, 10}));
-//	task.initialCondition.waves.push_back(wave);
+
+	Task::Fracture fracture;
+	fracture.direction = 1;
+	fracture.coordinate = Y/2;
+	fracture.area = std::make_shared<SphereArea>(Y/2, linal::Vector3({X/2, Y/2, 0}));
+	fracture.values = {
+		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
+		{PhysicalQuantities::T::Syy, [](real){return 0;}}
+	};
+	task.fractures.push_back(fracture); 
+	
+	// quantities to snapshot
+	task.quantitiesToWrite = {PhysicalQuantities::T::PRESSURE,
+	                          PhysicalQuantities::T::Sxx,
+	                          PhysicalQuantities::T::Sxy,
+	                          PhysicalQuantities::T::Syy};
+	return task;
+}
+
+
+Task parseTaskCagi3d() {
+	Task task;
+	task.accuracyOrder = 2;
+
+	real X = 0.016, Y = 0.016, Z = 0.004;
+	task.lengthes = {X, Y, Z};
+	task.sizes = {81, 81, 41};
+
+	real rho = 1e+3;
+	real lambda = 3e+10;
+	real mu = 2e+10;
+	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
+
+	task.CourantNumber = 1.0;
+
+	task.enableSnapshotting = true;
+	task.numberOfSnaps = 61;
+	task.stepsPerSnap = 1;
+
+	// border conditions
+	Task::BorderCondition borderCondition;	
+	// z up
+	real frequency = 10e+6, T = 1.0 / frequency;
+	real A = - 1e+6;
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-100*0.2*X, -100*0.2*Y, Z - 1e-5}), linal::Vector3({100*0.6*X, 100*0.6*Y, 10}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Szz, [A, T](real t){return (t < T) ? A : 0;}}
+	};
+	task.borderConditions.push_back(borderCondition);
+	// z bottom
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 10, 1e-5}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Szz, [](real){return 0;}}
+	};
+	task.borderConditions.push_back(borderCondition);
+		
+	Task::Fracture fracture;
+	fracture.direction = 2;
+	fracture.coordinate = Z/2;
+	fracture.area = std::make_shared<SphereArea>(Z/2, linal::Vector3({X/2, Y/2, Z/2}));
+	fracture.values = {
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Szz, [](real){return 0;}}
+	};
+	task.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
 	task.quantitiesToWrite = {PhysicalQuantities::T::PRESSURE,

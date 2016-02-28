@@ -1,7 +1,7 @@
 #ifndef LIBGCM_SOLVER_HPP
 #define LIBGCM_SOLVER_HPP
 
-#include <lib/numeric/gcmethod/GridCharacteristicMethod.hpp>
+#include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
 
