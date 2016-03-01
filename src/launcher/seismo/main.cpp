@@ -13,28 +13,20 @@ Task parseTask();
 int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.seismo");
-
 	Engine engine;
-	auto solver = new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>();
-	engine.setSolver(solver);
-	auto seismograph = new Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>();
-	engine.setSnapshotter(seismograph);
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	engine.addSnapshotter(new Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>());
 
 	const int numberOfStatements = 1;
 	try {
 		for (int i = 0; i < numberOfStatements; i++) {
-			Task task = parseTask();
-			seismograph->startSeismo(task);
-			engine.initialize(task);
+			engine.initialize(parseTask());
 			engine.run();
-			seismograph->finishSeismo();
 		}
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
 	}
 
-	delete solver;
-	delete seismograph;
 	MPI_Finalize();
 	return 0;
 }

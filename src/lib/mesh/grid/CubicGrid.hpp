@@ -120,6 +120,7 @@ namespace gcm {
 		 * @param z z index < sizes(2)
 		 * @return index in std::vector
 		 */
+		// TODO - special getIndex for different dimensions
 		size_t getIndex(const int x, const int y, const int z) const {
 			return (size_t)
 					((2 * accuracyOrder + sizes(2)) * (2 * accuracyOrder + sizes(1)) * (x + accuracyOrder)

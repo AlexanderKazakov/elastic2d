@@ -10,3 +10,7 @@ SphereArea::SphereArea(const real& _radius, const linal::Vector3& _center) : rad
 bool SphereArea::contains(const linal::Vector3 &coords) const {
 	return linal::length(coords - center) < radius;
 }
+
+void SphereArea::move(const linal::Vector3& shift) {
+	center += shift;
+}

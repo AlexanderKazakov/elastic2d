@@ -11,6 +11,11 @@ namespace gcm {
 		 * (by definition, area does not contain points on its border)
 		 */
 		virtual bool contains(const linal::Vector3& coords) const = 0;
+		
+		/**
+		 * Move area on specified distances
+         */
+		virtual void move(const linal::Vector3& shift) = 0;
 	};
 }
 

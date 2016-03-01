@@ -12,6 +12,7 @@ namespace gcm {
 		 */
 		AxisAlignedBoxArea(const linal::Vector3& _min, const linal::Vector3& _max);
 		virtual bool contains(const linal::Vector3& coords) const override;
+		virtual void move(const linal::Vector3& shift) override;
 		linal::Vector3 getMin() const { return min; };
 		linal::Vector3 getMax() const { return max; };
 	private:

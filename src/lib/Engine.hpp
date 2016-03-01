@@ -20,14 +20,12 @@ namespace gcm {
 		void run();
 
 
-		Snapshotter* getSnapshotter() const { return snapshotter; };
-		void setSnapshotter(Snapshotter* _snapshotter) { snapshotter = _snapshotter; };
-		Solver* getSolver() const { return solver; };
-		void setSolver(Solver* _solver) { solver = _solver; };
+		void addSnapshotter(Snapshotter* snapshotter) { snapshotters.push_back(snapshotter); };
+		void setSolver(Solver* solver_) { solver = solver_; };
 
 	protected:
 		Solver* solver = nullptr;
-		Snapshotter* snapshotter = nullptr;
+		std::vector<Snapshotter*> snapshotters;
 		real requiredTime = 0;
 
 		USE_AND_INIT_LOGGER("gcm.Engine");

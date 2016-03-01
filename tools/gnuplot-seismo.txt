@@ -1,6 +1,6 @@
 reset
 set term png
-set output "seismos/seismo.png"
+set output "snapshots/2dseismo/seismo.png"
 
 unset key
 set x2label "surface"
@@ -8,4 +8,4 @@ set x2tics
 set ylabel "time"
 set yrange [] reverse
 
-plot 'seismos/core00_seismo00000.bin' binary matrix with image axes x2y1
+plot 'snapshots/2dseismo/core00step0000.bin' binary matrix with image axes x2y1

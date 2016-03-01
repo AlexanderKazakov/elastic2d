@@ -32,7 +32,10 @@ void CubicGrid::initializeImpl(const Task &task) {
 		assert_eq(h(j), h(j)); // this is supposed to catch NaN
 		assert_eq(startR(j), startR(j));
 	}
-
+	
+	std::cout << sizeOfRealNodes() << std::endl;
+	std::cout << sizeOfAllNodes() << std::endl;
+	
 	initializeImplImpl(task);
 }
 

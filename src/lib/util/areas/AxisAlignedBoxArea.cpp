@@ -14,3 +14,7 @@ bool AxisAlignedBoxArea::contains(const linal::Vector3 &coords) const {
 	}
 	return true;
 }
+
+void AxisAlignedBoxArea::move(const linal::Vector3& shift) {
+	min += shift; max += shift;
+}

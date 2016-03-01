@@ -2,79 +2,50 @@
 #include <lib/rheology/models/Model.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 
+#include "lib/numeric/solvers/Solver.hpp"
+
 using namespace gcm;
 
-template<class TGrid>
-void Binary2DSeismograph<TGrid>::startSeismo(const Task& task) {
-	static_assert(TGrid::DIMENSIONALITY == 2, "This is seismograph for 2D");
-	LOG_DEBUG("Start seismo writing to " << makeFileNameForSeismo());
-	openSeismoFileStream(makeFileNameForSeismo());
+template<class TMesh>
+void Binary2DSeismograph<TMesh>::beforeCalculationImpl(const Solver* solver) {
+	static_assert(TMesh::DIMENSIONALITY == 2, "This is seismograph for 2D");
+	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
+			(seismoNumber, FILE_EXTENSION, FOLDER_NAME));
 
-	sizeY = task.sizes(1);
-	hY = 1; // TODO
-	tau = 1; //TODO
-	surface = new output_precision[sizeY + 1];  // plus one for auxiliary gnuplot data
+	const TMesh* mesh = dynamic_cast<const TMesh*>(solver->getGrid());
+	sizeY = mesh->getSizes()(1);
+	hY = (precision)(mesh->getH()(1));
+	tau = (precision)(solver->calculateTau());
+	surface = new precision[sizeY + 1];  // plus one for auxiliary gnuplot data
 	writeHeadOfTable();
 	seismoNumber++;
 }
 
-template<class TGrid>
-void Binary2DSeismograph<TGrid>::finishSeismo() {
-	closeSeismoFileStream();
+template<class TMesh>
+void Binary2DSeismograph<TMesh>::afterCalculationImpl() {
+	FileUtils::closeFileStream(fileStream);
 	delete [] surface;
 }
 
-template<class TGrid>
-void Binary2DSeismograph<TGrid>::snapshotImpl(const AbstractGrid* _grid, const int step) {
-	const TGrid* grid = dynamic_cast<const TGrid*>(_grid);
-	assert_eq(grid->getSizes()(1), sizeY);
+template<class TMesh>
+void Binary2DSeismograph<TMesh>::snapshotImpl(const AbstractGrid* mesh_, const int step) {
+	const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
+	assert_eq(mesh->getSizes()(1), sizeY);
 	surface[0] = step * tau;
 	for (int y = 0; y < sizeY; y++) {
-		surface[y + 1] = (output_precision) grid->pde(linal::VectorInt<3>({0, y, 0})).getPressure();
+		surface[y + 1] = (precision) mesh->pde(linal::VectorInt<3>({0, y, 0})).getPressure();
 	}
-	writeSurfaceToBuffer();
+	FileUtils::writeArrayToBinaryFileStream(fileStream, surface, (size_t)sizeY + 1);
 }
 
-template<class TGrid>
-void Binary2DSeismograph<TGrid>::openSeismoFileStream(const std::string& fileName) {
-	seismoFileStream.open(fileName, std::ios::binary);
-	assert_true(seismoFileStream.is_open());
-	seismoFileStream.clear();
-}
-
-template<class TGrid>
-void Binary2DSeismograph<TGrid>::writeSurfaceToBuffer() {
-	auto bufferSize = (std::streamsize) ((sizeY + 1) * sizeof(output_precision));
-	auto previousNumberOfBytes = seismoFileStream.tellp();
-	assert_true(seismoFileStream.write(reinterpret_cast<char*>(surface), bufferSize));
-	auto currentNumberOfBytes = seismoFileStream.tellp();
-	assert_eq(bufferSize, currentNumberOfBytes - previousNumberOfBytes);
-}
-
-template<class TGrid>
-void Binary2DSeismograph<TGrid>::closeSeismoFileStream() {
-	assert_true(seismoFileStream.good());
-	seismoFileStream.close();
-}
-
-template <class TGrid>
-std::string Binary2DSeismograph<TGrid>::makeFileNameForSeismo() {
-	char buffer[50];
-	sprintf(buffer, "%s%02d%s%05d%s", "seismos/core", MPI::COMM_WORLD.Get_rank(), "_seismo", seismoNumber, ".bin");
-	return std::string(buffer);
-}
-
-template <class TGrid>
-void Binary2DSeismograph<TGrid>::writeHeadOfTable() {
-	surface[0] = (output_precision) sizeY;
+template <class TMesh>
+void Binary2DSeismograph<TMesh>::writeHeadOfTable() {
+	surface[0] = (precision)sizeY;
 	for (int i = 0; i < sizeY; i++) {
 		surface[i + 1] = i * hY;
 	}
-	writeSurfaceToBuffer();
+	FileUtils::writeArrayToBinaryFileStream(fileStream, surface, (size_t)sizeY + 1);
 }
-
-template <class TGrid>
-void Binary2DSeismograph<TGrid>::initializeImpl(const Task&) { }
 
 
 template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>;

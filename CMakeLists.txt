@@ -70,6 +70,7 @@ endif()
 include_directories(src)
 file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/gcm_exe/*.cpp")
 file(GLOB_RECURSE SEISMO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/seismo/*.cpp")
+file(GLOB_RECURSE INVERSE_PROBLEM_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/inverse_problem/*.cpp")
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
@@ -85,6 +86,10 @@ target_link_libraries(gcm_exe gcm ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_L
 # gcm_seismo
 add_executable(gcm_seismo ${SEISMO_SOURCES})
 target_link_libraries(gcm_seismo gcm ${MPI_CXX_LIBRARIES} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
+
+# gcm_inverse_problem
+add_executable(gcm_inverse_problem ${INVERSE_PROBLEM_SOURCES})
+target_link_libraries(gcm_inverse_problem gcm ${MPI_CXX_LIBRARIES} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})

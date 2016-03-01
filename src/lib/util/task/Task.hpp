@@ -88,7 +88,12 @@ namespace gcm {
 		};
 		std::vector<Fracture> fractures = {};
 		
-		std::vector<PhysicalQuantities::T> quantitiesToWrite = {};
+		std::vector<PhysicalQuantities::T> quantitiesToVtk = {};
+		
+		struct Detector {
+			std::vector<PhysicalQuantities::T> quantities = {};
+			std::shared_ptr<Area> area;
+		} detector;
 	};
 }
 

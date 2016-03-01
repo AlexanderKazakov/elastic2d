@@ -18,3 +18,7 @@ bool StraightBoundedCylinderArea::contains(const linal::Vector3 &coords) const {
 	real projection = linal::dotProduct(coords - begin, axis);
 	return linal::dotProduct(coords - begin, coords - begin) - projection*projection < radius*radius;
 }
+
+void StraightBoundedCylinderArea::move(const linal::Vector3& shift) {
+	begin += shift; end += shift;
+}

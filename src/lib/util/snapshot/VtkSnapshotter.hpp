@@ -17,10 +17,11 @@ namespace gcm {
 	class VtkSnapshotter : public Snapshotter {
 		typedef typename TMesh::VtkGridType      VtkGridType;
 		typedef typename TMesh::VtkWriterType    VtkWriterType;
+		const std::string FOLDER_NAME = std::string("vtk");
 
-		std::vector<PhysicalQuantities::T> quantitiesToWrite = { };
+		std::vector<PhysicalQuantities::T> quantitiesToWrite = {};
 		virtual void initializeImpl(const Task& task) override {
-			quantitiesToWrite = task.quantitiesToWrite;
+			quantitiesToWrite = task.quantitiesToVtk;
 		};
 
 		virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
@@ -47,7 +48,8 @@ namespace gcm {
 #else
 			vtkWriter->SetInputData(vtkStrGrid);
 #endif
-			vtkWriter->SetFileName(makeFileNameForSnapshot(step).c_str());
+			vtkWriter->SetFileName(makeFileNameForSnapshot(step,
+					vtkWriter->GetDefaultFileExtension(), FOLDER_NAME).c_str());
 			vtkWriter->Write();
 		};
 
@@ -63,7 +65,8 @@ namespace gcm {
 		typedef void (VtkSnapshotter::*InsertFunc)(PhysicalQuantities::T quantity,
 				vtkSmartPointer<vtkFloatArray> vtkArr, const typename TMesh::VtkIterator& it);
 
-		void writeQuantity(PhysicalQuantities::T quantity, InsertFunc insertFunc, const int numOfComponents) {
+		void writeQuantity(PhysicalQuantities::T quantity, InsertFunc insertFunc, 
+		                   const int numOfComponents) {
 			auto vtkArr = vtkSmartPointer<vtkFloatArray>::New();
 			vtkArr->SetNumberOfComponents(numOfComponents);
 			vtkArr->Allocate((vtkIdType)mesh->sizeOfRealNodes(), 0);
@@ -98,7 +101,7 @@ namespace gcm {
 		};
 
 		/**
-		 * Below is implementations of geometry writing for meshs of different types
+		 * Below is implementations of geometry writing for meshes of different types
 		 */
 
 		void writeGeometry(const CubicGrid& gcmGrid, vtkSmartPointer<vtkStructuredGrid> _vtkGrid) {
@@ -134,20 +137,6 @@ namespace gcm {
 				}
 				_vtkGrid->InsertNextCell(triangle->GetCellType(),triangle->GetPointIds());
 			}
-		};
-
-		const char* CORE      = "core";
-		const char* DIRECTORY = "snaps"; // relative name of directory to put snapshots
-		const char* STEP      = "step";
-		const char* SLASH     = "/";
-		const char* DOT       = ".";
-
-		/** @return name for vtk snapshot */
-		std::string makeFileNameForSnapshot(const int step) const {
-			char buffer[50];
-			sprintf(buffer, "%s%s%s%02d%s%s%05d%s%s", DIRECTORY, SLASH, CORE, MPI::COMM_WORLD.Get_rank(),
-			        mesh->getId().c_str(), STEP, step, DOT, vtkWriter->GetDefaultFileExtension());
-			return std::string(buffer);
 		};
 	};
 }

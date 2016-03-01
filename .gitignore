@@ -1,9 +1,7 @@
 build/*
 build
-snaps
-snaps/*
-seismos
-seismos/*
+snapshots
+snapshots/*
 .idea/*
 *.log
 CMakeFiles
@@ -13,7 +11,7 @@ gcm_exe
 gcm_tests
 gcm_mpi_tests
 gcm_seismo
-cgal_tests
+gcm_inverse_problem
 nbproject
 nbproject/*
 cmake_install.cmake

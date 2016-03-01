@@ -1,0 +1,6 @@
+reset
+set term png
+set output "snapshots/1dseismo/seismo.png"
+
+plot 'snapshots/1dseismo/core00step0000.bin' binary record=(-1) using 0:1
+

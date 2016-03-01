@@ -17,12 +17,11 @@ while getopts ":n:" o; do
     esac
 done
 
-rm -rf snapshots/2dseismo
+rm -rf snapshots/1dseismo
 rm -f *.log
-mkdir -p snapshots/2dseismo
-echo "Start ./build/gcm_seismo with $np processes ..."
-mpirun -np $np ./build/gcm_seismo
+mkdir -p snapshots/1dseismo
+echo "Start ./build/gcm_inverse_problem with $np processes ..."
+mpirun -np $np ./build/gcm_inverse_problem
 
-gnuplot tools/gnuplot-seismo.txt && eog snapshots/2dseismo/seismo.png
-
+gnuplot tools/gnuplot-1d-binary.txt && eog snapshots/1dseismo/seismo.png
 
