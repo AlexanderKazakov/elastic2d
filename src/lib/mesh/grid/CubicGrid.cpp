@@ -22,7 +22,8 @@ void CubicGrid::initializeImpl(const Task &task) {
 	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / this->numberOfWorkers);
 	sizes(0) = numberOfNodesAlongXPerOneCore; // number of nodes along x direction on this mesh
 	// in order to keep specified in task number of nodes
-	if (this->rank == this->numberOfWorkers - 1) sizes(0) = task.sizes(0) - numberOfNodesAlongXPerOneCore * (this->numberOfWorkers - 1);
+	if (this->rank == this->numberOfWorkers - 1) 
+		sizes(0) = task.sizes(0) - numberOfNodesAlongXPerOneCore * (this->numberOfWorkers - 1);
 	startR(0) += (this->rank * numberOfNodesAlongXPerOneCore) * h(0); // mpi parallel along X axis
 	// MPI - (end)
 
@@ -36,6 +37,5 @@ void CubicGrid::initializeImpl(const Task &task) {
 	std::cout << sizeOfRealNodes() << std::endl;
 	std::cout << sizeOfAllNodes() << std::endl;
 	
-	initializeImplImpl(task);
 }
 

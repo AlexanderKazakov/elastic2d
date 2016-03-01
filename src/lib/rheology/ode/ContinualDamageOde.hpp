@@ -21,9 +21,9 @@ namespace gcm {
 		static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; };
 		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; };
 
-		void initialize(const Task &task) {
+		void beforeStatement(const Statement &statement) {
 			// todo
-			parameter = task.orthotropicMaterial.continualDamageParameter;
+			parameter = statement.orthotropicMaterial.continualDamageParameter;
 			assert_gt(parameter, 0.0);
 		};
 

@@ -136,11 +136,6 @@ namespace gcm {
 
 		virtual void initializeImpl(const Task &task) override;
 
-		virtual void recalculateMaximalLambda() = 0;
-		virtual void applyInitialConditions(const Task& task) = 0;
-
-		virtual void initializeImplImpl(const Task& task) = 0;
-
 		USE_AND_INIT_LOGGER("gcm.CubicGrid");
 	};
 }

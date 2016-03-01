@@ -13,32 +13,37 @@ namespace gcm {
 	 */
 	class Solver {
 	public:
-		virtual void initialize(const Task& task) {
-			currentTime = 0.0; // solver can be used for several calculations
+		void initialize(const Task& task) {
 			initializeImpl(task);
 		};
-		virtual void initializeImpl(const Task &task) = 0;
-		virtual void nextTimeStepImpl() = 0;
-		virtual ~Solver() { };
-
+		void beforeStatement(const Statement& statement) {
+			currentTime = 0;
+			beforeStatementImpl(statement);
+		};
 		void nextTimeStep() {
 			real tau = calculateTau();
 			nextTimeStepImpl();
 			currentTime += tau;
 		};
-
+		void afterStatement() {
+			afterStatementImpl();
+		};
+		virtual ~Solver() { };
+		
 		/** @return grid with actual values */
 		virtual AbstractGrid* getGrid() const = 0;
-
 		/** Calculate time step from Courant–Friedrichs–Lewy condition */
 		virtual real calculateTau() const = 0;
-
-		real getCurrentTime() const {
-			return currentTime;
-		};
-
+		real getCurrentTime() const { return currentTime; };
+		
+	protected:
+		virtual void initializeImpl(const Task& task) = 0;
+		virtual void beforeStatementImpl(const Statement& statement) = 0;
+		virtual void nextTimeStepImpl() = 0;
+		virtual void afterStatementImpl() = 0;
+		
 	private:
-		real currentTime = 0.0;
+		real currentTime = 0;
 	};
 }
 

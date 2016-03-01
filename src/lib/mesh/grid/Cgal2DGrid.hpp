@@ -123,11 +123,6 @@ namespace gcm {
 			// TODO for movable grids
 		};
 
-		virtual void applyInitialConditions(const Task& task) = 0;
-		virtual void recalculateMaximalLambda() = 0;
-
-		virtual void initializeImplImpl(const Task& task) = 0;
-
 		USE_AND_INIT_LOGGER("gcm.Cgal2DGrid");
 	};
 }

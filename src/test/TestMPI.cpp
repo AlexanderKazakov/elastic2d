@@ -78,21 +78,24 @@ INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementation
 TEST(MPI, MpiEngineVsSequenceEngine)
 {
 	Task task;
+	Statement statement;
 	task.accuracyOrder = 2;
-	task.CourantNumber = 1.8;
-	task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+	statement.CourantNumber = 1.8;
+	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 
 	task.sizes(0) = 20;
 	task.sizes(1) = 10;
 	task.lengthes = {2, 1, 1};
-	task.numberOfSnaps = 5;
+	statement.numberOfSnaps = 5;
 
-	Task::InitialCondition::Quantity pressure;
+	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 0.5, 0}));
-	task.initialCondition.quantities.push_back(pressure);
+	statement.initialCondition.quantities.push_back(pressure);
 
+	task.statements.push_back(statement);
+	
 	// calculate in sequence
 	task.forceSequence = true;
 	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> sequenceEngine;

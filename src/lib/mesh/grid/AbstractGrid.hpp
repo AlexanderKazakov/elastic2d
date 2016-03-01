@@ -16,14 +16,15 @@ namespace gcm {
 		void initialize(const Task &task) {
 			rank = MPI::COMM_WORLD.Get_rank();
 			numberOfWorkers = MPI::COMM_WORLD.Get_size();
-
 			if (task.forceSequence) {
 				rank = 0;
 				numberOfWorkers = 1;
 			}
-
 			initializeImpl(task);
-			applyInitialConditions(task);
+		};
+		void beforeStatement(const Statement& statement) {
+			beforeStatementImpl(statement);
+			applyInitialConditions(statement);
 		};
 		virtual ~AbstractGrid() { };
 
@@ -67,11 +68,12 @@ namespace gcm {
 		real minimalSpatialStep = 0.0; // minimal spatial step over all mesh
 
 		virtual void initializeImpl(const Task &task) = 0;
-		virtual void applyInitialConditions(const Task& task) = 0;
+		virtual void beforeStatementImpl(const Statement& statement) = 0;
+		virtual void applyInitialConditions(const Statement& statement) = 0;
+		virtual void afterStatement() = 0;
 
 		virtual void recalculateMinimalSpatialStep() = 0;
 		virtual void recalculateMaximalLambda() = 0;
-
 	};
 }
 

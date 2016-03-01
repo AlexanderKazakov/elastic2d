@@ -43,6 +43,7 @@ namespace gcm {
 		};
 		
 		void initialize(const Task& task);
+		void beforeStatement(const Statement &statement);
 		void applyBorderBeforeStage(Mesh* mesh_, const real currentTime_, 
 		                            const real timeStep_, const int stage);
 		void applyBorderAfterStage(Mesh* mesh_, const real currentTime_, 
@@ -55,6 +56,9 @@ namespace gcm {
 		std::vector<Fracture> fractures;
 		// temporary values - just to not send between all the functions
 		Mesh* mesh;
+		linal::Int3 sizes; // mesh sizes
+		linal::Vector<3> startR; // mesh startR
+		linal::Vector<3> lengths; // mesh lengths
 		real currentTime;
 		real timeStep;
 		int direction;
@@ -77,6 +81,7 @@ namespace gcm {
 		typedef typename Mesh::Iterator              Iterator;
 
 		void initialize(const Task&) { };
+		void beforeStatement(const Statement&) { };
 		void applyBorderBeforeStage(Mesh*, const real, const real, const int) { };
 		void applyBorderAfterStage(Mesh*, const real, const real, const int) { };
 	};

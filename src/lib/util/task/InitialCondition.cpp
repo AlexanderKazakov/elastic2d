@@ -5,18 +5,18 @@
 using namespace gcm;
 
 template<class TModel>
-void InitialCondition<TModel>::initialize(const Task &task) {
+void InitialCondition<TModel>::initialize(const Statement &stmt) {
 
-	for (auto& vectorInitCondition : task.initialCondition.vectors) {
+	for (auto& vectorInitCondition : stmt.initialCondition.vectors) {
 		assert_eq(PdeVector::M, vectorInitCondition.list.size());
 		pdeConditions.push_back(PdeCondition(vectorInitCondition.area, 
 			                 PdeVector(vectorInitCondition.list)));
 	}
 
-	for (auto& wave : task.initialCondition.waves) {
+	for (auto& wave : stmt.initialCondition.waves) {
 		assert_lt(wave.direction, TModel::DIMENSIONALITY);
 		typename TModel::Material material;
-		material.initialize(task);
+		material.initialize(stmt);
 		GCM_MATRICES gcmMatrices(material);
 		auto A = gcmMatrices.A(wave.direction);
 		int columnNumber = GCM_MATRICES::WAVE_COLUMNS.at(wave.waveType);
@@ -28,7 +28,7 @@ void InitialCondition<TModel>::initialize(const Task &task) {
 		pdeConditions.push_back(PdeCondition(wave.area, tmp));
 	}
 
-	for (auto& quantityInitCondition : task.initialCondition.quantities) {
+	for (auto& quantityInitCondition : stmt.initialCondition.quantities) {
 		PdeVector tmp;
 		linal::clear(tmp);
 		PdeVector::QUANTITIES.at(quantityInitCondition.physicalQuantity).Set

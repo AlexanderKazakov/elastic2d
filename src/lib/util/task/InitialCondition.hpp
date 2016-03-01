@@ -12,7 +12,7 @@ namespace gcm {
 		typedef typename TModel::GCM_MATRICES    GCM_MATRICES;
 
 		/** Convert task terms of initial conditions to own format */
-		void initialize(const Task& task);
+		void initialize(const Statement& statement);
 
 		/** Apply initial conditions to node assume that its coordinates is coords */
 		void apply(PdeVector& v, const linal::Vector3& coords) const;

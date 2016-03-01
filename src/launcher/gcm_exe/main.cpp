@@ -46,99 +46,97 @@ int main(int argc, char** argv) {
 Task parseTaskCgal() {
 	Task task;	
 	task.spatialStep = 0.4;
+	task.enableSnapshotting = true;
 
+	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
-	task.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
+	statement.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 
-	task.CourantNumber = 1.0;
+	statement.CourantNumber = 1.0;
 
-	task.enableSnapshotting = true;
-	task.numberOfSnaps = 21;
-	task.stepsPerSnap = 1;
+	statement.numberOfSnaps = 21;
+	statement.stepsPerSnap = 1;
 
-	Task::InitialCondition::Quantity pressure;
+	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.4, linal::Vector3({0.5, 0.5, 0}));
-	task.initialCondition.quantities.push_back(pressure);
+	statement.initialCondition.quantities.push_back(pressure);
 	
-	task.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
+	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
 	                          PhysicalQuantities::T::Sxx,
 	                          PhysicalQuantities::T::Sxy,
 	                          PhysicalQuantities::T::Syy};
 
+	task.statements.push_back(statement);
 	return task;
 }
 
 Task parseTask2d() {
 	Task task;
+	task.enableSnapshotting = true;
 
 	task.accuracyOrder = 2;
 
 	task.lengthes = {4, 2, 1};
 	task.sizes = {100, 50, 1};
 
+	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
-	task.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
+	statement.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 
-	task.CourantNumber = 0.9;
+	statement.CourantNumber = 0.9;
 
-	task.enableSnapshotting = true;
-	task.numberOfSnaps = 20;
-	task.stepsPerSnap = 1;
+	statement.numberOfSnaps = 20;
+	statement.stepsPerSnap = 1;
 
-	Task::InitialCondition::Quantity pressure;
+	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({2, 1, 0}));
-	task.initialCondition.quantities.push_back(pressure);
+	statement.initialCondition.quantities.push_back(pressure);
 
-	task.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
+	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
 
+	task.statements.push_back(statement);
 	return task;
 }
 
 Task parseTaskDemo() {
 	Task task;
+	task.enableSnapshotting = true;
 
 	task.accuracyOrder = 2;
 
 	task.lengthes = {4, 2, 1};
 	task.sizes = {100, 50, 25};
 
+	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
-	task.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
+	statement.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 
-	task.CourantNumber = 0.9;
+	statement.CourantNumber = 0.9;
 
-	task.enableSnapshotting = true;
-	task.numberOfSnaps = 20;
-	task.stepsPerSnap = 1;
+	statement.numberOfSnaps = 20;
+	statement.stepsPerSnap = 1;
 
-	Task::InitialCondition::Quantity pressure;
+	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({2, 1, 0.5}));
-	task.initialCondition.quantities.push_back(pressure);
+	statement.initialCondition.quantities.push_back(pressure);
 
-	/*Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::T::P_FORWARD;
-	wave.direction = 0;
-	wave.quantity = PhysicalQuantities::T::PRESSURE;
-	wave.quantityValue = 10.0;
-	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({0.2, -1, -1}), linal::Vector3({0.5, 3, 3}));
-	task.initialCondition.waves.push_back(wave);*/
+	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
 
-	task.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
-
+	task.statements.push_back(statement);
 	return task;
 }

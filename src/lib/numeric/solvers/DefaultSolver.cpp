@@ -8,16 +8,10 @@ void DefaultSolver<TMesh>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 
 	method = new GridCharacteristicMethod<TMesh>();
-	corrector = new typename Model::Corrector();
-	corrector->initialize(task);
-	internalOde = new typename Model::InternalOde();
-	internalOde->initialize(task);
-	borderConditions.initialize(task);
-
 	mesh = new TMesh();
 	mesh->initialize(task);
+	borderConditions.initialize(task);
 
-	CourantNumber = task.CourantNumber;
 	splittingSecondOrder = task.splittingSecondOrder;
 }
 
@@ -27,6 +21,18 @@ DefaultSolver<TMesh>::~DefaultSolver() {
 	delete corrector;
 	delete internalOde;
 	delete mesh;
+}
+
+template<class TMesh>
+void DefaultSolver<TMesh>::beforeStatementImpl(const Statement& statement) {
+	CourantNumber = statement.CourantNumber;
+	corrector = new Corrector();
+	corrector->beforeStatement(statement);
+	internalOde = new InternalOde();
+	internalOde->beforeStatement(statement);
+	borderConditions.beforeStatement(statement);
+
+	mesh->beforeStatement(statement);
 }
 
 template<class TMesh>
@@ -62,6 +68,11 @@ void DefaultSolver<TMesh>::nextTimeStepImpl() {
 }
 
 template<class TMesh>
+void DefaultSolver<TMesh>::afterStatementImpl() {
+	mesh->afterStatement();
+}
+
+template<class TMesh>
 void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
 	DataBus<Model, Grid>::exchangeNodesWithNeighbors(mesh);
 	borderConditions.applyBorderBeforeStage(mesh, getCurrentTime(), timeStep, s);
@@ -72,7 +83,7 @@ void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::internalOdeNextStep(const real timeStep) {
-	if (TMesh::Model::InternalOde::NonTrivial) {
+	if (InternalOde::NonTrivial) {
 		assert_eq(mesh->pdeVectors.size(), mesh->odeValues.size());
 		for (auto it : *mesh) {
 			internalOde->nextStep(mesh->_ode(it), mesh->pde(it), timeStep);
@@ -82,7 +93,7 @@ void DefaultSolver<TMesh>::internalOdeNextStep(const real timeStep) {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::applyCorrectors() {
-	if (TMesh::Model::Corrector::NonTrivial) {
+	if (Corrector::NonTrivial) {
 		for (auto it : *mesh) {
 			corrector->apply(mesh->_pde(it));
 		}

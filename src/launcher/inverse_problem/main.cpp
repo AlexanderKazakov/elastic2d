@@ -39,26 +39,27 @@ Task parseTaskCagi2d() {
 	Task task;
 	task.accuracyOrder = 2;
 	task.forceSequence = true;
+	task.enableSnapshotting = true;
 
 	real X = 0.016, Y = 0.004;
 	task.lengthes = {X, Y, 1};
 	task.sizes = {201, 51, 1};
 
+	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
-	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
+	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
 
-	task.CourantNumber = 1.0;
+	statement.CourantNumber = 1.0;
 
-	task.enableSnapshotting = true;
-	task.numberOfSnaps = 101;
-	task.stepsPerSnap = 1;
+	statement.numberOfSnaps = 101;
+	statement.stepsPerSnap = 1;
 
 	// border conditions
 	auto area = std::make_shared<AxisAlignedBoxArea>
 		(linal::Vector3({X/2-0.001*X, Y - 1e-5, -10}), linal::Vector3({X/2+0.001*X, 10, 10}));
-	Task::BorderCondition borderCondition;	
+	Statement::BorderCondition borderCondition;	
 	// y up
 	real frequency = 10e+6, T = 1.0 / frequency;
 	real A = - 1e+6;
@@ -67,7 +68,7 @@ Task parseTaskCagi2d() {
 		{PhysicalQuantities::T::Syy, [A, T](real t){return (t < T) ? A : 0;}},
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}}
 	};
-	task.borderConditions.push_back(borderCondition);
+	statement.borderConditions.push_back(borderCondition);
 	// y bottom
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 1e-5, 10}));
@@ -75,10 +76,10 @@ Task parseTaskCagi2d() {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
 	};
-	task.borderConditions.push_back(borderCondition);
+	statement.borderConditions.push_back(borderCondition);
 	
 
-	Task::Fracture fracture;
+	Statement::Fracture fracture;
 	fracture.direction = 1;
 	fracture.coordinate = Y/2;
 	fracture.area = std::make_shared<SphereArea>(Y/2, linal::Vector3({X/2, Y/2, 0}));
@@ -86,17 +87,18 @@ Task parseTaskCagi2d() {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
 	};
-	task.fractures.push_back(fracture); 
+	statement.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
-	task.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
+	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
 	                        PhysicalQuantities::T::Sxx,
 	                        PhysicalQuantities::T::Sxy,
 	                        PhysicalQuantities::T::Syy};
 	
-	task.detector.quantities = {PhysicalQuantities::T::Syy};
-	task.detector.area = area;
+	statement.detector.quantities = {PhysicalQuantities::T::Syy};
+	statement.detector.area = area;
 	
+	task.statements.push_back(statement);
 	return task;
 }
 
@@ -105,24 +107,25 @@ Task parseTaskCagi3d() {
 	Task task;
 	task.accuracyOrder = 2;
 	task.forceSequence = true;
+	task.enableSnapshotting = true;
 
 	real X = 0.016, Y = 0.016, Z = 0.004;
 	task.lengthes = {X, Y, Z};
 	task.sizes = {81, 81, 41};
 
+	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
-	task.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
+	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
 
-	task.CourantNumber = 1.0;
+	statement.CourantNumber = 1.0;
 
-	task.enableSnapshotting = true;
-	task.numberOfSnaps = 61;
-	task.stepsPerSnap = 1;
+	statement.numberOfSnaps = 61;
+	statement.stepsPerSnap = 1;
 
 	// border conditions
-	Task::BorderCondition borderCondition;	
+	Statement::BorderCondition borderCondition;	
 	// z up
 	real frequency = 10e+6, T = 1.0 / frequency;
 	real A = - 1e+6;
@@ -133,7 +136,7 @@ Task parseTaskCagi3d() {
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
 		{PhysicalQuantities::T::Szz, [A, T](real t){return (t < T) ? A : 0;}}
 	};
-	task.borderConditions.push_back(borderCondition);
+	statement.borderConditions.push_back(borderCondition);
 	// z bottom
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 10, 1e-5}));
@@ -142,9 +145,9 @@ Task parseTaskCagi3d() {
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
 		{PhysicalQuantities::T::Szz, [](real){return 0;}}
 	};
-	task.borderConditions.push_back(borderCondition);
+	statement.borderConditions.push_back(borderCondition);
 		
-	Task::Fracture fracture;
+	Statement::Fracture fracture;
 	fracture.direction = 2;
 	fracture.coordinate = Z/2;
 	fracture.area = std::make_shared<SphereArea>(Z/2, linal::Vector3({X/2, Y/2, Z/2}));
@@ -153,14 +156,15 @@ Task parseTaskCagi3d() {
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
 		{PhysicalQuantities::T::Szz, [](real){return 0;}}
 	};
-	task.fractures.push_back(fracture); 
+	statement.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
-	task.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
+	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
 	                          PhysicalQuantities::T::Sxx,
 	                          PhysicalQuantities::T::Sxy,
 	                          PhysicalQuantities::T::Syy};
 
 	
+	task.statements.push_back(statement);
 	return task;
 }

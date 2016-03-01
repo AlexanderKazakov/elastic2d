@@ -5,8 +5,8 @@
 #include <lib/rheology/variables/variables.hpp>
 
 namespace gcm {
-	class Task;
-
+	struct Statement;
+	
 	class IsotropicMaterial {
 	public:
 		real rho = 0; // density
@@ -22,7 +22,7 @@ namespace gcm {
 		IsotropicMaterial(const real rho_ = 0, const real lambda_ = 0, const real mu_ = 0,
 		                  const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
 		
-		void initialize(const Task& task);
+		void initialize(const Statement& statement);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial>& m) const;

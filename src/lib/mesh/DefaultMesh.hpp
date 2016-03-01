@@ -77,25 +77,28 @@ namespace gcm {
 		std::vector<PdeVector>        pdeVectorsNew;
 		std::vector<GCM_MATRICES*>    gcmMatrices;
 		std::vector<OdeVariables>     odeValues;
-
-		virtual void initializeImplImpl(const Task& task) override {
+		
+		virtual void beforeStatementImpl(const Statement& statement) override {
+			// TODO - for movable meshes it should reconstruct the grid
 			allocate();
 
 			typename TModel::Material material;
-			material.initialize(task);
+			material.initialize(statement);
 			auto gcmMatricesPtr = new GCM_MATRICES(material);
 			for (auto& gcmMatrix : this->gcmMatrices) {
 				gcmMatrix = gcmMatricesPtr;
 			}
 			this->maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
 		};
-		void applyInitialConditions(const Task& task) {
+		void applyInitialConditions(const Statement& statement) {
 			InitialCondition<TModel> initialCondition;
-			initialCondition.initialize(task);
+			initialCondition.initialize(statement);
 			for (auto it : *this) {
 				initialCondition.apply(_pde(it), this->coords(it));
 			}
 		};
+		virtual void afterStatement() override { };
+
 
 		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ };
 

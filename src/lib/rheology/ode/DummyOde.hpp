@@ -18,7 +18,7 @@ namespace gcm {
 
 		static const std::map<PhysicalQuantities::T, GetSetter<Variables>> QUANTITIES;
 
-		void initialize(const Task&) { };
+		void beforeStatement(const Statement&) { };
 
 		template<typename PDEVariables>
 		void nextStep(Variables&, PDEVariables&, const real) { };

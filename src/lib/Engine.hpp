@@ -12,13 +12,12 @@ namespace gcm {
 	 */
 	class Engine {
 	public:
-		void initialize(const Task& task);
+		void initialize(const Task& task_);
 
 		/**
-		 * Perform calculation of the task
+		 * Perform calculation of the whole task (it can be several statements)
 		 */
 		void run();
-
 
 		void addSnapshotter(Snapshotter* snapshotter) { snapshotters.push_back(snapshotter); };
 		void setSolver(Solver* solver_) { solver = solver_; };
@@ -27,7 +26,15 @@ namespace gcm {
 		Solver* solver = nullptr;
 		std::vector<Snapshotter*> snapshotters;
 		real requiredTime = 0;
+		Task task;
 
+		/**
+		 * Perform calculation of statement
+         */
+		void runStatement();
+		
+		void beforeStatement(const Statement& statement);
+		
 		USE_AND_INIT_LOGGER("gcm.Engine");
 	};
 }

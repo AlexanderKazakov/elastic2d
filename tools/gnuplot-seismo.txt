@@ -8,4 +8,4 @@ set x2tics
 set ylabel "time"
 set yrange [] reverse
 
-plot 'snapshots/2dseismo/core00step0000.bin' binary matrix with image axes x2y1
+plot 'snapshots/2dseismo/core00.bin' binary matrix with image axes x2y1

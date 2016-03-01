@@ -8,8 +8,8 @@ IsotropicMaterial::IsotropicMaterial(const real rho_, const real lambda_, const 
 		rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
 		continualDamageParameter(continualDamageParameter_) { }
 
-void IsotropicMaterial::initialize(const Task &task) {
-	*this = task.isotropicMaterial;
+void IsotropicMaterial::initialize(const Statement& statement) {
+	*this = statement.isotropicMaterial;
 }
 
 void IsotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<1>, IsotropicMaterial> &m) const {

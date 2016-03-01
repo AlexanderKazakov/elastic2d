@@ -23,8 +23,8 @@ OrthotropicMaterial::OrthotropicMaterial(const real rho_, std::initializer_list<
 	}
 }
 
-void OrthotropicMaterial::initialize(const Task &task) {
-	*this = task.orthotropicMaterial;
+void OrthotropicMaterial::initialize(const Statement& statement) {
+	*this = statement.orthotropicMaterial;
 }
 
 void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial> &m) const {

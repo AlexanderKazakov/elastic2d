@@ -18,7 +18,6 @@ void Cgal2DGrid::initializeImpl(const Task& task) {
 	}
 
 	recalculateMinimalSpatialStep();
-	initializeImplImpl(task);
 };
 
 void Cgal2DGrid::triangulate() {

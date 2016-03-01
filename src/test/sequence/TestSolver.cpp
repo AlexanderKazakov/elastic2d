@@ -11,16 +11,17 @@ TEST(Solver, StageXForward)
 {
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
+		Statement statement;
 		task.accuracyOrder = accuracyOrder;
-		task.CourantNumber = 1.0;
-		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+		statement.CourantNumber = 1.0;
+		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 10;
 		task.sizes(1) = 10;
 		task.lengthes = {2, 3, 1};
-		task.numberOfSnaps = 1;
-		task.T = 100.0;
+		statement.numberOfSnaps = 1;
+		statement.T = 100.0;
 
-		Task::InitialCondition::Wave wave;
+		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 0; // along x
 		wave.quantity = PhysicalQuantities::T::PRESSURE;
@@ -28,10 +29,13 @@ TEST(Solver, StageXForward)
 		linal::Vector3 min({0.3, -1, -1});
 		linal::Vector3 max({0.7, 4, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-		task.initialCondition.waves.push_back(wave);
+		statement.initialCondition.waves.push_back(wave);
+		
+		task.statements.push_back(statement);
 
 		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
 		solver.initialize(task);
+		solver.beforeStatement(statement);
 		auto pWave = solver.getMesh()->getPde(2, 0, 0);
 		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
 
@@ -53,16 +57,17 @@ TEST(Solver, StageY)
 {
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
+		Statement statement;
 		task.accuracyOrder = accuracyOrder;
-		task.CourantNumber = 1.0;
-		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+		statement.CourantNumber = 1.0;
+		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 10;
 		task.sizes(1) = 10;
 		task.lengthes = {3, 2, 1};
-		task.numberOfSnaps = 1;
-		task.T = 100.0;
+		statement.numberOfSnaps = 1;
+		statement.T = 100.0;
 
-		Task::InitialCondition::Wave wave;
+		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::Vy;
@@ -70,10 +75,13 @@ TEST(Solver, StageY)
 		linal::Vector3 min({ -1, 0.3, -1});
 		linal::Vector3 max({ 4, 0.7, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-		task.initialCondition.waves.push_back(wave);
+		statement.initialCondition.waves.push_back(wave);
 
+		task.statements.push_back(statement);
+		
 		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
 		solver.initialize(task);
+		solver.beforeStatement(statement);
 		auto pWave = solver.getMesh()->getPde(0, 2, 0);
 		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
 
@@ -95,24 +103,28 @@ TEST(Solver, StageYSxx)
 {
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
+		Statement statement;
 		task.accuracyOrder = accuracyOrder;
-		task.CourantNumber = 0.7;
-		task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+		statement.CourantNumber = 0.7;
+		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 11;
 		task.sizes(1) = 11;
 		task.lengthes = {1, 1, 1};
-		task.numberOfSnaps = 1;
+		statement.numberOfSnaps = 1;
 
-		Task::InitialCondition::Quantity quantity;
+		Statement::InitialCondition::Quantity quantity;
 		quantity.physicalQuantity = PhysicalQuantities::T::Sxx;
 		quantity.value = 10;
 		linal::Vector3 begin({0.5, 0.5, -1});
 		linal::Vector3 end({0.5, 0.5, 1});
 		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.01, begin, end);
-		task.initialCondition.quantities.push_back(quantity);
+		statement.initialCondition.quantities.push_back(quantity);
+		
+		task.statements.push_back(statement);
 
 		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
 		solver.initialize(task);
+		solver.beforeStatement(statement);
 		auto sxxOnly = solver.getMesh()->getPde(5, 5, 0);
 		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
 

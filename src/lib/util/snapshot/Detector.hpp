@@ -16,20 +16,19 @@ namespace gcm {
 		typedef typename Model::PdeVariables    PdeVariables;
 		
 		
-		static const int DIMENSIONALITY = TMesh::DIMENSIONALITY;
+		const int DIMENSIONALITY = TMesh::DIMENSIONALITY;
 		const std::string FILE_EXTENSION = std::string("bin");
 		const std::string FOLDER_NAME    = std::string("1dseismo");
 
 	protected:
 		virtual void initializeImpl(const Task& task) override {
-			assert_eq(task.detector.quantities.size(), 1); // more than one unsupported
-			quantityToWrite = task.detector.quantities[0];
-			detectionArea = task.detector.area;
-		};
-		virtual void beforeCalculationImpl(const Solver* solver) override {
-			const TMesh* mesh = dynamic_cast<const TMesh*>(solver->getGrid());
 			direction = DIMENSIONALITY - 1;
-			indexOfDetectingSide = mesh->getSizes()(direction) - 1;
+			indexOfDetectingSide = task.sizes(direction) - 1;			
+		};
+		virtual void beforeStatementImpl(const Statement& statement) override {
+			assert_eq(statement.detector.quantities.size(), 1); // more than one still unsupported
+			quantityToWrite = statement.detector.quantities[0];
+			detectionArea = statement.detector.area;
 		};
 		virtual void snapshotImpl(const AbstractGrid* mesh_, const int) override {
 			const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
@@ -46,16 +45,14 @@ namespace gcm {
 			valuesInArea.clear();
 			seismo.push_back((precision)valueToWrite);
 		};
-		virtual void afterCalculationImpl() override {
+		virtual void afterStatementImpl() override {
 			FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
-					(seismoNumber, FILE_EXTENSION, FOLDER_NAME));
+					(-1, FILE_EXTENSION, FOLDER_NAME));
 			FileUtils::writeStdVectorToBinaryFileStream(fileStream, seismo);
 			FileUtils::closeFileStream(fileStream);
-			seismoNumber++;
 		};
 
 	private:
-		int seismoNumber = 0;
 		std::vector<precision> seismo;
 		std::vector<real> valuesInArea;
 
@@ -66,7 +63,6 @@ namespace gcm {
 		PhysicalQuantities::T quantityToWrite;
 		
 		std::ofstream fileStream;
-		std::ofstream fileStreamTest;
 		
 		void detect(const PdeVector pde, const linal::Vector3) {
 			real realValue = PdeVariables::QUANTITIES.at(quantityToWrite).Get(pde);

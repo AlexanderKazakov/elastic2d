@@ -7,7 +7,7 @@
 #include <lib/rheology/variables/variables.hpp>
 
 namespace gcm {
-	class Task;
+	struct Statement;
 	class IsotropicMaterial;
 	template<typename TVariables, class TMaterial> class GcmMatrices;
 
@@ -35,7 +35,7 @@ namespace gcm {
 		OrthotropicMaterial(const real rho_ = 0, std::initializer_list<real> = {0,0,0,0,0,0,0,0,0},
 		                    const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
 
-		void initialize(const Task& task);
+		void initialize(const Statement& statement);
 
 		/** Fill in gcm matrices */
 		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>& m) const;

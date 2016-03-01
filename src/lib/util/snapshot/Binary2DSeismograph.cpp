@@ -7,22 +7,21 @@
 using namespace gcm;
 
 template<class TMesh>
-void Binary2DSeismograph<TMesh>::beforeCalculationImpl(const Solver* solver) {
+void Binary2DSeismograph<TMesh>::initializeImpl(const Task& task) {
 	static_assert(TMesh::DIMENSIONALITY == 2, "This is seismograph for 2D");
-	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
-			(seismoNumber, FILE_EXTENSION, FOLDER_NAME));
-
-	const TMesh* mesh = dynamic_cast<const TMesh*>(solver->getGrid());
-	sizeY = mesh->getSizes()(1);
-	hY = (precision)(mesh->getH()(1));
-	tau = (precision)(solver->calculateTau());
-	surface = new precision[sizeY + 1];  // plus one for auxiliary gnuplot data
-	writeHeadOfTable();
-	seismoNumber++;
+	sizeY = task.sizes(1);
 }
 
 template<class TMesh>
-void Binary2DSeismograph<TMesh>::afterCalculationImpl() {
+void Binary2DSeismograph<TMesh>::beforeStatementImpl(const Statement&) {
+	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
+			(-1, FILE_EXTENSION, FOLDER_NAME));
+	surface = new precision[sizeY + 1];  // plus one for auxiliary gnuplot data
+	writeHeadOfTable();
+}
+
+template<class TMesh>
+void Binary2DSeismograph<TMesh>::afterStatementImpl() {
 	FileUtils::closeFileStream(fileStream);
 	delete [] surface;
 }

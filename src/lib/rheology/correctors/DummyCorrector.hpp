@@ -11,7 +11,7 @@ namespace gcm {
 	public:
 		static const bool NonTrivial = false;
 
-		void initialize(const Task&) { };
+		void beforeStatement(const Statement&) { };
 
 		template<typename TNode>
 		void apply(TNode&) const { };

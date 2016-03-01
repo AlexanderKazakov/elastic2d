@@ -20,8 +20,8 @@ namespace gcm {
 		const std::string FOLDER_NAME = std::string("vtk");
 
 		std::vector<PhysicalQuantities::T> quantitiesToWrite = {};
-		virtual void initializeImpl(const Task& task) override {
-			quantitiesToWrite = task.quantitiesToVtk;
+		virtual void beforeStatementImpl(const Statement& statement) override {
+			quantitiesToWrite = statement.quantitiesToVtk;
 		};
 
 		virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {

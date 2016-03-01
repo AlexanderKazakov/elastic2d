@@ -65,6 +65,11 @@ namespace gcm {
 		DefaultSolverWrapper<TGrid>* getSolverForTest() const {
 			return static_cast<DefaultSolverWrapper<TGrid>*>(this->solver);
 		}
+		void runStatementForTest() { this->runStatement(); };
+		
+		void beforeStatementForTest(const Statement& statement) {
+			this->beforeStatement(statement);
+		};
 	};
 }
 

@@ -7,20 +7,26 @@ using namespace gcm;
 
 template<typename TModel>
 void BorderConditions<TModel, CubicGrid>::initialize(const Task& task) {
-	for (const auto& bc : task.borderConditions) {
+	sizes = task.sizes;
+	startR = task.startR;
+	lengths = task.lengthes;
+}
+
+template<typename TModel>
+void BorderConditions<TModel, CubicGrid>::beforeStatement(const Statement &statement) {
+	for (const auto& bc : statement.borderConditions) {
 		for (const auto& q : bc.values) {
 			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
 		}
 		conditions.push_back(Condition(bc.area, bc.values));
 	}
-	for (const auto& fr : task.fractures) {
+	for (const auto& fr : statement.fractures) {
 		for (const auto& q : fr.values) {
 			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
 		}
 		int d = fr.direction;
-		int index = (int) (task.sizes(d) *
-			(fr.coordinate - task.startR(d)) / task.lengthes(d));
-		assert_gt(index, 0); assert_lt(index, task.sizes(d) - 1);
+		int index = (int) (sizes(d) * (fr.coordinate - startR(d)) / lengths(d));
+		assert_gt(index, 0); assert_lt(index, sizes(d) - 1);
 		fractures.push_back(Fracture(d, index,   - 1, fr.area, fr.values));
 		fractures.push_back(Fracture(d, index + 1, 1, fr.area, fr.values));
 	}

@@ -18,37 +18,38 @@ namespace gcm {
 	template<class TMesh>
 	class DefaultSolver : public Solver {
 	public:
-		typedef typename TMesh::Model    Model;
-		typedef typename TMesh::Grid     Grid;		
+		typedef typename TMesh::Model        Model;
+		typedef typename TMesh::Grid         Grid;	
+		typedef typename Model::Corrector    Corrector;
+		typedef typename Model::InternalOde  InternalOde;
 		
-		virtual void initializeImpl(const Task& task) override;
-		virtual void nextTimeStepImpl() override;
-		~DefaultSolver();
-
 		virtual real calculateTau() const override;
-
-		virtual AbstractGrid* getGrid() const {
-			return mesh;
-		};
+		virtual AbstractGrid* getGrid() const { return mesh; };
+		~DefaultSolver();
 
 	protected:
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
-		bool splittingSecondOrder = false; // use or not time second order approach in splitting method
+		bool splittingSecondOrder = false; // time second order approach in splitting method
 
 		GridCharacteristicMethod<TMesh>* method = nullptr;
-		typename Model::Corrector* corrector = nullptr;
-		typename Model::InternalOde* internalOde = nullptr;
+		Corrector* corrector = nullptr;
+		InternalOde* internalOde = nullptr;
 		BorderConditions<Model, Grid> borderConditions;
 
 		TMesh* mesh = nullptr;
-
-		USE_AND_INIT_LOGGER("gcm.DefaultSolver");
+		
+		virtual void initializeImpl(const Task& task) override;
+		virtual void beforeStatementImpl(const Statement& statement) override;
+		virtual void nextTimeStepImpl() override;
+		virtual void afterStatementImpl() override;
 
 		void stage(const int s, const real timeStep);
+	private:
 		void internalOdeNextStep(const real timeStep);
 		void applyCorrectors();
 		void moveMesh(const real timeStep);
 
+		USE_AND_INIT_LOGGER("gcm.DefaultSolver");
 	};
 }
 

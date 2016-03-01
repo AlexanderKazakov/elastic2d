@@ -10,17 +10,21 @@ using namespace gcm;
 
 TEST(CubicGrid, initialize) {
 	Task task;
+	Statement statement;
 	task.accuracyOrder = 3;
-	task.CourantNumber = 0.7;
-	task.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+	statement.CourantNumber = 0.7;
+	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.sizes(0) = 7;
 	task.sizes(1) = 9;
 	task.lengthes = {20, 8, 1};
-	task.numberOfSnaps = 5;
-	task.T = 100.0;
+	statement.numberOfSnaps = 5;
+	statement.T = 100.0;
+	
+	task.statements.push_back(statement);
 
 	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid;
 	grid.initialize(task);
+	grid.beforeStatement(statement);
 	ASSERT_NEAR(grid.getH()(0), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getH()(1), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
@@ -81,22 +85,26 @@ TEST(CubicGrid, PartIterator) {
 TEST(CubicGrid, interpolateValuesAround)
 {
 	Task task;
-	task.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
+	Statement statement;
+	statement.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
 
 	task.sizes(0) = task.sizes(1) = 3;
 	task.accuracyOrder = 1;
 	task.lengthes = {2, 2, 2}; // h_x = h_y = 1.0
 
-	Task::InitialCondition::Quantity quantity;
+	Statement::InitialCondition::Quantity quantity;
 	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	quantity.value = -1.0;
 	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
-	task.initialCondition.quantities.push_back(quantity);
+	statement.initialCondition.quantities.push_back(quantity);
 
+	task.statements.push_back(statement);
+	
 	for (int stage = 0; stage <= 1; stage++) {
 
 		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid;
 		grid.initialize(task);
+		grid.beforeStatement(statement);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
