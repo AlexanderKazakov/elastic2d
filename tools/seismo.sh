@@ -23,6 +23,6 @@ mkdir -p snapshots/2dseismo
 echo "Start ./build/gcm_seismo with $np processes ..."
 mpirun -np $np ./build/gcm_seismo
 
-gnuplot tools/gnuplot-seismo.txt && eog snapshots/2dseismo/seismo.png
+gnuplot tools/gnuplot-seismo.txt && eog snapshots/2dseismo/core00statement0000.bin.png
 
 

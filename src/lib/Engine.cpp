@@ -15,6 +15,7 @@ void Engine::initialize(const Task &task_) {
 
 void Engine::run() {
 	for (const auto& statement : task.statements) {
+		std::cout << "Start statement " << statement.id << std::endl;
 		beforeStatement(statement);
 		runStatement();
 	}
@@ -23,6 +24,7 @@ void Engine::run() {
 void Engine::beforeStatement(const Statement& statement) {
 	solver->beforeStatement(statement);
 	real tau = solver->calculateTau();
+	std::cout << "Tau = " << tau << std::endl;
 	requiredTime = statement.numberOfSnaps * statement.stepsPerSnap * tau;
 	if (statement.numberOfSnaps == 0) requiredTime = statement.T;
 	assert_gt(requiredTime, 0);

@@ -1,6 +1,5 @@
 reset
 set term png
-set output "snapshots/2dseismo/seismo.png"
 
 unset key
 set x2label "surface"
@@ -8,4 +7,9 @@ set x2tics
 set ylabel "time"
 set yrange [] reverse
 
-plot 'snapshots/2dseismo/core00.bin' binary matrix with image axes x2y1
+list = system('ls snapshots/2dseismo')
+
+do for [file in list] {
+    set output sprintf('snapshots/2dseismo/%s.png', file)
+    plot sprintf('snapshots/2dseismo/%s', file) binary matrix with image axes x2y1 
+}

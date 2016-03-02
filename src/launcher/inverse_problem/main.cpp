@@ -11,21 +11,18 @@ using namespace gcm;
 Task parseTaskCagi2d();
 Task parseTaskCagi3d();
 
+const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 
 int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.main");
-	Engine engine;
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.addSnapshotter(new Detector<DefaultMesh<Elastic2DModel, CubicGrid>>());
-
-	const int numberOfStatements = 1;
 	try {
-		for (int i = 0; i < numberOfStatements; i++) {
-			engine.initialize(parseTaskCagi2d());
-			engine.run();
-		}
+		Engine engine;
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>());
+//		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid>>());
+		engine.addSnapshotter(new Detector<DefaultMesh<Elastic3DModel, CubicGrid>>());
+		engine.initialize(parseTaskCagi3d());
+		engine.run();
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
 	}
@@ -42,34 +39,22 @@ Task parseTaskCagi2d() {
 	task.enableSnapshotting = true;
 
 	real X = 0.016, Y = 0.004;
+	real sensorSize = 0.003;
+	real sourceSize = 0.003;
 	task.lengthes = {X, Y, 1};
-	task.sizes = {201, 51, 1};
+	task.sizes = {151, 101, 1};
 
 	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
 	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
-
 	statement.CourantNumber = 1.0;
-
-	statement.numberOfSnaps = 101;
+	statement.numberOfSnaps = 251;
 	statement.stepsPerSnap = 1;
 
-	// border conditions
-	auto area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({X/2-0.001*X, Y - 1e-5, -10}), linal::Vector3({X/2+0.001*X, 10, 10}));
 	Statement::BorderCondition borderCondition;	
-	// y up
-	real frequency = 10e+6, T = 1.0 / frequency;
-	real A = - 1e+6;
-	borderCondition.area = area;
-	borderCondition.values = {
-		{PhysicalQuantities::T::Syy, [A, T](real t){return (t < T) ? A : 0;}},
-		{PhysicalQuantities::T::Sxy, [](real){return 0;}}
-	};
-	statement.borderConditions.push_back(borderCondition);
-	// y bottom
+	// y bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 1e-5, 10}));
 	borderCondition.values = {
@@ -77,8 +62,15 @@ Task parseTaskCagi2d() {
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
 	};
 	statement.borderConditions.push_back(borderCondition);
+	// y up free border
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-10, Y-1e-5, -10}), linal::Vector3({10, 10, 10}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
+		{PhysicalQuantities::T::Syy, [](real){return 0;}}
+	};
+	statement.borderConditions.push_back(borderCondition);
 	
-
 	Statement::Fracture fracture;
 	fracture.direction = 1;
 	fracture.coordinate = Y/2;
@@ -90,15 +82,42 @@ Task parseTaskCagi2d() {
 	statement.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
-	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
-	                        PhysicalQuantities::T::Sxx,
-	                        PhysicalQuantities::T::Sxy,
-	                        PhysicalQuantities::T::Syy};
+	statement.quantitiesToVtk = {};
+	statement.detector.quantities = {PhysicalQuantities::T::Vy};
 	
-	statement.detector.quantities = {PhysicalQuantities::T::Syy};
-	statement.detector.area = area;
-	
-	task.statements.push_back(statement);
+	real spaceToMoveSensor = X - (sensorSize + sourceSize);
+	real shiftAtTime = spaceToMoveSensor / NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS;
+	std::cout << "shiftAtTime = " << shiftAtTime << std::endl;
+	int counter = 0;
+	for (int i = 0; i < NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS; i++) {
+		real initSensorPosition = i * shiftAtTime;
+		real endSensorPosition = initSensorPosition + sensorSize;
+		real initSrcPosition = endSensorPosition;
+		real endSrcPosition = initSrcPosition + sourceSize;
+		// y up sensor
+		auto srcArea = std::make_shared<AxisAlignedBoxArea>
+			(linal::Vector3({initSrcPosition, Y - 1e-5, -10}),
+			 linal::Vector3({endSrcPosition, 10, 10}));
+		real frequency = 10e+6, T = 1.0 / frequency;
+		real A = - 1e+6;
+		borderCondition.area = srcArea;
+		borderCondition.values = {
+			{PhysicalQuantities::T::Syy, [A, T](real t){return (t < T) ? A : 0;}},
+			{PhysicalQuantities::T::Sxy, [](real){return 0;}}
+		};
+		if (statement.borderConditions.size() == 3) statement.borderConditions.pop_back();
+		statement.borderConditions.push_back(borderCondition);
+		auto sensorArea = std::make_shared<AxisAlignedBoxArea>
+			(linal::Vector3({initSensorPosition, Y - 1e-5, -10}),
+			 linal::Vector3({endSensorPosition, 10, 10}));
+		statement.detector.area = sensorArea;
+
+		statement.id = StringUtils::toString(i, 4);
+		if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) {
+			task.statements.push_back(statement);
+		}
+		counter++;
+	}
 	return task;
 }
 
@@ -110,61 +129,100 @@ Task parseTaskCagi3d() {
 	task.enableSnapshotting = true;
 
 	real X = 0.016, Y = 0.016, Z = 0.004;
+	real sensorSizeX = 0.003;
+	real sourceSizeX = 0.003;
+	real commonSizeY = 0.006;
 	task.lengthes = {X, Y, Z};
-	task.sizes = {81, 81, 41};
+	task.sizes = {151/10, 151/10, 101/10};
 
 	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
 	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
-
 	statement.CourantNumber = 1.0;
-
-	statement.numberOfSnaps = 61;
+	statement.numberOfSnaps = 251/10;
 	statement.stepsPerSnap = 1;
 
-	// border conditions
 	Statement::BorderCondition borderCondition;	
-	// z up
-	real frequency = 10e+6, T = 1.0 / frequency;
-	real A = - 1e+6;
-	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-100*0.2*X, -100*0.2*Y, Z - 1e-5}), linal::Vector3({100*0.6*X, 100*0.6*Y, 10}));
-	borderCondition.values = {
-		{PhysicalQuantities::T::Sxz, [](real){return 0;}},
-		{PhysicalQuantities::T::Syz, [](real){return 0;}},
-		{PhysicalQuantities::T::Szz, [A, T](real t){return (t < T) ? A : 0;}}
-	};
-	statement.borderConditions.push_back(borderCondition);
-	// z bottom
+	// z bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 10, 1e-5}));
 	borderCondition.values = {
-		{PhysicalQuantities::T::Sxz, [](real){return 0;}},
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
-		{PhysicalQuantities::T::Szz, [](real){return 0;}}
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
 	};
 	statement.borderConditions.push_back(borderCondition);
-		
+	// z up free border
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-10, -10, Z-1e-5}), linal::Vector3({10, 10, 10}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+	};
+	statement.borderConditions.push_back(borderCondition);
+	
 	Statement::Fracture fracture;
 	fracture.direction = 2;
 	fracture.coordinate = Z/2;
 	fracture.area = std::make_shared<SphereArea>(Z/2, linal::Vector3({X/2, Y/2, Z/2}));
 	fracture.values = {
-		{PhysicalQuantities::T::Sxz, [](real){return 0;}},
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
-		{PhysicalQuantities::T::Szz, [](real){return 0;}}
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
 	};
 	statement.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
-	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
-	                          PhysicalQuantities::T::Sxx,
-	                          PhysicalQuantities::T::Sxy,
-	                          PhysicalQuantities::T::Syy};
-
+	statement.quantitiesToVtk = {};
+	statement.detector.quantities = {PhysicalQuantities::T::Vz};
 	
-	task.statements.push_back(statement);
+	real spaceToMoveSensorX = X - (sensorSizeX + sourceSizeX);
+	real shiftAtTimeX = spaceToMoveSensorX / NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS;
+	std::cout << "shiftAtTimeX = " << shiftAtTimeX << std::endl;
+	real spaceToMoveSensorY = Y - commonSizeY;
+	real shiftAtTimeY = spaceToMoveSensorY / NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS;
+	std::cout << "shiftAtTimeY = " << shiftAtTimeY << std::endl;
+	int counter = 0;
+	for (int i = 0; i < NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS; i++) {
+		for (int j = 0; j < NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS; j++) {
+			// detector x
+			real initSensorPositionX = i * shiftAtTimeX;
+			real endSensorPositionX = initSensorPositionX + sensorSizeX;
+			real initSrcPositionX = endSensorPositionX;
+			real endSrcPositionX = initSrcPositionX + sourceSizeX;
+			// detector y
+			real initSensorPositionY = i * shiftAtTimeY;
+			real endSensorPositionY = initSensorPositionY + commonSizeY;
+			real initSrcPositionY = initSensorPositionY;
+			real endSrcPositionY = endSensorPositionY;
+			// z up sensor
+			auto srcArea = std::make_shared<AxisAlignedBoxArea>
+				(linal::Vector3({initSrcPositionX, initSrcPositionY, Z - 1e-5}),
+				 linal::Vector3({endSrcPositionX, endSrcPositionY, 10}));
+			real frequency = 10e+6, T = 1.0 / frequency;
+			real A = - 1e+6;
+			borderCondition.area = srcArea;
+			borderCondition.values = {
+				{PhysicalQuantities::T::Szz, [A, T](real t){return (t < T) ? A : 0;}},
+				{PhysicalQuantities::T::Syz, [](real){return 0;}},
+				{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+			};
+			if (statement.borderConditions.size() == 3) statement.borderConditions.pop_back();
+			statement.borderConditions.push_back(borderCondition);
+			auto sensorArea = std::make_shared<AxisAlignedBoxArea>
+				(linal::Vector3({initSensorPositionX, initSensorPositionY, Z - 1e-5}),
+				 linal::Vector3({endSensorPositionX, endSensorPositionY, 10}));
+			statement.detector.area = sensorArea;
+
+			statement.id = StringUtils::toString(j, 2) + StringUtils::toString(i, 2);
+			if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) { 
+				task.statements.push_back(statement);
+			}
+			counter++;
+		}
+	}
 	return task;
 }

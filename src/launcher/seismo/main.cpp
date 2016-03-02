@@ -17,12 +17,9 @@ int main(int argc, char **argv) {
 	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
 	engine.addSnapshotter(new Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>());
 
-	const int numberOfStatements = 1;
 	try {
-		for (int i = 0; i < numberOfStatements; i++) {
-			engine.initialize(parseTask());
-			engine.run();
-		}
+		engine.initialize(parseTask());
+		engine.run();
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
 	}
@@ -53,7 +50,6 @@ Task parseTask() {
 	statement.numberOfSnaps = 100;
 	statement.stepsPerSnap = 1;
 
-
 	Statement::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::P_FORWARD;
 	wave.direction = 1;
@@ -62,6 +58,21 @@ Task parseTask() {
 	wave.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({-1, 0.2, -1}), linal::Vector3({3, 0.5, 3}));
 	statement.initialCondition.waves.push_back(wave);
 
+	statement.id = "0000";
 	task.statements.push_back(statement);
+	
+	Statement::BorderCondition borderCondition;	
+	// x right free border
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-10, 0.99, -10}), linal::Vector3({10, 10, 10}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
+		{PhysicalQuantities::T::Syy, [](real){return 0;}}
+	};
+	statement.borderConditions.push_back(borderCondition);
+	
+	statement.id = "0001";
+	task.statements.push_back(statement);
+	
 	return task;
 }

@@ -29,6 +29,7 @@ namespace gcm {
 			assert_eq(statement.detector.quantities.size(), 1); // more than one still unsupported
 			quantityToWrite = statement.detector.quantities[0];
 			detectionArea = statement.detector.area;
+			seismo.clear();
 		};
 		virtual void snapshotImpl(const AbstractGrid* mesh_, const int) override {
 			const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
@@ -40,7 +41,7 @@ namespace gcm {
 				}
 			}
 			assert_ge(valuesInArea.size(), 1);
-			real valueToWrite = std::accumulate(valuesInArea.begin(), valuesInArea.end(), 0)
+			real valueToWrite = std::accumulate(valuesInArea.begin(), valuesInArea.end(), 0.0)
 					/ (real) valuesInArea.size();
 			valuesInArea.clear();
 			seismo.push_back((precision)valueToWrite);

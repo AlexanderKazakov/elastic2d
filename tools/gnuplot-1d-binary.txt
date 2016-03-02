@@ -1,6 +1,11 @@
 reset
 set term png
-set output "snapshots/1dseismo/seismo.png"
 
-plot 'snapshots/1dseismo/core00.bin' binary record=(-1) using 0:1
+list = system('ls snapshots/1dseismo')
+
+do for [file in list] {
+    set output sprintf('snapshots/1dseismo/%s.png', file)
+    plot sprintf('snapshots/1dseismo/%s', file) binary record=(-1) using 0:1 with lines
+}
+
 
