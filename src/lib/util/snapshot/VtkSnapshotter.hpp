@@ -46,7 +46,7 @@ namespace gcm {
 #ifdef CONFIG_VTK_5
 			vtkWriter->SetInput(vtkGrid);
 #else
-			vtkWriter->SetInputData(vtkStrGrid);
+			vtkWriter->SetInputData(vtkGrid);
 #endif
 			vtkWriter->SetFileName(makeFileNameForSnapshot(step,
 					vtkWriter->GetDefaultFileExtension(), FOLDER_NAME).c_str());
