@@ -18,10 +18,10 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 	try {
 		Engine engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>());
-//		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid>>());
-		engine.addSnapshotter(new Detector<DefaultMesh<Elastic3DModel, CubicGrid>>());
-		engine.initialize(parseTaskCagi3d());
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
+		engine.addSnapshotter(new Detector<DefaultMesh<Elastic2DModel, CubicGrid>>());
+		engine.initialize(parseTaskCagi2d());
 		engine.run();
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
@@ -114,7 +114,9 @@ Task parseTaskCagi2d() {
 
 		statement.id = StringUtils::toString(i, 4);
 		if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) {
-			task.statements.push_back(statement);
+			if (i == 5) {
+				task.statements.push_back(statement);
+			}
 		}
 		counter++;
 	}
@@ -133,7 +135,7 @@ Task parseTaskCagi3d() {
 	real sourceSizeX = 0.003;
 	real commonSizeY = 0.006;
 	task.lengthes = {X, Y, Z};
-	task.sizes = {151/10, 151/10, 101/10};
+	task.sizes = {151/2, 151/2, 101/2};
 
 	Statement statement;
 	real rho = 1e+3;
@@ -141,7 +143,7 @@ Task parseTaskCagi3d() {
 	real mu = 2e+10;
 	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
 	statement.CourantNumber = 1.0;
-	statement.numberOfSnaps = 251/10;
+	statement.numberOfSnaps = 251/2;
 	statement.stepsPerSnap = 1;
 
 	Statement::BorderCondition borderCondition;	
@@ -194,7 +196,7 @@ Task parseTaskCagi3d() {
 			real initSrcPositionX = endSensorPositionX;
 			real endSrcPositionX = initSrcPositionX + sourceSizeX;
 			// detector y
-			real initSensorPositionY = i * shiftAtTimeY;
+			real initSensorPositionY = j * shiftAtTimeY;
 			real endSensorPositionY = initSensorPositionY + commonSizeY;
 			real initSrcPositionY = initSensorPositionY;
 			real endSrcPositionY = endSensorPositionY;
@@ -218,8 +220,9 @@ Task parseTaskCagi3d() {
 			statement.detector.area = sensorArea;
 
 			statement.id = StringUtils::toString(j, 2) + StringUtils::toString(i, 2);
-			if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) { 
-				task.statements.push_back(statement);
+			if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) {
+				if (i == 5 && j == 5)
+					task.statements.push_back(statement);
 			}
 			counter++;
 		}
