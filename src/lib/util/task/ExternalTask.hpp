@@ -1,5 +1,5 @@
-#ifndef LIBGCM_TASK_HPP
-#define LIBGCM_TASK_HPP
+#ifndef LIBGCM_EXTERNALTASK_HPP
+#define LIBGCM_EXTERNALTASK_HPP
 
 #include <map>
 #include <memory>
@@ -13,13 +13,15 @@
 
 namespace gcm {
 	/**
-	 * Properties, conditions, tasks in native format of the program.
-	 * Used in initialization of the program.
+	 * Properties, conditions, tasks in external format - strings and numbers.
+	 * The aim is to separate parsing xml or whatever from program initialization.
+	 * Any parser just creates an object of this class and returns it.
+	 * Then it's translated to Task - program's format of conditions.
 	 */
 	
 	/** 
-	 * Set of all conditions for one statement.
-	 * Task can contains several statements.
+	 * Set of all conditions except mesh geometry.
+	 * This is part of task for one statement.
 	 */
 	struct Statement {
 		typedef std::function<real(real)> TimeDependency;
@@ -91,9 +93,6 @@ namespace gcm {
 		} detector;
 	};
 	
-	/**
-	 * Struct to initialize the program.
-	 */
 	struct Task {
 		linal::Vector<3> lengthes = {0, 0, 0}; // lengthes of cube in each direction
 		linal::VectorInt<3> sizes = {1, 1, 1}; // number of nodes along each direction
@@ -111,4 +110,4 @@ namespace gcm {
 	};
 }
 
-#endif // LIBGCM_TASK_HPP
+#endif // LIBGCM_EXTERNALTASK_HPP

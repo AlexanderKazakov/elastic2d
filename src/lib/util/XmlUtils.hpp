@@ -14,7 +14,7 @@ namespace gcm {
 			std::ostringstream strStream;
 			strStream << std::setfill('0') << std::setw(length) << number;
 			return strStream.str();
-		}
+		};
 	};
 }
 

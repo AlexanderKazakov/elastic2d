@@ -138,8 +138,7 @@ void BorderConditions<TModel, CubicGrid>::handleFracturePoint
 	handleBorderPoint({0, 0, 0}, values);
 	mesh = tmpMesh;
 	// calculate stage on the helpMesh
-	GridCharacteristicMethod<Mesh> gcmMetod; // todo static?
-	gcmMetod.stage(direction, timeStep * fracNormal, helpMesh);
+	GridCharacteristicMethod<Mesh>::stage(direction, timeStep * fracNormal, helpMesh);
 	// copy calculated values to real mesh
 	for (int i = 0; i < mesh->getAccuracyOrder(); i++) {
 		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;

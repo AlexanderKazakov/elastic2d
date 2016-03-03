@@ -80,10 +80,10 @@ namespace gcm {
 		typedef typename Mesh::PdeVector             PdeVector;
 		typedef typename Mesh::Iterator              Iterator;
 
-		void initialize(const Task&) { };
-		void beforeStatement(const Statement&) { };
-		void applyBorderBeforeStage(Mesh*, const real, const real, const int) { };
-		void applyBorderAfterStage(Mesh*, const real, const real, const int) { };
+		void initialize(const Task&) { }
+		void beforeStatement(const Statement&) { }
+		void applyBorderBeforeStage(Mesh*, const real, const real, const int) { }
+		void applyBorderAfterStage(Mesh*, const real, const real, const int) { }
 	};
 }
 

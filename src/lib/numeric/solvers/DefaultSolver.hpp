@@ -18,23 +18,24 @@ namespace gcm {
 	template<class TMesh>
 	class DefaultSolver : public Solver {
 	public:
-		typedef typename TMesh::Model        Model;
-		typedef typename TMesh::Grid         Grid;	
-		typedef typename Model::Corrector    Corrector;
-		typedef typename Model::InternalOde  InternalOde;
+		typedef typename TMesh::Model            Model;
+		typedef typename TMesh::Grid             Grid;
+		typedef typename Model::Corrector        Corrector;
+		typedef typename Model::InternalOde      InternalOde;
+		typedef BorderConditions<Model, Grid>    Border;
+		typedef GridCharacteristicMethod<TMesh>  GCM;
 		
 		virtual real calculateTau() const override;
-		virtual AbstractGrid* getGrid() const { return mesh; };
+		virtual AbstractGrid* getGrid() const { return mesh; }
 		~DefaultSolver();
 
 	protected:
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
 		bool splittingSecondOrder = false; // time second order approach in splitting method
 
-		GridCharacteristicMethod<TMesh>* method = nullptr;
 		Corrector* corrector = nullptr;
 		InternalOde* internalOde = nullptr;
-		BorderConditions<Model, Grid> borderConditions;
+		Border* borderConditions = nullptr;
 
 		TMesh* mesh = nullptr;
 		
@@ -49,7 +50,7 @@ namespace gcm {
 		void applyCorrectors();
 		void moveMesh(const real timeStep);
 
-		USE_AND_INIT_LOGGER("gcm.DefaultSolver");
+		USE_AND_INIT_LOGGER("gcm.DefaultSolver")
 	};
 }
 

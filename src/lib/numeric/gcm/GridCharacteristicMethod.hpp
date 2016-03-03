@@ -10,16 +10,15 @@
 namespace gcm {
 	template<class TMesh>
 	class GridCharacteristicMethod {
-		typedef typename TMesh::GCM_HANDLER GCM_HANDLER;
 	public:
+		typedef typename TMesh::GCM_HANDLER GCM_HANDLER;
 		/**
 		 * Do grid-characteristic stage of splitting method
 		 * @param s direction
 		 * @param timeStep time step
 		 * @param mesh mesh to perform calculation
 		 */
-		void stage(const int s, const real &timeStep, TMesh* mesh) {
-			LOG_DEBUG("Start stage " << s << " timeStep = " << timeStep);
+		static void stage(const int s, const real &timeStep, TMesh* mesh) {
 
 			for (auto it : *mesh) {
 				// points to interpolate values on previous time layer
@@ -33,9 +32,9 @@ namespace gcm {
 								/* old values are in columns of the matrix */
 								(GCM_HANDLER::interpolateValuesAround(*mesh, s, it, dx));
 			}
-		};
+		}
 
-		USE_AND_INIT_LOGGER("gcm.GridCharacteristicMethod");
+		USE_AND_INIT_LOGGER("gcm.GridCharacteristicMethod")
 	};
 }
 

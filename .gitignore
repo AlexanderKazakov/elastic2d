@@ -17,3 +17,5 @@ nbproject/*
 cmake_install.cmake
 compile_commands.json
 libgcm.so
+CMakeLists.txt.user
+*.autosave

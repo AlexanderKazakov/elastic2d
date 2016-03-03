@@ -7,19 +7,18 @@ template<class TMesh>
 void DefaultSolver<TMesh>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 
-	method = new GridCharacteristicMethod<TMesh>();
 	mesh = new TMesh();
 	mesh->initialize(task);
-	borderConditions.initialize(task);
+
+	borderConditions = new Border();
+	borderConditions->initialize(task);
 
 	splittingSecondOrder = task.splittingSecondOrder;
 }
 
 template<class TMesh>
 DefaultSolver<TMesh>::~DefaultSolver() {
-	delete method;
-	delete corrector;
-	delete internalOde;
+	delete borderConditions;
 	delete mesh;
 }
 
@@ -30,8 +29,8 @@ void DefaultSolver<TMesh>::beforeStatementImpl(const Statement& statement) {
 	corrector->beforeStatement(statement);
 	internalOde = new InternalOde();
 	internalOde->beforeStatement(statement);
-	borderConditions.beforeStatement(statement);
 
+	borderConditions->beforeStatement(statement);
 	mesh->beforeStatement(statement);
 }
 
@@ -70,14 +69,16 @@ void DefaultSolver<TMesh>::nextTimeStepImpl() {
 template<class TMesh>
 void DefaultSolver<TMesh>::afterStatementImpl() {
 	mesh->afterStatement();
+	delete corrector;
+	delete internalOde;
 }
 
 template<class TMesh>
 void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
 	DataBus<Model, Grid>::exchangeNodesWithNeighbors(mesh);
-	borderConditions.applyBorderBeforeStage(mesh, getCurrentTime(), timeStep, s);
-	method->stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
-	borderConditions.applyBorderAfterStage(mesh, getCurrentTime(), timeStep, s);
+	borderConditions->applyBorderBeforeStage(mesh, getCurrentTime(), timeStep, s);
+	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
+	borderConditions->applyBorderAfterStage(mesh, getCurrentTime(), timeStep, s);
 	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return actual PDE values back to pdeVectors
 }
 
