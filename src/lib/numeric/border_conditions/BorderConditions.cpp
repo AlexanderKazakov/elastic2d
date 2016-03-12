@@ -60,7 +60,7 @@ template<typename TModel>
 void BorderConditions<TModel, CubicGrid>::handleSide() const {
 	auto borderIter = mesh->slice(direction, 0);
 	if (onTheRight)
-		borderIter = mesh->slice(direction, mesh->getSizes()(direction) - 1);
+		borderIter = mesh->slice(direction, mesh->sizes(direction) - 1);
 	while (borderIter != borderIter.end()) {
 		for (const auto& condition : conditions) {
 			if (condition.area->contains(mesh->coords(borderIter))) {
@@ -76,7 +76,7 @@ void BorderConditions<TModel, CubicGrid>::handleBorderPoint
 (const Iterator& borderIter, const Map& values) const {
 	
 	int innerSign = onTheRight ? -1 : 1;
-	for (int a = 1; a <= mesh->getAccuracyOrder(); a++) {
+	for (int a = 1; a <= mesh->borderSize; a++) {
 		auto realIter = borderIter; realIter(direction) += innerSign * a;
 		auto virtIter = borderIter; virtIter(direction) -= innerSign * a;
 	
@@ -113,11 +113,13 @@ void BorderConditions<TModel, CubicGrid>::applyBorderAfterStage
 
 template<typename TModel>
 void BorderConditions<TModel, CubicGrid>::allocateHelpMesh() {
-	// warning - this is not complete cubic mesh, just an auxiliary smth
-	helpMesh = new Mesh();
-	*((CubicGrid*)helpMesh) = *((CubicGrid*)mesh);
-	helpMesh->sizes = {1, 1, 1};
-	helpMesh->sizes(direction) = mesh->getAccuracyOrder();
+	Task helpTask;
+	helpTask.dimensionality = 1;
+	helpTask.borderSize = mesh->borderSize;
+	helpTask.forceSequence = true;
+	helpTask.sizes = {1, 1, 1};
+	helpTask.sizes(direction) = mesh->borderSize;
+	helpMesh = new Mesh(helpTask);
 	helpMesh->allocate();
 }
 
@@ -125,7 +127,7 @@ template<typename TModel>
 void BorderConditions<TModel, CubicGrid>::handleFracturePoint
 (const Iterator& iter, const Map& values, const int fracNormal) {
 	// copy values to helpMesh
-	for (int i = 0; i < 2 * mesh->getAccuracyOrder(); i++) {
+	for (int i = 0; i < 2 * mesh->borderSize; i++) {
 		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
 		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
 		helpMesh->_pde(helpMeshIter) = mesh->pde(realMeshIter); // todo - what if matrix depends on ode, etc?
@@ -140,7 +142,7 @@ void BorderConditions<TModel, CubicGrid>::handleFracturePoint
 	// calculate stage on the helpMesh
 	GridCharacteristicMethod<Mesh>::stage(direction, timeStep * fracNormal, helpMesh);
 	// copy calculated values to real mesh
-	for (int i = 0; i < mesh->getAccuracyOrder(); i++) {
+	for (int i = 0; i < mesh->borderSize; i++) {
 		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
 		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
 		mesh->_pdeNew(realMeshIter) = helpMesh->pdeNew(helpMeshIter);

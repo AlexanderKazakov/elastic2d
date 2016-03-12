@@ -32,41 +32,44 @@ namespace gcm {
 		typedef typename Grid::Iterator       Iterator;
 
 		typedef GcmHandler<TModel, TGrid>     GCM_HANDLER;
-		
+
+		DefaultMesh(const Task& task) : Grid(task) { }
+		virtual ~DefaultMesh() { }
+
 		/** Read-only access to real actual PDE vectors */
 		const PdeVector& pde(const Iterator& it) const {
 			return this->pdeVectors[this->getIndex(it)];
-		};
+		}
 		/** Read-only access to real actual ODE values */
 		const OdeVariables& ode(const Iterator& it) const {
 			return this->odeValues[this->getIndex(it)];
-		};
+		}
 		/** Read-only access to real PDE vectors on next time layer */
 		const PdeVector& pdeNew(const Iterator& it) const {
 			return this->pdeVectorsNew[this->getIndex(it)];
-		};
+		}
 		/** Read-only access to real GCM matrices */
 		GCM_MATRICES* matrix(const Iterator& it) const {
 			return this->gcmMatrices[this->getIndex(it)];
-		};
+		}
 
 	protected:
 		/** Read / write access to real actual PDE vectors */
 		PdeVector& _pde(const Iterator& it) {
 			return this->pdeVectors[this->getIndex(it)];
-		};
+		}
 		/** Read / write access to real actual ODE vectors */
 		OdeVariables& _ode(const Iterator& it) {
 			return this->odeValues[this->getIndex(it)];
-		};
+		}
 		/** Read / write access to real PDE vectors in auxiliary "on next time layer" storage */
 		PdeVector& _pdeNew(const Iterator& it) {
 			return this->pdeVectorsNew[this->getIndex(it)];
-		};
+		}
 		/** Read / write access to real actual GCM matrices */
 		GCM_MATRICES*& _matrix(const Iterator& it) {
 			return this->gcmMatrices[this->getIndex(it)];
-		};
+		}
 
 	protected:
 		/**
@@ -89,18 +92,18 @@ namespace gcm {
 				gcmMatrix = gcmMatricesPtr;
 			}
 			this->maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
-		};
+		}
 		void applyInitialConditions(const Statement& statement) {
 			InitialCondition<TModel> initialCondition;
 			initialCondition.initialize(statement);
 			for (auto it : *this) {
 				initialCondition.apply(_pde(it), this->coords(it));
 			}
-		};
-		virtual void afterStatement() override { };
+		}
+		virtual void afterStatement() override { }
 
 
-		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ };
+		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ }
 
 		void allocate() {
 			zeroInitialize(pdeVectors, this->sizeOfAllNodes());
@@ -108,12 +111,12 @@ namespace gcm {
 			zeroInitialize(gcmMatrices, this->sizeOfAllNodes());
 			if (Model::InternalOde::NonTrivial)
 				zeroInitialize(odeValues, this->sizeOfAllNodes());
-		};
+		}
 		template<typename T>
 		static void zeroInitialize(std::vector<T>& stdVec, size_t initSize) {
 			stdVec.resize(initSize);
 			memset(&(stdVec[0]), 0, stdVec.size() * sizeof(T));
-		};
+		}
 		
 
 		friend class DefaultSolver<DefaultMesh>;

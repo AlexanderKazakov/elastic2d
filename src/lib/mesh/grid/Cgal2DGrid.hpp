@@ -17,13 +17,13 @@ namespace gcm {
 	 */
 	class Cgal2DGrid : public UnstructuredGrid {
 	public:
-		virtual ~Cgal2DGrid() { };
+
 		typedef Iterator ForwardIterator;
-		ForwardIterator begin() const { return 0; };
-		ForwardIterator end() const { return sizeOfRealNodes(); };
+		ForwardIterator begin() const { return 0; }
+		ForwardIterator end() const { return sizeOfRealNodes(); }
 		typedef Iterator VtkIterator;
-		VtkIterator vtkBegin() const { return begin(); };
-		VtkIterator vtkEnd() const { return end(); };
+		VtkIterator vtkBegin() const { return begin(); }
+		VtkIterator vtkEnd() const { return end(); }
 
 		typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 		typedef CGAL::Triangulation_vertex_base_2<K>                Vb;
@@ -47,29 +47,32 @@ namespace gcm {
 		 * this caused by the fact that CGAL triangulation is a convex hull of its vertices, we don't deal with them at all)
 		 */
 		struct RealFaceTester {
-			bool operator()(const FiniteFacesIterator& it) const { return !it->is_in_domain(); };
+			bool operator()(const FiniteFacesIterator& it) const { return !it->is_in_domain(); }
 		} realFaceTester;
 		typedef CGAL::Filter_iterator<FiniteFacesIterator, RealFaceTester> CellIterator;
-		CellIterator cellBegin() const { return CellIterator(triangulation.finite_faces_end(), realFaceTester, triangulation.finite_faces_begin()); };
-		CellIterator cellEnd() const { return CellIterator(triangulation.finite_faces_end(), realFaceTester, triangulation.finite_faces_end()); };
+		CellIterator cellBegin() const { return CellIterator(triangulation.finite_faces_end(), realFaceTester, triangulation.finite_faces_begin()); }
+		CellIterator cellEnd() const { return CellIterator(triangulation.finite_faces_end(), realFaceTester, triangulation.finite_faces_end()); }
+
+		Cgal2DGrid(const Task& task);
+		virtual ~Cgal2DGrid() { }
 
 		/** Read-only access to real coordinates with auxiliary 0 at z */
 		const linal::Vector3 coords(const Iterator& it) const {
 			auto point = vertexHandles[it.iter]->point();
 			return {point.x(), point.y(), 0};
-		};
+		}
 		/** Read-only access to real coordinates */
 		const linal::Vector2 coords2d(const Iterator& it) const {
 			auto point = vertexHandles[it.iter]->point();
 			return {point.x(), point.y()};
-		};
+		}
 
 	protected:
 		/** Move specified point on specified distance */
 		void move(const Iterator& it, const linal::Vector2& d) {
 			auto& point = vertexHandles[it.iter]->point();
 			point = point + CgalVector2(d(0), d(1));
-		};
+		}
 		
 		/**
 		 * @param it begin() <= iterator < end()
@@ -77,7 +80,7 @@ namespace gcm {
 		 */
 		size_t getIndex(const Iterator& it) const {
 			return it.iter;
-		};
+		}
 		
 	public:
 		/** @return indices of all vertices in vertexHandles which specified cell owns */
@@ -85,21 +88,20 @@ namespace gcm {
 			for( int i = 0; i < 3; i++) {
 				vertices[i] = verticesIndices.at(it->vertex(i));
 			}
-		};
+		}
 
 		size_t sizeOfRealNodes() const {
 			return vertexHandles.size();
-		};
+		}
 		size_t sizeOfAllNodes() const {
 			return sizeOfRealNodes();
-		};
+		}
 
 	protected:
 		CDT                         triangulation;
 		std::vector<VertexHandle>   vertexHandles;
 		std::map<VertexHandle, int> verticesIndices;
 
-		virtual void initializeImpl(const Task &task) override;
 		void triangulate();
 
 		Triangle findOwnerTriangle(const Iterator& it, const linal::Vector2& shift) const {
@@ -112,18 +114,18 @@ namespace gcm {
 				}
 			}
 			return ans;
-		};
+		}
 		FaceHandle findOwnerFace(const Iterator& it, const CgalVector2 shift) const {
 			auto beginVertex = vertexHandles[getIndex(it)];
 			auto q = beginVertex->point() + shift; // point to find owner face for
 			return triangulation.locate(q, beginVertex->incident_faces());
-		};
+		}
 
 		virtual void recalculateMinimalSpatialStep() override {
 			// TODO for movable grids
-		};
+		}
 
-		USE_AND_INIT_LOGGER("gcm.Cgal2DGrid");
+		USE_AND_INIT_LOGGER("gcm.Cgal2DGrid")
 	};
 }
 

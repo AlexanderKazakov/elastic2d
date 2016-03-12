@@ -95,12 +95,13 @@ namespace gcm {
 	 * Struct to initialize the program.
 	 */
 	struct Task {
+		int dimensionality = 0;
 		linal::Vector<3> lengthes = {0, 0, 0}; // lengthes of cube in each direction
 		linal::VectorInt<3> sizes = {1, 1, 1}; // number of nodes along each direction
 		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node
 		real spatialStep = 0; // effective spatial step for unstructured grids
 
-		int accuracyOrder = 0; // order of accuracy of spatial interpolation
+		int borderSize = 0; // order of accuracy of spatial interpolation
 		bool splittingSecondOrder = false;
 		bool enableSnapshotting = false;
 		bool forceSequence = false; // if true make meshes thinking that the number of

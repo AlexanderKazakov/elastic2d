@@ -11,7 +11,8 @@ using namespace gcm;
 TEST(CubicGrid, initialize) {
 	Task task;
 	Statement statement;
-	task.accuracyOrder = 3;
+	task.borderSize = 3;
+	task.dimensionality = 2;
 	statement.CourantNumber = 0.7;
 	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.sizes(0) = 7;
@@ -22,11 +23,10 @@ TEST(CubicGrid, initialize) {
 	
 	task.statements.push_back(statement);
 
-	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid;
-	grid.initialize(task);
+	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid(task);
 	grid.beforeStatement(statement);
-	ASSERT_NEAR(grid.getH()(0), 3.333333333, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(grid.getH()(1), 1.0, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(grid.h(1), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.sizes(0); x++) {
@@ -42,13 +42,14 @@ TEST(CubicGrid, initialize) {
 
 TEST(CubicGrid, PartIterator) {
 	Task task;
-	task.accuracyOrder = 2;
+
+	task.dimensionality = 3;
+	task.borderSize = 2;
 	int X = 5, Y = 7, Z = 6;
 	task.sizes = {X, Y, Z};
 	task.lengthes = {20, 8, 1};
 	
-	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid>> grid;
-	grid.initialize(task);
+	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid>> grid(task);
 	
 	int counter = 0;
 	for (auto it = grid.slice((int)DIRECTION::Z, 3); it != it.end(); ++it) {
@@ -61,12 +62,12 @@ TEST(CubicGrid, PartIterator) {
 		counter++;
 	}
 	ASSERT_EQ(linal::directProduct(max-min), counter);
-	auto partIter = grid.box({0, 0, 0}, grid.getSizes());
+	auto partIter = grid.box({0, 0, 0}, grid.sizes);
 	for (auto it : grid) {
 		ASSERT_EQ(it, *partIter);
 		++partIter;
 	}
-	for (int a = 1; a <= grid.getAccuracyOrder(); a++) {
+	for (int a = 1; a <= grid.borderSize; a++) {
 		int direction = 0;
 		int d = direction, d1 = (d+1)%3, d2 = (d+2)%3;
 		auto realIter = grid.slice(direction,  a);
@@ -88,8 +89,9 @@ TEST(CubicGrid, interpolateValuesAround)
 	Statement statement;
 	statement.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
 
+	task.dimensionality = 2;
 	task.sizes(0) = task.sizes(1) = 3;
-	task.accuracyOrder = 1;
+	task.borderSize = 1;
 	task.lengthes = {2, 2, 2}; // h_x = h_y = 1.0
 
 	Statement::InitialCondition::Quantity quantity;
@@ -102,8 +104,7 @@ TEST(CubicGrid, interpolateValuesAround)
 	
 	for (int stage = 0; stage <= 1; stage++) {
 
-		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid;
-		grid.initialize(task);
+		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid(task);
 		grid.beforeStatement(statement);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
@@ -117,7 +118,7 @@ TEST(CubicGrid, interpolateValuesAround)
 		}
 
 		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
-		DefaultMesh<Elastic2DModel, CubicGrid>::Iterator it({1, 1, 0}, grid.getSizes());
+		DefaultMesh<Elastic2DModel, CubicGrid>::Iterator it({1, 1, 0}, grid.sizes);
 		DefaultMesh<Elastic2DModel, CubicGrid>::Matrix matrix =
 				GcmHandler<Elastic2DModel, CubicGrid>::interpolateValuesAround(grid, stage, it, dx);
 

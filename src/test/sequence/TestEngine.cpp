@@ -11,7 +11,8 @@ TEST(Engine, runStatementForTest)
 {
 	Task task;
 	Statement statement;
-	task.accuracyOrder = 5;
+	task.dimensionality = 2;
+	task.borderSize = 5;
 	statement.CourantNumber = 4.5;
 	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 	task.sizes(0) = 20;
@@ -50,7 +51,8 @@ TEST(Engine, TwoLayersDifferentRho)
 
 		Task task;
 		Statement statement;
-		task.accuracyOrder = 3;
+		task.borderSize = 3;
+		task.dimensionality = 2;
 		statement.CourantNumber = 1.5;
 		statement.isotropicMaterial = IsotropicMaterial(1.0, 2.0, 0.8);
 		task.sizes(0) = 50;
@@ -129,7 +131,8 @@ TEST(Engine, TwoLayersDifferentE)
 
 		Task task;
 		Statement statement;
-		task.accuracyOrder = 3;
+		task.borderSize = 3;
+		task.dimensionality = 2;
 		statement.CourantNumber = 1.5;
 		statement.isotropicMaterial = IsotropicMaterial(1.0, 2.0, 0.8);
 		task.sizes(0) = 50;

@@ -26,7 +26,7 @@ namespace gcm {
 		typedef std::map<PhysicalQuantities::T, TimeDependency> Map;
 		struct Condition {
 			Condition(const std::shared_ptr<Area> area_, const Map& values_) :
-					area(area_), values(values_) { };
+					area(area_), values(values_) { }
 			std::shared_ptr<Area> area;
 			Map values;
 		};
@@ -34,7 +34,7 @@ namespace gcm {
 			Fracture(const int direction_, const int index_, const int normal_,
 			         std::shared_ptr<Area> area_, const Map& values_) :
 					direction(direction_), index(index_), normal(normal_), 
-					area(area_), values(values_) { };
+					area(area_), values(values_) { }
 			int direction; // crossing axis
 			int index; // index at crossing axis
 			int normal; // -1 or 1 only

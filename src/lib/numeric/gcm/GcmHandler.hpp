@@ -44,9 +44,9 @@ namespace gcm {
 		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
 		                                      const Iterator& it, const PdeVector& dx) {
 			Matrix ans;
-			std::vector<PdeVector> src( (size_t) (mesh.getAccuracyOrder() + 1) );
+			std::vector<PdeVector> src( (size_t) (mesh.borderSize + 1) );
 			PdeVector res;
-			Iterator shift({0, 0, 0}, mesh.getSizes());
+			Iterator shift({0, 0, 0}, mesh.sizes);
 			for (int k = 0; k < PdeVector::M; k++) {
 				shift(stage) = (dx(k) > 0) ? 1 : -1;
 				for (int i = 0; i < src.size(); i++) {

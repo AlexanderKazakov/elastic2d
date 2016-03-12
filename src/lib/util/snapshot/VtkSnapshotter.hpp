@@ -105,7 +105,7 @@ namespace gcm {
 		 */
 
 		void writeGeometry(const CubicGrid& gcmGrid, vtkSmartPointer<vtkStructuredGrid> _vtkGrid) {
-			auto sizes = gcmGrid.getSizes();
+			auto sizes = gcmGrid.sizes;
 			_vtkGrid->SetDimensions(sizes(0), sizes(1), sizes(2));
 
 			auto points = vtkSmartPointer<vtkPoints>::New();

@@ -13,51 +13,52 @@ namespace gcm {
 	class AbstractGrid {
 	public:
 		/** @param task properties and initial conditions etc */
-		void initialize(const Task &task) {
+		AbstractGrid(const Task &task) {
+			// TODO - should rank be here?
 			rank = MPI::COMM_WORLD.Get_rank();
 			numberOfWorkers = MPI::COMM_WORLD.Get_size();
 			if (task.forceSequence) {
 				rank = 0;
 				numberOfWorkers = 1;
 			}
-			initializeImpl(task);
-		};
+		}
+		virtual ~AbstractGrid() { }
+
 		void beforeStatement(const Statement& statement) {
 			beforeStatementImpl(statement);
 			applyInitialConditions(statement);
-		};
-		virtual ~AbstractGrid() { };
+		}
 
 		/** @warning this is not always just MPI-rank (see forceSequence) */
 		int getRank() const {
 			assert_ge(rank, 0);
 			assert_lt(rank, numberOfWorkers);
 			return rank;
-		};
+		}
 		/** @warning this is not always just MPI-size (see forceSequence) */
 		int getNumberOfWorkers() const {
 			assert_gt(numberOfWorkers, 0);
 			return numberOfWorkers;
-		};
+		}
 
 		/** @return maximal in modulus eigenvalue among all nodes all GcmMatrices of the mesh */
 		real getMaximalLambda() const {
 			assert_gt(maximalLambda, 0.0);
 			return maximalLambda;
-		};
+		}
 		/** @return minimal spatial step for Courant condition */
 		real getMinimalSpatialStep() const {
 			assert_gt(minimalSpatialStep, 0.0);
 			return minimalSpatialStep;
-		};
+		}
 
-		std::string getId() const { return id; };
+		std::string getId() const { return id; }
 
 		void beforeStep() {
 			recalculateMinimalSpatialStep();
 			recalculateMaximalLambda();
-		};
-		void afterStep() { };
+		}
+		void afterStep() { }
 
 	protected:
 		std::string id = "mesh"; // name of the mesh
@@ -67,7 +68,6 @@ namespace gcm {
 		real maximalLambda = 0.0; // maximal in modulus eigenvalue among all nodes all GcmMatrices of the mesh
 		real minimalSpatialStep = 0.0; // minimal spatial step over all mesh
 
-		virtual void initializeImpl(const Task &task) = 0;
 		virtual void beforeStatementImpl(const Statement& statement) = 0;
 		virtual void applyInitialConditions(const Statement& statement) = 0;
 		virtual void afterStatement() = 0;

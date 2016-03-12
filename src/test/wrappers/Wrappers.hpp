@@ -17,16 +17,18 @@ namespace gcm {
 		typedef typename TMesh::PdeVector PdeVector;
 		typedef typename TMesh::Iterator Iterator;
 
+		MeshWrapper(const Task& task) : TMesh(task) { }
+
 		PdeVector getPde(const int x, const int y, const int z) const {
 			auto it = Iterator({x, y, z});
 			return this->pde(it);
-		};
+		}
 		GCM_MATRICES* getMatrix(const int x, const int y, const int z) const {
 			return this->matrix(Iterator({x, y, z}));
-		};
+		}
 		GCM_MATRICES*& getMatrix(const int x, const int y, const int z) {
 			return this->_matrix(Iterator({x, y, z}));
-		};
+		}
 
 		void changeRheology(const real rho2rho0, const real lambda2lambda0, const real mu2mu0) {
 			IsotropicMaterial oldMaterial = this->getMatrix(0, 0, 0)->getMaterial();
@@ -52,11 +54,11 @@ namespace gcm {
 	class DefaultSolverWrapper : public DefaultSolver<TGrid> {
 	public:
 		void stageForTest(const int s, const real &timeStep) { return this->stage(s, timeStep); }
-		real getTauForTest() const { return this->calculateTau(); };
+		real getTauForTest() const { return this->calculateTau(); }
 
 		MeshWrapper<TGrid>* getMesh() const {
 			return static_cast<MeshWrapper<TGrid>*>(this->mesh);
-		};
+		}
 	};
 
 	template<class TGrid>
@@ -65,11 +67,11 @@ namespace gcm {
 		DefaultSolverWrapper<TGrid>* getSolverForTest() const {
 			return static_cast<DefaultSolverWrapper<TGrid>*>(this->solver);
 		}
-		void runStatementForTest() { this->runStatement(); };
+		void runStatementForTest() { this->runStatement(); }
 		
 		void beforeStatementForTest(const Statement& statement) {
 			this->beforeStatement(statement);
-		};
+		}
 	};
 }
 

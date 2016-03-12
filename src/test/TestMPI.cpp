@@ -79,7 +79,8 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 {
 	Task task;
 	Statement statement;
-	task.accuracyOrder = 2;
+	task.dimensionality = 2;
+	task.borderSize = 2;
 	statement.CourantNumber = 1.8;
 	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 
@@ -117,8 +118,8 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 
 	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / MPI::COMM_WORLD.Get_size());
 	int startX = MPI::COMM_WORLD.Get_rank() * numberOfNodesAlongXPerOneCore;
-	for (int x = 0; x < mpiMesh->getSizes()(0); x++) {
-		for (int y = 0; y < mpiMesh->getSizes()(1); y++) {
+	for (int x = 0; x < mpiMesh->sizes(0); x++) {
+		for (int y = 0; y < mpiMesh->sizes(1); y++) {
 			ASSERT_EQ(mpiMesh->getPde(x, y, 0), sequenceMesh->getPde(x + startX, y, 0))
 					<< "x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
 		}

@@ -11,9 +11,7 @@ namespace gcm {
 	 * Responsible for mpi connection
 	 */
 	template<typename TModel, typename TGrid>
-	struct DataBus {
-		USE_AND_INIT_LOGGER("gcm.DataBus");
-	};
+	struct DataBus;
 
 	template<typename TModel>
 	struct DataBus<TModel, CubicGrid> {
@@ -24,9 +22,7 @@ namespace gcm {
 			LOG_DEBUG("Start data exchange with neighbor cores");
 			if (mesh->numberOfWorkers == 1) return;
 		
-			int bufferSize = mesh->accuracyOrder
-			                 * (mesh->getSizes()(1) + 2 * mesh->accuracyOrder)
-			                 * (mesh->getSizes()(2) + 2 * mesh->accuracyOrder);
+			int bufferSize = mesh->borderSize * mesh->indexMaker(0);
 			size_t size = mesh->pdeVectors.size();
 		
 			if (mesh->rank == 0) {
@@ -47,9 +43,9 @@ namespace gcm {
 							 &(mesh->pdeVectors[0]), (int) sizeof(PdeVector) * bufferSize, MPI_BYTE, mesh->rank - 1, 1,
 							 MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			}
-		};
+		}
 		
-		USE_AND_INIT_LOGGER("gcm.DataBus");
+		USE_AND_INIT_LOGGER("gcm.DataBus")
 	};
 
 	template<typename TModel>
@@ -57,9 +53,9 @@ namespace gcm {
 		typedef DefaultMesh<TModel, Cgal2DGrid>      Mesh;
 		typedef typename Mesh::PdeVector             PdeVector;
 
-		static void exchangeNodesWithNeighbors(Mesh*) { };
+		static void exchangeNodesWithNeighbors(Mesh*) { }
 
-		USE_AND_INIT_LOGGER("gcm.DataBus");
+		USE_AND_INIT_LOGGER("gcm.DataBus")
 	};
 
 }

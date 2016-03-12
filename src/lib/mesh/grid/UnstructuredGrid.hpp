@@ -18,23 +18,24 @@ namespace gcm {
 
 		struct Iterator {
 			size_t iter = 0;
-			Iterator() : iter(0) { };
-			Iterator(size_t value) : iter(value) { };
-			const Iterator& operator*() { return *this; };
+			Iterator() : iter(0) { }
+			Iterator(size_t value) : iter(value) { }
+			const Iterator& operator*() { return *this; }
 			bool operator!=(const Iterator& other) const {
 				return iter != other.iter;
-			};
+			}
 			Iterator& operator++() {
 				iter++;
 				return (*this);
-			};
+			}
 		};
 
-		virtual ~UnstructuredGrid() { };
+		UnstructuredGrid(const Task& task) : AbstractGrid(task) { }
+		virtual ~UnstructuredGrid() { }
 
 	protected:
 
-		USE_AND_INIT_LOGGER("gcm.UnstructuredGrid");
+		USE_AND_INIT_LOGGER("gcm.UnstructuredGrid")
 	};
 }
 

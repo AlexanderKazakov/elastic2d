@@ -32,8 +32,9 @@ int main(int argc, char **argv) {
 Task parseTask() {
 	Task task;
 	task.forceSequence = true;
-	task.accuracyOrder = 3;
 
+	task.borderSize = 3;
+	task.dimensionality = 2;
 	task.lengthes = {1, 1, 1};
 	task.sizes = {50, 50, 1};
 	task.enableSnapshotting = true;	

@@ -34,7 +34,8 @@ int main(int argc, char** argv) {
 
 Task parseTaskCagi2d() {
 	Task task;
-	task.accuracyOrder = 2;
+	task.dimensionality = 2;
+	task.borderSize = 2;
 	task.forceSequence = true;
 	task.enableSnapshotting = true;
 
@@ -126,7 +127,8 @@ Task parseTaskCagi2d() {
 
 Task parseTaskCagi3d() {
 	Task task;
-	task.accuracyOrder = 2;
+	task.dimensionality = 3;
+	task.borderSize = 2;
 	task.forceSequence = true;
 	task.enableSnapshotting = true;
 

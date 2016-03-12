@@ -12,7 +12,8 @@ TEST(Solver, StageXForward)
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		Statement statement;
-		task.accuracyOrder = accuracyOrder;
+		task.dimensionality = 2;
+		task.borderSize = accuracyOrder;
 		statement.CourantNumber = 1.0;
 		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 10;
@@ -58,7 +59,8 @@ TEST(Solver, StageY)
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		Statement statement;
-		task.accuracyOrder = accuracyOrder;
+		task.dimensionality = 2;
+		task.borderSize = accuracyOrder;
 		statement.CourantNumber = 1.0;
 		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 10;
@@ -104,7 +106,8 @@ TEST(Solver, StageYSxx)
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		Statement statement;
-		task.accuracyOrder = accuracyOrder;
+		task.dimensionality = 2;
+		task.borderSize = accuracyOrder;
 		statement.CourantNumber = 0.7;
 		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
 		task.sizes(0) = 11;

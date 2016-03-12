@@ -29,7 +29,7 @@ void Binary2DSeismograph<TMesh>::afterStatementImpl() {
 template<class TMesh>
 void Binary2DSeismograph<TMesh>::snapshotImpl(const AbstractGrid* mesh_, const int step) {
 	const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
-	assert_eq(mesh->getSizes()(1), sizeY);
+	assert_eq(mesh->sizes(1), sizeY);
 	surface[0] = step * tau;
 	for (int y = 0; y < sizeY; y++) {
 		surface[y + 1] = (precision) mesh->pde(linal::VectorInt<3>({0, y, 0})).getPressure();

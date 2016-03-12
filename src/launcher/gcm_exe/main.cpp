@@ -79,8 +79,8 @@ Task parseTask2d() {
 	Task task;
 	task.enableSnapshotting = true;
 
-	task.accuracyOrder = 2;
-
+	task.borderSize = 2;
+	task.dimensionality = 2;
 	task.lengthes = {4, 2, 1};
 	task.sizes = {100, 50, 1};
 
@@ -112,8 +112,8 @@ Task parseTaskDemo() {
 	Task task;
 	task.enableSnapshotting = true;
 
-	task.accuracyOrder = 2;
-
+	task.borderSize = 2;
+	task.dimensionality = 3;
 	task.lengthes = {4, 2, 1};
 	task.sizes = {100, 50, 25};
 

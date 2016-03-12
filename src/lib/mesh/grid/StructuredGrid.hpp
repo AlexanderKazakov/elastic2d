@@ -15,11 +15,13 @@ namespace gcm {
 		typedef vtkStructuredGrid             VtkGridType;
 		typedef vtkXMLStructuredGridWriter    VtkWriterType;
 
-		virtual ~StructuredGrid() { };
-	protected:
-		virtual void recalculateMinimalSpatialStep() override { };
+		StructuredGrid(const Task& task) : AbstractGrid(task) { }
+		virtual ~StructuredGrid() { }
 
-		USE_AND_INIT_LOGGER("gcm.StructuredGrid");
+	protected:
+		virtual void recalculateMinimalSpatialStep() override { }
+
+		USE_AND_INIT_LOGGER("gcm.StructuredGrid")
 	};
 }
 

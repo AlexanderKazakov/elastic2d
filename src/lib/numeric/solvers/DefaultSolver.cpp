@@ -7,8 +7,7 @@ template<class TMesh>
 void DefaultSolver<TMesh>::initializeImpl(const Task &task) {
 	LOG_INFO("Start initialization");
 
-	mesh = new TMesh();
-	mesh->initialize(task);
+	mesh = new TMesh(task);
 
 	borderConditions = new Border();
 	borderConditions->initialize(task);

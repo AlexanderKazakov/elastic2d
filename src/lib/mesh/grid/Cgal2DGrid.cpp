@@ -3,7 +3,8 @@
 using namespace gcm;
 
 
-void Cgal2DGrid::initializeImpl(const Task& task) {
+Cgal2DGrid::Cgal2DGrid(const Task& task) :
+		UnstructuredGrid(task) {
 	LOG_INFO("Start initialization");
 	minimalSpatialStep = task.spatialStep;
 	triangulate();
@@ -18,7 +19,7 @@ void Cgal2DGrid::initializeImpl(const Task& task) {
 	}
 
 	recalculateMinimalSpatialStep();
-};
+}
 
 void Cgal2DGrid::triangulate() {
 	VertexHandle va = triangulation.insert(Point(-2, -1));
@@ -55,5 +56,5 @@ void Cgal2DGrid::triangulate() {
 	mesher.refine_mesh();
 	std::cout << "Number of vertices: " << triangulation.number_of_vertices() << std::endl;
 	std::cout << "Number of faces: " << triangulation.number_of_faces() << std::endl;
-};
+}
 
