@@ -26,7 +26,6 @@ namespace gcm {
 
 		void beforeStatement(const Statement& statement) {
 			beforeStatementImpl(statement);
-			applyInitialConditions(statement);
 		}
 
 		/** @warning this is not always just MPI-rank (see forceSequence) */
@@ -69,7 +68,6 @@ namespace gcm {
 		real minimalSpatialStep = 0.0; // minimal spatial step over all mesh
 
 		virtual void beforeStatementImpl(const Statement& statement) = 0;
-		virtual void applyInitialConditions(const Statement& statement) = 0;
 		virtual void afterStatement() = 0;
 
 		virtual void recalculateMinimalSpatialStep() = 0;

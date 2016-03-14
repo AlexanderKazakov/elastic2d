@@ -18,9 +18,9 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 	try {
 		Engine engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
-		engine.addSnapshotter(new Detector<DefaultMesh<Elastic2DModel, CubicGrid>>());
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
+		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
+		engine.addSnapshotter(new Detector<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 		engine.initialize(parseTaskCagi2d());
 		engine.run();
 	} catch (Exception e) {

@@ -5,15 +5,15 @@
 
 using namespace gcm;
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::initialize(const Task& task) {
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::initialize(const Task& task) {
 	sizes = task.sizes;
 	startR = task.startR;
 	lengths = task.lengthes;
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::beforeStatement(const Statement &statement) {
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::beforeStatement(const Statement &statement) {
 	for (const auto& bc : statement.borderConditions) {
 		for (const auto& q : bc.values) {
 			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
@@ -32,8 +32,8 @@ void BorderConditions<TModel, CubicGrid>::beforeStatement(const Statement &state
 	}
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::applyBorderBeforeStage
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderBeforeStage
 (Mesh* mesh_, const real currentTime_, const real timeStep_, const int stage) {
 	// handling borders
 	mesh = mesh_; currentTime = currentTime_; timeStep = timeStep_; direction = stage;
@@ -56,8 +56,8 @@ void BorderConditions<TModel, CubicGrid>::applyBorderBeforeStage
 	handleSide();
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::handleSide() const {
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::handleSide() const {
 	auto borderIter = mesh->slice(direction, 0);
 	if (onTheRight)
 		borderIter = mesh->slice(direction, mesh->sizes(direction) - 1);
@@ -71,8 +71,8 @@ void BorderConditions<TModel, CubicGrid>::handleSide() const {
 	}
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::handleBorderPoint
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::handleBorderPoint
 (const Iterator& borderIter, const Map& values) const {
 	
 	int innerSign = onTheRight ? -1 : 1;
@@ -91,8 +91,8 @@ void BorderConditions<TModel, CubicGrid>::handleBorderPoint
 	}
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::applyBorderAfterStage
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderAfterStage
 (Mesh* mesh_, const real currentTime_, const real timeStep_, const int stage) {
 	// handling inner fractures
 	mesh = mesh_; currentTime = currentTime_; timeStep = timeStep_; direction = stage;
@@ -111,8 +111,8 @@ void BorderConditions<TModel, CubicGrid>::applyBorderAfterStage
 	}
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::allocateHelpMesh() {
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::allocateHelpMesh() {
 	Task helpTask;
 	helpTask.dimensionality = 1;
 	helpTask.borderSize = mesh->borderSize;
@@ -123,15 +123,15 @@ void BorderConditions<TModel, CubicGrid>::allocateHelpMesh() {
 	helpMesh->allocate();
 }
 
-template<typename TModel>
-void BorderConditions<TModel, CubicGrid>::handleFracturePoint
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, CubicGrid, TMaterial>::handleFracturePoint
 (const Iterator& iter, const Map& values, const int fracNormal) {
 	// copy values to helpMesh
 	for (int i = 0; i < 2 * mesh->borderSize; i++) {
 		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
 		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
 		helpMesh->_pde(helpMeshIter) = mesh->pde(realMeshIter); // todo - what if matrix depends on ode, etc?
-		helpMesh->_matrix(helpMeshIter) = mesh->matrix(realMeshIter);
+		helpMesh->matrix(helpMeshIter) = mesh->matrix(realMeshIter);
 	}
 	// apply border conditions before stage on the helpMesh
 	onTheRight = false;
@@ -150,10 +150,11 @@ void BorderConditions<TModel, CubicGrid>::handleFracturePoint
 }
 
 
-template class BorderConditions<Elastic1DModel, CubicGrid>;
-template class BorderConditions<Elastic2DModel, CubicGrid>;
-template class BorderConditions<Elastic3DModel, CubicGrid>;
-template class BorderConditions<OrthotropicElastic3DModel, CubicGrid>;
-template class BorderConditions<ContinualDamageElastic2DModel, CubicGrid>;
-template class BorderConditions<IdealPlastic2DModel, CubicGrid>;
-template class BorderConditions<SuperDuperModel, CubicGrid>;
+template class BorderConditions<Elastic1DModel, CubicGrid, IsotropicMaterial>;
+template class BorderConditions<Elastic2DModel, CubicGrid, IsotropicMaterial>;
+template class BorderConditions<Elastic3DModel, CubicGrid, IsotropicMaterial>;
+template class BorderConditions<SuperDuperModel, CubicGrid, IsotropicMaterial>;
+template class BorderConditions<Elastic3DModel, CubicGrid, OrthotropicMaterial>;
+template class BorderConditions<SuperDuperModel, CubicGrid, OrthotropicMaterial>;
+
+

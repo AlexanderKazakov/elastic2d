@@ -4,41 +4,42 @@
 
 using namespace gcm;
 
-template<class TModel>
-void InitialCondition<TModel>::initialize(const Statement &stmt) {
+template<typename TModel, typename TMaterial>
+void InitialCondition<TModel, TMaterial>::initialize(const Statement &statement) {
 
-	for (auto& vectorInitCondition : stmt.initialCondition.vectors) {
-		assert_eq(PdeVector::M, vectorInitCondition.list.size());
-		pdeConditions.push_back(PdeCondition(vectorInitCondition.area, 
-			                 PdeVector(vectorInitCondition.list)));
+	for (auto& v : statement.initialCondition.vectors) {
+		assert_eq(PdeVector::M, v.list.size());
+		pdeConditions.push_back(PdeCondition(v.area,
+							 PdeVector(v.list)));
 	}
 
-	for (auto& wave : stmt.initialCondition.waves) {
+	for (auto& wave : statement.initialCondition.waves) {
 		assert_lt(wave.direction, TModel::DIMENSIONALITY);
-		typename TModel::Material material;
-		material.initialize(stmt);
-		GCM_MATRICES gcmMatrices(material);
-		auto A = gcmMatrices.A(wave.direction);
-		int columnNumber = GCM_MATRICES::WAVE_COLUMNS.at(wave.waveType);
-		PdeVector tmp;
-		tmp = A.U1.getColumn(columnNumber);
+
+		TMaterial material;
+		material.initialize(statement);
+		auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>();
+		TModel::constructGcmMatrices(gcmMatricesPtr, PdeVector::zeros(), material);
+
+		auto A = gcmMatricesPtr->m[wave.direction];
+		int columnNumber = TModel::MATERIALS_WAVES_MAP.at(TMaterial::ID).at(wave.waveType);
+		PdeVector tmp = A.U1.getColumn(columnNumber);
 		real currentValue = PdeVector::QUANTITIES.at(wave.quantity).Get(tmp);
 		assert_ne(currentValue, 0.0);
 		tmp *= wave.quantityValue / currentValue;
 		pdeConditions.push_back(PdeCondition(wave.area, tmp));
 	}
 
-	for (auto& quantityInitCondition : stmt.initialCondition.quantities) {
+	for (auto& q: statement.initialCondition.quantities) {
 		PdeVector tmp;
 		linal::clear(tmp);
-		PdeVector::QUANTITIES.at(quantityInitCondition.physicalQuantity).Set
-				(quantityInitCondition.value, tmp);
-		pdeConditions.push_back(PdeCondition(quantityInitCondition.area, tmp));
+		PdeVector::QUANTITIES.at(q.physicalQuantity).Set(q.value, tmp);
+		pdeConditions.push_back(PdeCondition(q.area, tmp));
 	}
 }
 
-template<class TModel>
-void InitialCondition<TModel>::apply(PdeVector &v, const linal::Vector3& coords) const {
+template<typename TModel, typename TMaterial>
+void InitialCondition<TModel, TMaterial>::apply(PdeVector &v, const linal::Vector3& coords) const {
 	linal::clear(v);
 	for (auto& condition : pdeConditions) {
 		if (condition.area->contains(coords)) {
@@ -48,10 +49,11 @@ void InitialCondition<TModel>::apply(PdeVector &v, const linal::Vector3& coords)
 }
 
 
-template class InitialCondition<Elastic1DModel>;
-template class InitialCondition<Elastic2DModel>;
-template class InitialCondition<Elastic3DModel>;
-template class InitialCondition<OrthotropicElastic3DModel>;
-template class InitialCondition<ContinualDamageElastic2DModel>;
-template class InitialCondition<IdealPlastic2DModel>;
-template class InitialCondition<SuperDuperModel>;
+template class InitialCondition<Elastic1DModel, IsotropicMaterial>;
+template class InitialCondition<Elastic2DModel, IsotropicMaterial>;
+template class InitialCondition<Elastic3DModel, IsotropicMaterial>;
+template class InitialCondition<Elastic3DModel, OrthotropicMaterial>;
+template class InitialCondition<SuperDuperModel, OrthotropicMaterial>;
+template class InitialCondition<SuperDuperModel, IsotropicMaterial>;
+
+

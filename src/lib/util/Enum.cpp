@@ -36,4 +36,8 @@ const std::map<Waves::T, std::string> Waves::NAME = {
 };
 
 
+const std::map<Materials::T, std::string> Materials::NAME = {
+		{Materials::T::ISOTROPIC,    "isotropic"},
+		{Materials::T::ORTHOTROPIC,  "orthotropic"}
+};
 

@@ -21,9 +21,10 @@ namespace gcm {
 
 		/** Set all the container's values to zero */
 		template<class TContainer>
-		void clear(TContainer &container) {
+		TContainer& clear(TContainer &container) {
 			memset(container.values, 0, TContainer::SIZE * sizeof(real));
-		};
+			return container;
+		}
 
 		/**
 		 * Computes negative of matrix B

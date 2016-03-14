@@ -18,14 +18,14 @@ namespace gcm {
 		};
 
 		static const std::map<PhysicalQuantities::T, GetSetter<Variables>> QUANTITIES;
-		static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; };
-		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; };
+		static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; }
+		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; }
 
 		void beforeStatement(const Statement &statement) {
 			// todo
 			parameter = statement.orthotropicMaterial.continualDamageParameter;
 			assert_gt(parameter, 0.0);
-		};
+		}
 
 		template<typename PDEVariables>
 		void nextStep(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
@@ -45,6 +45,6 @@ namespace gcm {
 		real parameter = 0; // parameter in evolution equation
 
 	};
-};
+}
 
 #endif // LIBGCM_CONTINUALDAMAGEODE_HPP

@@ -10,13 +10,13 @@ namespace gcm {
 	/**
 	 * Responsible for mpi connection
 	 */
-	template<typename TModel, typename TGrid>
+	template<typename TModel, typename TGrid, typename TMaterial>
 	struct DataBus;
 
-	template<typename TModel>
-	struct DataBus<TModel, CubicGrid> {
-		typedef DefaultMesh<TModel, CubicGrid>       Mesh;
-		typedef typename Mesh::PdeVector             PdeVector;
+	template<typename TModel, typename TMaterial>
+	struct DataBus<TModel, CubicGrid, TMaterial> {
+		typedef DefaultMesh<TModel, CubicGrid, TMaterial>       Mesh;
+		typedef typename Mesh::PdeVector                        PdeVector;
 
 		static void exchangeNodesWithNeighbors(Mesh* mesh) {
 			LOG_DEBUG("Start data exchange with neighbor cores");
@@ -48,10 +48,10 @@ namespace gcm {
 		USE_AND_INIT_LOGGER("gcm.DataBus")
 	};
 
-	template<typename TModel>
-	struct DataBus<TModel, Cgal2DGrid> {
-		typedef DefaultMesh<TModel, Cgal2DGrid>      Mesh;
-		typedef typename Mesh::PdeVector             PdeVector;
+	template<typename TModel, typename TMaterial>
+	struct DataBus<TModel, Cgal2DGrid, TMaterial> {
+		typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial>      Mesh;
+		typedef typename Mesh::PdeVector                        PdeVector;
 
 		static void exchangeNodesWithNeighbors(Mesh*) { }
 

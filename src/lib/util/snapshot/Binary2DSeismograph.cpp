@@ -47,4 +47,4 @@ void Binary2DSeismograph<TMesh>::writeHeadOfTable() {
 }
 
 
-template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>;
+template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>;

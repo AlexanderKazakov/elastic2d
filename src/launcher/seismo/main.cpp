@@ -14,8 +14,8 @@ int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.seismo");
 	Engine engine;
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.addSnapshotter(new Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
+	engine.addSnapshotter(new Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 
 	try {
 		engine.initialize(parseTask());

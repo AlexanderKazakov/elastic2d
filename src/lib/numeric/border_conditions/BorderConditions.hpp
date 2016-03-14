@@ -11,16 +11,14 @@ namespace gcm {
 	/**
 	 * Work with border conditions on different mesh types
 	 */
-	template<typename TModel, typename TGrid>
-	struct BorderConditions { };
+	template<typename TModel, typename TGrid, typename TMaterial> struct BorderConditions;
 
-	template<typename TModel>
-	struct BorderConditions<TModel, CubicGrid> {
-		typedef DefaultMesh<TModel, CubicGrid>       Mesh;
-		typedef typename Mesh::Matrix                Matrix;
-		typedef typename Mesh::PdeVector             PdeVector;
-		typedef typename Mesh::Iterator              Iterator;
-		typedef typename TModel::PdeVariables        PdeVariables;
+	template<typename TModel, typename TMaterial>
+	struct BorderConditions<TModel, CubicGrid, TMaterial> {
+		typedef DefaultMesh<TModel, CubicGrid, TMaterial>       Mesh;
+		typedef typename Mesh::PdeVector                        PdeVector;
+		typedef typename Mesh::Iterator                         Iterator;
+		typedef typename TModel::PdeVariables                   PdeVariables;
 
 		typedef std::function<real(real)>                       TimeDependency;
 		typedef std::map<PhysicalQuantities::T, TimeDependency> Map;
@@ -73,12 +71,11 @@ namespace gcm {
 		                         const int fracNormal);
 	};
 
-	template<typename TModel>
-	struct BorderConditions<TModel, Cgal2DGrid> {
-		typedef DefaultMesh<TModel, Cgal2DGrid>      Mesh;
-		typedef typename Mesh::Matrix                Matrix;
-		typedef typename Mesh::PdeVector             PdeVector;
-		typedef typename Mesh::Iterator              Iterator;
+	template<typename TModel, typename TMaterial>
+	struct BorderConditions<TModel, Cgal2DGrid, TMaterial> {
+		typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial>      Mesh;
+		typedef typename Mesh::PdeVector                        PdeVector;
+		typedef typename Mesh::Iterator                         Iterator;
 
 		void initialize(const Task&) { }
 		void beforeStatement(const Statement&) { }

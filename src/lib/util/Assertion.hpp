@@ -101,5 +101,16 @@ namespace std
 )
 #define __assert_le_no_debug(v1, v2) __assert_le_debug(v1, v2, {})
 #define assert_le(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_le_debug, __assert_le_no_debug)(v1, __VA_ARGS__)
+// assert_near
+#define __assert_near_debug(v1, v2, equality_tolerance, debug_code) DO_ONCE( \
+	if (fabs(v1 - v2) > equality_tolerance) \
+	{ \
+		DO_ONCE(debug_code); \
+		THROW_ASSERTION_FAILED(std::string("Values " #v1 " and " #v2 " expected to be near, but " #v1 " evaluates to ") + std::to_string(v1) + std::string(" and " #v2 " evaluates to ") + std::to_string(v2) + std::string(".")); \
+	} \
+)
+#define __assert_near_no_debug(v1, v2, equality_tolerance) __assert_near_debug(v1, v2, equality_tolerance, {})
+#define assert_near(v1, ...) GET_MACRO_4(v1, __VA_ARGS__, __assert_near_debug, __assert_near_no_debug)(v1, __VA_ARGS__)
+
 
 #endif /* ASSERTION_HPP */

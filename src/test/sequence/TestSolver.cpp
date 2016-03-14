@@ -34,16 +34,16 @@ TEST(Solver, StageXForward)
 		
 		task.statements.push_back(statement);
 
-		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
+		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> solver;
 		solver.initialize(task);
 		solver.beforeStatement(statement);
-		auto pWave = solver.getMesh()->getPde(2, 0, 0);
-		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
+		auto pWave = solver.getMesh()->pde({2, 0, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->getPde(x, y, 0),
+					ASSERT_EQ(solver.getMesh()->pde({x, y, 0}),
 					           (x == 2 + i || x == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -81,16 +81,16 @@ TEST(Solver, StageY)
 
 		task.statements.push_back(statement);
 		
-		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
+		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> solver;
 		solver.initialize(task);
 		solver.beforeStatement(statement);
-		auto pWave = solver.getMesh()->getPde(0, 2, 0);
-		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
+		auto pWave = solver.getMesh()->pde({0, 2, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 2; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->getPde(x, y, 0),
+					ASSERT_EQ(solver.getMesh()->pde({x, y, 0}),
 					          (y == 2 + i || y == 3 + i) ? pWave : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
@@ -125,16 +125,16 @@ TEST(Solver, StageYSxx)
 		
 		task.statements.push_back(statement);
 
-		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> solver;
+		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> solver;
 		solver.initialize(task);
 		solver.beforeStatement(statement);
-		auto sxxOnly = solver.getMesh()->getPde(5, 5, 0);
-		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector zero({0, 0, 0, 0, 0});
+		auto sxxOnly = solver.getMesh()->pde({5, 5, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector zero({0, 0, 0, 0, 0});
 
 		for (int i = 0; i < 7; i++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				for (int x = 0; x < task.sizes(0); x++) {
-					ASSERT_EQ(solver.getMesh()->getPde(x, y, 0), (x == 5 && y == 5 ) ? sxxOnly : zero)
+					ASSERT_EQ(solver.getMesh()->pde({x, y, 0}), (x == 5 && y == 5 ) ? sxxOnly : zero)
 					<< "accuracyOrder = " << accuracyOrder << " i = " << i << " y = " << y << " x = " << x;
 				}
 			}

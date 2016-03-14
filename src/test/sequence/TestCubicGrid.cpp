@@ -23,7 +23,7 @@ TEST(CubicGrid, initialize) {
 	
 	task.statements.push_back(statement);
 
-	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid(task);
+	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> grid(task);
 	grid.beforeStatement(statement);
 	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.h(1), 1.0, EQUALITY_TOLERANCE);
@@ -32,8 +32,8 @@ TEST(CubicGrid, initialize) {
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
 			for (int z = 0; z < task.sizes(2); z++) {
-				for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector::M; i++) {
-					ASSERT_EQ(grid.getPde(x, y, z)(i), 0.0);
+				for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector::M; i++) {
+					ASSERT_EQ(grid.pde({x, y, z})(i), 0.0);
 				}
 			}
 		}
@@ -49,7 +49,7 @@ TEST(CubicGrid, PartIterator) {
 	task.sizes = {X, Y, Z};
 	task.lengthes = {20, 8, 1};
 	
-	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid>> grid(task);
+	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>> grid(task);
 	
 	int counter = 0;
 	for (auto it = grid.slice((int)DIRECTION::Z, 3); it != it.end(); ++it) {
@@ -104,38 +104,38 @@ TEST(CubicGrid, interpolateValuesAround)
 	
 	for (int stage = 0; stage <= 1; stage++) {
 
-		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> grid(task);
+		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> grid(task);
 		grid.beforeStatement(statement);
 		for (int x = 0; x < task.sizes(0); x++) {
 			for (int y = 0; y < task.sizes(1); y++) {
 				// check that values is set properly
-				ASSERT_EQ(grid.getPde(x, y, 0).V[0], 0.0);
-				ASSERT_EQ(grid.getPde(x, y, 0).V[1], 0.0);
-				ASSERT_EQ(grid.getPde(x, y, 0).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(grid.getPde(x, y, 0).sigma(0, 1), 0.0);
-				ASSERT_EQ(grid.getPde(x, y, 0).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(grid.pde({x, y, 0}).V[0], 0.0);
+				ASSERT_EQ(grid.pde({x, y, 0}).V[1], 0.0);
+				ASSERT_EQ(grid.pde({x, y, 0}).sigma(0, 0), (x == 1 && y == 1) ? 1.0 : 0.0);
+				ASSERT_EQ(grid.pde({x, y, 0}).sigma(0, 1), 0.0);
+				ASSERT_EQ(grid.pde({x, y, 0}).sigma(1, 1), (x == 1 && y == 1) ? 1.0 : 0.0);
 			}
 		}
 
-		DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
-		DefaultMesh<Elastic2DModel, CubicGrid>::Iterator it({1, 1, 0}, grid.sizes);
-		DefaultMesh<Elastic2DModel, CubicGrid>::Matrix matrix =
-				GcmHandler<Elastic2DModel, CubicGrid>::interpolateValuesAround(grid, stage, it, dx);
+		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector dx({-1, 1, -0.5, 0.5, 0});
+		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::Iterator it({1, 1, 0}, grid.sizes);
+		auto m = GcmHandler<Elastic2DModel, CubicGrid, IsotropicMaterial>::
+				interpolateValuesAround(grid, stage, it, dx);
 
-		for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid>::PdeVector::M; i++) {
-			ASSERT_EQ(matrix(i, 0), 0.0) << "i = " << i; // Courant = 1
-			ASSERT_EQ(matrix(i, 1), 0.0) << "i = " << i; // Courant = 1
-			ASSERT_EQ(matrix(0, i), 0.0) << "i = " << i; // Vx
-			ASSERT_EQ(matrix(1, i), 0.0) << "i = " << i; // Vy
-			ASSERT_EQ(matrix(3, i), 0.0) << "i = " << i; // Sxy
+		for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector::M; i++) {
+			ASSERT_EQ(m(i, 0), 0.0) << "i = " << i; // Courant = 1
+			ASSERT_EQ(m(i, 1), 0.0) << "i = " << i; // Courant = 1
+			ASSERT_EQ(m(0, i), 0.0) << "i = " << i; // Vx
+			ASSERT_EQ(m(1, i), 0.0) << "i = " << i; // Vy
+			ASSERT_EQ(m(3, i), 0.0) << "i = " << i; // Sxy
 		}
 
-		ASSERT_EQ(matrix(2, 2), 0.5); // Courant = 0.5
-		ASSERT_EQ(matrix(2, 3), 0.5); // Courant = 0.5
-		ASSERT_EQ(matrix(4, 2), 0.5); // Courant = 0.5
-		ASSERT_EQ(matrix(4, 3), 0.5); // Courant = 0.5
+		ASSERT_EQ(m(2, 2), 0.5); // Courant = 0.5
+		ASSERT_EQ(m(2, 3), 0.5); // Courant = 0.5
+		ASSERT_EQ(m(4, 2), 0.5); // Courant = 0.5
+		ASSERT_EQ(m(4, 3), 0.5); // Courant = 0.5
 
-		ASSERT_EQ(matrix(2, 4), 1.0); // Courant = 0
-		ASSERT_EQ(matrix(4, 4), 1.0); // Courant = 0
+		ASSERT_EQ(m(2, 4), 1.0); // Courant = 0
+		ASSERT_EQ(m(4, 4), 1.0); // Courant = 0
 	}
 }

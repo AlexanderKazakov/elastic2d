@@ -33,13 +33,13 @@ TEST(Engine, runStatementForTest)
 	
 	task.statements.push_back(statement);
 
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> engine;
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine;
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 	engine.initialize(task);
 	engine.beforeStatementForTest(statement);
-	auto sWave = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, 3, 0);
+	auto sWave = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, 3, 0});
 	engine.runStatementForTest();
-	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, 22, 0));
+	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, 22, 0}));
 }
 
 
@@ -72,8 +72,8 @@ TEST(Engine, TwoLayersDifferentRho)
 		
 		task.statements.push_back(statement);
 
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine;
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 		engine.initialize(task);
 		engine.beforeStatementForTest(statement);
 
@@ -83,13 +83,13 @@ TEST(Engine, TwoLayersDifferentRho)
 		engine.getSolverForTest()->getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		auto init = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto init = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
 
 		engine.runStatementForTest();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		auto reflect = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, leftNodeIndex, 0);
-		auto transfer = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, rightNodeIndex, 0);
+		auto reflect = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
+		auto transfer = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, rightNodeIndex, 0});
 
 		real rho0 = statement.isotropicMaterial.rho;
 		real lambda0 = statement.isotropicMaterial.lambda;
@@ -152,8 +152,8 @@ TEST(Engine, TwoLayersDifferentE)
 
 		task.statements.push_back(statement);
 		
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine;
+		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 		engine.initialize(task);
 		engine.beforeStatementForTest(statement);
 
@@ -163,13 +163,13 @@ TEST(Engine, TwoLayersDifferentE)
 		engine.getSolverForTest()->getMesh()->changeRheology(rho2rho0, lambda2lambda0, mu2mu0);
 
 		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		auto init = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, leftNodeIndex, 0);
+		auto init = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
 
 		engine.runStatementForTest();
 
 		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		auto reflect = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, leftNodeIndex, 0);
-		auto transfer = engine.getSolverForTest()->getMesh()->getPde(task.sizes(0) / 2, rightNodeIndex, 0);
+		auto reflect = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
+		auto transfer = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, rightNodeIndex, 0});
 
 		real rho0 = statement.isotropicMaterial.rho;
 		real lambda0 = statement.isotropicMaterial.lambda;

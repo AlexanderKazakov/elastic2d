@@ -19,12 +19,12 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	Engine engine;
-//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>());
-//	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid>>());
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
-	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid>>());
-//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
-//	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid>>());
+//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>>());
+//	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>>());
+	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
+	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
+//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>>());
+//	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>>());
 
 	try {
 		engine.initialize(parseTask2d());

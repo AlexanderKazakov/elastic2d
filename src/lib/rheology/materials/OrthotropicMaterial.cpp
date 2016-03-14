@@ -4,6 +4,7 @@
 
 using namespace gcm;
 
+const Materials::T OrthotropicMaterial::ID = Materials::T::ORTHOTROPIC;
 
 OrthotropicMaterial::OrthotropicMaterial(const IsotropicMaterial &isotropic) {
 	rho = isotropic.rho;
@@ -27,121 +28,14 @@ void OrthotropicMaterial::initialize(const Statement& statement) {
 	*this = statement.orthotropicMaterial;
 }
 
-void OrthotropicMaterial::constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial> &m) const {
-	m.m[0].A.initialize({0, 0, 0, -1.0 / rho, 0, 0, 0, 0, 0,
-	                     0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,
-	                     -c11, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     0, -c66, 0, 0, 0, 0, 0, 0, 0,
-	                     0, 0, -c55, 0, 0, 0, 0, 0, 0,
-	                     -c12, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     -c13, 0, 0, 0, 0, 0, 0, 0, 0});
-
-	m.m[0].L.initialize(
-			{-sqrt(c66 / rho), sqrt(c66 / rho), -sqrt(c55 / rho), sqrt(c55 / rho), -sqrt(c11 / rho), sqrt(c11 / rho), 0,
-			 0, 0});
-
-	m.m[0].U.initialize({0, 1.0, 0, 0, 1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-	                     0, 1.0, 0, 0, -1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-	                     0, 0, 1.0, 0, 0, 1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-	                     0, 0, 1.0, 0, 0, -1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-	                     1.0, 0, 0, 1.0 / (sqrt(c11) * sqrt(rho)), 0, 0, 0, 0, 0,
-	                     1.0, 0, 0, -1.0 / (sqrt(c11) * sqrt(rho)), 0, 0, 0, 0, 0,
-	                     0, 0, 0, -c12 / c11, 0, 0, 1.0, 0, 0.0,
-	                     0, 0, 0, 0, 0, 0, 0, 1.0, 0,
-	                     0, 0, 0, -(1.0 * c13) / c11, 0, 0, 0, 0, 1.0});
-
-	m.m[0].U1.initialize({0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-	                      0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, 0.5 * sqrt(c11) * sqrt(rho), -0.5 * sqrt(c11) * sqrt(rho), 0, 0, 0,
-	                      0.5 * sqrt(c66) * sqrt(rho), -0.5 * sqrt(c66) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0.5 * sqrt(c55) * sqrt(rho), -0.5 * sqrt(c55) * sqrt(rho), 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c12 * sqrt(rho)) / sqrt(c11), -(0.5 * c12 * sqrt(rho)) / sqrt(c11), 1, 0, 0,
-	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
-	                      0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c11), -(0.5 * c13 * sqrt(rho)) / sqrt(c11), 0, 0, 1});
-
-
-	m.m[1].A.initialize({0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, -1.0 / rho, 0, 0,
-	                     0, 0, 0, 0, 0, 0, 0, -1.0 / rho, 0,
-	                     0, -c12, 0, 0, 0, 0, 0, 0, 0,
-	                     -c66, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     0, -c22, 0, 0, 0, 0, 0, 0, 0,
-	                     0, 0, -c44, 0, 0, 0, 0, 0, 0,
-	                     0, -c23, 0, 0, 0, 0, 0, 0, 0});
-
-	m.m[1].L.initialize(
-			{-sqrt(c66 / rho), sqrt(c66 / rho), -sqrt(c44 / rho), sqrt(c44 / rho), -sqrt(c22 / rho), sqrt(c22 / rho), 0,
-			 0, 0});
-
-	m.m[1].U.initialize({1.0, 0, 0, 0, 1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-	                     1.0, 0, 0, 0, -1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-	                     0, 0, 1.0, 0, 0, 0, 0, 1.0 / (sqrt(c44) * sqrt(rho)), 0,
-	                     0, 0, 1.0, 0, 0, 0, 0, -1.0 / (sqrt(c44) * sqrt(rho)), 0,
-	                     0, 1.0, 0, 0, 0, 0, 1.0 / (sqrt(c22) * sqrt(rho)), 0, 0,
-	                     0, 1.0, 0, 0, 0, 0, -1.0 / (sqrt(c22) * sqrt(rho)), 0, 0,
-	                     0, 0, 0, 1.0, 0, 0, -c12 / c22, 0, 0.0,
-	                     0, 0, 0, 0, 0, 1.0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, -(1.0 * c23) / c22, 0, 1.0});
-
-	m.m[1].U1.initialize({0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-	                      0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c12) / sqrt(c22 / rho), -(0.5 * c12) / sqrt(c22 / rho), 1, 0, 0,
-	                      0.5 * sqrt(c66) * sqrt(rho), -0.5 * sqrt(c66) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
-	                      0, 0, 0, 0, 0.5 * sqrt(c22) * sqrt(rho), -0.5 * sqrt(c22) * sqrt(rho), 0, 0, 0,
-	                      0, 0, 0.5 * sqrt(c44) * sqrt(rho), -0.5 * sqrt(c44) * sqrt(rho), 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c22), -(0.5 * c23 * sqrt(rho)) / sqrt(c22), 0, 0, 1});
-
-
-	m.m[2].A.initialize({0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, 0, -1.0 / rho, 0,
-	                     0, 0, 0, 0, 0, 0, 0, 0, -1.0 / rho,
-	                     0, 0, -c13, 0, 0, 0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     -c55, 0, 0, 0, 0, 0, 0, 0, 0,
-	                     0, 0, -c23, 0, 0, 0, 0, 0, 0,
-	                     0, -c44, 0, 0, 0, 0, 0, 0, 0,
-	                     0, 0, -c33, 0, 0, 0, 0, 0, 0});
-
-	m.m[2].L.initialize(
-			{-sqrt(c55 / rho), sqrt(c55 / rho), -sqrt(c44 / rho), sqrt(c44 / rho), -sqrt(c33 / rho), sqrt(c33 / rho), 0,
-			 0, 0});
-
-	m.m[2].U.initialize({1.0, 0, 0, 0, 0, 1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-	                     1.0, 0, 0, 0, 0, -1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-	                     0, 1.0, 0, 0, 0, 0, 0, 1.0 / (sqrt(c44) * sqrt(rho)), 0,
-	                     0, 1.0, 0, 0, 0, 0, 0, -1.0 / (sqrt(c44) * sqrt(rho)), 0,
-	                     0, 0, 1.0, 0, 0, 0, 0, 0, 1.0 / (sqrt(c33) * sqrt(rho)),
-	                     0, 0, 1.0, 0, 0, 0, 0, 0, -1.0 / (sqrt(c33) * sqrt(rho)),
-	                     0, 0, 0, 1.0, 0, 0, 0, 0, -(1.0 * c13) / c33,
-	                     0, 0, 0, 0, 1.0, 0, 0, 0, 0,
-	                     0, 0, 0, 0, 0, 0, 1.0, 0, -(1.0 * c23) / c33});
-
-	m.m[2].U1.initialize({0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c33), -(0.5 * c13 * sqrt(rho)) / sqrt(c33), 1, 0, 0,
-	                      0, 0, 0, 0, 0, 0, 0, 1, 0,
-	                      0.5 * sqrt(c55) * sqrt(rho), -0.5 * sqrt(c55) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c33), -(0.5 * c23 * sqrt(rho)) / sqrt(c33), 0, 0, 1,
-	                      0, 0, 0.5 * sqrt(c44) * sqrt(rho), -0.5 * sqrt(c44) * sqrt(rho), 0, 0, 0, 0, 0,
-	                      0, 0, 0, 0, 0.5 * sqrt(c33) * sqrt(rho), -0.5 * sqrt(c33) * sqrt(rho), 0, 0, 0});
-}
-
-
 OrthotropicMaterial OrthotropicMaterial::generateRandomMaterial() {
-	static const real RHO_MAX = 100.0;
-	static const real RHO_MIN = 0.01;
-	static const real C_MAX = 1e+3;
-	static const real C_MIN = 1.0;
+	const real RHO_MAX = 100.0;
+	const real RHO_MIN = 0.01;
+	const real C_MAX = 1e+3;
+	const real C_MIN = 1.0;
 
 	real rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
-	// Generate symmetric positive-definite matrix
+	// Generate symmetric positive-definite matrix TODO - to linal
 	linal::Matrix<3,3> help;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {

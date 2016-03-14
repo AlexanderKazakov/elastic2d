@@ -5,7 +5,7 @@
 
 namespace gcm {
 
-	template<class TModel>
+	template<typename TModel, typename TMaterial>
 	class InitialCondition {
 	public:
 		typedef typename TModel::PdeVector       PdeVector;
@@ -20,7 +20,7 @@ namespace gcm {
 	private:
 		struct PdeCondition {
 			PdeCondition(std::shared_ptr<Area> area_, PdeVector pdeVector_) : 
-					area(area_), pdeVector(pdeVector_) { };
+					area(area_), pdeVector(pdeVector_) { }
 			std::shared_ptr<Area> area;
 			PdeVector pdeVector;
 		};

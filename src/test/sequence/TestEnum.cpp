@@ -22,7 +22,7 @@ TYPED_TEST_P(TestConcepts, SizeOfMap) {
 REGISTER_TYPED_TEST_CASE_P(TestConcepts, SizeOfMap);
 
 // When new concept arrears, place it here
-typedef Types<PhysicalQuantities, Waves> AllImplementations;
+typedef Types<PhysicalQuantities, Waves, Materials> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllConcepts, TestConcepts, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P

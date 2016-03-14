@@ -7,7 +7,7 @@
 
 using namespace gcm;
 
-template<class TNode>
+template<class Value>
 class TestMpiConnection : public testing::Test {
 protected:
 	void testMpiConnection() {
@@ -16,43 +16,43 @@ protected:
 
 		const int testNumberOfNodes = 1000;
 
-		TNode leftNodes[testNumberOfNodes];
-		TNode rightNodes[testNumberOfNodes];
+		Value lefValues[testNumberOfNodes];
+		Value righValues[testNumberOfNodes];
 
 		for (int k = 0; k < testNumberOfNodes; k++) {
-			for (int i = 0; i < TNode::M; i++) {
-				leftNodes[k](i) = rightNodes[k](i) = rank;
+			for (int i = 0; i < Value::M; i++) {
+				lefValues[k](i) = righValues[k](i) = rank;
 			}
 		}
 
 		if (numberOfWorkers > 1) {
 			if (rank == 0) {
-				MPI_Sendrecv_replace(rightNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
+				MPI_Sendrecv_replace(righValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
 				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			} else if (rank == numberOfWorkers - 1) {
-				MPI_Sendrecv_replace(leftNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
+				MPI_Sendrecv_replace(lefValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
 				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			} else {
-				MPI_Sendrecv_replace(rightNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
+				MPI_Sendrecv_replace(righValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
 				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-				MPI_Sendrecv_replace(leftNodes, (int) sizeof(TNode) * testNumberOfNodes, MPI_BYTE,
+				MPI_Sendrecv_replace(lefValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
 				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 			}
 
 			for (int k = 0; k < testNumberOfNodes; k++) {
-				for (int i = 0; i < TNode::M; i++) {
+				for (int i = 0; i < Value::M; i++) {
 					if (rank == 0) {
-						ASSERT_EQ(rightNodes[k](i), rank + 1);
+						ASSERT_EQ(righValues[k](i), rank + 1);
 					} else if (rank == numberOfWorkers - 1) {
-						ASSERT_EQ(leftNodes[k](i), rank - 1);
+						ASSERT_EQ(lefValues[k](i), rank - 1);
 					} else {
-						ASSERT_EQ(leftNodes[k](i), rank - 1);
-						ASSERT_EQ(rightNodes[k](i), rank + 1);
+						ASSERT_EQ(lefValues[k](i), rank - 1);
+						ASSERT_EQ(righValues[k](i), rank + 1);
 					}
 				}
 			}
 		}
-	};
+	}
 };
 
 /** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc for explaination */
@@ -67,8 +67,8 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiConnection, MPI_NODE_TYPE);
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
 		Elastic1DModel::PdeVector,
-		ContinualDamageElastic2DModel::PdeVector,
-		OrthotropicElastic3DModel::PdeVector
+		Elastic2DModel::PdeVector,
+		Elastic3DModel::PdeVector
 > AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementations);
@@ -99,16 +99,16 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	
 	// calculate in sequence
 	task.forceSequence = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> sequenceEngine;
-	sequenceEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> sequenceEngine;
+	sequenceEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 	sequenceEngine.initialize(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.forceSequence = false;
 	task.enableSnapshotting = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid>> mpiEngine;
-	mpiEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>());
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> mpiEngine;
+	mpiEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
 	mpiEngine.initialize(task);
 	mpiEngine.run();
 
@@ -120,7 +120,7 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	int startX = MPI::COMM_WORLD.Get_rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {
-			ASSERT_EQ(mpiMesh->getPde(x, y, 0), sequenceMesh->getPde(x + startX, y, 0))
+			ASSERT_EQ(mpiMesh->pde({x, y, 0}), sequenceMesh->pde({x + startX, y, 0}))
 					<< "x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
 		}
 	}

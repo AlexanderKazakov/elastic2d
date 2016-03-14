@@ -74,7 +74,7 @@ void DefaultSolver<TMesh>::afterStatementImpl() {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
-	DataBus<Model, Grid>::exchangeNodesWithNeighbors(mesh);
+	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	borderConditions->applyBorderBeforeStage(mesh, getCurrentTime(), timeStep, s);
 	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
 	borderConditions->applyBorderAfterStage(mesh, getCurrentTime(), timeStep, s);
@@ -102,7 +102,7 @@ void DefaultSolver<TMesh>::applyCorrectors() {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::moveMesh(const real timeStep) {
-	MeshMover<Model, Grid>::moveMesh(*mesh, timeStep);
+	MESH_MOVER::moveMesh(*mesh, timeStep);
 }
 
 template<class TMesh>
@@ -110,13 +110,12 @@ real DefaultSolver<TMesh>::calculateTau() const {
 	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
 }
 
-template class DefaultSolver<DefaultMesh<Elastic1DModel, CubicGrid>>;
-template class DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid>>;
-template class DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>;
-template class DefaultSolver<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>;
-template class DefaultSolver<DefaultMesh<ContinualDamageElastic2DModel, CubicGrid>>;
-template class DefaultSolver<DefaultMesh<IdealPlastic2DModel, CubicGrid>>;
-template class DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid>>;
+template class DefaultSolver<DefaultMesh<Elastic1DModel, CubicGrid, IsotropicMaterial>>;
+template class DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>;
+template class DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>>;
 
-template class DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid>>;
+template class DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid, IsotropicMaterial>>;
+template class DefaultSolver<DefaultMesh<SuperDuperModel, CubicGrid, OrthotropicMaterial>>;
+
+template class DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>>;
 

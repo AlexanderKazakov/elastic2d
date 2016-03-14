@@ -18,16 +18,19 @@ namespace gcm {
 	template<class TMesh>
 	class DefaultSolver : public Solver {
 	public:
-		typedef typename TMesh::Model            Model;
-		typedef typename TMesh::Grid             Grid;
-		typedef typename Model::Corrector        Corrector;
-		typedef typename Model::InternalOde      InternalOde;
-		typedef BorderConditions<Model, Grid>    Border;
-		typedef GridCharacteristicMethod<TMesh>  GCM;
-		
+		typedef typename TMesh::Model                          Model;
+		typedef typename TMesh::Grid                           Grid;
+		typedef typename TMesh::Material                       Material;
+		typedef typename Model::Corrector                      Corrector;
+		typedef typename Model::InternalOde                    InternalOde;
+		typedef BorderConditions<Model, Grid, Material>        Border;
+		typedef DataBus<Model, Grid, Material>                 DATA_BUS;
+		typedef MeshMover<Model, Grid, Material>               MESH_MOVER;
+		typedef GridCharacteristicMethod<TMesh>                GCM;
+
+		virtual ~DefaultSolver();
 		virtual real calculateTau() const override;
 		virtual AbstractGrid* getGrid() const { return mesh; }
-		~DefaultSolver();
 
 	protected:
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition

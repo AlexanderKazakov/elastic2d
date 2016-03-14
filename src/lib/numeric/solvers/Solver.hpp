@@ -15,26 +15,26 @@ namespace gcm {
 	public:
 		void initialize(const Task& task) {
 			initializeImpl(task);
-		};
+		}
 		void beforeStatement(const Statement& statement) {
 			currentTime = 0;
 			beforeStatementImpl(statement);
-		};
+		}
 		void nextTimeStep() {
 			real tau = calculateTau();
 			nextTimeStepImpl();
 			currentTime += tau;
-		};
+		}
 		void afterStatement() {
 			afterStatementImpl();
-		};
-		virtual ~Solver() { };
+		}
+		virtual ~Solver() { }
 		
 		/** @return grid with actual values */
 		virtual AbstractGrid* getGrid() const = 0;
 		/** Calculate time step from Courant–Friedrichs–Lewy condition */
 		virtual real calculateTau() const = 0;
-		real getCurrentTime() const { return currentTime; };
+		real getCurrentTime() const { return currentTime; }
 		
 	protected:
 		virtual void initializeImpl(const Task& task) = 0;

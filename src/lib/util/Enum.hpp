@@ -61,9 +61,25 @@ namespace gcm {
 		/** string names of concepts */
 		static const std::map<T, std::string> NAME;
 	};
+
+	/**
+	 * For all types of materials used in the program.
+	 */
+	struct Materials {
+		/** Type */
+		enum class T {
+			ISOTROPIC,
+			ORTHOTROPIC,
+
+			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		};
+
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
+	};
 	
 	enum class DIRECTION {X = 0, Y = 1, Z = 2};
-};
+}
 
 
 #endif // LIBGCM_CONCEPTS_HPP

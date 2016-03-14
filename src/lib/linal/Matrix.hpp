@@ -39,6 +39,11 @@ namespace gcm {
 			static const int M = TM; // number of strings
 			static const int N = TN; // number of columns
 
+			static Matrix zeros() {
+				Matrix m;
+				return clear(m);
+			}
+
 			Matrix() { };
 			Matrix& operator=(const Matrix &m2) = default;
 			/** @param values Values to initialize matrix with, string by string */

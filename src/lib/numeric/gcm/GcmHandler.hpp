@@ -12,12 +12,13 @@ namespace gcm {
 	/**
 	 * Bridge between grids of different types and grid-characteristic method
 	 */
-	template<typename TModel, typename TGrid>
+	template<typename TModel, typename TGrid, typename TMaterial>
 	struct GcmHandler {
-		typedef DefaultMesh<TModel, TGrid>           Mesh;
-		typedef typename Mesh::Matrix                Matrix;
-		typedef typename Mesh::PdeVector             PdeVector;
-		typedef typename Mesh::Iterator              Iterator;
+		typedef TGrid                                     Grid;
+		typedef DefaultMesh<TModel, Grid, TMaterial>      Mesh;
+		typedef typename Mesh::Matrix                     Matrix;
+		typedef typename Mesh::PdeVector                  PdeVector;
+		typedef typename Mesh::Iterator                   Iterator;
 
 		/**
 		 * Interpolate nodal values in specified points.
@@ -33,12 +34,13 @@ namespace gcm {
 		                                      const PdeVector& dx);
 	};
 
-	template<typename TModel>
-	struct GcmHandler<TModel, CubicGrid> {
-		typedef DefaultMesh<TModel, CubicGrid>       Mesh;
-		typedef typename Mesh::Matrix                Matrix;
-		typedef typename Mesh::PdeVector             PdeVector;
-		typedef typename Mesh::Iterator              Iterator;
+	template<typename TModel, typename TMaterial>
+	struct GcmHandler<TModel, CubicGrid, TMaterial> {
+		typedef CubicGrid                                 Grid;
+		typedef DefaultMesh<TModel, Grid, TMaterial>      Mesh;
+		typedef typename Mesh::Matrix                     Matrix;
+		typedef typename Mesh::PdeVector                  PdeVector;
+		typedef typename Mesh::Iterator                   Iterator;
 
 		/** See the comment under */
 		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
@@ -56,16 +58,17 @@ namespace gcm {
 				ans.setColumn(k, res);
 			}
 			return ans;
-		};
+		}
 	};
 
-	template<typename TModel>
-	struct GcmHandler<TModel, Cgal2DGrid> {
-		typedef DefaultMesh<TModel, Cgal2DGrid>      Mesh;
-		typedef typename Mesh::Matrix                Matrix;
-		typedef typename Mesh::PdeVector             PdeVector;
-		typedef typename Mesh::Iterator              Iterator;
-		typedef typename Mesh::Triangle              Triangle;
+	template<typename TModel, typename TMaterial>
+	struct GcmHandler<TModel, Cgal2DGrid, TMaterial> {
+		typedef Cgal2DGrid                                Grid;
+		typedef DefaultMesh<TModel, Grid, TMaterial>      Mesh;
+		typedef typename Mesh::Matrix                     Matrix;
+		typedef typename Mesh::PdeVector                  PdeVector;
+		typedef typename Mesh::Iterator                   Iterator;
+		typedef typename Mesh::Triangle                   Triangle;
 
 		/** See the comment under */
 		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
@@ -85,7 +88,7 @@ namespace gcm {
 				ans.setColumn(k, u);
 			}
 			return ans;
-		};
+		}
 	};
 }
 

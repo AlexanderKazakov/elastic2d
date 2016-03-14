@@ -9,10 +9,11 @@
 namespace gcm {
 	struct Statement;
 	class IsotropicMaterial;
-	template<typename TVariables, class TMaterial> class GcmMatrices;
 
 	class OrthotropicMaterial {
 	public:
+		static const Materials::T ID;
+
 		real rho = 0; // density
 		union {
 			real c[9]; // elastic coefficients
@@ -37,13 +38,10 @@ namespace gcm {
 
 		void initialize(const Statement& statement);
 
-		/** Fill in gcm matrices */
-		void constructGcmMatrices(GcmMatrices<VelocitySigmaVariables<3>, OrthotropicMaterial>& m) const;
-
 		/** For testing purposes */
 		static OrthotropicMaterial generateRandomMaterial();
 	};
 
-};
+}
 
 #endif // LIBGCM_ORTHOTROPICMATERIAL_HPP
