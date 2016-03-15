@@ -1,5 +1,4 @@
 #include <lib/rheology/materials/IsotropicMaterial.hpp>
-#include <lib/util/task/Task.hpp>
 
 using namespace gcm;
 
@@ -9,10 +8,6 @@ IsotropicMaterial::IsotropicMaterial(const real rho_, const real lambda_, const 
                                      const real yieldStrength_, const real continualDamageParameter_) :
 		rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
 		continualDamageParameter(continualDamageParameter_) { }
-
-void IsotropicMaterial::initialize(const Statement& statement) {
-	*this = statement.isotropicMaterial;
-}
 
 IsotropicMaterial IsotropicMaterial::generateRandomMaterial() {
 	const real RHO_MAX = 100.0;

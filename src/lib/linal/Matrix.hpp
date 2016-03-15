@@ -44,12 +44,12 @@ namespace gcm {
 				return clear(m);
 			}
 
-			Matrix() { };
+			Matrix() { }
 			Matrix& operator=(const Matrix &m2) = default;
 			/** @param values Values to initialize matrix with, string by string */
 			Matrix(std::initializer_list<real> list) {
 				this->initialize(list);
-			};
+			}
 			/**
 			 * Copy constructor
 			 * @param m Matrix to construct from
@@ -58,37 +58,37 @@ namespace gcm {
 			Matrix(const Matrix<TM, TN, Container2> &m2) {
 				static_assert(this->SIZE == TM * TN, "Container must have enough memory to store values");
 				(*this) = m2;
-			};
+			}
 			/**
 			 * Assignment operator from matrix of equal size and any container
 			 * @return reference to modified matrix instance
 			 */
 			template<typename Container2>
-			Matrix<TM, TN, Container> &operator=(const Matrix<TM, TN, Container2> &m2) {
+			Matrix& operator=(const Matrix<TM, TN, Container2> &m2) {
 				// TODO - rvalues?
 				static_assert(this->SIZE == m2.SIZE, "Containers must have equal size");
 				memcpy(this->values, m2.values, sizeof(this->values));
 				return *this;
-			};
+			}
 			/** @param values Values to initialize matrix with, string by string */
 			void initialize(std::initializer_list<real> list);
 
 			/** Read-only access to matrix component */
 			real operator()(const int i, const int j) const {
 				return this->values[getIndex(i, j)];
-			};
+			}
 			/** Read/write access to matrix component */
 			real &operator()(const int i, const int j) {
 				return this->values[getIndex(i, j)];
-			};
+			}
 			/** Read-only access to vector component */
 			real operator()(const int i) const {
 				return this->values[i];
-			};
+			}
 			/** Read/write access to vector component */
 			real &operator()(const int i) {
 				return this->values[i];
-			};
+			}
 
 			/** @return transposed matrix */
 			Matrix<TN, TM, Container> transpose() const;
@@ -112,14 +112,14 @@ namespace gcm {
 					ans(j) = (*this)(j, i);
 				}
 				return ans;
-			};
+			}
 			/** set i-th column */
 			template<typename Container2>
 			void setColumn(const int i, const Matrix<TM, 1, Container2> &column) {
 				for (int j = 0; j < TM; j++) {
 					(*this)(j, i) = column(j);
 				}
-			};
+			}
 
 			/** @return in vector diagonal of this matrix multiplied by matrix B */
 			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> diagonalMultiply(const Matrix<TN, TM> &B) const;
@@ -131,7 +131,7 @@ namespace gcm {
 			/** @return values array index of matrix component */
 			int getIndex(const int i, const int j) const {
 				return i * TN + j;
-			};
+			}
 		};
 
 		template<int TM, int TN, typename Container>
@@ -188,8 +188,8 @@ namespace gcm {
 			}
 			return ans;
 		}
-	};
-};
+	}
+}
 
 namespace std {
 	template<int TM, int TN, typename Container>
@@ -204,7 +204,7 @@ namespace std {
 		}
 
 		return os;
-	};
-};
+	}
+}
 
 #endif // LIBGCM_LINAL_MATRIX_HPP

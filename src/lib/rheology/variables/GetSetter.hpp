@@ -1,7 +1,7 @@
 #ifndef LIBGCM_GETSETTER_HPP
 #define LIBGCM_GETSETTER_HPP
 
-#include <lib/util/Types.hpp>
+#include <lib/linal/linal.hpp>
 
 namespace gcm {
 
@@ -15,14 +15,14 @@ namespace gcm {
 	 *
 	 * The function pointers are supposed to reduce call overhead.
 	 * The map shouldn't be used at every access to every node, but just once before handling
-	 * a large portion of nodes
+	 * a large portion of nodes.
 	 */
 	template<typename Variables>
 	struct GetSetter {
 		typedef real (*Getter)(const Variables& variablesToGetFrom);
 		typedef void (*Setter)(const real& value, Variables& variablesToSetTo);
 
-		GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { };
+		GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { }
 
 		Getter Get;
 		Setter Set;
@@ -34,7 +34,7 @@ namespace gcm {
 		typedef linal::Vector3 (*Getter)(const Variables& variablesToGetFrom);
 		typedef void (*Setter)(const linal::Vector3& value, Variables& variablesToSetTo);
 
-		Vector3GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { };
+		Vector3GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { }
 
 		Getter Get;
 		Setter Set;

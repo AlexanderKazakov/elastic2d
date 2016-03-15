@@ -5,6 +5,8 @@
 #include <lib/rheology/variables/variables.hpp>
 #include <lib/rheology/ode/ode.hpp>
 #include <lib/rheology/correctors/correctors.hpp>
+#include <lib/numeric/gcm/GcmMatrices.hpp>
+
 
 namespace gcm {
 
@@ -43,7 +45,7 @@ namespace gcm {
 
 		// template<Node>
 		static void constructGcmMatrices
-		(GcmMatricesPtr m, const PdeVector& pde, const IsotropicMaterial& material);
+		(GcmMatricesPtr m, const PdeVector& pde, std::shared_ptr<const IsotropicMaterial> material);
 	};
 
 	class Elastic2DModel {
@@ -65,7 +67,7 @@ namespace gcm {
 		static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
 		static void constructGcmMatrices
-		(GcmMatricesPtr m, const PdeVector& pde, const IsotropicMaterial& material);
+		(GcmMatricesPtr m, const PdeVector& pde, std::shared_ptr<const IsotropicMaterial> material);
 	};
 
 	class Elastic3DModel {
@@ -87,9 +89,9 @@ namespace gcm {
 		static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
 		static void constructGcmMatrices
-		(GcmMatricesPtr m, const PdeVector& pde, const IsotropicMaterial& material);
+		(GcmMatricesPtr m, const PdeVector& pde, std::shared_ptr<const IsotropicMaterial> material);
 		static void constructGcmMatrices
-		(GcmMatricesPtr m, const PdeVector& pde, const OrthotropicMaterial& material);
+		(GcmMatricesPtr m, const PdeVector& pde, std::shared_ptr<const OrthotropicMaterial> material);
 	};
 
 	class SuperDuperModel {
@@ -110,9 +112,9 @@ namespace gcm {
 
 		static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
-		template<typename TMaterial>
+		template<typename TMaterialPtr>
 		static void constructGcmMatrices
-		(GcmMatricesPtr m, const PdeVector& pde, const TMaterial& material) {
+		(GcmMatricesPtr m, const PdeVector& pde, const TMaterialPtr material) {
 			Elastic3DModel::constructGcmMatrices(m, pde, material);
 		}
 

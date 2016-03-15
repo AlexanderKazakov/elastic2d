@@ -9,15 +9,14 @@ void InitialCondition<TModel, TMaterial>::initialize(const Statement &statement)
 
 	for (auto& v : statement.initialCondition.vectors) {
 		assert_eq(PdeVector::M, v.list.size());
-		pdeConditions.push_back(PdeCondition(v.area,
-							 PdeVector(v.list)));
+		pdeConditions.push_back(PdeCondition(v.area, PdeVector(v.list)));
 	}
 
 	for (auto& wave : statement.initialCondition.waves) {
 		assert_lt(wave.direction, TModel::DIMENSIONALITY);
 
-		TMaterial material;
-		material.initialize(statement);
+		auto material = std::dynamic_pointer_cast<TMaterial>
+				(statement.materialConditions.defaultMaterial);
 		auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>();
 		TModel::constructGcmMatrices(gcmMatricesPtr, PdeVector::zeros(), material);
 
@@ -41,7 +40,7 @@ void InitialCondition<TModel, TMaterial>::initialize(const Statement &statement)
 template<typename TModel, typename TMaterial>
 void InitialCondition<TModel, TMaterial>::apply(PdeVector &v, const linal::Vector3& coords) const {
 	linal::clear(v);
-	for (auto& condition : pdeConditions) {
+	for (const auto& condition : pdeConditions) {
 		if (condition.area->contains(coords)) {
 			v += condition.pdeVector;
 		}

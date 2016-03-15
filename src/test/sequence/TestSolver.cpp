@@ -15,7 +15,7 @@ TEST(Solver, StageXForward)
 		task.dimensionality = 2;
 		task.borderSize = accuracyOrder;
 		statement.CourantNumber = 1.0;
-		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+		statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 		task.sizes(0) = 10;
 		task.sizes(1) = 10;
 		task.lengthes = {2, 3, 1};
@@ -62,7 +62,7 @@ TEST(Solver, StageY)
 		task.dimensionality = 2;
 		task.borderSize = accuracyOrder;
 		statement.CourantNumber = 1.0;
-		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+		statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 		task.sizes(0) = 10;
 		task.sizes(1) = 10;
 		task.lengthes = {3, 2, 1};
@@ -109,7 +109,7 @@ TEST(Solver, StageYSxx)
 		task.dimensionality = 2;
 		task.borderSize = accuracyOrder;
 		statement.CourantNumber = 0.7;
-		statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+		statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 		task.sizes(0) = 11;
 		task.sizes(1) = 11;
 		task.lengthes = {1, 1, 1};

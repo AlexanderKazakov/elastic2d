@@ -31,8 +31,14 @@ namespace gcm {
 		int stepsPerSnap = 1;
 		real T = 0.0; // optional, required time if (numberOfSnaps == 0)
 
-		IsotropicMaterial isotropicMaterial;
-		OrthotropicMaterial orthotropicMaterial;
+		struct MaterialCondition {
+			std::shared_ptr<AbstractMaterial> defaultMaterial;
+			struct Inhomogenity {
+				std::shared_ptr<Area> area;
+				std::shared_ptr<AbstractMaterial> material;
+			};
+			std::vector<Inhomogenity> materials;
+		} materialConditions;
 
 		/**
 		 * All listed here initial conditions will be applied in sequence, 
@@ -45,7 +51,7 @@ namespace gcm {
 				std::shared_ptr<Area> area;
 				std::initializer_list<real> list;
 			};
-			std::vector<Vector> vectors = {};
+			std::vector<Vector> vectors;
 
 			// initial conditions in terms of waves
 
@@ -56,7 +62,7 @@ namespace gcm {
 				PhysicalQuantities::T quantity; // quantity to calibrate wave amplitude
 				real quantityValue; // value of calibration quantity
 			};
-			std::vector<Wave> waves = {};
+			std::vector<Wave> waves;
 
 			// initial conditions in terms of physical quantities
 
@@ -65,7 +71,7 @@ namespace gcm {
 				PhysicalQuantities::T physicalQuantity;
 				real value;
 			};
-			std::vector<Quantity> quantities = {};
+			std::vector<Quantity> quantities;
 
 		} initialCondition;
 
@@ -73,7 +79,7 @@ namespace gcm {
 			std::shared_ptr<Area> area;
 			std::map<PhysicalQuantities::T, TimeDependency> values;
 		};
-		std::vector<BorderCondition> borderConditions = {};
+		std::vector<BorderCondition> borderConditions;
 
 		struct Fracture {
 			int direction;
@@ -81,12 +87,12 @@ namespace gcm {
 			std::shared_ptr<Area> area;
 			std::map<PhysicalQuantities::T, TimeDependency> values;
 		};
-		std::vector<Fracture> fractures = {};
+		std::vector<Fracture> fractures;
 
-		std::vector<PhysicalQuantities::T> quantitiesToVtk = {};
+		std::vector<PhysicalQuantities::T> quantitiesToVtk;
 
 		struct Detector {
-			std::vector<PhysicalQuantities::T> quantities = {};
+			std::vector<PhysicalQuantities::T> quantities;
 			std::shared_ptr<Area> area;
 		} detector;
 	};

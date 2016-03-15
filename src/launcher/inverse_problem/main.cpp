@@ -49,7 +49,7 @@ Task parseTaskCagi2d() {
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
-	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.CourantNumber = 1.0;
 	statement.numberOfSnaps = 251;
 	statement.stepsPerSnap = 1;
@@ -143,7 +143,7 @@ Task parseTaskCagi3d() {
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
-	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.CourantNumber = 1.0;
 	statement.numberOfSnaps = 251/2;
 	statement.stepsPerSnap = 1;

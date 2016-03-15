@@ -20,24 +20,6 @@ namespace gcm {
 		typedef typename TMesh::Iterator Iterator;
 
 		MeshWrapper(const Task& task) : TMesh(task) { }
-
-		void changeRheology(const real rho2rho0, const real lambda2lambda0, const real mu2mu0) {
-			IsotropicMaterial oldMaterial = *(this->material({0, 0, 0}));
-			IsotropicMaterial newMaterial
-					(rho2rho0 * oldMaterial.rho, lambda2lambda0 * oldMaterial.lambda, mu2mu0 * oldMaterial.mu);
-			auto newRheologyMatrix = std::make_shared<GCM_MATRICES>();
-			Model::constructGcmMatrices(newRheologyMatrix, PdeVector::zeros(), newMaterial);
-
-			for (int x = 0; x < this->sizes(0); x++) {
-				for (int y = 0; y < this->sizes(1); y++) {
-					if (y * this->h(1) >= 0.5) {
-						this->_matrix({x, y, 0}) = newRheologyMatrix;
-					}
-				}
-			}
-
-			this->maximalLambda = fmax(this->maximalLambda, newRheologyMatrix->getMaximalEigenvalue());
-		}
 	};
 
 	template<class TGrid>

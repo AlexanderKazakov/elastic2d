@@ -1,6 +1,5 @@
 #include <lib/rheology/materials/OrthotropicMaterial.hpp>
 #include <lib/rheology/materials/IsotropicMaterial.hpp>
-#include <lib/util/task/Task.hpp>
 
 using namespace gcm;
 
@@ -20,12 +19,8 @@ OrthotropicMaterial::OrthotropicMaterial(const real rho_, std::initializer_list<
 		rho(rho_), yieldStrength(yieldStrength_), continualDamageParameter(continualDamageParameter_) {
 	int i = 0;
 	for(auto& r : list) {
-		c[i++] = r;
+		c[i++] = r; // todo c(list)?
 	}
-}
-
-void OrthotropicMaterial::initialize(const Statement& statement) {
-	*this = statement.orthotropicMaterial;
 }
 
 OrthotropicMaterial OrthotropicMaterial::generateRandomMaterial() {

@@ -82,7 +82,7 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	task.dimensionality = 2;
 	task.borderSize = 2;
 	statement.CourantNumber = 1.8;
-	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 
 	task.sizes(0) = 20;
 	task.sizes(1) = 10;

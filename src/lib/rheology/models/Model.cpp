@@ -42,10 +42,10 @@ const MaterialsWavesMap SuperDuperModel::MATERIALS_WAVES_MAP =
 
 
 void Elastic1DModel::constructGcmMatrices
-(GcmMatricesPtr m, const PdeVector&, const IsotropicMaterial& material) {
-	const real rho = material.rho;
-	const real lambda = material.lambda;
-	const real mu = material.mu;
+(GcmMatricesPtr m, const PdeVector&, std::shared_ptr<const IsotropicMaterial> material) {
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real mu = material->mu;
 	const real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 
 	m->m[0].A.initialize({0.0, -1.0 / rho,
@@ -63,10 +63,10 @@ void Elastic1DModel::constructGcmMatrices
 }
 
 void Elastic2DModel::constructGcmMatrices
-(GcmMatricesPtr m, const PdeVector&, const IsotropicMaterial& material) {
-	const real rho = material.rho;
-	const real lambda = material.lambda;
-	const real mu = material.mu;
+(GcmMatricesPtr m, const PdeVector&, std::shared_ptr<const IsotropicMaterial> material) {
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real mu = material->mu;
 
 	// TODO - actually we can use orthotropic material here
 	m->m[0].A.initialize({0, 0, -1.0 / rho, 0, 0,
@@ -116,10 +116,10 @@ void Elastic2DModel::constructGcmMatrices
 }
 
 void Elastic3DModel::constructGcmMatrices
-(GcmMatricesPtr m, const PdeVector&, const IsotropicMaterial& material) {
-	const real rho = material.rho;
-	const real lambda = material.lambda;
-	const real mu = material.mu;
+(GcmMatricesPtr m, const PdeVector&, std::shared_ptr<const IsotropicMaterial> material) {
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real mu = material->mu;
 
 	// TODO - actually we can use orthotropic material here
 	m->m[0].A.initialize({0, 0, 0, -1.0 / rho, 0, 0, 0, 0, 0,
@@ -231,8 +231,8 @@ void Elastic3DModel::constructGcmMatrices
 
 
 void Elastic3DModel::constructGcmMatrices
-(GcmMatricesPtr m, const PdeVector&, const OrthotropicMaterial& material) {
-#define COPY_FROM_MATERIAL(var) const real var = material.var
+(GcmMatricesPtr m, const PdeVector&, std::shared_ptr<const OrthotropicMaterial> material) {
+#define COPY_FROM_MATERIAL(var) const real var = material->var
 	COPY_FROM_MATERIAL(rho);
 	COPY_FROM_MATERIAL(c11);
 	COPY_FROM_MATERIAL(c12);

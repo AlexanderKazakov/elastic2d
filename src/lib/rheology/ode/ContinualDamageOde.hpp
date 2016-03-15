@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+#include <lib/rheology/variables/GetSetter.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/task/Task.hpp>
 
@@ -21,9 +22,9 @@ namespace gcm {
 		static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; }
 		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; }
 
-		void beforeStatement(const Statement &statement) {
+		void beforeStatement(const Statement &/*statement*/) {
 			// todo
-			parameter = statement.orthotropicMaterial.continualDamageParameter;
+			parameter = 1;
 			assert_gt(parameter, 0.0);
 		}
 

@@ -24,7 +24,7 @@ namespace gcm {
 			std::shared_ptr<Area> area;
 			PdeVector pdeVector;
 		};
-		std::vector<PdeCondition> pdeConditions = {};
+		std::vector<PdeCondition> pdeConditions;
 
 	};
 }

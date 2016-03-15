@@ -2,6 +2,7 @@
 #define LIBGCM_DEFAULTMESH_HPP
 
 #include <lib/util/task/InitialCondition.hpp>
+#include <lib/util/task/MaterialsCondition.hpp>
 
 namespace gcm {
 	template<typename TMesh> class DefaultSolver;
@@ -102,7 +103,7 @@ namespace gcm {
 		virtual void beforeStatementImpl(const Statement& statement) override {
 			// TODO - for movable meshes it should reconstruct the grid
 			allocate();
-			applyRheologyConditions(statement);
+			applyMaterialConditions(statement);
 			applyInitialConditions(statement);
 		}
 		void allocate() {
@@ -114,20 +115,12 @@ namespace gcm {
 				odeValues.resize(this->sizeOfAllNodes());
 			}
 		}
-		void applyRheologyConditions(const Statement& statement) {
-			Material* material_ = new Material();
-			material_->initialize(statement);
-			std::shared_ptr<Material> mp(material_);
-			for (auto& materialPtr : this->materials) {
-				materialPtr = mp;
+		void applyMaterialConditions(const Statement& statement) {
+			MaterialsCondition<Model, Material> condition(statement);
+			for (auto it : *this) {
+				condition.apply(_material(it), _matrix(it), this->coords(it));
 			}
-
-			auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>();
-			Model::constructGcmMatrices(gcmMatricesPtr, PdeVector::zeros(), *material_);
-			for (auto& gcmMatrix : this->gcmMatrices) {
-				gcmMatrix = gcmMatricesPtr;
-			}
-			this->maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
+			this->maximalLambda = condition.getMaximalEigenvalue();
 		}
 		void applyInitialConditions(const Statement& statement) {
 			InitialCondition<Model, Material> initialCondition;

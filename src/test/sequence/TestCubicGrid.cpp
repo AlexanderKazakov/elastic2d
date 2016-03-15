@@ -14,7 +14,7 @@ TEST(CubicGrid, initialize) {
 	task.borderSize = 3;
 	task.dimensionality = 2;
 	statement.CourantNumber = 0.7;
-	statement.isotropicMaterial = IsotropicMaterial(4.0, 2.0, 0.5);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	task.sizes(0) = 7;
 	task.sizes(1) = 9;
 	task.lengthes = {20, 8, 1};
@@ -87,7 +87,7 @@ TEST(CubicGrid, interpolateValuesAround)
 {
 	Task task;
 	Statement statement;
-	statement.isotropicMaterial = IsotropicMaterial(2.0, 2.0, 1.0);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(2, 2, 1);
 
 	task.dimensionality = 2;
 	task.sizes(0) = task.sizes(1) = 3;

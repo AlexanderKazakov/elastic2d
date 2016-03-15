@@ -42,11 +42,10 @@ Task parseTask() {
 	Statement statement;
 	statement.CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
 
-	real rho0 = 4; // default density
-	real lambda0 = 2; // default Lame parameter
-	real mu0 = 1; // default Lame parameter
-	real yieldStrength0 = 1;
-	statement.isotropicMaterial = IsotropicMaterial(rho0, lambda0, mu0, yieldStrength0);
+	real rho = 4; // default density
+	real lambda = 2; // default Lame parameter
+	real mu = 1; // default Lame parameter
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
 	statement.numberOfSnaps = 100;
 	statement.stepsPerSnap = 1;

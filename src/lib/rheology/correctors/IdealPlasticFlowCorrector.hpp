@@ -13,9 +13,9 @@ namespace gcm {
 	public:
 		static const bool NonTrivial = true;
 
-		void beforeStatement(const Statement &statement) {
+		void beforeStatement(const Statement &/*statement*/) {
 			// todo
-			yieldStrength = statement.orthotropicMaterial.yieldStrength;
+			yieldStrength = 1;
 			assert_gt(yieldStrength, 0.0);
 		};
 

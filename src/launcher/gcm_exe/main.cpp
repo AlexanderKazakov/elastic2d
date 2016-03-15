@@ -52,8 +52,7 @@ Task parseTaskCgal() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
-	statement.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
 	statement.CourantNumber = 1.0;
 
@@ -88,8 +87,7 @@ Task parseTask2d() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
-	statement.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
 	statement.CourantNumber = 0.9;
 
@@ -121,8 +119,9 @@ Task parseTaskDemo() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.isotropicMaterial = IsotropicMaterial(rho, lambda, mu, 1, 1);
-	statement.orthotropicMaterial = OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+//	statement.materialConditions.defaultMaterial = std::make_shared<OrthotropicMaterial>
+//			(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 
 	statement.CourantNumber = 0.9;
 

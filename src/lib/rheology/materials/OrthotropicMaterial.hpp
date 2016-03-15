@@ -1,20 +1,16 @@
 #ifndef LIBGCM_ORTHOTROPICMATERIAL_HPP
 #define LIBGCM_ORTHOTROPICMATERIAL_HPP
 
-#include <initializer_list>
-
-#include <lib/util/Types.hpp>
-#include <lib/rheology/variables/variables.hpp>
+#include <lib/rheology/materials/AbstractMaterial.hpp>
 
 namespace gcm {
-	struct Statement;
-	class IsotropicMaterial;
+	struct IsotropicMaterial;
 
-	class OrthotropicMaterial {
-	public:
+	struct OrthotropicMaterial : public AbstractMaterial {
 		static const Materials::T ID;
 
 		real rho = 0; // density
+
 		union {
 			real c[9]; // elastic coefficients
 			struct {
@@ -28,7 +24,6 @@ namespace gcm {
 		};
 
 		real yieldStrength = 0; // plasticity parameters
-
 		real continualDamageParameter = 0; // parameter in continual damage equation
 
 		OrthotropicMaterial(const OrthotropicMaterial& other) = default;
@@ -36,12 +31,9 @@ namespace gcm {
 		OrthotropicMaterial(const real rho_ = 0, std::initializer_list<real> = {0,0,0,0,0,0,0,0,0},
 		                    const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
 
-		void initialize(const Statement& statement);
-
 		/** For testing purposes */
 		static OrthotropicMaterial generateRandomMaterial();
 	};
-
 }
 
 #endif // LIBGCM_ORTHOTROPICMATERIAL_HPP
