@@ -20,9 +20,9 @@ namespace gcm {
 
 		void beforeStatement(const Statement&) { }
 
-		template<typename PDEVariables>
-		void nextStep(Variables&, PDEVariables&, const real) { }
+		template<typename TNodePtr>
+		void nextStep(TNodePtr, const real) { }
 	};
-};
+}
 
 #endif // LIBGCM_DUMMYODE_HPP

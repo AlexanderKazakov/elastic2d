@@ -36,7 +36,8 @@ int main(int argc, char** argv) {
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 		std::cout << "Time of calculation, microseconds = " << duration << std::endl;
 	} catch (Exception e) {
-		LOG_FATAL(e.what());
+		std::cout << e.what() << std::endl;
+//		LOG_FATAL(e.what());
 	}
 
 	MPI_Finalize();

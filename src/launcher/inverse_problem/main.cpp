@@ -24,7 +24,8 @@ int main(int argc, char** argv) {
 		engine.initialize(parseTaskCagi2d());
 		engine.run();
 	} catch (Exception e) {
-		LOG_FATAL(e.what());
+		std::cout << e.what() << std::endl;
+//		LOG_FATAL(e.what());
 	}
 
 	MPI_Finalize();
@@ -43,7 +44,7 @@ Task parseTaskCagi2d() {
 	real sensorSize = 0.003;
 	real sourceSize = 0.003;
 	task.lengthes = {X, Y, 1};
-	task.sizes = {151, 101, 1};
+	task.sizes = {151 / 10, 101 /10, 1};
 
 	Statement statement;
 	real rho = 1e+3;
@@ -51,7 +52,7 @@ Task parseTaskCagi2d() {
 	real mu = 2e+10;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.CourantNumber = 1.0;
-	statement.numberOfSnaps = 251;
+	statement.numberOfSnaps = 251 / 10;
 	statement.stepsPerSnap = 1;
 
 	Statement::BorderCondition borderCondition;	

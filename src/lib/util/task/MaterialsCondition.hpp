@@ -21,15 +21,14 @@ namespace gcm {
 			}
 		}
 
-		/** Apply material conditions to node assume that its coordinates is coords */
-		void apply(std::shared_ptr<TMaterial>& material, std::shared_ptr<GCM_MATRICES>& matrices,
-				   const linal::Vector3& coords) const {
-			material = defaultCondition.material;
-			matrices = defaultCondition.matrices;
+		template<typename TNode>
+		void apply(TNode node) const {
+			node->_material() = defaultCondition.material;
+			node->_matrices() = defaultCondition.matrices;
 			for (const auto& condition : conditions) {
-				if (condition.area->contains(coords)) {
-					material = condition.material;
-					matrices = condition.matrices;
+				if (condition.area->contains(node->coords())) {
+					node->_material() = condition.material;
+					node->_matrices() = condition.matrices;
 				}
 			}
 		}
@@ -48,7 +47,7 @@ namespace gcm {
 					  std::shared_ptr<Area> area_ = std::shared_ptr<Area>()) :
 					area(area_), material(material_) {
 				matrices = std::make_shared<GCM_MATRICES>();
-				TModel::constructGcmMatrices(matrices, PdeVector::zeros(), material);
+				TModel::constructGcmMatrices(matrices, material);
 			}
 			std::shared_ptr<Area> area;
 			std::shared_ptr<TMaterial> material;

@@ -43,6 +43,37 @@ namespace gcm {
 		// Dimensionality of rheology model, the grid can have different
 		static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
 
+		struct Node {
+			Node(const Iterator& iterator, DefaultMesh*const mesh_) :
+				it(iterator), mesh(mesh_) { }
+
+			const PdeVector& pde() const { return mesh->pde(it); }
+			PdeVector& _pde() { return mesh->_pde(it); }
+
+			const OdeVariables& ode() const { return mesh->ode(it); }
+			OdeVariables& _ode() { return mesh->_ode(it); }
+
+			ConstGcmMatricesPtr matrices() const { return mesh->matrices(it); }
+			GcmMatricesPtr& _matrices() { return mesh->_matrices(it); }
+
+			ConstMaterialPtr material() const { return mesh->material(it); }
+			MaterialPtr& _material() { return mesh->_material(it); }
+
+			linal::Vector3 coords() const { return mesh->coords(it); }
+
+			/** @warning coords aren't copied */
+			template<typename TNodePtr>
+			void copyFrom(TNodePtr origin) {
+				_pde() = origin->pde();
+				_ode() = origin->ode();
+				_matrices() = origin->_matrices();
+				_material() = origin->_material();
+			}
+
+		private:
+			const Iterator it;
+			DefaultMesh*const mesh;
+		};
 
 		DefaultMesh(const Task& task) : Grid(task) { }
 		virtual ~DefaultMesh() { }
@@ -60,7 +91,7 @@ namespace gcm {
 			return this->pdeVectorsNew[this->getIndex(it)];
 		}
 		/** Read-only access to GCM matrices */
-		ConstGcmMatricesPtr matrix(const Iterator& it) const {
+		ConstGcmMatricesPtr matrices(const Iterator& it) const {
 			return this->gcmMatrices[this->getIndex(it)];
 		}
 		/** Read-only access to material */
@@ -69,6 +100,11 @@ namespace gcm {
 		}
 
 	protected:
+		/** Read / write "node" wrapper */
+		std::shared_ptr<Node> node(const Iterator& it) {
+			return std::make_shared<Node>(it, this);
+		}
+
 		/** Read / write access to actual PDE vectors */
 		PdeVector& _pde(const Iterator& it) {
 			return this->pdeVectors[this->getIndex(it)];
@@ -82,7 +118,7 @@ namespace gcm {
 			return this->pdeVectorsNew[this->getIndex(it)];
 		}
 		/** Read / write access to actual GCM matrices */
-		GcmMatricesPtr& _matrix(const Iterator& it) {
+		GcmMatricesPtr& _matrices(const Iterator& it) {
 			return this->gcmMatrices[this->getIndex(it)];
 		}
 		/** Read / write access to actual GCM matrices */
@@ -106,32 +142,10 @@ namespace gcm {
 			applyMaterialConditions(statement);
 			applyInitialConditions(statement);
 		}
-		void allocate() {
-			pdeVectors.resize(this->sizeOfAllNodes(), PdeVector::zeros());
-			pdeVectorsNew.resize(this->sizeOfAllNodes(), PdeVector::zeros());
-			gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
-			materials.resize(this->sizeOfAllNodes(), MaterialPtr());
-			if (Model::InternalOde::NonTrivial) {
-				odeValues.resize(this->sizeOfAllNodes());
-			}
-		}
-		void applyMaterialConditions(const Statement& statement) {
-			MaterialsCondition<Model, Material> condition(statement);
-			for (auto it : *this) {
-				condition.apply(_material(it), _matrix(it), this->coords(it));
-			}
-			this->maximalLambda = condition.getMaximalEigenvalue();
-		}
-		void applyInitialConditions(const Statement& statement) {
-			InitialCondition<Model, Material> initialCondition;
-			initialCondition.initialize(statement);
-			for (auto it : *this) {
-				initialCondition.apply(_pde(it), this->coords(it));
-			}
-		}
-
+		void allocate();
+		void applyMaterialConditions(const Statement& statement);
+		void applyInitialConditions(const Statement& statement);
 		virtual void afterStatement() override { }
-
 		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ }
 		
 
@@ -142,6 +156,40 @@ namespace gcm {
 		friend class MeshMover<Model, Grid, Material>;
 		friend class BorderConditions<Model, Grid, Material>;
 	};
+
+
+	template<typename TModel, typename TGrid, typename TMaterial>
+	void DefaultMesh<TModel, TGrid, TMaterial>::
+	allocate() {
+		pdeVectors.resize(this->sizeOfAllNodes(), PdeVector::zeros());
+		pdeVectorsNew.resize(this->sizeOfAllNodes(), PdeVector::zeros());
+		gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
+		materials.resize(this->sizeOfAllNodes(), MaterialPtr());
+		if (Model::InternalOde::NonTrivial) {
+			odeValues.resize(this->sizeOfAllNodes());
+		}
+	}
+
+	template<typename TModel, typename TGrid, typename TMaterial>
+	void DefaultMesh<TModel, TGrid, TMaterial>::
+	applyMaterialConditions(const Statement& statement) {
+		MaterialsCondition<Model, Material> condition(statement);
+		for (auto it : *this) {
+			condition.apply(node(it));
+		}
+		this->maximalLambda = condition.getMaximalEigenvalue();
+	}
+
+	template<typename TModel, typename TGrid, typename TMaterial>
+	void DefaultMesh<TModel, TGrid, TMaterial>::
+	applyInitialConditions(const Statement& statement) {
+		InitialCondition<Model, Material> initialCondition;
+		initialCondition.initialize(statement);
+		for (auto it : *this) {
+			initialCondition.apply(_pde(it), this->coords(it));
+		}
+	}
+
 }
 
 #endif // LIBGCM_DEFAULTMESH_HPP

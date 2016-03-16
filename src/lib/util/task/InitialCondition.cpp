@@ -18,7 +18,7 @@ void InitialCondition<TModel, TMaterial>::initialize(const Statement &statement)
 		auto material = std::dynamic_pointer_cast<TMaterial>
 				(statement.materialConditions.defaultMaterial);
 		auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>();
-		TModel::constructGcmMatrices(gcmMatricesPtr, PdeVector::zeros(), material);
+		TModel::constructGcmMatrices(gcmMatricesPtr, material);
 
 		auto A = gcmMatricesPtr->m[wave.direction];
 		int columnNumber = TModel::MATERIALS_WAVES_MAP.at(TMaterial::ID).at(wave.waveType);

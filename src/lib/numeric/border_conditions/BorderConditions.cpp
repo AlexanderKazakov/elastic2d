@@ -1,7 +1,6 @@
 #include <lib/numeric/border_conditions/BorderConditions.hpp>
 #include <lib/rheology/models/Model.hpp>
-
-#include "lib/numeric/gcm/GridCharacteristicMethod.hpp"
+#include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 
 using namespace gcm;
 
@@ -117,6 +116,7 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::allocateHelpMesh() {
 	helpTask.dimensionality = 1;
 	helpTask.borderSize = mesh->borderSize;
 	helpTask.forceSequence = true;
+	helpTask.lengthes = {1, 1, 1};
 	helpTask.sizes = {1, 1, 1};
 	helpTask.sizes(direction) = mesh->borderSize;
 	helpMesh = new Mesh(helpTask);
@@ -130,8 +130,7 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::handleFracturePoint
 	for (int i = 0; i < 2 * mesh->borderSize; i++) {
 		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
 		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
-		helpMesh->_pde(helpMeshIter) = mesh->pde(realMeshIter); // todo - what if matrix depends on ode, etc?
-		helpMesh->matrix(helpMeshIter) = mesh->matrix(realMeshIter);
+		helpMesh->node(helpMeshIter)->copyFrom(mesh->node(realMeshIter));
 	}
 	// apply border conditions before stage on the helpMesh
 	onTheRight = false;

@@ -86,7 +86,7 @@ void DefaultSolver<TMesh>::internalOdeNextStep(const real timeStep) {
 	if (InternalOde::NonTrivial) {
 		assert_eq(mesh->pdeVectors.size(), mesh->odeValues.size());
 		for (auto it : *mesh) {
-			internalOde->nextStep(mesh->_ode(it), mesh->pde(it), timeStep);
+			internalOde->nextStep(mesh->node(it), timeStep);
 		}
 	}
 }
@@ -95,7 +95,7 @@ template<class TMesh>
 void DefaultSolver<TMesh>::applyCorrectors() {
 	if (Corrector::NonTrivial) {
 		for (auto it : *mesh) {
-			corrector->apply(mesh->_pde(it));
+			corrector->apply(mesh->node(it));
 		}
 	}
 }

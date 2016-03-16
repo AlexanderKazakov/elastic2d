@@ -22,28 +22,21 @@ namespace gcm {
 		static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; }
 		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; }
 
-		void beforeStatement(const Statement &/*statement*/) {
-			// todo
-			parameter = 1;
-			assert_gt(parameter, 0.0);
-		}
+		void beforeStatement(const Statement &) { }
 
-		template<typename PDEVariables>
-		void nextStep(Variables& odeVariables, PDEVariables& pdeVariables, const real timeStep) {
-			odeVariables.hi += timeStep * dHiDt(odeVariables, pdeVariables, timeStep);
+		template<typename TNodePtr>
+		void nextStep(TNodePtr node, const real timeStep) {
+			node->_ode().hi += timeStep * dHiDt(node, timeStep);
 		}
 
 		/**
 		 * This is stupid model just for demonstration
 		 * @return time-derivative of damage measure
 		 */
-		template<typename PDEVariables>
-		real dHiDt(Variables&, PDEVariables& pdeVariables, const real) {
-			return fabs(pdeVariables.getPressure()) * parameter;
+		template<typename TNodePtr>
+		real dHiDt(const TNodePtr node, const real) {
+			return fabs(node->pde().getPressure()) * node->material()->continualDamageParameter;
 		}
-
-	protected:
-		real parameter = 0; // parameter in evolution equation
 
 	};
 }

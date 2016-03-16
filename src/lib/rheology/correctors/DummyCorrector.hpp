@@ -5,17 +5,20 @@
 
 namespace gcm {
 	/**
-	 * Dummy (stub) corrector for the case when there aren't correctors
+	 * Dummy (stub) node state corrector.
 	 */
 	class DummyCorrector {
 	public:
 		static const bool NonTrivial = false;
 
-		void beforeStatement(const Statement&) { };
+		void beforeStatement(const Statement&) { }
 
-		template<typename TNode>
-		void apply(TNode&) const { };
+		/**
+		 * This function should't be called at all, this is just stub
+		 */
+		template<typename TNodePtr>
+		void apply(TNodePtr) const { }
 	};
-};
+}
 
 #endif // LIBGCM_DUMMYCORRECTOR_HPP

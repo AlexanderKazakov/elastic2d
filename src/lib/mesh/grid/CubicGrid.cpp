@@ -20,7 +20,7 @@ CubicGrid::CubicGrid(const Task &task) :
 
 	assert_ge(borderSize, 1);
 	for (int j = 0; j < 3; j++) {
-		if (sizes(j) != 1) assert_ge(sizes(j), 2 * borderSize);
+		if (sizes(j) != 1) assert_ge(sizes(j), borderSize);
 		assert_gt(h(j), 0.0);
 		assert_eq(h(j), h(j)); // this is supposed to catch NaN
 		assert_eq(startR(j), startR(j));

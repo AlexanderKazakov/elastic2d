@@ -22,13 +22,13 @@ namespace gcm {
 
 			for (auto it : *mesh) {
 				// points to interpolate values on previous time layer
-				auto dx = -timeStep * linal::diag(mesh->matrix(it)->m[s].L);
+				auto dx = -timeStep * linal::diag(mesh->matrices(it)->m[s].L);
 				
 				mesh->_pdeNew(it) =
 						/* new values = U1 * Riemann solvers */
-						mesh->matrix(it)->m[s].U1 *
+						mesh->matrices(it)->m[s].U1 *
 						/* Riemann solvers = U * old values */
-						mesh->matrix(it)->m[s].U.diagonalMultiply
+						mesh->matrices(it)->m[s].U.diagonalMultiply
 								/* old values are in columns of the matrix */
 								(GCM_HANDLER::interpolateValuesAround(*mesh, s, it, dx));
 			}

@@ -69,7 +69,7 @@ protected:
 		for (int i = 0; i < NUMBER_OF_TEST_ITERATIONS; i++) {
 			auto material = std::make_shared<Material>(Material::generateRandomMaterial());
 			auto matrix = std::shared_ptr<GCM_MATRICES>(new GCM_MATRICES());
-			Model::constructGcmMatrices(matrix, PdeVector::zeros(), material);
+			Model::constructGcmMatrices(matrix, material);
 
 			testTraces(*matrix);
 			testLeftEigenVectors(*matrix);
