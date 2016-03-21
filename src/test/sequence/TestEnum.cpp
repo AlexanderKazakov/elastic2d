@@ -9,7 +9,7 @@ class TestConcepts : public testing::Test {
 protected:
 	void testSizeOfMap() {
 		ASSERT_EQ(static_cast<int>(TConcept::T::SIZE_OF_ENUM), TConcept::NAME.size());
-	};
+	}
 };
 
 /** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc for explaination */
@@ -22,7 +22,7 @@ TYPED_TEST_P(TestConcepts, SizeOfMap) {
 REGISTER_TYPED_TEST_CASE_P(TestConcepts, SizeOfMap);
 
 // When new concept arrears, place it here
-typedef Types<PhysicalQuantities, Waves, Materials> AllImplementations;
+typedef Types<PhysicalQuantities, Waves, Materials, Grids, Models> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllConcepts, TestConcepts, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P

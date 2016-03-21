@@ -9,6 +9,7 @@
  * The aim is to formalize and unify interconnection between parts of the program.
  * Use it every time when parts of the program communicate to each other by this concepts.
  * Enum class called T (type), map with string names called NAME.
+ * TODO - improve
  */
 
 namespace gcm {
@@ -70,6 +71,56 @@ namespace gcm {
 		enum class T {
 			ISOTROPIC,
 			ORTHOTROPIC,
+
+			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		};
+
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
+	};
+	
+	/**
+	 * For all types of grids used in the program.
+	 */
+	struct Grids {
+		/** Type */
+		enum class T {
+			CUBIC,
+			CGAL2D,
+
+			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		};
+
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
+	};
+	
+	/**
+	 * For all types of rheology models used in the program.
+	 */
+	struct Models {
+		/** Type */
+		enum class T {
+			ELASTIC1D,
+			ELASTIC2D,
+			ELASTIC3D,
+
+			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		};
+
+		/** string names of concepts */
+		static const std::map<T, std::string> NAME;
+	};
+	
+	/**
+	 * For all types of snapshotters used in the program.
+	 */
+	struct Snapshotters {
+		/** Type */
+		enum class T {
+			VTK,
+			BIN2DSEISM,
+			DETECTOR,
 
 			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 		};

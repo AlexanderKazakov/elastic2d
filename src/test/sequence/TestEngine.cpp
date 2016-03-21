@@ -21,15 +21,15 @@ TEST(Engine, runStatementForTest)
 	task.sizes(1) = 40;
 	task.lengthes = {7, 3, 1};
 	statement.numberOfSnaps = 9;
-	statement.T = 100.0;
+	statement.requiredTime = 100.0;
 
 	Statement::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::S1_FORWARD;
 	wave.direction = 1; // along y
 	wave.quantity = PhysicalQuantities::T::Vx;
 	wave.quantityValue = 1;
-	linal::Vector3 min({ -1, 0.1125, -1});
-	linal::Vector3 max({ 8, 0.6375, 1});
+	Real3 min({ -1, 0.1125, -1});
+	Real3 max({ 8, 0.6375, 1});
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	statement.initialCondition.waves.push_back(wave);
 	
@@ -62,7 +62,7 @@ TEST(Engine, TwoLayersDifferentRho)
 
 		statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho0, lambda0, mu0);
 		Statement::MaterialCondition::Inhomogenity newMaterial;
-		newMaterial.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({-10, 0.5 - 1e-5, -10}), linal::Vector3({10, 10, 10}));
+		newMaterial.area = std::make_shared<AxisAlignedBoxArea>(Real3({-10, 0.5 - 1e-5, -10}), Real3({10, 10, 10}));
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		statement.materialConditions.materials.push_back(newMaterial);
 
@@ -70,15 +70,15 @@ TEST(Engine, TwoLayersDifferentRho)
 		task.sizes(1) = 100;
 		task.lengthes = {2, 1, 1};
 		statement.numberOfSnaps = 0;
-		statement.T = 0.24;
+		statement.requiredTime = 0.24;
 
 		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::Vy;
 		wave.quantityValue = -2;
-		linal::Vector3 min({ -1, 0.015, -1});
-		linal::Vector3 max({ 4, 0.455, 1});
+		Real3 min({ -1, 0.015, -1});
+		Real3 max({ 4, 0.455, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		statement.initialCondition.waves.push_back(wave);
 
@@ -139,7 +139,7 @@ TEST(Engine, TwoLayersDifferentE)
 
 		statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho0, lambda0, mu0);
 		Statement::MaterialCondition::Inhomogenity newMaterial;
-		newMaterial.area = std::make_shared<AxisAlignedBoxArea>(linal::Vector3({-10, 0.5 - 1e-5, -10}), linal::Vector3({10, 10, 10}));
+		newMaterial.area = std::make_shared<AxisAlignedBoxArea>(Real3({-10, 0.5 - 1e-5, -10}), Real3({10, 10, 10}));
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		statement.materialConditions.materials.push_back(newMaterial);
 
@@ -148,7 +148,7 @@ TEST(Engine, TwoLayersDifferentE)
 		task.lengthes = {2, 1, 1};
 
 		statement.numberOfSnaps = 0;
-		statement.T = 0.24;
+		statement.requiredTime = 0.24;
 		task.enableSnapshotting = true;
 
 		Statement::InitialCondition::Wave wave;
@@ -156,8 +156,8 @@ TEST(Engine, TwoLayersDifferentE)
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::Vy;
 		wave.quantityValue = -2;
-		linal::Vector3 min({ -1, 0.015, -1});
-		linal::Vector3 max({ 4, 0.455, 1});
+		Real3 min({ -1, 0.015, -1});
+		Real3 max({ 4, 0.455, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		statement.initialCondition.waves.push_back(wave);
 

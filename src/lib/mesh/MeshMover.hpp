@@ -26,7 +26,7 @@ namespace gcm {
 		static void moveMesh(Mesh& mesh, const real timeStep) {
 			LOG_DEBUG("Start mesh motion");
 			for (auto& it : mesh) {
-				linal::Vector2 dx = {mesh.pde(it).V[0] * timeStep, 
+				Real2 dx = {mesh.pde(it).V[0] * timeStep, 
 				                     mesh.pde(it).V[1] * timeStep}; // todo Getter?
 				mesh.move(it, dx);
 			}

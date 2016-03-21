@@ -5,10 +5,10 @@
 using namespace gcm;
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::initialize(const Task& task) {
-	sizes = task.sizes;
-	startR = task.startR;
-	lengths = task.lengthes;
+BorderConditions<TModel, CubicGrid, TMaterial>::BorderConditions(const Task& task) {
+	sizes = task.cubicGrid.sizes;
+	startR = task.cubicGrid.startR;
+	lengths = task.cubicGrid.lengthes;
 }
 
 template<typename TModel, typename TMaterial>
@@ -26,23 +26,25 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::beforeStatement(const State
 		int d = fr.direction;
 		int index = (int) (sizes(d) * (fr.coordinate - startR(d)) / lengths(d));
 		assert_gt(index, 0); assert_lt(index, sizes(d) - 1);
-		fractures.push_back(Fracture(d, index,   - 1, fr.area, fr.values));
-		fractures.push_back(Fracture(d, index + 1, 1, fr.area, fr.values));
+		innerSurfaces.push_back(InnerSurface(d, index,   - 1, fr.area, fr.values));
+		innerSurfaces.push_back(InnerSurface(d, index + 1, 1, fr.area, fr.values));
 	}
 }
 
 template<typename TModel, typename TMaterial>
 void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderBeforeStage
-(Mesh* mesh_, const real currentTime_, const real timeStep_, const int stage) {
+(Mesh* mesh_, const real timeStep_, const int stage) {
 	// handling borders
-	mesh = mesh_; currentTime = currentTime_; timeStep = timeStep_; direction = stage;
-	// special for x-axis (because MPI partition along x-axis)
+	mesh = mesh_; timeStep = timeStep_; direction = stage;
+	// special for x-axis (because MPI partitioning along x-axis)
 	if (direction == 0) {
-		if (mesh->getRank() == 0) {
+		if (Engine::Instance().getForceSequence() ||
+		    Engine::Instance().MpiRank == 0) {
 			onTheRight = false;
 			handleSide();
 		}
-		if (mesh->getRank() == mesh->getNumberOfWorkers() - 1) {
+		if (Engine::Instance().getForceSequence() ||
+		    Engine::Instance().MpiRank == Engine::Instance().MpiSize - 1) {
 			onTheRight = true;
 			handleSide();
 		}
@@ -84,7 +86,7 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::handleBorderPoint
 			const auto& quantity = q.first;
 			const auto& timeDependency = q.second;
 			real realValue = PdeVariables::QUANTITIES.at(quantity).Get(mesh->pde(realIter));
-			real virtValue = - realValue + 2 * timeDependency(currentTime);
+			real virtValue = - realValue + 2 * timeDependency(Engine::Instance().getCurrentTime());
 			PdeVariables::QUANTITIES.at(quantity).Set(virtValue, mesh->_pde(virtIter));
 		}
 	}
@@ -92,16 +94,16 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::handleBorderPoint
 
 template<typename TModel, typename TMaterial>
 void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderAfterStage
-(Mesh* mesh_, const real currentTime_, const real timeStep_, const int stage) {
-	// handling inner fractures
-	mesh = mesh_; currentTime = currentTime_; timeStep = timeStep_; direction = stage;
-	for (const auto& fr : fractures) {
-		if (fr.direction == stage) {
+(Mesh* mesh_, const real timeStep_, const int stage) {
+	// handling inner surfaces
+	mesh = mesh_; timeStep = timeStep_; direction = stage;
+	for (const auto& innerSurface : innerSurfaces) {
+		if (innerSurface.direction == stage) {
 			allocateHelpMesh();
-			auto sliceIter = mesh->slice(direction, fr.index);
+			auto sliceIter = mesh->slice(direction, innerSurface.index);
 			while (sliceIter != sliceIter.end()) {
-				if (fr.area->contains(mesh->coords(sliceIter))) {
-					handleFracturePoint(sliceIter, fr.values, fr.normal);
+				if (innerSurface.area->contains(mesh->coords(sliceIter))) {
+					handleInnerSurfacePoint(sliceIter, innerSurface.values, innerSurface.normal);
 				}
 				++sliceIter;
 			}
@@ -112,39 +114,42 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderAfterStage
 
 template<typename TModel, typename TMaterial>
 void BorderConditions<TModel, CubicGrid, TMaterial>::allocateHelpMesh() {
-	Task helpTask;
-	helpTask.dimensionality = 1;
-	helpTask.borderSize = mesh->borderSize;
-	helpTask.forceSequence = true;
-	helpTask.lengthes = {1, 1, 1};
-	helpTask.sizes = {1, 1, 1};
-	helpTask.sizes(direction) = mesh->borderSize;
+	Task::CubicGrid helpCubicGridTask;
+	helpCubicGridTask.dimensionality = 1;
+	helpCubicGridTask.borderSize = mesh->borderSize;
+	helpCubicGridTask.h = mesh->h;
+	helpCubicGridTask.sizes = {mesh->borderSize, 1, 1};
+	Task helpTask; helpTask.cubicGrid = helpCubicGridTask;
 	helpMesh = new Mesh(helpTask);
 	helpMesh->allocate();
 }
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::handleFracturePoint
-(const Iterator& iter, const Map& values, const int fracNormal) {
+void BorderConditions<TModel, CubicGrid, TMaterial>::handleInnerSurfacePoint
+(const Iterator& iter, const Map& values, const int surfaceNormal) {
 	// copy values to helpMesh
 	for (int i = 0; i < 2 * mesh->borderSize; i++) {
-		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
-		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
-		helpMesh->node(helpMeshIter)->copyFrom(mesh->node(realMeshIter));
+		Iterator tmpIter = iter;
+		tmpIter(direction) += i * surfaceNormal;
+		helpMesh->_pde({i, 0, 0}) = mesh->pde(tmpIter);
+		helpMesh->_matrices({i, 0, 0}) = mesh->_matrices(tmpIter);
 	}
+
 	// apply border conditions before stage on the helpMesh
 	onTheRight = false;
-	Mesh* tmpMesh = mesh;
-	mesh = helpMesh;
+	Mesh* tmpMesh = mesh; int tmpDirection = direction;
+	mesh = helpMesh; direction = 0;
 	handleBorderPoint({0, 0, 0}, values);
-	mesh = tmpMesh;
+	mesh = tmpMesh; direction = tmpDirection;
+
 	// calculate stage on the helpMesh
-	GridCharacteristicMethod<Mesh>::stage(direction, timeStep * fracNormal, helpMesh);
+	GridCharacteristicMethod<Mesh>::stage(0, timeStep * surfaceNormal, helpMesh);
+
 	// copy calculated values to real mesh
 	for (int i = 0; i < mesh->borderSize; i++) {
-		Iterator helpMeshIter = {0, 0, 0}; helpMeshIter(direction) += i;
-		Iterator realMeshIter = iter;      realMeshIter(direction) += i * fracNormal;
-		mesh->_pdeNew(realMeshIter) = helpMesh->pdeNew(helpMeshIter);
+		Iterator tmpIter = iter;
+		tmpIter(direction) += i * surfaceNormal;
+		mesh->_pdeNew(tmpIter) = helpMesh->pdeNew({i, 0, 0});
 	}
 }
 

@@ -57,19 +57,19 @@ namespace gcm {
 		virtual ~Cgal2DGrid() { }
 
 		/** Read-only access to real coordinates with auxiliary 0 at z */
-		const linal::Vector3 coords(const Iterator& it) const {
+		const Real3 coords(const Iterator& it) const {
 			auto point = vertexHandles[it.iter]->point();
 			return {point.x(), point.y(), 0};
 		}
 		/** Read-only access to real coordinates */
-		const linal::Vector2 coords2d(const Iterator& it) const {
+		const Real2 coords2d(const Iterator& it) const {
 			auto point = vertexHandles[it.iter]->point();
 			return {point.x(), point.y()};
 		}
 
 	protected:
 		/** Move specified point on specified distance */
-		void move(const Iterator& it, const linal::Vector2& d) {
+		void move(const Iterator& it, const Real2& d) {
 			auto& point = vertexHandles[it.iter]->point();
 			point = point + CgalVector2(d(0), d(1));
 		}
@@ -101,10 +101,15 @@ namespace gcm {
 		CDT                         triangulation;
 		std::vector<VertexHandle>   vertexHandles;
 		std::map<VertexHandle, int> verticesIndices;
+		real effectiveSpatialStep = 0;
+		real getMinimalSpatialStep() const {
+			assert_gt(effectiveSpatialStep, 0);
+			return effectiveSpatialStep;
+		}
 
 		void triangulate();
 
-		Triangle findOwnerTriangle(const Iterator& it, const linal::Vector2& shift) const {
+		Triangle findOwnerTriangle(const Iterator& it, const Real2& shift) const {
 			Triangle ans;
 			auto ownerFace = findOwnerFace(it, CgalVector2(shift(0), shift(1)));
 			if ( ownerFace->is_in_domain() && ownerFace != triangulation.infinite_face() ) {
@@ -119,10 +124,6 @@ namespace gcm {
 			auto beginVertex = vertexHandles[getIndex(it)];
 			auto q = beginVertex->point() + shift; // point to find owner face for
 			return triangulation.locate(q, beginVertex->incident_faces());
-		}
-
-		virtual void recalculateMinimalSpatialStep() override {
-			// TODO for movable grids
 		}
 
 		USE_AND_INIT_LOGGER("gcm.Cgal2DGrid")

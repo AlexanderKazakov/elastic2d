@@ -26,7 +26,7 @@ namespace gcm {
 	class DefaultSolverWrapper : public DefaultSolver<TGrid> {
 	public:
 		void stageForTest(const int s, const real timeStep) { return this->stage(s, timeStep); }
-		real getTauForTest() const { return this->calculateTau(); }
+		real getTauForTest() const { return this->calculateTimeStep(); }
 
 		MeshWrapper<TGrid>* getMesh() const {
 			return static_cast<MeshWrapper<TGrid>*>(this->mesh);

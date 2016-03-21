@@ -18,7 +18,7 @@ namespace gcm {
 
 		static const std::map<PhysicalQuantities::T, GetSetter<Variables>> QUANTITIES;
 
-		void beforeStatement(const Statement&) { }
+		DummyOde(const Statement&) { }
 
 		template<typename TNodePtr>
 		void nextStep(TNodePtr, const real) { }

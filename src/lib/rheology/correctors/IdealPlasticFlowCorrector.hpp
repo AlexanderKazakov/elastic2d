@@ -13,7 +13,7 @@ namespace gcm {
 	public:
 		static const bool NonTrivial = true;
 
-		void beforeStatement(const Statement &) { }
+		IdealPlasticFlowCorrector(const Statement &) { }
 
 		template<typename TNodePtr>
 		void apply(TNodePtr node) const {

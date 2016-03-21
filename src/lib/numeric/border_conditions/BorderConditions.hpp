@@ -28,9 +28,9 @@ namespace gcm {
 			std::shared_ptr<Area> area;
 			Map values;
 		};
-		struct Fracture {
-			Fracture(const int direction_, const int index_, const int normal_,
-			         std::shared_ptr<Area> area_, const Map& values_) :
+		struct InnerSurface {
+			InnerSurface(const int direction_, const int index_, const int normal_,
+						 std::shared_ptr<Area> area_, const Map& values_) :
 					direction(direction_), index(index_), normal(normal_), 
 					area(area_), values(values_) { }
 			int direction; // crossing axis
@@ -40,35 +40,35 @@ namespace gcm {
 			Map values; // fixed values
 		};
 		
-		void initialize(const Task& task);
+		BorderConditions(const Task& task);
 		void beforeStatement(const Statement &statement);
-		void applyBorderBeforeStage(Mesh* mesh_, const real currentTime_, 
-		                            const real timeStep_, const int stage);
-		void applyBorderAfterStage(Mesh* mesh_, const real currentTime_, 
-		                           const real timeStep_, const int stage);
+		void applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage);
+		void applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage);
 	
 	private:
 		// list of conditions that applied in sequence (overwriting previous)
 		std::vector<Condition> conditions;
-		// list of inner fractures
-		std::vector<Fracture> fractures;
+		// list of inner surfaces
+		std::vector<InnerSurface> innerSurfaces;
 		// temporary values - just to not send between all the functions
 		Mesh* mesh;
-		linal::Int3 sizes; // mesh sizes
-		linal::Vector<3> startR; // mesh startR
-		linal::Vector<3> lengths; // mesh lengths
-		real currentTime;
 		real timeStep;
 		int direction;
 		bool onTheRight;
+
+		// TODO - wtf? replace
+		Int3 sizes; // mesh sizes
+		Real3 startR; // mesh startR
+		Real3 lengths; // mesh lengths
+
 		// auxiliary mesh for fracture calculation
 		Mesh* helpMesh;
 		
 		void handleSide() const;
 		void handleBorderPoint(const Iterator& borderIter, const Map& values) const;
 		void allocateHelpMesh();
-		void handleFracturePoint(const Iterator& borderIter, const Map& values,
-		                         const int fracNormal);
+		void handleInnerSurfacePoint(const Iterator& borderIter, const Map& values,
+									 const int surfaceNormal);
 	};
 
 	template<typename TModel, typename TMaterial>
@@ -77,10 +77,10 @@ namespace gcm {
 		typedef typename Mesh::PdeVector                        PdeVector;
 		typedef typename Mesh::Iterator                         Iterator;
 
-		void initialize(const Task&) { }
+		BorderConditions(const Task&) { }
 		void beforeStatement(const Statement&) { }
-		void applyBorderBeforeStage(Mesh*, const real, const real, const int) { }
-		void applyBorderAfterStage(Mesh*, const real, const real, const int) { }
+		void applyBorderBeforeStage(Mesh*, const real, const int) { }
+		void applyBorderAfterStage(Mesh*, const real, const int) { }
 	};
 }
 

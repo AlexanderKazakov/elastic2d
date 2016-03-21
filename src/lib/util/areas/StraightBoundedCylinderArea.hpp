@@ -13,14 +13,14 @@ namespace gcm {
 		 * @param begin center of upper cap of the keg
 		 * @param end center of lower cap of the keg
 		 */
-		StraightBoundedCylinderArea(const real& _radius, const linal::Vector3& _begin, const linal::Vector3& _end);
-		virtual bool contains(const linal::Vector3& coords) const override;
-		virtual void move(const linal::Vector3& shift) override;
+		StraightBoundedCylinderArea(const real& _radius, const Real3& _begin, const Real3& _end);
+		virtual bool contains(const Real3& coords) const override;
+		virtual void move(const Real3& shift) override;
 	private:
 		real radius;
-		linal::Vector3 begin; // center of upper cap of the keg
-		linal::Vector3 end; // center of lower cap of the keg
-		linal::Vector3 axis; // normalized vector along axis of the cylinder
+		Real3 begin; // center of upper cap of the keg
+		Real3 end; // center of lower cap of the keg
+		Real3 axis; // normalized vector along axis of the cylinder
 	};
 }
 

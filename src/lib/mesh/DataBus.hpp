@@ -8,10 +8,9 @@
 
 namespace gcm {
 	/**
-	 * Responsible for mpi connection
+	 * Responsible for MPI connection
 	 */
-	template<typename TModel, typename TGrid, typename TMaterial>
-	struct DataBus;
+	template<typename TModel, typename TGrid, typename TMaterial> struct DataBus;
 
 	template<typename TModel, typename TMaterial>
 	struct DataBus<TModel, CubicGrid, TMaterial> {
@@ -19,10 +18,12 @@ namespace gcm {
 
 		static void exchangeNodesWithNeighbors(Mesh* mesh) {
 			LOG_DEBUG("Start data exchange with neighbor cores");
-			if (mesh->numberOfWorkers == 1) return;
+			if (Engine::Instance().getForceSequence() ||
+				Engine::Instance().MpiSize == 1) return;
 
 			exchangeSomethingWithNeighbors(mesh, mesh->pdeVectors);
 			if (TModel::InternalOde::NonTrivial) {
+				// TODO - make it compile time impossible to access empty ode etc
 				exchangeSomethingWithNeighbors(mesh, mesh->odeValues);
 			}
 		}
@@ -52,22 +53,22 @@ namespace gcm {
 		int bufferSize = mesh->borderSize * mesh->indexMaker(0);
 		size_t size = vec.size();
 
-		if (mesh->rank == 0) {
-			MPI_Sendrecv(&(vec[size - 2 * bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank + 1, 1,
-						 &(vec[size - bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank + 1, 1,
+		if (Engine::Instance().MpiRank == 0) {
+			MPI_Sendrecv(&(vec[size - 2 * bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank + 1, 1,
+						 &(vec[size - bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank + 1, 1,
 						 MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
-		} else if (mesh->rank == mesh->numberOfWorkers - 1) {
-			MPI_Sendrecv(&(vec[(size_t)bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank - 1, 1,
-						 &(vec[0]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank - 1, 1,
+		} else if (Engine::Instance().MpiRank == Engine::Instance().MpiSize - 1) {
+			MPI_Sendrecv(&(vec[(size_t)bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank - 1, 1,
+						 &(vec[0]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank - 1, 1,
 						 MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 
 		} else {
-			MPI_Sendrecv(&(vec[size - 2 * bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank + 1, 1,
-						 &(vec[size - bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank + 1, 1,
+			MPI_Sendrecv(&(vec[size - 2 * bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank + 1, 1,
+						 &(vec[size - bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank + 1, 1,
 						 MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Sendrecv(&(vec[(size_t)bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank - 1, 1,
-						 &(vec[0]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, mesh->rank - 1, 1,
+			MPI_Sendrecv(&(vec[(size_t)bufferSize]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank - 1, 1,
+						 &(vec[0]), (int) sizeof(Smth) * bufferSize, MPI_BYTE, Engine::Instance().MpiRank - 1, 1,
 						 MPI::COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 	}

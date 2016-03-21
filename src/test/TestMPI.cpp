@@ -92,7 +92,7 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({1, 0.5, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
 	statement.initialCondition.quantities.push_back(pressure);
 
 	task.statements.push_back(statement);

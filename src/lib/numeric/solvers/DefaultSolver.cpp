@@ -4,15 +4,11 @@
 using namespace gcm;
 
 template<class TMesh>
-void DefaultSolver<TMesh>::initializeImpl(const Task &task) {
+DefaultSolver<TMesh>::DefaultSolver(const Task &task) : Solver(task) {
 	LOG_INFO("Start initialization");
 
-	mesh = new TMesh(task);
-
-	borderConditions = new Border();
-	borderConditions->initialize(task);
-
-	splittingSecondOrder = task.splittingSecondOrder;
+	mesh = new Mesh(task);
+	borderConditions = new Border(task);
 }
 
 template<class TMesh>
@@ -22,51 +18,31 @@ DefaultSolver<TMesh>::~DefaultSolver() {
 }
 
 template<class TMesh>
-void DefaultSolver<TMesh>::beforeStatementImpl(const Statement& statement) {
-	CourantNumber = statement.CourantNumber;
-	corrector = new Corrector();
-	corrector->beforeStatement(statement);
-	internalOde = new InternalOde();
-	internalOde->beforeStatement(statement);
+void DefaultSolver<TMesh>::beforeStatement(const Statement& statement) {
+	CourantNumber = statement.globalSettings.CourantNumber;
+	splittingSecondOrder = statement.globalSettings.splittingSecondOrder;
+
+	corrector = new Corrector(statement);
+	internalOde = new InternalOde(statement);
 
 	borderConditions->beforeStatement(statement);
 	mesh->beforeStatement(statement);
 }
 
 template<class TMesh>
-void DefaultSolver<TMesh>::nextTimeStepImpl() {
+void DefaultSolver<TMesh>::nextTimeStep(const real timeStep) {
 	LOG_INFO("Start time step " << step);
-	mesh->beforeStep();
-	real tau = calculateTau();
 
-	if (splittingSecondOrder) {
-		switch (TMesh::DIMENSIONALITY) {
-			case 1:
-				stage(0, tau);
-				break;
-			case 2:
-				stage(0, tau / 2);
-				stage(1, tau);
-				stage(0, tau / 2);
-				break;
-			case 3:
-				THROW_UNSUPPORTED("TODO splitting second order in 3D");
-				break;
-		}
-	} else {
-		for (int s = 0; s < TMesh::DIMENSIONALITY; s++) {
-			stage(s, tau);
-		}
+	for (int s = 0; s < Mesh::DIMENSIONALITY; s++) {
+		stage(s, timeStep);
 	}
-
-	internalOdeNextStep(tau);
+	internalOdeNextStep(timeStep);
+	moveMesh(timeStep);
 	applyCorrectors();
-	moveMesh(tau);
-	mesh->afterStep();
 }
 
 template<class TMesh>
-void DefaultSolver<TMesh>::afterStatementImpl() {
+void DefaultSolver<TMesh>::afterStatement() {
 	mesh->afterStatement();
 	delete corrector;
 	delete internalOde;
@@ -75,9 +51,9 @@ void DefaultSolver<TMesh>::afterStatementImpl() {
 template<class TMesh>
 void DefaultSolver<TMesh>::stage(const int s, const real timeStep) {
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
-	borderConditions->applyBorderBeforeStage(mesh, getCurrentTime(), timeStep, s);
+	borderConditions->applyBorderBeforeStage(mesh, timeStep, s);
 	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
-	borderConditions->applyBorderAfterStage(mesh, getCurrentTime(), timeStep, s);
+	borderConditions->applyBorderAfterStage(mesh, timeStep, s);
 	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return actual PDE values back to pdeVectors
 }
 
@@ -106,8 +82,8 @@ void DefaultSolver<TMesh>::moveMesh(const real timeStep) {
 }
 
 template<class TMesh>
-real DefaultSolver<TMesh>::calculateTau() const {
-	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalLambda();
+real DefaultSolver<TMesh>::calculateTimeStep() const {
+	return CourantNumber * mesh->getMinimalSpatialStep() / mesh->getMaximalEigenvalue();
 }
 
 template class DefaultSolver<DefaultMesh<Elastic1DModel, CubicGrid, IsotropicMaterial>>;

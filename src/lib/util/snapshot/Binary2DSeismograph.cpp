@@ -8,42 +8,44 @@ using namespace gcm;
 
 template<class TMesh>
 void Binary2DSeismograph<TMesh>::initializeImpl(const Task& task) {
-	static_assert(TMesh::DIMENSIONALITY == 2, "This is seismograph for 2D");
-	sizeY = task.sizes(1);
+	assert_eq(task.cubicGrid.dimensionality, 2);
+	sizeY = (size_t) task.cubicGrid.sizes(1);
+	hY = task.cubicGrid.h(1);
+	surface.resize(sizeY + 1); // plus one for auxiliary gnuplot data
 }
 
 template<class TMesh>
-void Binary2DSeismograph<TMesh>::beforeStatementImpl(const Statement&) {
+void Binary2DSeismograph<TMesh>::beforeStatementImpl(const Statement& statement) {
+	auto quantityToWrite = statement.binary2DSeismograph.quantityToWrite;
+	valuesGetter = PdeVariables::QUANTITIES.at(quantityToWrite).Get;
 	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
 			(-1, FILE_EXTENSION, FOLDER_NAME));
-	surface = new precision[sizeY + 1];  // plus one for auxiliary gnuplot data
 	writeHeadOfTable();
 }
 
 template<class TMesh>
-void Binary2DSeismograph<TMesh>::afterStatementImpl() {
+void Binary2DSeismograph<TMesh>::afterStatement() {
 	FileUtils::closeFileStream(fileStream);
-	delete [] surface;
 }
 
 template<class TMesh>
-void Binary2DSeismograph<TMesh>::snapshotImpl(const AbstractGrid* mesh_, const int step) {
+void Binary2DSeismograph<TMesh>::snapshotImpl(const AbstractGrid* mesh_, const int) {
 	const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
-	assert_eq(mesh->sizes(1), sizeY);
-	surface[0] = step * tau;
-	for (int y = 0; y < sizeY; y++) {
-		surface[y + 1] = (precision) mesh->pde(linal::VectorInt<3>({0, y, 0})).getPressure();
+	assert_eq(mesh->sizes(1), sizeY); // TODO slice iterator
+	surface[0] = (precision) Engine::Instance().getCurrentTime();
+	for (size_t y = 0; y < sizeY; y++) {
+		surface[y + 1] = (precision) valuesGetter(mesh->pde(linal::VectorInt<3>({0, (int)y, 0})));
 	}
-	FileUtils::writeArrayToBinaryFileStream(fileStream, surface, (size_t)sizeY + 1);
+	FileUtils::writeStdVectorToBinaryFileStream(fileStream, surface);
 }
 
 template <class TMesh>
 void Binary2DSeismograph<TMesh>::writeHeadOfTable() {
-	surface[0] = (precision)sizeY;
-	for (int i = 0; i < sizeY; i++) {
-		surface[i + 1] = i * hY;
+	surface[0] = (precision) sizeY;
+	for (size_t y = 0; y < sizeY; y++) {
+		surface[y + 1] = (precision) (y * hY);
 	}
-	FileUtils::writeArrayToBinaryFileStream(fileStream, surface, (size_t)sizeY + 1);
+	FileUtils::writeStdVectorToBinaryFileStream(fileStream, surface);
 }
 
 

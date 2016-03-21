@@ -18,19 +18,32 @@ namespace gcm {
 	template<class TMesh>
 	class DefaultSolver : public Solver {
 	public:
-		typedef typename TMesh::Model                          Model;
-		typedef typename TMesh::Grid                           Grid;
-		typedef typename TMesh::Material                       Material;
-		typedef typename Model::Corrector                      Corrector;
-		typedef typename Model::InternalOde                    InternalOde;
-		typedef BorderConditions<Model, Grid, Material>        Border;
-		typedef DataBus<Model, Grid, Material>                 DATA_BUS;
-		typedef MeshMover<Model, Grid, Material>               MESH_MOVER;
-		typedef GridCharacteristicMethod<TMesh>                GCM;
+		typedef TMesh                                         Mesh;
+		typedef typename Mesh::Model                          Model;
+		typedef typename Mesh::Grid                           Grid;
+		typedef typename Mesh::Material                       Material;
 
+		typedef typename Model::Corrector                     Corrector;
+		typedef typename Model::InternalOde                   InternalOde;
+
+		typedef BorderConditions<Model, Grid, Material>       Border;
+		typedef DataBus<Model, Grid, Material>                DATA_BUS;
+		typedef MeshMover<Model, Grid, Material>              MESH_MOVER;
+		typedef GridCharacteristicMethod<Mesh>                GCM;
+
+		DefaultSolver(const Task& task);
 		virtual ~DefaultSolver();
-		virtual real calculateTau() const override;
-		virtual AbstractGrid* getGrid() const { return mesh; }
+
+		virtual void beforeStatement(const Statement& statement) override;
+		virtual void afterStatement() override;
+
+		virtual void nextTimeStep(const real timeStep) override;
+
+		/** @return grid with actual values */
+		virtual AbstractGrid* getActualGrid() const { return mesh; }
+
+		/** Calculate time step from Courant–Friedrichs–Lewy condition */
+		virtual real calculateTimeStep() const override;
 
 	protected:
 		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
@@ -40,15 +53,9 @@ namespace gcm {
 		InternalOde* internalOde = nullptr;
 		Border* borderConditions = nullptr;
 
-		TMesh* mesh = nullptr;
-		
-		virtual void initializeImpl(const Task& task) override;
-		virtual void beforeStatementImpl(const Statement& statement) override;
-		virtual void nextTimeStepImpl() override;
-		virtual void afterStatementImpl() override;
+		Mesh* mesh = nullptr;
 
 		void stage(const int s, const real timeStep);
-	private:
 		void internalOdeNextStep(const real timeStep);
 		void applyCorrectors();
 		void moveMesh(const real timeStep);

@@ -28,10 +28,10 @@ namespace gcm {
 		/** Access to sigma as symmetric matrix */
 		real sigma(const int i, const int j) const {
 			return S[linal::SymmetricMatrix<Dimensionality>::getIndex(i, j)];
-		};
+		}
 		real& sigma(const int i, const int j) {
 			return S[linal::SymmetricMatrix<Dimensionality>::getIndex(i, j)];
-		};
+		}
 
 		real getPressure() const;
 		void setPressure(const real& pressure);
@@ -54,40 +54,40 @@ namespace gcm {
 		template<int i> static real GetV(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
 			static_assert(i < Dimensionality, "Index out of range");
 			return variablesToGetFrom.V[i];
-		};
+		}
 		template<int i> static void SetV(const real& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
 			static_assert(i < Dimensionality, "Index out of range");
 			variablesToSetTo.V[i] = value;
-		};
+		}
 
 		template<int i, int j> static real GetSigma(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
 			static_assert(i < Dimensionality && j < Dimensionality, "Index out of range");
 			return variablesToGetFrom.sigma(i, j);
-		};
+		}
 		template<int i, int j> static void SetSigma(const real& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
 			static_assert(i < Dimensionality && j < Dimensionality, "Index out of range");
 			variablesToSetTo.sigma(i, j) = value;
-		};
+		}
 
 		static real GetPressure(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
 			return variablesToGetFrom.getPressure();
-		};
+		}
 		static void SetPressure(const real& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
 			variablesToSetTo.setPressure(value);
-		};
+		}
 
-		static linal::Vector3 GetVelocity(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
-			linal::Vector3 ans = {0, 0, 0};
+		static Real3 GetVelocity(const VelocitySigmaVariables<Dimensionality>& variablesToGetFrom) {
+			Real3 ans = {0, 0, 0};
 			for (int i = 0; i < Dimensionality; i++) {
 				ans(i) = variablesToGetFrom.V[i];
 			}
 			return ans;
-		};
-		static void SetVelocity(const linal::Vector3& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
+		}
+		static void SetVelocity(const Real3& value, VelocitySigmaVariables<Dimensionality>& variablesToSetTo) {
 			for (int i = 0; i < Dimensionality; i++) {
 				variablesToSetTo.V[i] = value(i);
 			}
-		};
+		}
 
 	};
 }

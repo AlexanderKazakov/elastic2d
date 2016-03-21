@@ -23,7 +23,7 @@ namespace gcm {
 	template<typename TModel, typename TGrid, typename TMaterial>
 	class DefaultMesh : public TGrid {
 	public:
-		typedef          TModel                        Model;
+		typedef TModel                                 Model;
 		typedef typename Model::PdeVector              PdeVector;
 		typedef typename Model::OdeVariables           OdeVariables;
 		typedef typename Model::GCM_MATRICES           GCM_MATRICES;
@@ -31,10 +31,10 @@ namespace gcm {
 		typedef typename Model::ConstGcmMatricesPtr    ConstGcmMatricesPtr;
 		typedef typename GCM_MATRICES::Matrix          Matrix;
 
-		typedef          TGrid                         Grid;
+		typedef TGrid                                  Grid;
 		typedef typename Grid::Iterator                Iterator;
 
-		typedef          TMaterial                     Material;
+		typedef TMaterial                              Material;
 		typedef std::shared_ptr<Material>              MaterialPtr;
 		typedef std::shared_ptr<const Material>        ConstMaterialPtr;
 
@@ -59,13 +59,13 @@ namespace gcm {
 			ConstMaterialPtr material() const { return mesh->material(it); }
 			MaterialPtr& _material() { return mesh->_material(it); }
 
-			linal::Vector3 coords() const { return mesh->coords(it); }
+			Real3 coords() const { return mesh->coords(it); }
 
 			/** @warning coords aren't copied */
 			template<typename TNodePtr>
 			void copyFrom(TNodePtr origin) {
 				_pde() = origin->pde();
-				_ode() = origin->ode();
+				_ode() = origin->ode(); // TODO if ode is not present??
 				_matrices() = origin->_matrices();
 				_material() = origin->_material();
 			}
@@ -136,7 +136,13 @@ namespace gcm {
 		std::vector<MaterialPtr>      materials;
 		std::vector<OdeVariables>     odeValues;
 		
-		virtual void beforeStatementImpl(const Statement& statement) override {
+		real maximalEigenvalue = 0;
+		real getMaximalEigenvalue() const {
+			assert_gt(maximalEigenvalue, 0);
+			return maximalEigenvalue;
+		}
+		
+		void beforeStatement(const Statement& statement) {
 			// TODO - for movable meshes it should reconstruct the grid
 			allocate();
 			applyMaterialConditions(statement);
@@ -145,9 +151,8 @@ namespace gcm {
 		void allocate();
 		void applyMaterialConditions(const Statement& statement);
 		void applyInitialConditions(const Statement& statement);
-		virtual void afterStatement() override { }
-		virtual void recalculateMaximalLambda() override { /* TODO for non-linear materials */ }
-		
+		void recalculateMaximalLambda() { /* TODO for non-linear materials */ }
+		void afterStatement() { }		
 
 		friend class DefaultSolver<DefaultMesh>;
 		friend class GridCharacteristicMethod<DefaultMesh>;
@@ -177,7 +182,7 @@ namespace gcm {
 		for (auto it : *this) {
 			condition.apply(node(it));
 		}
-		this->maximalLambda = condition.getMaximalEigenvalue();
+		maximalEigenvalue = condition.getMaximalEigenvalue();
 	}
 
 	template<typename TModel, typename TGrid, typename TMaterial>

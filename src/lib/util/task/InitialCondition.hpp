@@ -15,7 +15,7 @@ namespace gcm {
 		void initialize(const Statement& statement);
 
 		/** Apply initial conditions to node assume that its coordinates is coords */
-		void apply(PdeVector& v, const linal::Vector3& coords) const;
+		void apply(PdeVector& v, const Real3& coords) const;
 
 	private:
 		struct PdeCondition {

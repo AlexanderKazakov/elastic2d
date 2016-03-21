@@ -14,6 +14,7 @@ namespace gcm {
 	class ContinualDamageOde {
 	public:
 		static const bool NonTrivial = true;
+
 		struct Variables {
 			real hi = 0;
 		};
@@ -22,7 +23,7 @@ namespace gcm {
 		static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; }
 		static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi = value; }
 
-		void beforeStatement(const Statement &) { }
+		ContinualDamageOde(const Statement&) { }
 
 		template<typename TNodePtr>
 		void nextStep(TNodePtr node, const real timeStep) {

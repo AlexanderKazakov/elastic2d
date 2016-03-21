@@ -6,19 +6,17 @@ using namespace gcm;
 Cgal2DGrid::Cgal2DGrid(const Task& task) :
 		UnstructuredGrid(task) {
 	LOG_INFO("Start initialization");
-	minimalSpatialStep = task.spatialStep;
+	effectiveSpatialStep = task.cgal2DGrid.spatialStep;
 	triangulate();
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
 	for (auto it = triangulation.finite_vertices_begin(); 
-		it != triangulation.finite_vertices_end(); it++) {
+			it != triangulation.finite_vertices_end(); it++) {
 		auto handle = it->handle();
 		vertexHandles[vertexIndex] = handle;
 		verticesIndices.insert({handle, vertexIndex});
 		vertexIndex++;
 	}
-
-	recalculateMinimalSpatialStep();
 }
 
 void Cgal2DGrid::triangulate() {
@@ -50,8 +48,9 @@ void Cgal2DGrid::triangulate() {
 	std::cout << "Meshing the triangulation..." << std::endl;
 	Mesher mesher(triangulation);
 	mesher.set_seeds(listOfSeeds.begin(), listOfSeeds.end());
-	Criteria meshingCriteria; 
-	meshingCriteria.set_size_bound(minimalSpatialStep);
+	Criteria meshingCriteria;
+	assert_gt(effectiveSpatialStep, 0);
+	meshingCriteria.set_size_bound(effectiveSpatialStep);
 	mesher.set_criteria(meshingCriteria);
 	mesher.refine_mesh();
 	std::cout << "Number of vertices: " << triangulation.number_of_vertices() << std::endl;

@@ -4,7 +4,7 @@
 #include <lib/util/StringUtils.hpp>
 #include <lib/util/FileUtils.hpp>
 #include <lib/mesh/grid/AbstractGrid.hpp>
-#include <lib/numeric/solvers/Solver.hpp>
+#include <lib/rheology/variables/GetSetter.hpp>
 
 namespace gcm {
 	/**
@@ -25,30 +25,28 @@ namespace gcm {
 		const int NUMBER_OF_DIGITS_IN_CORE = 2;
 		
 		void initialize(const Task& task) {
-			enableSnapshotting = task.enableSnapshotting;
-			if (task.statements.size() > 1) writeStatementToFileName = true;
-			if (enableSnapshotting) initializeImpl(task);
-		};
+			if (task.statements.size() > 1) {
+				writeStatementToFileName = true;
+			}
+			initializeImpl(task);
+		}
 		void beforeStatement(const Statement& statement) {
 			statementId = statement.id;
-			stepsPerSnap = statement.stepsPerSnap;
-			if (enableSnapshotting) beforeStatementImpl(statement);
-		};
+			stepsPerSnap = statement.globalSettings.stepsPerSnap;
+			beforeStatementImpl(statement);
+		}
 		void snapshot(const AbstractGrid* grid, const int step) {
-			if (enableSnapshotting && step % stepsPerSnap == 0) {
+			if (step % stepsPerSnap == 0) {
 				snapshotImpl(grid, step);
 			}
-		};
-		void afterStatement() {
-			if (enableSnapshotting) afterStatementImpl();
-		};
-		virtual ~Snapshotter() { };
+		}
+		virtual void afterStatement() { }		
+		virtual ~Snapshotter() { }
 
 	protected:
-		virtual void initializeImpl(const Task&) { };
-		virtual void beforeStatementImpl(const Statement&) { };
+		virtual void initializeImpl(const Task&) { }
+		virtual void beforeStatementImpl(const Statement&) { }
 		virtual void snapshotImpl(const AbstractGrid* grid, const int step) = 0;
-		virtual void afterStatementImpl() { };
 
 		/** @return relative name for snapshot file */
 		std::string makeFileNameForSnapshot(const int step, 
@@ -62,10 +60,9 @@ namespace gcm {
 				STATEMENT + statementId : "";
 			
 			return SNAPSHOTS + SLASH + folder + SLASH + core + statement + snap + DOT + fileExtension;
-		};
+		}
 		
 	private:
-		bool enableSnapshotting = false;
 		bool writeStatementToFileName = false;
 		std::string statementId = "";
 		int stepsPerSnap = 1;

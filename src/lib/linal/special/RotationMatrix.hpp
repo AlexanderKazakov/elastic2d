@@ -31,7 +31,7 @@ namespace gcm
          * @return Rotation matrix.
          */
         Matrix33 getZRotationMatrix(real angle);
-    };
-};
+	}
+}
 
 #endif

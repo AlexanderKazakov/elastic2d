@@ -34,7 +34,6 @@ namespace gcm {
 		virtual ~UnstructuredGrid() { }
 
 	protected:
-
 		USE_AND_INIT_LOGGER("gcm.UnstructuredGrid")
 	};
 }

@@ -6,12 +6,12 @@
 namespace gcm {
 	class SphereArea : public Area {
 	public:
-		SphereArea(const real& _radius, const linal::Vector3& _center);
-		virtual bool contains(const linal::Vector3& coords) const override;
-		virtual void move(const linal::Vector3& shift) override;
+		SphereArea(const real& _radius, const Real3& _center);
+		virtual bool contains(const Real3& coords) const override;
+		virtual void move(const Real3& shift) override;
 	private:
 		real radius;
-		linal::Vector3 center;
+		Real3 center;
 	};
 }
 

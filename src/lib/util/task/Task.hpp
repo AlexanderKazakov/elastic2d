@@ -19,17 +19,20 @@ namespace gcm {
 	
 	/** 
 	 * Set of all conditions for one statement.
-	 * Task can contains several statements.
+	 * Task can contain several statements.
 	 */
 	struct Statement {
 		typedef std::function<real(real)> TimeDependency;
 
 		std::string id; // name of statement
 
-		real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
-		int numberOfSnaps = 0;
-		int stepsPerSnap = 1;
-		real T = 0.0; // optional, required time if (numberOfSnaps == 0)
+		struct GlobalSettings {
+			real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
+			bool splittingSecondOrder = false;
+			int numberOfSnaps = 0;
+			int stepsPerSnap = 1;
+			real requiredTime = 0.0; // optional, required time if (numberOfSnaps <= 0)
+		} globalSettings;
 
 		struct MaterialCondition {
 			std::shared_ptr<AbstractMaterial> defaultMaterial;
@@ -46,7 +49,6 @@ namespace gcm {
 		 */
 		struct InitialCondition {
 			// initial conditions in terms of vector of node values
-
 			struct Vector {
 				std::shared_ptr<Area> area;
 				std::initializer_list<real> list;
@@ -54,7 +56,6 @@ namespace gcm {
 			std::vector<Vector> vectors;
 
 			// initial conditions in terms of waves
-
 			struct Wave {
 				std::shared_ptr<Area> area;
 				Waves::T waveType;
@@ -65,7 +66,6 @@ namespace gcm {
 			std::vector<Wave> waves;
 
 			// initial conditions in terms of physical quantities
-
 			struct Quantity {
 				std::shared_ptr<Area> area;
 				PhysicalQuantities::T physicalQuantity;
@@ -89,29 +89,53 @@ namespace gcm {
 		};
 		std::vector<Fracture> fractures;
 
-		std::vector<PhysicalQuantities::T> quantitiesToVtk;
-
+		struct VtkSnapshotter {
+			// in order to not dump big vtk snaps every statement
+			// but just sometimes for eye-checking
+			bool enableSnapshotting = false;
+			// list of physical quantities to write to vtk
+			std::vector<PhysicalQuantities::T> quantitiesToSnap;
+		} vtkSnapshotter;
+		
 		struct Detector {
 			std::vector<PhysicalQuantities::T> quantities;
 			std::shared_ptr<Area> area;
 		} detector;
+		
+		struct Binary2DSeismograph {
+			PhysicalQuantities::T quantityToWrite;
+		} binary2DSeismograph;
 	};
 	
 	/**
 	 * Struct to initialize the program.
 	 */
 	struct Task {
-		int dimensionality = 0;
-		linal::Vector<3> lengthes = {0, 0, 0}; // lengthes of cube in each direction
-		linal::VectorInt<3> sizes = {1, 1, 1}; // number of nodes along each direction
-		linal::Vector<3> startR = {0, 0, 0}; // global coordinates of the first real node
-		real spatialStep = 0; // effective spatial step for unstructured grids
+		
+		Materials::T materialId;
+		Grids::T gridId;
+		Models::T modelId;
+		std::vector<Snapshotters::T> snapshottersId;
 
-		int borderSize = 0; // order of accuracy of spatial interpolation
-		bool splittingSecondOrder = false;
-		bool enableSnapshotting = false;
-		bool forceSequence = false; // if true make meshes thinking that the number of
-		// processes is one, even if it isn't so actually
+		struct GlobalSettings {
+			// If true, independently from number of working processes
+			// calculation of a concrete statement is performed in sequence.
+			// Useful for inverse problem calculation and MPI testing.
+			bool forceSequence = false;
+		} globalSettings;
+
+		struct CubicGrid {
+			int dimensionality = 0; // spatial dimensionality of the grid (model can have different)
+			Real3 lengthes = {0, 0, 0}; // lengthes of cube in each direction
+			Real3 h = {0, 0, 0}; // spatial steps in each direction
+			Int3 sizes = {0, 0, 0}; // number of nodes along each direction
+			Real3 startR = {0, 0, 0}; // global coordinates of the first real node
+			int borderSize = 0; // number of virtual border nodes for one border point
+		} cubicGrid;
+
+		struct Cgal2DGrid {
+			real spatialStep = 0; // effective spatial step
+		} cgal2DGrid;
 
 		// list of statements to calculate on the same geometry
 		std::vector<Statement> statements;

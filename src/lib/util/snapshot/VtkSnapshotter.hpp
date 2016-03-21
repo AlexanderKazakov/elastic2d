@@ -2,6 +2,8 @@
 #define LIBGCM_VTKSNAPSHOTTER_HPP
 
 #include <lib/util/snapshot/Snapshotter.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
+#include <lib/mesh/grid/Cgal2DGrid.hpp>
 
 #include <vtkSmartPointer.h>
 #include <vtkPointData.h>
@@ -19,12 +21,16 @@ namespace gcm {
 		typedef typename TMesh::VtkWriterType    VtkWriterType;
 		const std::string FOLDER_NAME = std::string("vtk");
 
-		std::vector<PhysicalQuantities::T> quantitiesToWrite = {};
+		bool enableSnapshotting = false;
+		std::vector<PhysicalQuantities::T> quantitiesToSnap;
+		
 		virtual void beforeStatementImpl(const Statement& statement) override {
-			quantitiesToWrite = statement.quantitiesToVtk;
-		};
+			enableSnapshotting = statement.vtkSnapshotter.enableSnapshotting;
+			quantitiesToSnap = statement.vtkSnapshotter.quantitiesToSnap;
+		}
 
 		virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
+			if (!enableSnapshotting) return;
 			LOG_DEBUG("Start snapshot writing to " << makeFileNameForSnapshot(step));
 			mesh = dynamic_cast<const TMesh*>(_mesh);
 			// TODO - in this approach, we create a structure of size of the whole mesh,
@@ -35,7 +41,7 @@ namespace gcm {
 			for (auto& quantity : TMesh::PdeVector::VECTORS) {
 				writeQuantity(quantity.first, &VtkSnapshotter::insertVector, 3);
 			}
-			for (auto& quantity : quantitiesToWrite) {
+			for (auto& quantity : quantitiesToSnap) {
 				writeQuantity(quantity, &VtkSnapshotter::insertQuantity, 1);
 			}
 			for (auto& quantity : TMesh::Model::InternalOde::QUANTITIES) {
@@ -51,9 +57,9 @@ namespace gcm {
 			vtkWriter->SetFileName(makeFileNameForSnapshot(step,
 					vtkWriter->GetDefaultFileExtension(), FOLDER_NAME).c_str());
 			vtkWriter->Write();
-		};
+		}
 
-		USE_AND_INIT_LOGGER("gcm.VtkSnapshotter");
+		USE_AND_INIT_LOGGER("gcm.VtkSnapshotter")
 		const TMesh* mesh;
 		vtkSmartPointer<VtkGridType> vtkGrid;
 		vtkSmartPointer<VtkWriterType> vtkWriter;
@@ -75,7 +81,7 @@ namespace gcm {
 				(this->*insertFunc)(quantity, vtkArr, it);
 			}
 			vtkGrid->GetPointData()->AddArray(vtkArr);
-		};
+		}
 
 		void insertVector(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
 		                  const typename TMesh::VtkIterator& it) {
@@ -86,22 +92,22 @@ namespace gcm {
 				vtkVec[i] = (float) linalVec(i);
 			}
 			vtkArr->InsertNextTuple(vtkVec);
-		};
+		}
 
 		void insertQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
 		                    const typename TMesh::VtkIterator& it) {
 			auto Get = TMesh::PdeVector::QUANTITIES.at(quantity).Get;
 			vtkArr->InsertNextValue((float)Get(mesh->pde(it)));
-		};
+		}
 
 		void insertOdeQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
 		                       const typename TMesh::VtkIterator& it) {
 			auto Get = TMesh::Model::InternalOde::QUANTITIES.at(quantity).Get;
 			vtkArr->InsertNextValue((float)Get(mesh->ode(it)));
-		};
+		}
 
 		/**
-		 * Below is implementations of geometry writing for meshes of different types
+		 * Below are implementations of geometry writing for meshes of different types
 		 */
 
 		void writeGeometry(const CubicGrid& gcmGrid, vtkSmartPointer<vtkStructuredGrid> _vtkGrid) {
@@ -116,7 +122,7 @@ namespace gcm {
 				points->InsertNextPoint(point);
 			}
 			_vtkGrid->SetPoints(points);
-		};
+		}
 
 		void writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> _vtkGrid) {
 			auto points = vtkSmartPointer<vtkPoints>::New();
@@ -137,7 +143,7 @@ namespace gcm {
 				}
 				_vtkGrid->InsertNextCell(triangle->GetCellType(),triangle->GetPointIds());
 			}
-		};
+		}
 	};
 }
 

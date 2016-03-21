@@ -19,8 +19,6 @@ namespace gcm {
 		virtual ~StructuredGrid() { }
 
 	protected:
-		virtual void recalculateMinimalSpatialStep() override { }
-
 		USE_AND_INIT_LOGGER("gcm.StructuredGrid")
 	};
 }

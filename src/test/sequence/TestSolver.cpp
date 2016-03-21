@@ -20,15 +20,15 @@ TEST(Solver, StageXForward)
 		task.sizes(1) = 10;
 		task.lengthes = {2, 3, 1};
 		statement.numberOfSnaps = 1;
-		statement.T = 100.0;
+		statement.requiredTime = 100.0;
 
 		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 0; // along x
 		wave.quantity = PhysicalQuantities::T::PRESSURE;
 		wave.quantityValue = 5;
-		linal::Vector3 min({0.3, -1, -1});
-		linal::Vector3 max({0.7, 4, 1});
+		Real3 min({0.3, -1, -1});
+		Real3 max({0.7, 4, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		statement.initialCondition.waves.push_back(wave);
 		
@@ -67,15 +67,15 @@ TEST(Solver, StageY)
 		task.sizes(1) = 10;
 		task.lengthes = {3, 2, 1};
 		statement.numberOfSnaps = 1;
-		statement.T = 100.0;
+		statement.requiredTime = 100.0;
 
 		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::Vy;
 		wave.quantityValue = -2;
-		linal::Vector3 min({ -1, 0.3, -1});
-		linal::Vector3 max({ 4, 0.7, 1});
+		Real3 min({ -1, 0.3, -1});
+		Real3 max({ 4, 0.7, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		statement.initialCondition.waves.push_back(wave);
 
@@ -118,8 +118,8 @@ TEST(Solver, StageYSxx)
 		Statement::InitialCondition::Quantity quantity;
 		quantity.physicalQuantity = PhysicalQuantities::T::Sxx;
 		quantity.value = 10;
-		linal::Vector3 begin({0.5, 0.5, -1});
-		linal::Vector3 end({0.5, 0.5, 1});
+		Real3 begin({0.5, 0.5, -1});
+		Real3 end({0.5, 0.5, 1});
 		quantity.area = std::make_shared<StraightBoundedCylinderArea>(0.01, begin, end);
 		statement.initialCondition.quantities.push_back(quantity);
 		

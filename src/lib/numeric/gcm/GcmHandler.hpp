@@ -75,7 +75,7 @@ namespace gcm {
 		                                      const Iterator& it, const PdeVector& dx) {
 			Matrix ans;
 			for (int k = 0; k < PdeVector::M; k++) {
-				linal::Vector2 shift({(stage == 0) * dx(k), (stage == 1) * dx(k)});
+				Real2 shift({(stage == 0) * dx(k), (stage == 1) * dx(k)});
 				auto t = mesh.findOwnerTriangle(it, shift);
 				PdeVector u; linal::clear(u);
 				if (t.inner) {

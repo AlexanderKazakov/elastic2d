@@ -17,12 +17,8 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.main");
 	try {
-		Engine engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-		engine.addSnapshotter(new Detector<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-		engine.initialize(parseTaskCagi2d());
-		engine.run();
+		Engine::Instance().initialize(parseTaskCagi2d());
+		Engine::Instance().run();
 	} catch (Exception e) {
 		std::cout << e.what() << std::endl;
 //		LOG_FATAL(e.what());
@@ -35,30 +31,35 @@ int main(int argc, char** argv) {
 
 Task parseTaskCagi2d() {
 	Task task;
-	task.dimensionality = 2;
-	task.borderSize = 2;
-	task.forceSequence = true;
-	task.enableSnapshotting = true;
+	
+	task.modelId = Models::T::ELASTIC2D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	task.snapshottersId = {Snapshotters::T::VTK, Snapshotters::T::DETECTOR};
+	
+	task.cubicGrid.dimensionality = 2;
+	task.cubicGrid.borderSize = 2;
+	task.globalSettings.forceSequence = true;
 
 	real X = 0.016, Y = 0.004;
 	real sensorSize = 0.003;
 	real sourceSize = 0.003;
-	task.lengthes = {X, Y, 1};
-	task.sizes = {151 / 10, 101 /10, 1};
+	task.cubicGrid.lengthes = {X, Y, 1};
+	task.cubicGrid.sizes = {151 / 10, 101 /10, 1};
 
 	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
-	statement.CourantNumber = 1.0;
-	statement.numberOfSnaps = 251 / 10;
-	statement.stepsPerSnap = 1;
+	statement.globalSettings.CourantNumber = 1.0;
+	statement.globalSettings.numberOfSnaps = 251 / 10;
+	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::BorderCondition borderCondition;	
 	// y bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 1e-5, 10}));
+		(Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
@@ -66,7 +67,7 @@ Task parseTaskCagi2d() {
 	statement.borderConditions.push_back(borderCondition);
 	// y up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, Y-1e-5, -10}), linal::Vector3({10, 10, 10}));
+		(Real3({-10, Y-1e-5, -10}), Real3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
@@ -76,15 +77,15 @@ Task parseTaskCagi2d() {
 	Statement::Fracture fracture;
 	fracture.direction = 1;
 	fracture.coordinate = Y/2;
-	fracture.area = std::make_shared<SphereArea>(Y/2, linal::Vector3({X/2, Y/2, 0}));
+	fracture.area = std::make_shared<SphereArea>(Y/2, Real3({X/2, Y/2, 0}));
 	fracture.values = {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
 	};
 	statement.fractures.push_back(fracture); 
 	
-	// quantities to snapshot
-	statement.quantitiesToVtk = {};
+	statement.vtkSnapshotter.enableSnapshotting = false;
+	statement.vtkSnapshotter.quantitiesToSnap = {};
 	statement.detector.quantities = {PhysicalQuantities::T::Vy};
 	
 	real spaceToMoveSensor = X - (sensorSize + sourceSize);
@@ -98,8 +99,8 @@ Task parseTaskCagi2d() {
 		real endSrcPosition = initSrcPosition + sourceSize;
 		// y up sensor
 		auto srcArea = std::make_shared<AxisAlignedBoxArea>
-			(linal::Vector3({initSrcPosition, Y - 1e-5, -10}),
-			 linal::Vector3({endSrcPosition, 10, 10}));
+			(Real3({initSrcPosition, Y - 1e-5, -10}),
+			 Real3({endSrcPosition, 10, 10}));
 		real frequency = 10e+6, T = 1.0 / frequency;
 		real A = - 1e+6;
 		borderCondition.area = srcArea;
@@ -110,8 +111,8 @@ Task parseTaskCagi2d() {
 		if (statement.borderConditions.size() == 3) statement.borderConditions.pop_back();
 		statement.borderConditions.push_back(borderCondition);
 		auto sensorArea = std::make_shared<AxisAlignedBoxArea>
-			(linal::Vector3({initSensorPosition, Y - 1e-5, -10}),
-			 linal::Vector3({endSensorPosition, 10, 10}));
+			(Real3({initSensorPosition, Y - 1e-5, -10}),
+			 Real3({endSensorPosition, 10, 10}));
 		statement.detector.area = sensorArea;
 
 		statement.id = StringUtils::toString(i, 4);
@@ -128,31 +129,36 @@ Task parseTaskCagi2d() {
 
 Task parseTaskCagi3d() {
 	Task task;
-	task.dimensionality = 3;
-	task.borderSize = 2;
-	task.forceSequence = true;
-	task.enableSnapshotting = true;
+	
+	task.modelId = Models::T::ELASTIC3D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	task.snapshottersId = {Snapshotters::T::VTK, Snapshotters::T::DETECTOR};
+	
+	task.cubicGrid.dimensionality = 3;
+	task.cubicGrid.borderSize = 2;
+	task.globalSettings.forceSequence = true;
 
 	real X = 0.016, Y = 0.016, Z = 0.004;
 	real sensorSizeX = 0.003;
 	real sourceSizeX = 0.003;
 	real commonSizeY = 0.006;
-	task.lengthes = {X, Y, Z};
-	task.sizes = {151/2, 151/2, 101/2};
+	task.cubicGrid.lengthes = {X, Y, Z};
+	task.cubicGrid.sizes = {151/2, 151/2, 101/2};
 
 	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
-	statement.CourantNumber = 1.0;
-	statement.numberOfSnaps = 251/2;
-	statement.stepsPerSnap = 1;
+	statement.globalSettings.CourantNumber = 1.0;
+	statement.globalSettings.numberOfSnaps = 251/2;
+	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::BorderCondition borderCondition;	
 	// z bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 10, 1e-5}));
+		(Real3({-10, -10, -10}), Real3({10, 10, 1e-5}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
@@ -161,7 +167,7 @@ Task parseTaskCagi3d() {
 	statement.borderConditions.push_back(borderCondition);
 	// z up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, -10, Z-1e-5}), linal::Vector3({10, 10, 10}));
+		(Real3({-10, -10, Z-1e-5}), Real3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
@@ -172,7 +178,7 @@ Task parseTaskCagi3d() {
 	Statement::Fracture fracture;
 	fracture.direction = 2;
 	fracture.coordinate = Z/2;
-	fracture.area = std::make_shared<SphereArea>(Z/2, linal::Vector3({X/2, Y/2, Z/2}));
+	fracture.area = std::make_shared<SphereArea>(Z/2, Real3({X/2, Y/2, Z/2}));
 	fracture.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
@@ -181,7 +187,8 @@ Task parseTaskCagi3d() {
 	statement.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
-	statement.quantitiesToVtk = {};
+	statement.vtkSnapshotter.enableSnapshotting = false;
+	statement.vtkSnapshotter.quantitiesToSnap = {};
 	statement.detector.quantities = {PhysicalQuantities::T::Vz};
 	
 	real spaceToMoveSensorX = X - (sensorSizeX + sourceSizeX);
@@ -205,8 +212,8 @@ Task parseTaskCagi3d() {
 			real endSrcPositionY = endSensorPositionY;
 			// z up sensor
 			auto srcArea = std::make_shared<AxisAlignedBoxArea>
-				(linal::Vector3({initSrcPositionX, initSrcPositionY, Z - 1e-5}),
-				 linal::Vector3({endSrcPositionX, endSrcPositionY, 10}));
+				(Real3({initSrcPositionX, initSrcPositionY, Z - 1e-5}),
+				 Real3({endSrcPositionX, endSrcPositionY, 10}));
 			real frequency = 10e+6, T = 1.0 / frequency;
 			real A = - 1e+6;
 			borderCondition.area = srcArea;
@@ -218,8 +225,8 @@ Task parseTaskCagi3d() {
 			if (statement.borderConditions.size() == 3) statement.borderConditions.pop_back();
 			statement.borderConditions.push_back(borderCondition);
 			auto sensorArea = std::make_shared<AxisAlignedBoxArea>
-				(linal::Vector3({initSensorPositionX, initSensorPositionY, Z - 1e-5}),
-				 linal::Vector3({endSensorPositionX, endSensorPositionY, 10}));
+				(Real3({initSensorPositionX, initSensorPositionY, Z - 1e-5}),
+				 Real3({endSensorPositionX, endSensorPositionY, 10}));
 			statement.detector.area = sensorArea;
 
 			statement.id = StringUtils::toString(j, 2) + StringUtils::toString(i, 2);

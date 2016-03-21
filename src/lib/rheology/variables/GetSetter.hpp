@@ -31,8 +31,8 @@ namespace gcm {
 
 	template<typename Variables>
 	struct Vector3GetSetter {
-		typedef linal::Vector3 (*Getter)(const Variables& variablesToGetFrom);
-		typedef void (*Setter)(const linal::Vector3& value, Variables& variablesToSetTo);
+		typedef Real3 (*Getter)(const Variables& variablesToGetFrom);
+		typedef void (*Setter)(const Real3& value, Variables& variablesToSetTo);
 
 		Vector3GetSetter(Getter _Get, Setter _Set) : Get(_Get), Set(_Set) { }
 

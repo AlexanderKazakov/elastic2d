@@ -38,7 +38,7 @@ void InitialCondition<TModel, TMaterial>::initialize(const Statement &statement)
 }
 
 template<typename TModel, typename TMaterial>
-void InitialCondition<TModel, TMaterial>::apply(PdeVector &v, const linal::Vector3& coords) const {
+void InitialCondition<TModel, TMaterial>::apply(PdeVector &v, const Real3& coords) const {
 	linal::clear(v);
 	for (const auto& condition : pdeConditions) {
 		if (condition.area->contains(coords)) {

@@ -41,3 +41,23 @@ const std::map<Materials::T, std::string> Materials::NAME = {
 		{Materials::T::ORTHOTROPIC,  "orthotropic"}
 };
 
+
+const std::map<Grids::T, std::string> Grids::NAME = {
+		{Grids::T::CUBIC,    "cubic"},
+		{Grids::T::CGAL2D,   "cgal2d"}
+};
+
+
+const std::map<Models::T, std::string> Models::NAME = {
+		{Models::T::ELASTIC1D,    "elastic1d"},
+		{Models::T::ELASTIC2D,    "elastic2d"},
+		{Models::T::ELASTIC3D,    "elastic3d"}
+};
+
+
+const std::map<Snapshotters::T, std::string> Snapshotters::NAME = {
+		{Snapshotters::T::VTK,            "vtk"},
+		{Snapshotters::T::BIN2DSEISM,     "bin2dseism"},
+		{Snapshotters::T::DETECTOR,       "detector"}
+};
+

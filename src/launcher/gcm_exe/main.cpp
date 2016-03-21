@@ -9,28 +9,20 @@
 
 using namespace gcm;
 
-Task parseTaskCgal();
+Task parseTaskCgal2d();
 Task parseTask2d();
-Task parseTaskDemo();
+Task parseTask3d();
 
 
 int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.main");
 
-	Engine engine;
-//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>>());
-//	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>>());
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-//	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>>());
-//	engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>>());
-
 	try {
-		engine.initialize(parseTask2d());
+		Engine::Instance().initialize(parseTask2d());
 
 		auto t1 = std::chrono::high_resolution_clock::now();
-		engine.run();
+		Engine::Instance().run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
@@ -44,10 +36,15 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-Task parseTaskCgal() {
-	Task task;	
-	task.spatialStep = 0.4;
-	task.enableSnapshotting = true;
+Task parseTaskCgal2d() {
+	Task task;
+	
+	task.modelId = Models::T::ELASTIC2D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CGAL2D;
+	task.snapshottersId = {Snapshotters::T::VTK};
+	
+	task.cgal2DGrid.spatialStep = 0.4;
 
 	Statement statement;
 	real rho = 4;
@@ -55,21 +52,24 @@ Task parseTaskCgal() {
 	real mu = 1;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.CourantNumber = 1.0;
+	statement.globalSettings.CourantNumber = 1.0;
 
-	statement.numberOfSnaps = 21;
-	statement.stepsPerSnap = 1;
+	statement.globalSettings.numberOfSnaps = 21;
+	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.4, linal::Vector3({0.5, 0.5, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
 	statement.initialCondition.quantities.push_back(pressure);
 	
-	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE,
-	                          PhysicalQuantities::T::Sxx,
-	                          PhysicalQuantities::T::Sxy,
-	                          PhysicalQuantities::T::Syy};
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {
+			PhysicalQuantities::T::PRESSURE,
+			PhysicalQuantities::T::Sxx,
+			PhysicalQuantities::T::Sxy,
+			PhysicalQuantities::T::Syy
+	};
 
 	task.statements.push_back(statement);
 	return task;
@@ -77,12 +77,16 @@ Task parseTaskCgal() {
 
 Task parseTask2d() {
 	Task task;
-	task.enableSnapshotting = true;
+	
+	task.modelId = Models::T::ELASTIC2D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.borderSize = 2;
-	task.dimensionality = 2;
-	task.lengthes = {4, 2, 1};
-	task.sizes = {100, 50, 1};
+	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.dimensionality = 2;
+	task.cubicGrid.lengthes = {4, 2, 1};
+	task.cubicGrid.sizes = {100, 50, 1};
 
 	Statement statement;
 	real rho = 4;
@@ -90,31 +94,36 @@ Task parseTask2d() {
 	real mu = 1;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.CourantNumber = 0.9;
+	statement.globalSettings.CourantNumber = 0.9;
 
-	statement.numberOfSnaps = 20;
-	statement.stepsPerSnap = 1;
+	statement.globalSettings.numberOfSnaps = 20;
+	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({2, 1, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({2, 1, 0}));
 	statement.initialCondition.quantities.push_back(pressure);
 
-	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
 
 	task.statements.push_back(statement);
 	return task;
 }
 
-Task parseTaskDemo() {
+Task parseTask3d() {
 	Task task;
-	task.enableSnapshotting = true;
-
-	task.borderSize = 2;
-	task.dimensionality = 3;
-	task.lengthes = {4, 2, 1};
-	task.sizes = {100, 50, 25};
+	
+	task.modelId = Models::T::ELASTIC3D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	task.snapshottersId = {Snapshotters::T::VTK};
+	
+	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.dimensionality = 3;
+	task.cubicGrid.lengthes = {4, 2, 1};
+	task.cubicGrid.sizes = {100, 50, 25};
 
 	Statement statement;
 	real rho = 4;
@@ -124,18 +133,19 @@ Task parseTaskDemo() {
 //	statement.materialConditions.defaultMaterial = std::make_shared<OrthotropicMaterial>
 //			(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 
-	statement.CourantNumber = 0.9;
+	statement.globalSettings.CourantNumber = 0.9;
 
-	statement.numberOfSnaps = 20;
-	statement.stepsPerSnap = 1;
+	statement.globalSettings.numberOfSnaps = 20;
+	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, linal::Vector3({2, 1, 0.5}));
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({2, 1, 0.5}));
 	statement.initialCondition.quantities.push_back(pressure);
 
-	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
 
 	task.statements.push_back(statement);
 	return task;

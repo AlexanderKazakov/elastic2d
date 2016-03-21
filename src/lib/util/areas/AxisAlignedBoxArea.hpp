@@ -10,14 +10,14 @@ namespace gcm {
 		 * @param min the nearest point to origin of coordinates
 		 * @param max the farthest point from origin of coordinates
 		 */
-		AxisAlignedBoxArea(const linal::Vector3& _min, const linal::Vector3& _max);
-		virtual bool contains(const linal::Vector3& coords) const override;
-		virtual void move(const linal::Vector3& shift) override;
-		linal::Vector3 getMin() const { return min; };
-		linal::Vector3 getMax() const { return max; };
+		AxisAlignedBoxArea(const Real3& _min, const Real3& _max);
+		virtual bool contains(const Real3& coords) const override;
+		virtual void move(const Real3& shift) override;
+		Real3 getMin() const { return min; };
+		Real3 getMax() const { return max; };
 	private:
-		linal::Vector3 min; // the nearest point to origin of coordinates
-		linal::Vector3 max; // the farthest point from origin of coordinates
+		Real3 min; // the nearest point to origin of coordinates
+		Real3 max; // the farthest point from origin of coordinates
 	};
 }
 

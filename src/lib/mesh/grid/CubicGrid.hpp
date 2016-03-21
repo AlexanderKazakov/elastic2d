@@ -6,14 +6,15 @@
 
 namespace gcm {
 	/**
-	 * Non-movable structured rectangular grid
+	 * Non-movable structured rectangular grid.
+	 * Dimensionality from 1 to 3.
+	 * If dimensionality is 2, the grid lies in plain XY, and size by Z is 1.
+	 * If dimensionality is 1, the grid lies on axis X and sizes by Y and Z are 1.
+	 * The slowest index is always X (if going through the memory sequentially)
 	 */
 	class CubicGrid : public StructuredGrid {
 	public:
-		typedef linal::Int3         Int3;
-		typedef linal::Vector<3>    Real3;
-		
-		struct Iterator : public Int3 {
+		struct Iterator : public Int3 { // TODO - replace inheritance
 			Int3 bounds = {0, 0, 0};
 			Iterator(const Int3 start, const Int3 bounds_) {
 				(*this) = start;
@@ -42,7 +43,7 @@ namespace gcm {
 		ForwardIterator begin() const { return ForwardIterator({0, 0, 0}, sizes).begin(); }
 		ForwardIterator end() const { return ForwardIterator({0, 0, 0}, sizes).end(); }
 
-		/** slow-Z fast-X iterator */
+		/** slow-Z fast-X vtk suitable iterator */
 		struct VtkIterator : public Iterator {
 			using Iterator::Iterator;
 			VtkIterator& operator++() {
@@ -93,7 +94,7 @@ namespace gcm {
 		virtual ~CubicGrid() { }
 
 		/** Read-only access to real coordinates */
-		const linal::Vector3 coords(const Iterator& it) const {
+		const Real3 coords(const Iterator& it) const {
 			return startR + linal::plainMultiply(it, h);
 		}
 
@@ -131,13 +132,20 @@ namespace gcm {
 		const Real3 startR; // global coordinates of the first real node of the grid
 		const Real3 h; // spatial steps along each direction
 
+		real getMinimalSpatialStep() const {
+			real minH = fmin(h(0), fmin(h(1), h(2)));
+			assert_gt(minH, 0);
+			return minH;
+		}
+		
+		/** Checking and precalculations of the setup properties before program starts */
+		static void preprocessTask(Task::CubicGrid& task);
 	private:
-		// functions for constructor
-		Int3 calculateSizes(const Task& task) const;
-		Int3 calculateIndexMaker(const Task& task) const;
-		Real3 calculateStartR(const Task& task) const;
-		Real3 calculateH(const Task& task) const;
-		int numberOfNodesAlongXPerOneCore(const Task& task) const;
+		// functions for setup precalculations
+		static Int3 calculateSizes(const Task::CubicGrid& task);
+		static Real3 calculateStartR(const Task::CubicGrid& task);
+		static int numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task);
+		static Int3 calculateIndexMaker(const Task::CubicGrid& task);
 
 		USE_AND_INIT_LOGGER("gcm.CubicGrid")
 	};

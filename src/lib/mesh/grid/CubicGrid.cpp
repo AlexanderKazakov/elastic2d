@@ -8,53 +8,112 @@
 using namespace gcm;
 
 
-CubicGrid::CubicGrid(const Task &task) :
+CubicGrid::CubicGrid(const Task& task) :
 		StructuredGrid(task),
-		borderSize(task.borderSize),
-		sizes(calculateSizes(task)),
-		indexMaker(calculateIndexMaker(task)),
-		startR(calculateStartR(task)),
-		h(calculateH(task)) {
-
-	this->minimalSpatialStep = fmin(h(0), fmin(h(1), h(2)));
-
+		borderSize(task.cubicGrid.borderSize),
+		sizes(task.cubicGrid.sizes),
+		indexMaker(calculateIndexMaker(task.cubicGrid)),
+		startR(task.cubicGrid.startR),
+		h(task.cubicGrid.h) {
+	
 	assert_ge(borderSize, 1);
-	for (int j = 0; j < 3; j++) {
-		if (sizes(j) != 1) assert_ge(sizes(j), borderSize);
-		assert_gt(h(j), 0.0);
-		assert_eq(h(j), h(j)); // this is supposed to catch NaN
-		assert_eq(startR(j), startR(j));
+	for (int i = 0; i < task.cubicGrid.dimensionality; i++) {
+		assert_ge(sizes(i), borderSize);
+		assert_gt(h(i), 0);
+	}
+	for (int i = task.cubicGrid.dimensionality; i < 3; i++) {
+		assert_eq(sizes(i), 1);
+		assert_eq(h(i), std::numeric_limits<real>::max());
+		assert_eq(indexMaker(i), 0);
+	}
+	for (int i = 0; i < 3; i++) {
+		// this is supposed to catch NaN
+		assert_eq(h(i), h(i));
+		assert_eq(startR(i), startR(i));
 	}
 }
 
+void CubicGrid::preprocessTask(Task::CubicGrid& task) {
+	// check before precalculations
+	assert_ge(task.dimensionality, 1);
+	assert_le(task.dimensionality, 3);
+	assert_ge(task.borderSize, 1);
+	for (int i = 0; i < task.dimensionality; i++) {
+		assert_ge(task.sizes(i), task.borderSize);
+		assert_ge(task.lengthes(i), 0);
+		assert_ge(task.h(i), 0);
+		// either lengths or h can be specified
+		if (task.lengthes(0) > 0) { // lengths specified
+			assert_eq(task.h(i), 0);
+			assert_gt(task.lengthes(i), 0);
+		} else { // h specified
+			assert_eq(task.lengthes(i), 0);
+			assert_gt(task.h(i), 0);
+		}
+	}
+	for (int i = task.dimensionality; i < 3; i++) {
+		task.sizes(i) = 1;
+		task.lengthes(i) = std::numeric_limits<real>::max();
+		task.h(i) = std::numeric_limits<real>::max();
+		task.startR(i) = 0;
+	}
 
-CubicGrid::Int3 CubicGrid::calculateSizes(const Task& task) const {
+	if (task.lengthes(0) > 0) { // if lengths not h specified
+		task.h = linal::plainDivision(task.lengthes, task.sizes - Int3({1, 1, 1}));
+	}
+	// with respect to MPI partition
+	task.sizes = calculateSizes(task);
+	task.startR = calculateStartR(task);
+	task.lengthes = linal::plainMultiply(task.sizes - Int3({1, 1, 1}), task.h);
+}
+
+Int3 CubicGrid::calculateSizes(const Task::CubicGrid& task) {
 	Int3 _sizes = task.sizes;
+	if (Engine::Instance().getForceSequence()) {
+		return _sizes;
+	}
+	
 	// MPI - we divide the grid among processes equally along x-axis
 	_sizes(0) = numberOfNodesAlongXPerOneCore(task);
 	// in order to keep specified in task number of nodes
-	if (this->rank == this->numberOfWorkers - 1)
-		_sizes(0) = task.sizes(0) - numberOfNodesAlongXPerOneCore(task) * (this->numberOfWorkers - 1);
-	// MPI - (end)
+	if (Engine::Instance().MpiRank == Engine::Instance().MpiSize - 1) {
+		_sizes(0) = task.sizes(0) - 
+				numberOfNodesAlongXPerOneCore(task) * (Engine::Instance().MpiSize - 1);
+	}
+	
 	return _sizes;
 }
 
-CubicGrid::Int3 CubicGrid::calculateIndexMaker(const Task& task) const {
-	Int3 _indexMaker = {0, 0, 0};
-	Int3 _sizes = calculateSizes(task);
-	int _borderSize = task.borderSize;
+Real3 CubicGrid::calculateStartR(const Task::CubicGrid& task) {
+	Real3 _startR = task.startR;
+	if (Engine::Instance().getForceSequence()) {
+		return _startR;
+	}
+	
+	// MPI - we divide the grid among processes equally along x-axis
+	_startR(0) += Engine::Instance().MpiRank * numberOfNodesAlongXPerOneCore(task) * task.h(0);
+	
+	return _startR;
+}
 
+int CubicGrid::numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
+	return (int) std::round((real) task.sizes(0) / Engine::Instance().MpiSize);
+}
+
+Int3 CubicGrid::calculateIndexMaker(const Task::CubicGrid& task) {
+
+	Int3 _indexMaker = {0, 0, 0};
 	switch (task.dimensionality) {
 		case 1:
 			_indexMaker(0) = 1;
 			break;
 		case 2:
-			_indexMaker(0) = 2 * _borderSize + _sizes(1);
+			_indexMaker(0) = 2 * task.borderSize + task.sizes(1);
 			_indexMaker(1) = 1;
 			break;
 		case 3:
-			_indexMaker(0) = (2 * _borderSize + _sizes(1)) * (2 * _borderSize + _sizes(2));
-			_indexMaker(1) = 2 * _borderSize + _sizes(2);
+			_indexMaker(0) = (2 * task.borderSize + task.sizes(1)) * (2 * task.borderSize + task.sizes(2));
+			_indexMaker(1) = 2 * task.borderSize + task.sizes(2);
 			_indexMaker(2) = 1;
 			break;
 		default:
@@ -63,38 +122,5 @@ CubicGrid::Int3 CubicGrid::calculateIndexMaker(const Task& task) const {
 
 	return _indexMaker;
 }
-
-CubicGrid::Real3 CubicGrid::calculateStartR(const Task& task) const {
-	Real3 _startR = task.startR;
-	// MPI - we divide the grid among processes equally along x-axis
-	_startR(0) += (this->rank * numberOfNodesAlongXPerOneCore(task))
-				  * calculateH(task)(0); // mpi parallel along X axis
-	// MPI - (end)
-	return _startR;
-}
-
-CubicGrid::Real3 CubicGrid::calculateH(const Task& task) const {
-	return linal::plainDivision(task.lengthes, task.sizes - Int3({1, 1, 1}));
-}
-
-int CubicGrid::numberOfNodesAlongXPerOneCore(const Task& task) const {
-	return (int) std::round((real) task.sizes(0) / this->numberOfWorkers);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

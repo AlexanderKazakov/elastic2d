@@ -19,7 +19,7 @@ TEST(CubicGrid, initialize) {
 	task.sizes(1) = 9;
 	task.lengthes = {20, 8, 1};
 	statement.numberOfSnaps = 5;
-	statement.T = 100.0;
+	statement.requiredTime = 100.0;
 	
 	task.statements.push_back(statement);
 
@@ -27,7 +27,7 @@ TEST(CubicGrid, initialize) {
 	grid.beforeStatement(statement);
 	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.h(1), 1.0, EQUALITY_TOLERANCE);
-	ASSERT_NEAR(grid.getMaximalLambda(), 0.866025404, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(grid.getMaximalEigenvalue(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	for (int x = 0; x < task.sizes(0); x++) {
 		for (int y = 0; y < task.sizes(1); y++) {
@@ -57,7 +57,7 @@ TEST(CubicGrid, PartIterator) {
 	}
 	ASSERT_EQ(X * Y, counter);
 	counter = 0;
-	CubicGrid::Int3 min = {2, 2, 3}, max = {4, 3, 6};
+	Int3 min = {2, 2, 3}, max = {4, 3, 6};
 	for (auto it = grid.box(min, max); it != it.end(); ++it) {
 		counter++;
 	}
@@ -97,7 +97,7 @@ TEST(CubicGrid, interpolateValuesAround)
 	Statement::InitialCondition::Quantity quantity;
 	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	quantity.value = -1.0;
-	quantity.area = std::make_shared<SphereArea>(0.1, linal::Vector3({1,1,0}));
+	quantity.area = std::make_shared<SphereArea>(0.1, Real3({1,1,0}));
 	statement.initialCondition.quantities.push_back(quantity);
 
 	task.statements.push_back(statement);

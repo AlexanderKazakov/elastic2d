@@ -11,7 +11,7 @@ namespace gcm {
 	public:
 		static const bool NonTrivial = false;
 
-		void beforeStatement(const Statement&) { }
+		DummyCorrector(const Statement&) { }
 
 		/**
 		 * This function should't be called at all, this is just stub
