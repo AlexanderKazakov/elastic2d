@@ -40,7 +40,7 @@ Engine::~Engine() {
 
 void Engine::run() {
 	for (const auto& statement : task.statements) {
-		std::cout << "Start statement " << statement.id << std::endl;
+		LOG_INFO("Start statement " << statement.id);
 		beforeStatement(statement);
 		runStatement();
 	}
@@ -64,8 +64,6 @@ void Engine::beforeStatement(const Statement& statement) {
 }
 
 void Engine::runStatement() {
-	LOG_INFO("Start calculations");
-
 	int step = 0;
 	while (Clock::Time() < requiredTime) {
 		real timeStep = estimateTimeStep();

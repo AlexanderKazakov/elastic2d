@@ -15,7 +15,6 @@ namespace gcm {
 		
 		static void moveMesh(Mesh&, const real) { }
 		
-		USE_AND_INIT_LOGGER("gcm.MeshMover")
 	};
 
 	template<typename TModel, typename TMaterial>
@@ -24,6 +23,7 @@ namespace gcm {
 		typedef typename Mesh::PdeVector                         PdeVector;
 
 		static void moveMesh(Mesh& mesh, const real timeStep) {
+			USE_AND_INIT_LOGGER("gcm.MeshMover")			
 			LOG_DEBUG("Start mesh motion");
 			for (auto& it : mesh) {
 				Real2 dx = {mesh.pde(it).V[0] * timeStep, 
@@ -32,7 +32,6 @@ namespace gcm {
 			}
 		}
 		
-		USE_AND_INIT_LOGGER("gcm.MeshMover")
 	};
 }
 

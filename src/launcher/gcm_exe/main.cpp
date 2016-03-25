@@ -20,14 +20,13 @@ int main(int argc, char** argv) {
 
 	try {
 		auto t1 = std::chrono::high_resolution_clock::now();
-		Engine(parseTask2d()).run();
+		Engine(parseTaskCgal2d()).run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-		std::cout << "Time of calculation, microseconds = " << duration << std::endl;
+		LOG_INFO("Time of calculation, microseconds = " << duration);
 	} catch (Exception e) {
-		std::cout << e.what() << std::endl;
-//		LOG_FATAL(e.what());
+		LOG_FATAL(e.what());
 	}
 
 	MPI_Finalize();

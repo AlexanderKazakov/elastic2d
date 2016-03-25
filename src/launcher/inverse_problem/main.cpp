@@ -15,12 +15,11 @@ const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 
 int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
-	USE_AND_INIT_LOGGER("gcm.main");
+	USE_AND_INIT_LOGGER("gcm.inverse_problem");
 	try {
 		Engine(parseTaskCagi2d()).run();
 	} catch (Exception e) {
-		std::cout << e.what() << std::endl;
-//		LOG_FATAL(e.what());
+		LOG_FATAL(e.what());
 	}
 
 	MPI_Finalize();

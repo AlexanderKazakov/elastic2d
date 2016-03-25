@@ -64,9 +64,7 @@ namespace gcm {
 	};
 	
 	template<class TMesh>
-	DefaultSolver<TMesh>::DefaultSolver(const Task &task) : Solver(task) {
-		LOG_INFO("Start initialization");
-	
+	DefaultSolver<TMesh>::DefaultSolver(const Task &task) : Solver(task) {	
 		mesh = new Mesh(task);
 		borderConditions = new Border(task);
 	}
@@ -90,8 +88,6 @@ namespace gcm {
 	
 	template<class TMesh>
 	void DefaultSolver<TMesh>::nextTimeStep(const real timeStep) {
-		LOG_INFO("Start time step " << step);
-	
 		for (int s = 0; s < Mesh::DIMENSIONALITY; s++) {
 			stage(s, timeStep);
 		}

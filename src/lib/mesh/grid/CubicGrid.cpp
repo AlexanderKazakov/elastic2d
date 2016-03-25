@@ -31,8 +31,6 @@ CubicGrid::CubicGrid(const Task& task) :
 		assert_eq(h(i), h(i));
 		assert_eq(startR(i), startR(i));
 	}
-	
-	std::cout << Mpi::Rank() << " # " << "sizes = " << sizes << " h = " << h << "sR = " << startR;
 }
 
 void CubicGrid::preprocessTask(Task::CubicGrid& task) {
@@ -64,7 +62,7 @@ void CubicGrid::preprocessTask(Task::CubicGrid& task) {
 		task.h = linal::plainDivision(task.lengths, task.sizes - Int3({1, 1, 1}));
 	}
 	// with respect to MPI partition
-	// TODO - remove this shit
+	// TODO - smth is wrong with this idea of "preprocess"
 	auto sizes_ = calculateSizes(task);
 	auto startR_ = calculateStartR(task);
 	task.sizes = sizes_;

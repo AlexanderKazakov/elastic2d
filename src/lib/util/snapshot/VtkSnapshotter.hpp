@@ -31,7 +31,6 @@ namespace gcm {
 
 		virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 			if (!enableSnapshotting) return;
-			LOG_DEBUG("Start snapshot writing to " << makeFileNameForSnapshot(step));
 			mesh = dynamic_cast<const TMesh*>(_mesh);
 			assert_true(mesh);
 			// TODO - in this approach, we create a structure of size of the whole mesh,

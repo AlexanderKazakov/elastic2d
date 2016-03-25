@@ -5,7 +5,6 @@ using namespace gcm;
 
 Cgal2DGrid::Cgal2DGrid(const Task& task) :
 		UnstructuredGrid(task) {
-	LOG_INFO("Start initialization");
 	effectiveSpatialStep = task.cgal2DGrid.spatialStep;
 	triangulate();
 	vertexHandles.resize(triangulation.number_of_vertices());
@@ -43,9 +42,9 @@ void Cgal2DGrid::triangulate() {
 	std::list<Point> listOfSeeds;
 	listOfSeeds.push_back(Point(-1, -1));
 
-	std::cout << "Number of vertices: " << triangulation.number_of_vertices() << std::endl;
-	std::cout << "Number of faces: " << triangulation.number_of_faces() << std::endl;
-	std::cout << "Meshing the triangulation..." << std::endl;
+	LOG_DEBUG("Number of vertices: " << triangulation.number_of_vertices());
+	LOG_DEBUG("Number of faces: " << triangulation.number_of_faces());
+	LOG_DEBUG("Meshing the triangulation...");
 	Mesher mesher(triangulation);
 	mesher.set_seeds(listOfSeeds.begin(), listOfSeeds.end());
 	Criteria meshingCriteria;
@@ -53,7 +52,6 @@ void Cgal2DGrid::triangulate() {
 	meshingCriteria.set_size_bound(effectiveSpatialStep);
 	mesher.set_criteria(meshingCriteria);
 	mesher.refine_mesh();
-	std::cout << "Number of vertices: " << triangulation.number_of_vertices() << std::endl;
-	std::cout << "Number of faces: " << triangulation.number_of_faces() << std::endl;
+	LOG_DEBUG("Number of vertices: " << triangulation.number_of_vertices());
+	LOG_DEBUG("Number of faces: " << triangulation.number_of_faces());
 }
-

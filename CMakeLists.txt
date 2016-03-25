@@ -6,7 +6,7 @@ set(WARNING_FLAGS "-Wall -Wextra -Wsign-conversion -Wconversion -Wundef -Wcast-a
 set(SAFE_MATH_OPERATIONS "-frounding-math -fsignaling-nans") # it's also necessary for CGAL working
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${WARNING_FLAGS} ${SAFE_MATH_OPERATIONS}")
 
-# Show compiler output (default is not)
+# Show make output (default is not)
 option(VERBOSE_MAKE "VERBOSE_MAKE" OFF)
 IF(VERBOSE_MAKE)
     set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -51,14 +51,24 @@ else()
 endif()
 
 # cmake generated config
-set(CMAKE_CONFIG_SHARE_GCM "${CMAKE_INSTAL_PREFIX}/share/gcm3d")
-set(CMAKE_CONFIG_ENABLE_LOGGING       0)
+set(CMAKE_CONFIG_SHARE_GCM "${CMAKE_INSTAL_PREFIX}/share/gcm")
+
+set(CMAKE_CONFIG_ENABLE_LOGGING       1)
 set(CMAKE_CONFIG_ENABLE_LOGGING_FATAL 1)
 set(CMAKE_CONFIG_ENABLE_LOGGING_ERROR 1)
 set(CMAKE_CONFIG_ENABLE_LOGGING_WARN  1)
-set(CMAKE_CONFIG_ENABLE_LOGGING_INFO  1)
-set(CMAKE_CONFIG_ENABLE_LOGGING_DEBUG 1)
-set(CMAKE_CONFIG_ENABLE_LOGGING_TRACE 1)
+set(CMAKE_CONFIG_ENABLE_LOGGING_INFO  0)
+set(CMAKE_CONFIG_ENABLE_LOGGING_DEBUG 0)
+set(CMAKE_CONFIG_ENABLE_LOGGING_TRACE 0)
+
+IF(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+    set(CMAKE_CONFIG_ENABLE_LOGGING_INFO  1)
+ELSEIF(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(CMAKE_CONFIG_ENABLE_LOGGING_INFO  1)
+    set(CMAKE_CONFIG_ENABLE_LOGGING_DEBUG 1)
+    set(CMAKE_CONFIG_ENABLE_LOGGING_TRACE 1)
+ENDIF()
+
 set(CMAKE_CONFIG_ENABLE_ASSERTIONS    1)
 set(LIBGCM_DOUBLE_PRECISION           1)
 configure_file("${CMAKE_CURRENT_LIST_DIR}/cmake/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/generated_sources/lib/config.hpp")
@@ -92,9 +102,9 @@ target_link_libraries(gcm_inverse_problem gcm ${MPI_CXX_LIBRARIES} ${CGAL_LIBRAR
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
 target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
-# tmp
-add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestEngine.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
-target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
+## tmp
+#add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestEngine.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
+#target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests on mpi
 add_executable(gcm_mpi_tests ${TEST_MPI_FILE})

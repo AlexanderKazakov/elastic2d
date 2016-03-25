@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 		Engine(parseTask()).run();
 	} catch (Exception e) {
 		std::cout << e.what() << std::endl;
-//		LOG_FATAL(e.what());
+		LOG_FATAL(e.what());
 	}
 
 	MPI_Finalize();

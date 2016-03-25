@@ -17,7 +17,6 @@ namespace gcm {
 		typedef DefaultMesh<TModel, CubicGrid, TMaterial>       Mesh;
 
 		static void exchangeNodesWithNeighbors(Mesh* mesh) {
-			LOG_DEBUG("Start data exchange with neighbor cores");
 			if (Mpi::ForceSequence() || Mpi::Size() == 1) return;
 
 			exchangeSomethingWithNeighbors(mesh, mesh->pdeVectors);
@@ -29,8 +28,6 @@ namespace gcm {
 
 		template<typename Smth>
 		static void exchangeSomethingWithNeighbors(Mesh* mesh, std::vector<Smth>& vec);
-		
-		USE_AND_INIT_LOGGER("gcm.DataBus")
 	};
 
 	template<typename TModel, typename TMaterial>
@@ -39,7 +36,6 @@ namespace gcm {
 
 		static void exchangeNodesWithNeighbors(Mesh*) { }
 
-		USE_AND_INIT_LOGGER("gcm.DataBus")
 	};
 
 

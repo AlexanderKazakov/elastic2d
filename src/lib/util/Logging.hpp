@@ -8,7 +8,7 @@
     #include <log4cxx/logger.h>
     #include <log4cxx/mdc.h>
     #define USE_LOGGER log4cxx::LoggerPtr logger;
-    #define INIT_LOGGER(name) logger = log4cxx::Logger::getLogger(name)
+    #define INIT_LOGGER(name) logger = log4cxx::Logger::getLogger(name);
     #define USE_AND_INIT_LOGGER(name) log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger(name);
 #if CONFIG_ENABLE_LOGGING_TRACE
     #define TRACE_ON_EXCEPTION(statement) DO_ONCE( \
