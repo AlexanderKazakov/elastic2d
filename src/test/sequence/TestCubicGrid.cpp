@@ -11,27 +11,23 @@ using namespace gcm;
 TEST(CubicGrid, initialize) {
 	Task task;
 	Statement statement;
-	task.borderSize = 3;
-	task.dimensionality = 2;
-	statement.CourantNumber = 0.7;
+	task.cubicGrid.borderSize = 3;
+	task.cubicGrid.dimensionality = 2;
+	task.cubicGrid.sizes = {7, 9, 1};
+	task.cubicGrid.lengths = {20, 8, 1};
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-	task.sizes(0) = 7;
-	task.sizes(1) = 9;
-	task.lengthes = {20, 8, 1};
-	statement.numberOfSnaps = 5;
-	statement.requiredTime = 100.0;
-	
 	task.statements.push_back(statement);
 
+	CubicGrid::preprocessTask(task.cubicGrid);
 	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> grid(task);
-	grid.beforeStatement(statement);
+	grid.beforeStatementForTest(statement);
 	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.h(1), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMaximalEigenvalue(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
-	for (int x = 0; x < task.sizes(0); x++) {
-		for (int y = 0; y < task.sizes(1); y++) {
-			for (int z = 0; z < task.sizes(2); z++) {
+	for (int x = 0; x < task.cubicGrid.sizes(0); x++) {
+		for (int y = 0; y < task.cubicGrid.sizes(1); y++) {
+			for (int z = 0; z < task.cubicGrid.sizes(2); z++) {
 				for (int i = 0; i < DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector::M; i++) {
 					ASSERT_EQ(grid.pde({x, y, z})(i), 0.0);
 				}
@@ -43,12 +39,13 @@ TEST(CubicGrid, initialize) {
 TEST(CubicGrid, PartIterator) {
 	Task task;
 
-	task.dimensionality = 3;
-	task.borderSize = 2;
+	task.cubicGrid.dimensionality = 3;
+	task.cubicGrid.borderSize = 2;
 	int X = 5, Y = 7, Z = 6;
-	task.sizes = {X, Y, Z};
-	task.lengthes = {20, 8, 1};
+	task.cubicGrid.sizes = {X, Y, Z};
+	task.cubicGrid.lengths = {20, 8, 1};
 	
+	CubicGrid::preprocessTask(task.cubicGrid);
 	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial>> grid(task);
 	
 	int counter = 0;
@@ -89,10 +86,10 @@ TEST(CubicGrid, interpolateValuesAround)
 	Statement statement;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(2, 2, 1);
 
-	task.dimensionality = 2;
-	task.sizes(0) = task.sizes(1) = 3;
-	task.borderSize = 1;
-	task.lengthes = {2, 2, 2}; // h_x = h_y = 1.0
+	task.cubicGrid.dimensionality = 2;
+	task.cubicGrid.sizes = {3, 3, 1};
+	task.cubicGrid.borderSize = 1;
+	task.cubicGrid.lengths = {2, 2, 2}; // h_x = h_y = 1.0
 
 	Statement::InitialCondition::Quantity quantity;
 	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -101,13 +98,14 @@ TEST(CubicGrid, interpolateValuesAround)
 	statement.initialCondition.quantities.push_back(quantity);
 
 	task.statements.push_back(statement);
+	CubicGrid::preprocessTask(task.cubicGrid);
 	
 	for (int stage = 0; stage <= 1; stage++) {
 
 		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> grid(task);
-		grid.beforeStatement(statement);
-		for (int x = 0; x < task.sizes(0); x++) {
-			for (int y = 0; y < task.sizes(1); y++) {
+		grid.beforeStatementForTest(statement);
+		for (int x = 0; x < task.cubicGrid.sizes(0); x++) {
+			for (int y = 0; y < task.cubicGrid.sizes(1); y++) {
 				// check that values is set properly
 				ASSERT_EQ(grid.pde({x, y, 0}).V[0], 0.0);
 				ASSERT_EQ(grid.pde({x, y, 0}).V[1], 0.0);

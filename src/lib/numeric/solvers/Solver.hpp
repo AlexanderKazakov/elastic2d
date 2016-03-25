@@ -22,7 +22,7 @@ namespace gcm {
 		virtual void nextTimeStep(const real timeStep) = 0;
 
 		/** @return grid with actual values */
-		virtual AbstractGrid* getActualGrid() const = 0;
+		virtual AbstractGrid* getActualMesh() const = 0;
 
 		/** Calculate time step from Courant–Friedrichs–Lewy condition */
 		virtual real calculateTimeStep() const = 0;

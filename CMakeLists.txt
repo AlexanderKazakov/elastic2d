@@ -92,6 +92,10 @@ target_link_libraries(gcm_inverse_problem gcm ${MPI_CXX_LIBRARIES} ${CGAL_LIBRAR
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
 target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
+# tmp
+add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestEngine.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
+target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
+
 # tests on mpi
 add_executable(gcm_mpi_tests ${TEST_MPI_FILE})
 target_link_libraries(gcm_mpi_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})

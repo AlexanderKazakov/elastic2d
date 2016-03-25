@@ -33,6 +33,7 @@ namespace gcm {
 			if (!enableSnapshotting) return;
 			LOG_DEBUG("Start snapshot writing to " << makeFileNameForSnapshot(step));
 			mesh = dynamic_cast<const TMesh*>(_mesh);
+			assert_true(mesh);
 			// TODO - in this approach, we create a structure of size of the whole mesh,
 			// and then write it, allocate size of mesh at every time step is not a good idea
 			vtkGrid = VtkGridType::New();

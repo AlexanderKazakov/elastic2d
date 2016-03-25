@@ -28,7 +28,7 @@ namespace gcm {
 
 		struct GlobalSettings {
 			real CourantNumber = 0.0; // number from Courant–Friedrichs–Lewy condition
-			bool splittingSecondOrder = false;
+//			bool splittingSecondOrder = false;
 			int numberOfSnaps = 0;
 			int stepsPerSnap = 1;
 			real requiredTime = 0.0; // optional, required time if (numberOfSnaps <= 0)
@@ -126,7 +126,7 @@ namespace gcm {
 
 		struct CubicGrid {
 			int dimensionality = 0; // spatial dimensionality of the grid (model can have different)
-			Real3 lengthes = {0, 0, 0}; // lengthes of cube in each direction
+			Real3 lengths = {0, 0, 0}; // lengthes of cube in each direction
 			Real3 h = {0, 0, 0}; // spatial steps in each direction
 			Int3 sizes = {0, 0, 0}; // number of nodes along each direction
 			Real3 startR = {0, 0, 0}; // global coordinates of the first real node

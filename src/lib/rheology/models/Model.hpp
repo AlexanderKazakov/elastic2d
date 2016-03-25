@@ -69,6 +69,9 @@ namespace gcm {
 		template<typename ... Args>
 		static void constructGcmMatrices
 		(GcmMatricesPtr m, std::shared_ptr<const IsotropicMaterial> material, const Args& ...);
+		template<typename ... Args>
+		static void constructGcmMatrices
+		(GcmMatricesPtr m, std::shared_ptr<const OrthotropicMaterial> material, const Args& ...);
 	};
 
 	class Elastic3DModel {
@@ -197,6 +200,12 @@ namespace gcm {
 							  0.5 * sqrt(rho * (lambda + 2 * mu)), -0.5 * sqrt(rho * (lambda + 2 * mu)), 0, 0, 0});
 
 		m->checkDecomposition();
+	}
+	
+	template<typename ... Args>
+	void Elastic2DModel::constructGcmMatrices
+	(GcmMatricesPtr /*m*/, std::shared_ptr<const OrthotropicMaterial> /*material*/, const Args& ...) {
+		THROW_UNSUPPORTED("TODO");
 	}
 
 	template<typename ... Args>

@@ -17,8 +17,7 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.main");
 	try {
-		Engine::Instance().initialize(parseTaskCagi2d());
-		Engine::Instance().run();
+		Engine(parseTaskCagi2d()).run();
 	} catch (Exception e) {
 		std::cout << e.what() << std::endl;
 //		LOG_FATAL(e.what());
@@ -44,8 +43,8 @@ Task parseTaskCagi2d() {
 	real X = 0.016, Y = 0.004;
 	real sensorSize = 0.003;
 	real sourceSize = 0.003;
-	task.cubicGrid.lengthes = {X, Y, 1};
-	task.cubicGrid.sizes = {151 / 10, 101 /10, 1};
+	task.cubicGrid.lengths = {X, Y, 1};
+	task.cubicGrid.sizes = {151 / 1, 101 / 1, 1};
 
 	Statement statement;
 	real rho = 1e+3;
@@ -53,7 +52,7 @@ Task parseTaskCagi2d() {
 	real mu = 2e+10;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.globalSettings.CourantNumber = 1.0;
-	statement.globalSettings.numberOfSnaps = 251 / 10;
+	statement.globalSettings.numberOfSnaps = 251 / 1;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::BorderCondition borderCondition;	
@@ -84,8 +83,8 @@ Task parseTaskCagi2d() {
 	};
 	statement.fractures.push_back(fracture); 
 	
-	statement.vtkSnapshotter.enableSnapshotting = false;
-	statement.vtkSnapshotter.quantitiesToSnap = {};
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
 	statement.detector.quantities = {PhysicalQuantities::T::Vy};
 	
 	real spaceToMoveSensor = X - (sensorSize + sourceSize);
@@ -117,7 +116,7 @@ Task parseTaskCagi2d() {
 
 		statement.id = StringUtils::toString(i, 4);
 		if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) {
-			if (i == 5) {
+			if (i == 3) {
 				task.statements.push_back(statement);
 			}
 		}
@@ -143,7 +142,7 @@ Task parseTaskCagi3d() {
 	real sensorSizeX = 0.003;
 	real sourceSizeX = 0.003;
 	real commonSizeY = 0.006;
-	task.cubicGrid.lengthes = {X, Y, Z};
+	task.cubicGrid.lengths = {X, Y, Z};
 	task.cubicGrid.sizes = {151/2, 151/2, 101/2};
 
 	Statement statement;
@@ -187,9 +186,9 @@ Task parseTaskCagi3d() {
 	statement.fractures.push_back(fracture); 
 	
 	// quantities to snapshot
-	statement.vtkSnapshotter.enableSnapshotting = false;
-	statement.vtkSnapshotter.quantitiesToSnap = {};
 	statement.detector.quantities = {PhysicalQuantities::T::Vz};
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
 	
 	real spaceToMoveSensorX = X - (sensorSizeX + sourceSizeX);
 	real shiftAtTimeX = spaceToMoveSensorX / NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS;

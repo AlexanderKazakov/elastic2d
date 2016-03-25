@@ -5,13 +5,21 @@
 
 using namespace gcm;
 
-void Engine::initialize(const Task &task_) {
-	LOG_INFO("Start initialization");
-	task = task_;
-	assert_gt(task.statements.size(), 0);
+real Clock::time = 0;
+int Mpi::rank = 0;
+int Mpi::size = 1;
+bool Mpi::forceSequence = false;
+
+Engine::Engine(const Task &task_) :
+		task(task_) {
+	LOG_INFO("Start Engine");
+	Clock::time = 0;
+	Mpi::initialize(task.globalSettings.forceSequence);
 	
-	forceSequence = task.globalSettings.forceSequence;
-	CubicGrid::preprocessTask(task.cubicGrid);
+	assert_gt(task.statements.size(), 0);
+	if (task.gridId == Grids::T::CUBIC) {
+		CubicGrid::preprocessTask(task.cubicGrid);
+	}
 	
 	auto factory = Factory::create(task);
 	solver = factory->createSolver(task);
@@ -23,6 +31,13 @@ void Engine::initialize(const Task &task_) {
 	}
 }
 
+Engine::~Engine() {
+	for (auto snap : snapshotters) {
+		delete snap;
+	}
+	delete solver;
+}
+
 void Engine::run() {
 	for (const auto& statement : task.statements) {
 		std::cout << "Start statement " << statement.id << std::endl;
@@ -32,7 +47,7 @@ void Engine::run() {
 }
 
 void Engine::beforeStatement(const Statement& statement) {
-	currentTime = 0;
+	Clock::time = 0;
 	solver->beforeStatement(statement);
 
 	requiredTime = statement.globalSettings.numberOfSnaps * 
@@ -44,21 +59,21 @@ void Engine::beforeStatement(const Statement& statement) {
 	
 	for (auto snap : snapshotters) {
 		snap->beforeStatement(statement);
-		snap->snapshot(solver->getActualGrid(), 0);
+		snap->snapshot(solver->getActualMesh(), 0);
 	}
 }
 
 void Engine::runStatement() {
 	LOG_INFO("Start calculations");
 
-	int step = 1; currentTime = 0;
-	while (getCurrentTime() < requiredTime) {
+	int step = 0;
+	while (Clock::Time() < requiredTime) {
 		real timeStep = estimateTimeStep();
 		solver->nextTimeStep(timeStep);
+		step++; Clock::time += timeStep;
 		for (auto snap : snapshotters) {
-			snap->snapshot(solver->getActualGrid(), step);
+			snap->snapshot(solver->getActualMesh(), step);
 		}
-		step++; currentTime += timeStep;
 	}
 	
 	for (auto snap : snapshotters) {

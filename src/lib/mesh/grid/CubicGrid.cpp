@@ -31,6 +31,8 @@ CubicGrid::CubicGrid(const Task& task) :
 		assert_eq(h(i), h(i));
 		assert_eq(startR(i), startR(i));
 	}
+	
+	std::cout << Mpi::Rank() << " # " << "sizes = " << sizes << " h = " << h << "sR = " << startR;
 }
 
 void CubicGrid::preprocessTask(Task::CubicGrid& task) {
@@ -40,45 +42,47 @@ void CubicGrid::preprocessTask(Task::CubicGrid& task) {
 	assert_ge(task.borderSize, 1);
 	for (int i = 0; i < task.dimensionality; i++) {
 		assert_ge(task.sizes(i), task.borderSize);
-		assert_ge(task.lengthes(i), 0);
+		assert_ge(task.lengths(i), 0);
 		assert_ge(task.h(i), 0);
 		// either lengths or h can be specified
-		if (task.lengthes(0) > 0) { // lengths specified
+		if (task.lengths(0) > 0) { // lengths specified
 			assert_eq(task.h(i), 0);
-			assert_gt(task.lengthes(i), 0);
+			assert_gt(task.lengths(i), 0);
 		} else { // h specified
-			assert_eq(task.lengthes(i), 0);
+			assert_eq(task.lengths(i), 0);
 			assert_gt(task.h(i), 0);
 		}
 	}
 	for (int i = task.dimensionality; i < 3; i++) {
 		task.sizes(i) = 1;
-		task.lengthes(i) = std::numeric_limits<real>::max();
+		task.lengths(i) = std::numeric_limits<real>::max();
 		task.h(i) = std::numeric_limits<real>::max();
 		task.startR(i) = 0;
 	}
 
-	if (task.lengthes(0) > 0) { // if lengths not h specified
-		task.h = linal::plainDivision(task.lengthes, task.sizes - Int3({1, 1, 1}));
+	if (task.lengths(0) > 0) { // if lengths not h specified
+		task.h = linal::plainDivision(task.lengths, task.sizes - Int3({1, 1, 1}));
 	}
 	// with respect to MPI partition
-	task.sizes = calculateSizes(task);
-	task.startR = calculateStartR(task);
-	task.lengthes = linal::plainMultiply(task.sizes - Int3({1, 1, 1}), task.h);
+	// TODO - remove this shit
+	auto sizes_ = calculateSizes(task);
+	auto startR_ = calculateStartR(task);
+	task.sizes = sizes_;
+	task.startR = startR_;
 }
 
 Int3 CubicGrid::calculateSizes(const Task::CubicGrid& task) {
 	Int3 _sizes = task.sizes;
-	if (Engine::Instance().getForceSequence()) {
+	if (Mpi::ForceSequence()) {
 		return _sizes;
 	}
 	
 	// MPI - we divide the grid among processes equally along x-axis
 	_sizes(0) = numberOfNodesAlongXPerOneCore(task);
 	// in order to keep specified in task number of nodes
-	if (Engine::Instance().MpiRank == Engine::Instance().MpiSize - 1) {
+	if (Mpi::Rank() == Mpi::Size() - 1) {
 		_sizes(0) = task.sizes(0) - 
-				numberOfNodesAlongXPerOneCore(task) * (Engine::Instance().MpiSize - 1);
+				numberOfNodesAlongXPerOneCore(task) * (Mpi::Size() - 1);
 	}
 	
 	return _sizes;
@@ -86,18 +90,18 @@ Int3 CubicGrid::calculateSizes(const Task::CubicGrid& task) {
 
 Real3 CubicGrid::calculateStartR(const Task::CubicGrid& task) {
 	Real3 _startR = task.startR;
-	if (Engine::Instance().getForceSequence()) {
+	if (Mpi::ForceSequence()) {
 		return _startR;
 	}
 	
 	// MPI - we divide the grid among processes equally along x-axis
-	_startR(0) += Engine::Instance().MpiRank * numberOfNodesAlongXPerOneCore(task) * task.h(0);
+	_startR(0) += Mpi::Rank() * numberOfNodesAlongXPerOneCore(task) * task.h(0);
 	
 	return _startR;
 }
 
 int CubicGrid::numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
-	return (int) std::round((real) task.sizes(0) / Engine::Instance().MpiSize);
+	return (int) std::round((real) task.sizes(0) / Mpi::Size());
 }
 
 Int3 CubicGrid::calculateIndexMaker(const Task::CubicGrid& task) {

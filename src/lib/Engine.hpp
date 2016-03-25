@@ -11,65 +11,78 @@ namespace gcm {
 	class Snapshotter;
 	
 	/**
+	 * Current physical time in the calculated statement
+	 */
+	struct Clock {
+		static real Time() {
+			return time;
+		}
+		private:
+			static real time;
+			friend class Engine;
+	};
+	
+	/**
+	 * MPI information
+	 */
+	struct Mpi {
+		static int Rank() {
+			return rank;
+		}
+		static int Size() {
+			return size;
+		}
+		/** 
+		 * If true, independently from number of working processes
+		 * calculation of every concrete statement is performed in sequence.
+		 * Useful for inverse problem calculation and MPI testing.
+		 */
+		static bool ForceSequence() {
+			return forceSequence;
+		}
+	private:
+		static int rank;
+		static int size;
+		static bool forceSequence;
+		
+		static void initialize(const bool forceSequence_) {
+			rank = MPI::COMM_WORLD.Get_rank();
+			size = MPI::COMM_WORLD.Get_size();
+			forceSequence = forceSequence_;
+		}
+		friend class Engine;
+	};
+	
+	/**
 	 * Main class. Responsible for the whole process of calculation
-	 * from time = 0 to time = requiredTime.
-	 * Clock of the program, singleton.
 	 */
 	class Engine {
 	public:
-		static Engine& Instance() {
-			static Engine instance;
-			return instance;
-		}
-	private:
-		Engine() : MpiRank(MPI::COMM_WORLD.Get_rank()),
-		           MpiSize(MPI::COMM_WORLD.Get_size()) { }
-		~Engine() { }
-	public:
+		Engine(const Task& task_);
+		~Engine();
 		Engine(const Engine&) = delete;
 		Engine& operator=(const Engine&) = delete;
-		
-		const int MpiRank;
-		const int MpiSize;
-
-		void initialize(const Task& task_);
 
 		/**
 		 * Perform calculation of the whole task (it can be several statements)
 		 */
 		void run();
-		
-		real getCurrentTime() const { return currentTime; }
-		bool getForceSequence() const { return forceSequence; }
 
 	protected:
 		Solver* solver = nullptr;
 		std::vector<Snapshotter*> snapshotters;
-
-		/** 
-		 * If true, independently from number of working processes
-		 * calculation of a concrete statement is performed in sequence.
-		 * Useful for inverse problem calculation and MPI testing.
-		 */
-		bool forceSequence = false;
-		/**
-		 * Required physical time to calculate the statement
-		 */
-		real requiredTime = 0;
-		/**
-		 * Current physical time in the calculated statement
-		 */
-		real currentTime = 0;
-
 		Task task;
+		real requiredTime = 0;
 
+		/**
+		 * Prepare to run statement
+		 */
+		void beforeStatement(const Statement& statement);
 		/**
 		 * Perform calculation of statement
          */
 		void runStatement();
 		
-		void beforeStatement(const Statement& statement);
-
 		real estimateTimeStep();
 		
 		USE_AND_INIT_LOGGER("gcm.Engine")

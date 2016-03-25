@@ -22,7 +22,7 @@ namespace gcm {
 		/** Set all the container's values to zero */
 		template<class TContainer>
 		TContainer& clear(TContainer &container) {
-			memset(container.values, 0, TContainer::SIZE * sizeof(real));
+			memset(container.values, 0, sizeof(TContainer));
 			return container;
 		}
 

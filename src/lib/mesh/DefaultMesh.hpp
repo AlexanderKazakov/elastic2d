@@ -98,6 +98,10 @@ namespace gcm {
 		ConstMaterialPtr material(const Iterator& it) const {
 			return this->materials[this->getIndex(it)];
 		}
+		real getMaximalEigenvalue() const {
+			assert_gt(maximalEigenvalue, 0);
+			return maximalEigenvalue;
+		}
 
 	protected:
 		/** Read / write "node" wrapper */
@@ -135,12 +139,7 @@ namespace gcm {
 		std::vector<GcmMatricesPtr>   gcmMatrices;
 		std::vector<MaterialPtr>      materials;
 		std::vector<OdeVariables>     odeValues;
-		
 		real maximalEigenvalue = 0;
-		real getMaximalEigenvalue() const {
-			assert_gt(maximalEigenvalue, 0);
-			return maximalEigenvalue;
-		}
 		
 		void beforeStatement(const Statement& statement) {
 			// TODO - for movable meshes it should reconstruct the grid
@@ -166,7 +165,8 @@ namespace gcm {
 	template<typename TModel, typename TGrid, typename TMaterial>
 	void DefaultMesh<TModel, TGrid, TMaterial>::
 	allocate() {
-		pdeVectors.resize(this->sizeOfAllNodes(), PdeVector::zeros());
+		auto zero = PdeVector::zeros();
+		pdeVectors.resize(this->sizeOfAllNodes(), zero /*PdeVector::zeros()*/);
 		pdeVectorsNew.resize(this->sizeOfAllNodes(), PdeVector::zeros());
 		gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 		materials.resize(this->sizeOfAllNodes(), MaterialPtr());

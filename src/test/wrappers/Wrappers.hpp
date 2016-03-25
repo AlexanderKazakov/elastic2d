@@ -20,26 +20,39 @@ namespace gcm {
 		typedef typename TMesh::Iterator Iterator;
 
 		MeshWrapper(const Task& task) : TMesh(task) { }
-	};
-
-	template<class TGrid>
-	class DefaultSolverWrapper : public DefaultSolver<TGrid> {
-	public:
-		void stageForTest(const int s, const real timeStep) { return this->stage(s, timeStep); }
-		real getTauForTest() const { return this->calculateTimeStep(); }
-
-		MeshWrapper<TGrid>* getMesh() const {
-			return static_cast<MeshWrapper<TGrid>*>(this->mesh);
+		
+		void beforeStatementForTest(const Statement& statement) {
+			this->beforeStatement(statement);
 		}
 	};
 
-	template<class TGrid>
+	template<class TMesh>
+	class DefaultSolverWrapper : public DefaultSolver<TMesh> {
+	public:
+		DefaultSolverWrapper(const Task& task) : DefaultSolver<TMesh>(task) { }
+		
+		// TODO - move to GcmMethod test
+		void stageForTest(const int s, const real timeStep) { 
+			this->stage(s, timeStep); 
+		}
+		
+		MeshWrapper<TMesh>* getMesh() {
+			return static_cast<MeshWrapper<TMesh>*>(this->getActualMesh());
+		}
+	};
+
+	template<class TMesh>
 	class EngineWrapper : public Engine {
 	public:
-		DefaultSolverWrapper<TGrid>* getSolverForTest() const {
-			return static_cast<DefaultSolverWrapper<TGrid>*>(this->solver);
+		EngineWrapper(const Task& task_) : Engine(task_) { }
+		
+		DefaultSolverWrapper<TMesh>* getSolverForTest() const {
+			return static_cast<DefaultSolverWrapper<TMesh>*>(this->solver);
 		}
-		void runStatementForTest() { this->runStatement(); }
+		
+		void runStatementForTest() { 
+			this->runStatement();
+		}
 		
 		void beforeStatementForTest(const Statement& statement) {
 			this->beforeStatement(statement);

@@ -15,8 +15,7 @@ int main(int argc, char **argv) {
 	USE_AND_INIT_LOGGER("gcm.seismo");
 
 	try {
-		Engine::Instance().initialize(parseTask());
-		Engine::Instance().run();
+		Engine(parseTask()).run();
 	} catch (Exception e) {
 		std::cout << e.what() << std::endl;
 //		LOG_FATAL(e.what());
@@ -33,24 +32,27 @@ Task parseTask() {
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
-	task.snapshottersId = {Snapshotters::T::BIN2DSEISM};
+	task.snapshottersId = {Snapshotters::T::BIN2DSEISM,
+		Snapshotters::T::VTK};
 	
 	task.globalSettings.forceSequence = true;
 
 	task.cubicGrid.borderSize = 3;
 	task.cubicGrid.dimensionality = 2;
-	task.cubicGrid.lengthes = {1, 1, 1};
+	task.cubicGrid.lengths = {1, 1, 1};
 	task.cubicGrid.sizes = {50, 50, 1};
 	
 	Statement statement;
-	statement.globalSettings.CourantNumber = 1.2; // number from Courant–Friedrichs–Lewy condition
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.binary2DSeismograph.quantityToWrite = PhysicalQuantities::T::PRESSURE;
+	statement.globalSettings.CourantNumber = 1.0; // number from Courant–Friedrichs–Lewy condition
 
 	real rho = 4; // default density
 	real lambda = 2; // default Lame parameter
 	real mu = 1; // default Lame parameter
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.numberOfSnaps = 100;
+	statement.globalSettings.numberOfSnaps = 50;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Wave wave;

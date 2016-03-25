@@ -11,7 +11,6 @@ namespace gcm {
 	class Detector : public Snapshotter {
 	public:
 		typedef typename TMesh::PdeVector       PdeVector;
-//		typedef typename TMesh::PartIterator    BorderIter;
 		typedef typename TMesh::Model           Model;
 		typedef typename Model::PdeVariables    PdeVariables;
 		
@@ -31,16 +30,16 @@ namespace gcm {
 			detectionArea = statement.detector.area;
 			seismo.clear();
 		}
-		virtual void snapshotImpl(const AbstractGrid* /*mesh_*/, const int) override {
-			// TODO - fix for unstructured grids with border iterator 
-//			const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
-//			for (auto it = mesh->slice(direction, indexOfDetectingSide);
-//			          it != it.end(); ++it) {
-//				auto coords = mesh->coords(it);
-//				if (detectionArea->contains(coords)) {					
-//					detect(mesh->pde(it), coords);
-//				}
-//			}
+		virtual void snapshotImpl(const AbstractGrid* mesh_, const int) override {
+			const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
+			assert_true(mesh);
+			for (auto it = mesh->slice(direction, indexOfDetectingSide);
+			          it != it.end(); ++it) {
+				auto coords = mesh->coords(it);
+				if (detectionArea->contains(coords)) {					
+					detect(mesh->pde(it), coords);
+				}
+			}
 			assert_ge(valuesInArea.size(), 1);
 			real valueToWrite = std::accumulate(valuesInArea.begin(), valuesInArea.end(), 0.0)
 					/ (real) valuesInArea.size();

@@ -55,7 +55,7 @@ namespace gcm {
 			std::string snap = (step >= 0) ? 
 				SNAP + StringUtils::toString(step, NUMBER_OF_DIGITS_IN_SNAP) : "";
 			std::string core = CORE + 
-				StringUtils::toString(MPI::COMM_WORLD.Get_rank(), NUMBER_OF_DIGITS_IN_CORE);
+				StringUtils::toString(Mpi::Rank(), NUMBER_OF_DIGITS_IN_CORE);
 			std::string statement = writeStatementToFileName ?
 				STATEMENT + statementId : "";
 			

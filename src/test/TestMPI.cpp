@@ -78,16 +78,21 @@ INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementation
 TEST(MPI, MpiEngineVsSequenceEngine)
 {
 	Task task;
+	
+	task.modelId = Models::T::ELASTIC2D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	
 	Statement statement;
-	task.dimensionality = 2;
-	task.borderSize = 2;
-	statement.CourantNumber = 1.8;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-
-	task.sizes(0) = 20;
-	task.sizes(1) = 10;
-	task.lengthes = {2, 1, 1};
-	statement.numberOfSnaps = 5;
+	task.cubicGrid.dimensionality = 2;
+	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.sizes(0) = 20;
+	task.cubicGrid.sizes(1) = 10;
+	task.cubicGrid.lengths = {2, 1, 1};
+	
+	statement.globalSettings.CourantNumber = 1.8;
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);	
+	statement.globalSettings.numberOfSnaps = 5;
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -98,26 +103,21 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	task.statements.push_back(statement);
 	
 	// calculate in sequence
-	task.forceSequence = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> sequenceEngine;
-	sequenceEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-	sequenceEngine.initialize(task);
+	task.globalSettings.forceSequence = true;
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> sequenceEngine(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
-	task.forceSequence = false;
-	task.enableSnapshotting = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> mpiEngine;
-	mpiEngine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-	mpiEngine.initialize(task);
+	task.globalSettings.forceSequence = false;
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> mpiEngine(task);
 	mpiEngine.run();
 
 	// check that parallel result is equal to sequence result
 	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
 	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
 
-	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.sizes(0) / MPI::COMM_WORLD.Get_size());
-	int startX = MPI::COMM_WORLD.Get_rank() * numberOfNodesAlongXPerOneCore;
+	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.cubicGrid.sizes(0) / Mpi::Size());
+	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {
 			ASSERT_EQ(mpiMesh->pde({x, y, 0}), sequenceMesh->pde({x + startX, y, 0}))

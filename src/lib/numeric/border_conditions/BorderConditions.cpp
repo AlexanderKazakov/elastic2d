@@ -8,7 +8,7 @@ template<typename TModel, typename TMaterial>
 BorderConditions<TModel, CubicGrid, TMaterial>::BorderConditions(const Task& task) {
 	sizes = task.cubicGrid.sizes;
 	startR = task.cubicGrid.startR;
-	lengths = task.cubicGrid.lengthes;
+	lengths = task.cubicGrid.lengths;
 }
 
 template<typename TModel, typename TMaterial>
@@ -38,13 +38,11 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderBeforeStage
 	mesh = mesh_; timeStep = timeStep_; direction = stage;
 	// special for x-axis (because MPI partitioning along x-axis)
 	if (direction == 0) {
-		if (Engine::Instance().getForceSequence() ||
-		    Engine::Instance().MpiRank == 0) {
+		if (Mpi::ForceSequence() || Mpi::Rank() == 0) {
 			onTheRight = false;
 			handleSide();
 		}
-		if (Engine::Instance().getForceSequence() ||
-		    Engine::Instance().MpiRank == Engine::Instance().MpiSize - 1) {
+		if (Mpi::ForceSequence() || Mpi::Rank() == Mpi::Size() - 1) {
 			onTheRight = true;
 			handleSide();
 		}
@@ -86,7 +84,7 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::handleBorderPoint
 			const auto& quantity = q.first;
 			const auto& timeDependency = q.second;
 			real realValue = PdeVariables::QUANTITIES.at(quantity).Get(mesh->pde(realIter));
-			real virtValue = - realValue + 2 * timeDependency(Engine::Instance().getCurrentTime());
+			real virtValue = - realValue + 2 * timeDependency(Clock::Time());
 			PdeVariables::QUANTITIES.at(quantity).Set(virtValue, mesh->_pde(virtIter));
 		}
 	}
@@ -117,7 +115,7 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::allocateHelpMesh() {
 	Task::CubicGrid helpCubicGridTask;
 	helpCubicGridTask.dimensionality = 1;
 	helpCubicGridTask.borderSize = mesh->borderSize;
-	helpCubicGridTask.h = mesh->h;
+	helpCubicGridTask.h = {mesh->h(0), std::numeric_limits<real>::max(), std::numeric_limits<real>::max()};
 	helpCubicGridTask.sizes = {mesh->borderSize, 1, 1};
 	Task helpTask; helpTask.cubicGrid = helpCubicGridTask;
 	helpMesh = new Mesh(helpTask);
@@ -158,6 +156,8 @@ template class BorderConditions<Elastic1DModel, CubicGrid, IsotropicMaterial>;
 template class BorderConditions<Elastic2DModel, CubicGrid, IsotropicMaterial>;
 template class BorderConditions<Elastic3DModel, CubicGrid, IsotropicMaterial>;
 template class BorderConditions<SuperDuperModel, CubicGrid, IsotropicMaterial>;
+
+template class BorderConditions<Elastic2DModel, CubicGrid, OrthotropicMaterial>;
 template class BorderConditions<Elastic3DModel, CubicGrid, OrthotropicMaterial>;
 template class BorderConditions<SuperDuperModel, CubicGrid, OrthotropicMaterial>;
 

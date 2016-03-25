@@ -1,27 +1,27 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/areas/areas.hpp>
-
 #include <test/wrappers/Wrappers.hpp>
+#include <lib/util/areas/areas.hpp>
 #include <lib/rheology/models/Model.hpp>
-
-#include <lib/util/snapshot/VtkSnapshotter.hpp>
 
 using namespace gcm;
 
 TEST(Engine, runStatementForTest)
 {
 	Task task;
+	task.modelId = Models::T::ELASTIC2D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	
 	Statement statement;
-	task.dimensionality = 2;
-	task.borderSize = 5;
-	statement.CourantNumber = 4.5;
+	task.cubicGrid.dimensionality = 2;
+	task.cubicGrid.borderSize = 5;
+	statement.globalSettings.CourantNumber = 4.5;
 	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-	task.sizes(0) = 20;
-	task.sizes(1) = 40;
-	task.lengthes = {7, 3, 1};
-	statement.numberOfSnaps = 9;
-	statement.requiredTime = 100.0;
+	task.cubicGrid.sizes = {20, 40, 1};
+	task.cubicGrid.lengths = {7, 3, 1};
+	statement.globalSettings.numberOfSnaps = 9;
+	statement.globalSettings.requiredTime = 100.0;
 
 	Statement::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::S1_FORWARD;
@@ -35,13 +35,12 @@ TEST(Engine, runStatementForTest)
 	
 	task.statements.push_back(statement);
 
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine;
-	engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-	engine.initialize(task);
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine(task);
 	engine.beforeStatementForTest(statement);
-	auto sWave = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, 3, 0});
+	
+	auto sWave = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, 3, 0});
 	engine.runStatementForTest();
-	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, 22, 0}));
+	ASSERT_EQ(sWave, engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, 22, 0}));
 }
 
 
@@ -51,10 +50,14 @@ TEST(Engine, TwoLayersDifferentRho)
 	for (int i = 0; i < 5; i++) {
 
 		Task task;
+		task.modelId = Models::T::ELASTIC2D;
+		task.materialId = Materials::T::ISOTROPIC;
+		task.gridId = Grids::T::CUBIC;
+		
 		Statement statement;
-		task.borderSize = 3;
-		task.dimensionality = 2;
-		statement.CourantNumber = 1.5;
+		task.cubicGrid.borderSize = 3;
+		task.cubicGrid.dimensionality = 2;
+		statement.globalSettings.CourantNumber = 1.5;
 
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
 		real rho2rho0 = rho2rho0Initial * pow(2, i), lambda2lambda0 = 1, mu2mu0 = 1;
@@ -66,11 +69,10 @@ TEST(Engine, TwoLayersDifferentRho)
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		statement.materialConditions.materials.push_back(newMaterial);
 
-		task.sizes(0) = 50;
-		task.sizes(1) = 100;
-		task.lengthes = {2, 1, 1};
-		statement.numberOfSnaps = 0;
-		statement.requiredTime = 0.24;
+		task.cubicGrid.sizes = {50, 100, 1};
+		task.cubicGrid.lengths = {2, 1, 1};
+		statement.globalSettings.numberOfSnaps = 0;
+		statement.globalSettings.requiredTime = 0.24;
 
 		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
@@ -84,19 +86,17 @@ TEST(Engine, TwoLayersDifferentRho)
 
 		task.statements.push_back(statement);
 
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-		engine.initialize(task);
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine(task);
 		engine.beforeStatementForTest(statement);
 
-		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		auto init = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
+		int leftNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.25);
+		auto init = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
 
 		engine.runStatementForTest();
 
-//		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		auto reflect = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
-//		auto transfer = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, rightNodeIndex, 0});
+//		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
+		auto reflect = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
+//		auto transfer = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, rightNodeIndex, 0});
 
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0); // acoustic impedance
@@ -128,10 +128,14 @@ TEST(Engine, TwoLayersDifferentE)
 	for (int i = 0; i < 5; i++) {
 
 		Task task;
+		task.modelId = Models::T::ELASTIC2D;
+		task.materialId = Materials::T::ISOTROPIC;
+		task.gridId = Grids::T::CUBIC;
+		
 		Statement statement;
-		task.borderSize = 3;
-		task.dimensionality = 2;
-		statement.CourantNumber = 1.5;
+		task.cubicGrid.borderSize = 3;
+		task.cubicGrid.dimensionality = 2;
+		statement.globalSettings.CourantNumber = 1.5;
 
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
 		real rho2rho0 = 1, lambda2lambda0 = E2E0Initial * pow(2, i), mu2mu0 = E2E0Initial * pow(2, i);
@@ -143,13 +147,11 @@ TEST(Engine, TwoLayersDifferentE)
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		statement.materialConditions.materials.push_back(newMaterial);
 
-		task.sizes(0) = 50;
-		task.sizes(1) = 100;
-		task.lengthes = {2, 1, 1};
+		task.cubicGrid.sizes = {50, 100, 1};
+		task.cubicGrid.lengths = {2, 1, 1};
 
-		statement.numberOfSnaps = 0;
-		statement.requiredTime = 0.24;
-		task.enableSnapshotting = true;
+		statement.globalSettings.numberOfSnaps = 0;
+		statement.globalSettings.requiredTime = 0.24;
 
 		Statement::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
@@ -163,20 +165,17 @@ TEST(Engine, TwoLayersDifferentE)
 
 		task.statements.push_back(statement);
 		
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>());
-		engine.initialize(task);
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> engine(task);
 		engine.beforeStatementForTest(statement);
 
-		int leftNodeIndex = (int) (task.sizes(1) * 0.25);
-		auto init = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
+		int leftNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.25);
+		auto init = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
 
 		engine.runStatementForTest();
 
-//		int rightNodeIndex = (int) (task.sizes(1) * 0.7);
-		auto reflect = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, leftNodeIndex, 0});
-//		auto transfer = engine.getSolverForTest()->getMesh()->pde({task.sizes(0) / 2, rightNodeIndex, 0});
+//		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
+		auto reflect = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
+//		auto transfer = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, rightNodeIndex, 0});
 
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0); // acoustic impedance

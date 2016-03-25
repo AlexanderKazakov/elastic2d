@@ -19,10 +19,8 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 
 	try {
-		Engine::Instance().initialize(parseTask2d());
-
 		auto t1 = std::chrono::high_resolution_clock::now();
-		Engine::Instance().run();
+		Engine(parseTask2d()).run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
@@ -85,7 +83,7 @@ Task parseTask2d() {
 
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.dimensionality = 2;
-	task.cubicGrid.lengthes = {4, 2, 1};
+	task.cubicGrid.lengths = {4, 2, 1};
 	task.cubicGrid.sizes = {100, 50, 1};
 
 	Statement statement;
@@ -122,7 +120,7 @@ Task parseTask3d() {
 	
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.dimensionality = 3;
-	task.cubicGrid.lengthes = {4, 2, 1};
+	task.cubicGrid.lengths = {4, 2, 1};
 	task.cubicGrid.sizes = {100, 50, 25};
 
 	Statement statement;

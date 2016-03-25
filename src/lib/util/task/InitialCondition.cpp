@@ -50,6 +50,7 @@ void InitialCondition<TModel, TMaterial>::apply(PdeVector &v, const Real3& coord
 
 template class InitialCondition<Elastic1DModel, IsotropicMaterial>;
 template class InitialCondition<Elastic2DModel, IsotropicMaterial>;
+template class InitialCondition<Elastic2DModel, OrthotropicMaterial>;
 template class InitialCondition<Elastic3DModel, IsotropicMaterial>;
 template class InitialCondition<Elastic3DModel, OrthotropicMaterial>;
 template class InitialCondition<SuperDuperModel, OrthotropicMaterial>;

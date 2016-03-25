@@ -31,8 +31,9 @@ void Binary2DSeismograph<TMesh>::afterStatement() {
 template<class TMesh>
 void Binary2DSeismograph<TMesh>::snapshotImpl(const AbstractGrid* mesh_, const int) {
 	const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
+	assert_true(mesh);
 	assert_eq(mesh->sizes(1), sizeY); // TODO slice iterator
-	surface[0] = (precision) Engine::Instance().getCurrentTime();
+	surface[0] = (precision) Clock::Time();
 	for (size_t y = 0; y < sizeY; y++) {
 		surface[y + 1] = (precision) valuesGetter(mesh->pde(linal::VectorInt<3>({0, (int)y, 0})));
 	}
@@ -50,3 +51,4 @@ void Binary2DSeismograph<TMesh>::writeHeadOfTable() {
 
 
 template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>>;
+template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid, OrthotropicMaterial>>;

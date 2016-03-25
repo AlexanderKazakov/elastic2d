@@ -57,15 +57,15 @@ TEST(Linal, MatrixConstruct)
         7.0, 8.0, 9.0
     });
     
-    ASSERT_EQ(m2.xx, 1.0);
-    ASSERT_EQ(m2.xy, 2.0);
-    ASSERT_EQ(m2.xz, 3.0);
-    ASSERT_EQ(m2.yx, 4.0);
-    ASSERT_EQ(m2.yy, 5.0);
-    ASSERT_EQ(m2.yz, 6.0);
-    ASSERT_EQ(m2.zx, 7.0);
-    ASSERT_EQ(m2.zy, 8.0);
-    ASSERT_EQ(m2.zz, 9.0);
+    ASSERT_EQ(m2(0, 0), 1.0);
+    ASSERT_EQ(m2(0, 1), 2.0);
+    ASSERT_EQ(m2(0, 2), 3.0);
+    ASSERT_EQ(m2(1, 0), 4.0);
+    ASSERT_EQ(m2(1, 1), 5.0);
+    ASSERT_EQ(m2(1, 2), 6.0);
+    ASSERT_EQ(m2(2, 0), 7.0);
+    ASSERT_EQ(m2(2, 1), 8.0);
+    ASSERT_EQ(m2(2, 2), 9.0);
 }
 
 TEST(Linal, MatrixAccess)
@@ -122,10 +122,10 @@ TEST(Linal, MatrixAddCustomContainer)
 
     auto m3 = m1 + m2;
 
-    ASSERT_EQ(m3.xx, 5.0);
-    ASSERT_EQ(m3.xy, 5.0);
-    ASSERT_EQ(m3.yx, 5.0);
-    ASSERT_EQ(m3.yy, 5.0);
+    ASSERT_EQ(m3(0, 0), 5.0);
+    ASSERT_EQ(m3(0, 1), 5.0);
+    ASSERT_EQ(m3(1, 0), 5.0);
+    ASSERT_EQ(m3(1, 1), 5.0);
 }
 
 TEST(Linal, MatrixAssign)
@@ -187,10 +187,10 @@ TEST(Linal, MatrixSubtractCustomContainer)
 
     auto m3 = m1 - m2;
 
-    ASSERT_EQ(m3.xx, 0.0);
-    ASSERT_EQ(m3.xy, 0.0);
-    ASSERT_EQ(m3.yx, 0.0);
-    ASSERT_EQ(m3.yy, 0.0);
+    ASSERT_EQ(m3(0, 0), 0.0);
+    ASSERT_EQ(m3(0, 1), 0.0);
+    ASSERT_EQ(m3(1, 0), 0.0);
+    ASSERT_EQ(m3(1, 1), 0.0);
 }
 
 TEST(Linal, MatrixProduct)
@@ -221,10 +221,10 @@ TEST(Linal, MatrixProductSquare)
 
     auto m3 = m1 * m2;
 
-    ASSERT_EQ(m3.xx, 7.0);
-    ASSERT_EQ(m3.xy, 10.0);
-    ASSERT_EQ(m3.yx, 15.0);
-    ASSERT_EQ(m3.yy, 22.0);
+    ASSERT_EQ(m3(0, 0), 7.0);
+    ASSERT_EQ(m3(0, 1), 10.0);
+    ASSERT_EQ(m3(1, 0), 15.0);
+    ASSERT_EQ(m3(1, 1), 22.0);
 }
 
 TEST(Linal, MatrixEqual)
@@ -251,10 +251,10 @@ TEST(Linal, MatrixScalarMultiplication)
 
     m = 1*m*2;
 
-    ASSERT_EQ(m.xx, 2.0);
-    ASSERT_EQ(m.xy, 4.0);
-    ASSERT_EQ(m.yx, 6.0);
-    ASSERT_EQ(m.yy, 8.0);
+    ASSERT_EQ(m(0, 0), 2.0);
+    ASSERT_EQ(m(0, 1), 4.0);
+    ASSERT_EQ(m(1, 0), 6.0);
+    ASSERT_EQ(m(1, 1), 8.0);
 }
 
 TEST(Linal, MatrixScalarDivision)
@@ -266,10 +266,10 @@ TEST(Linal, MatrixScalarDivision)
 
     m = m/2;
 
-    ASSERT_EQ(m.xx, 1.0);
-    ASSERT_EQ(m.xy, 2.0);
-    ASSERT_EQ(m.yx, 3.0);
-    ASSERT_EQ(m.yy, 4.0);
+    ASSERT_EQ(m(0, 0), 1.0);
+    ASSERT_EQ(m(0, 1), 2.0);
+    ASSERT_EQ(m(1, 0), 3.0);
+    ASSERT_EQ(m(1, 1), 4.0);
 }
 
 TEST(Linal, MatrixTranspose)
@@ -382,15 +382,15 @@ TEST(Linal, Matrix33Construct)
         7.0, 8.0, 9.0
     });
 
-    ASSERT_EQ(m1.xx, 1.0);
-    ASSERT_EQ(m1.xy, 2.0);
-    ASSERT_EQ(m1.xz, 3.0);
-    ASSERT_EQ(m1.yx, 4.0);
-    ASSERT_EQ(m1.yy, 5.0);
-    ASSERT_EQ(m1.yz, 6.0);
-    ASSERT_EQ(m1.zx, 7.0);
-    ASSERT_EQ(m1.zy, 8.0);
-    ASSERT_EQ(m1.zz, 9.0);
+    ASSERT_EQ(m1(0, 0), 1.0);
+    ASSERT_EQ(m1(0, 1), 2.0);
+    ASSERT_EQ(m1(0, 2), 3.0);
+    ASSERT_EQ(m1(1, 0), 4.0);
+    ASSERT_EQ(m1(1, 1), 5.0);
+    ASSERT_EQ(m1(1, 2), 6.0);
+    ASSERT_EQ(m1(2, 0), 7.0);
+    ASSERT_EQ(m1(2, 1), 8.0);
+    ASSERT_EQ(m1(2, 2), 9.0);
 }
 
 TEST(Linal, Matrix33Assign)
@@ -403,15 +403,15 @@ TEST(Linal, Matrix33Assign)
 
     auto m2 = m1;
 
-    ASSERT_EQ(m2.xx, 1.0);
-    ASSERT_EQ(m2.xy, 2.0);
-    ASSERT_EQ(m2.xz, 3.0);
-    ASSERT_EQ(m2.yx, 4.0);
-    ASSERT_EQ(m2.yy, 5.0);
-    ASSERT_EQ(m2.yz, 6.0);
-    ASSERT_EQ(m2.zx, 7.0);
-    ASSERT_EQ(m2.zy, 8.0);
-    ASSERT_EQ(m2.zz, 9.0);
+    ASSERT_EQ(m2(0, 0), 1.0);
+    ASSERT_EQ(m2(0, 1), 2.0);
+    ASSERT_EQ(m2(0, 2), 3.0);
+    ASSERT_EQ(m2(1, 0), 4.0);
+    ASSERT_EQ(m2(1, 1), 5.0);
+    ASSERT_EQ(m2(1, 2), 6.0);
+    ASSERT_EQ(m2(2, 0), 7.0);
+    ASSERT_EQ(m2(2, 1), 8.0);
+    ASSERT_EQ(m2(2, 2), 9.0);
 }
 
 TEST(Linal, Matrix33Determinant)
@@ -425,33 +425,33 @@ TEST(Linal, Matrix33Determinant)
     ASSERT_EQ(determinant(m), -8.0);
 }
 
-TEST(Linal, Vector3Construct)
+TEST(Linal, Real3Construct)
 {
-    Vector3 m1({
+    Real3 m1({
         1.0, 2.0, 3.0,
     });
 
-    ASSERT_EQ(m1.x, 1.0);
-    ASSERT_EQ(m1.y, 2.0);
-    ASSERT_EQ(m1.z, 3.0);
+    ASSERT_EQ(m1(0), 1.0);
+    ASSERT_EQ(m1(1), 2.0);
+    ASSERT_EQ(m1(2), 3.0);
 }
 
-TEST(Linal, Vector3Assign)
+TEST(Linal, Real3Assign)
 {
-    Vector3 m1({
+    Real3 m1({
         1.0, 2.0, 3.0,
     });
 
     auto m2 = m1;
 
-    ASSERT_EQ(m2.x, 1.0);
-    ASSERT_EQ(m2.y, 2.0);
-    ASSERT_EQ(m2.z, 3.0);
+    ASSERT_EQ(m2(0), 1.0);
+    ASSERT_EQ(m2(1), 2.0);
+    ASSERT_EQ(m2(2), 3.0);
 }
 
 TEST(Linal, VectorLength)
 {
-    Vector3 v({
+    Real3 v({
         0.0, 3.0, 4.0,
     });
 
@@ -460,11 +460,11 @@ TEST(Linal, VectorLength)
 
 TEST(Linal, VectorDotProduct)
 {
-    Vector3 v1({
+    Real3 v1({
         1.0, 2.0, 3.0
     });
 
-    Vector3 v2({
+    Real3 v2({
         -2.0, 4.0, -2.0
     });
 
@@ -473,19 +473,19 @@ TEST(Linal, VectorDotProduct)
 
 TEST(Linal, VectorCrossProduct)
 {
-    Vector3 v1({
+    Real3 v1({
         1.0, 0.0, 0.0
     });
 
-    Vector3 v2({
+    Real3 v2({
         0.0, 1.0, 0.0
     });
     
-    Vector3 v3({
+    Real3 v3({
         0.0, 0.0, 1.0
     });
     
-    Vector3 z({
+    Real3 z({
         0.0, 0.0, 0.0
     });
 
@@ -504,17 +504,17 @@ TEST(Linal, VectorCrossProduct)
 
 TEST(Linal, VectorNormalize)
 {
-    Vector3 v1({
+    Real3 v1({
         2.0, 0.0, 0.0
     });
 
     auto v = normalize(v1);
 
-    ASSERT_NEAR(v.x, 1.0, 1e-5);
-    ASSERT_EQ(v.y, 0.0);
-    ASSERT_EQ(v.z, 0.0);
+    ASSERT_NEAR(v(0), 1.0, 1e-5);
+    ASSERT_EQ(v(1), 0.0);
+    ASSERT_EQ(v(2), 0.0);
 
-    Vector3 v2({
+    Real3 v2({
         1.0, 2.0, 3.0        
     });
 
@@ -523,7 +523,7 @@ TEST(Linal, VectorNormalize)
     ASSERT_NEAR(length(v), 1.0, 1e-5);
 
 #if CONFIG_ENABLE_ASSERTIONS
-    Vector3 v3({
+    Real3 v3({
         0.0, 0.0, 0.0
     });
 
@@ -536,15 +536,15 @@ TEST(Linal, VectorNormalize)
 
 TEST(Linal, RotationMatrix)
 {
-    Vector3 x({
+    Real3 x({
         1.0, 0.0, 0.0
     });
     
-    Vector3 y({
+    Real3 y({
         0.0, 1.0, 0.0
     });
     
-    Vector3 z({
+    Real3 z({
         0.0, 0.0, 1.0
     });
 
