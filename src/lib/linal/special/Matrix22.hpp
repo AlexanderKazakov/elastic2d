@@ -9,7 +9,7 @@ namespace linal {
  * Specialized value container for 2x2 matrix.
  */
 struct Matrix22Container {
-	static const int SIZE = 2 * 2;                 // size of storage in units of gcm::real
+	static const int SIZE = 2 * 2; ///< size of storage in units of gcm::real
 	union {
 		real values[SIZE];
 		struct {

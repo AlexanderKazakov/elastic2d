@@ -6,6 +6,21 @@
 #include <lib/util/task/Task.hpp>
 #include <lib/util/Logging.hpp>
 
+/**
+ * @mainpage
+ *
+ * GCM - grid-characteristic method
+ * ================================
+ * 
+ * Engine for numerical simulations of wave and associated processes
+ * -----------------------------------------------------------------
+ * 
+ * ## About
+ *
+ * 1-2-3-dimensional simulation of wave and associated processes
+ *
+ */
+
 namespace gcm {
 class Solver;
 class Snapshotter;

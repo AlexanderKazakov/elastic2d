@@ -44,9 +44,10 @@ struct VelocitySigmaVariables {
 	 */
 	real getJ2() const;
 
-	/**
-	 * Look at GetSetter.hpp for explanations about the code below
+	/** @name Getters and Setters
+	 * @see GetSetter.hpp for explanations
 	 */
+	///@{
 	static const std::map<PhysicalQuantities::T,
 	                      GetSetter<VelocitySigmaVariables<Dimensionality> > > QUANTITIES;
 	static const std::map<PhysicalQuantities::T,
@@ -101,7 +102,7 @@ struct VelocitySigmaVariables {
 			variablesToSetTo.V[i] = value(i);
 		}
 	}
-
+	///@}
 };
 }
 

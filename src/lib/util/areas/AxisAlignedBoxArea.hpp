@@ -18,8 +18,8 @@ public:
 	Real3 getMax() const { return max; }
 
 private:
-	Real3 min;         // the nearest point to origin of coordinates
-	Real3 max;         // the farthest point from origin of coordinates
+	Real3 min;         ///< the nearest point to origin of coordinates
+	Real3 max;         ///< the farthest point from origin of coordinates
 };
 
 

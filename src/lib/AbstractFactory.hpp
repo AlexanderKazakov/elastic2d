@@ -10,6 +10,7 @@
 namespace gcm {
 
 /**
+ * @file
  * The approach to instantiate the meshes, solvers, snapshotters etc,
  * templated by variety of rheology models, grids and materials etc.
  * The reason for partial template specializations is that not all existing

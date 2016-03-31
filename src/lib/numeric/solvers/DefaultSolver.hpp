@@ -14,6 +14,7 @@
 namespace gcm {
 /**
  * Class for handling complete time step
+ * @tparam TMesh type of mesh to deal with
  */
 template<class TMesh>
 class DefaultSolver : public Solver {
@@ -46,8 +47,7 @@ public:
 	virtual real calculateTimeStep() const override;
 
 protected:
-	real CourantNumber = 0.0;         // number from Courant–Friedrichs–Lewy condition
-//		bool splittingSecondOrder = false; // time second order approach in splitting method
+	real CourantNumber = 0.0; ///< number from Courant–Friedrichs–Lewy condition
 
 	Corrector* corrector = nullptr;
 	InternalOde* internalOde = nullptr;
@@ -118,8 +118,7 @@ void DefaultSolver<TMesh>::
 stage(const int s, const real timeStep) {
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	borderConditions->applyBorderBeforeStage(mesh, timeStep, s);
-	GCM::stage(s, timeStep, mesh);                    // now actual PDE values is in
-		                                          // pdeVectorsNew
+	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
 	borderConditions->applyBorderAfterStage(mesh, timeStep, s);
 	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return actual PDE values back to
 		                                          // pdeVectors

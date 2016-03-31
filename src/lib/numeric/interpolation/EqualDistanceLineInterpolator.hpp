@@ -17,20 +17,20 @@ public:
 	 * @param q relative distance between first source point and point to interpolate.
 	 */
 	static void minMaxInterpolate(TVector& res, std::vector<TVector>& src, const real& q) {
-		// where is the point to interpolate
+		/// where is the point to interpolate
 		unsigned long k = (unsigned long) q;
-		// check that we perform interpolation, not extrapolation
+		/// check that we perform interpolation, not extrapolation
 		assert_le(k, src.size() - 1);
 		assert_ge(q, 0);
-		// yield values for limiter
+		/// yield values for limiter
 		TVector maximum, minimum;
 		for (int i = 0; i < TVector::M; i++) {
 			maximum(i) = fmax(src[k](i), src[k + 1](i));
 			minimum(i) = fmin(src[k](i), src[k + 1](i));
 		}
-		// interpolate
+		/// interpolate
 		interpolate(res, src, q);
-		// minmax limiter
+		/// minmax limiter
 		for (int i = 0; i < TVector::M; i++) {
 			if (res(i) > maximum(i)) {
 				res(i) = maximum(i);
@@ -52,9 +52,9 @@ public:
 	 * @param q relative distance between first source point and point to interpolate.
 	 */
 	static void interpolate(TVector& res, std::vector<TVector>& src, const real& q) {
-		// Newton interpolation
+		/// Newton interpolation
 		res = src[0];
-		const int p = (int)src.size() - 1;         // order of interpolation
+		const int p = (int)src.size() - 1; ///< order of interpolation
 		for (int i = 1; i <= p; i++) {
 			for (int j = 0; j < p - i + 1; j++) {
 				// TODO - make all this linal operations faster, replace std::vector

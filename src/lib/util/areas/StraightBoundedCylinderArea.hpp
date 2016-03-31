@@ -19,9 +19,9 @@ public:
 
 private:
 	real radius;
-	Real3 begin;       // center of upper cap of the keg
-	Real3 end;         // center of lower cap of the keg
-	Real3 axis;        // normalized vector along axis of the cylinder
+	Real3 begin;       ///< center of upper cap of the keg
+	Real3 end;         ///< center of lower cap of the keg
+	Real3 axis;        ///< normalized vector along axis of the cylinder
 };
 
 

@@ -12,27 +12,28 @@ namespace gcm {
 
 /**
  * The PDE is like
- * d\vec{u}/dt + \mat{A_0}   \partial{\vec{u}}/\partial{x_0}
- *             + \mat{A_1}   \partial{\vec{u}}/\partial{x_1}
- *             + \mat{A_Dimensionality} \partial{\vec{u}}/\partial{x_Dimensionality} = \vec{f}.
- * The class represents \mat{A_i} with their eigensystems
+ * \f[
+ * d\vec{u}/dt + A_0 \partial{\vec{u}} / \partial{x_0}
+ *             + ...
+ *             + A_{Dim} \partial{\vec{u}} / \partial{x_{Dim}} = \vec{f}.
+ * \f]
+ * The class represents \f$ A_i \f$ with their eigensystems.
  * @tparam M size of PDE
- * @tparam Dimensionality number of GcmMatrixes
+ * @tparam Dim number of GcmMatrixes
  */
-template<int TM, int Dimensionality>
+template<int TM, int Dim>
 struct GcmMatrices {
 	static const int M = TM;
-	static const int DIMENSIONALITY = Dimensionality;
+	static const int D = Dim;
 	typedef linal::Matrix<M, M> Matrix;
 
 	/** Matrix in PDE along some direction with its eigensystem */
 	struct GcmMatrix {
-		Matrix A;                   // matrix for some axis in PDE // TODO - skip this in
-			                    // Release mode?
-		/* A = U1 * L * U  and so right eigenvectors are columns of the U1 */
-		Matrix U;                   // matrix of left eigenvectors (aka eigenstrings)
-		Matrix U1;                  // matrix of right eigenvectors
-		linal::DiagonalMatrix<M> L; // diagonal eigenvalue matrix
+		Matrix A; ///< matrix for some axis in PDE // TODO - skip this in Release mode?
+		///< A = U1 * L * U  and so right eigenvectors are columns of the U1.
+		Matrix U;                   ///< matrix of left eigenvectors (aka eigenstrings)
+		Matrix U1;                  ///< matrix of right eigenvectors
+		linal::DiagonalMatrix<M> L; ///< diagonal eigenvalue matrix
 
 		real getMaximalEigenvalue() const {
 			real ans = 0;
@@ -44,17 +45,18 @@ struct GcmMatrices {
 
 	};
 
-	GcmMatrix m[Dimensionality];
+	GcmMatrix m[D];
 
 	/** @return maximal in modulus eigenvalue of matrices from all directions */
 	real getMaximalEigenvalue() const {
 		real ans = 0;
-		for (int i = 0; i < Dimensionality; i++) {
+		for (int i = 0; i < D; i++) {
 			ans = fmax(ans, m[i].getMaximalEigenvalue());
 		}
 		return ans;
 	}
 
+	/** @throw gcm::Exception */
 	void checkDecomposition() const {
 		checkTraces();
 		checkLeftEigenvectors();
@@ -63,13 +65,13 @@ struct GcmMatrices {
 	}
 
 	void checkTraces() const {
-		for (int s = 0; s < Dimensionality; s++) {
+		for (int s = 0; s < D; s++) {
 			assert_near(m[s].A.trace(), m[s].L.trace(), EQUALITY_TOLERANCE);
 		}
 	}
 
 	void checkLeftEigenvectors() const {
-		for (int s = 0; s < Dimensionality; s++) {
+		for (int s = 0; s < D; s++) {
 			Matrix AU1 = m[s].A * m[s].U1;
 			Matrix U1L = m[s].U1 * m[s].L;
 			for (int i = 0; i < M; i++) {
@@ -81,7 +83,7 @@ struct GcmMatrices {
 	}
 
 	void checkRightEigenvectors() const {
-		for (int s = 0; s < Dimensionality; s++) {
+		for (int s = 0; s < D; s++) {
 			Matrix UA = m[s].U * m[s].A;
 			Matrix LU = m[s].L * m[s].U;
 			for (int i = 0; i < M; i++) {
@@ -93,7 +95,7 @@ struct GcmMatrices {
 	}
 
 	void checkInverseMatrices() const {
-		for (int s = 0; s < Dimensionality; s++) {
+		for (int s = 0; s < D; s++) {
 			Matrix UU1 = m[s].U * m[s].U1;
 			for (int i = 0; i < M; i++) {
 				for (int j = 0; j < M; j++) {

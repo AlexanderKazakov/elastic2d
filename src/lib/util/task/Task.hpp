@@ -13,8 +13,10 @@
 
 namespace gcm {
 /**
+ * @defgroup task Task and statements
  * Properties, conditions, tasks in native format of the program.
  * Used in initialization of the program.
+ * @{
  */
 
 /**
@@ -24,14 +26,13 @@ namespace gcm {
 struct Statement {
 	typedef std::function<real(real)> TimeDependency;
 
-	std::string id;         // name of statement
+	std::string id;         ///< name of statement
 
 	struct GlobalSettings {
-		real CourantNumber = 0.0;         // number from Courant–Friedrichs–Lewy condition
-//			bool splittingSecondOrder = false;
+		real CourantNumber = 0.0;        ///< number from Courant–Friedrichs–Lewy condition
 		int numberOfSnaps = 0;
 		int stepsPerSnap = 1;
-		real requiredTime = 0.0;         // optional, required time if (numberOfSnaps <= 0)
+		real requiredTime = 0.0;         ///< optional, required time if (numberOfSnaps <= 0)
 	} globalSettings;
 
 	struct MaterialCondition {
@@ -48,24 +49,24 @@ struct Statement {
 	 * not rewriting but adding to each other
 	 */
 	struct InitialCondition {
-		// initial conditions in terms of vector of node values
+		/// initial conditions in terms of vector of node values
 		struct Vector {
 			std::shared_ptr<Area> area;
 			std::initializer_list<real> list;
 		};
 		std::vector<Vector> vectors;
 
-		// initial conditions in terms of waves
+		/// initial conditions in terms of waves
 		struct Wave {
 			std::shared_ptr<Area> area;
 			Waves::T waveType;
 			int direction;
-			PhysicalQuantities::T quantity; // quantity to calibrate wave amplitude
-			real quantityValue;             // value of calibration quantity
+			PhysicalQuantities::T quantity; ///< quantity to calibrate wave amplitude
+			real quantityValue;             ///< value of calibration quantity
 		};
 		std::vector<Wave> waves;
 
-		// initial conditions in terms of physical quantities
+		/// initial conditions in terms of physical quantities
 		struct Quantity {
 			std::shared_ptr<Area> area;
 			PhysicalQuantities::T physicalQuantity;
@@ -90,10 +91,10 @@ struct Statement {
 	std::vector<Fracture> fractures;
 
 	struct VtkSnapshotter {
-		// in order to not dump big vtk snaps every statement
-		// but just sometimes for eye-checking
+		/// in order to not dump big vtk snaps every statement
+		/// but just sometimes for eye-checking
 		bool enableSnapshotting = false;
-		// list of physical quantities to write to vtk
+		/// list of physical quantities to write to vtk
 		std::vector<PhysicalQuantities::T> quantitiesToSnap;
 	} vtkSnapshotter;
 
@@ -118,29 +119,31 @@ struct Task {
 	std::vector<Snapshotters::T> snapshottersId;
 
 	struct GlobalSettings {
-		// If true, independently from number of working processes
-		// calculation of a concrete statement is performed in sequence.
-		// Useful for inverse problem calculation and MPI testing.
+		/// If true, independently from number of working processes
+		/// calculation of a concrete statement is performed in sequence.
+		/// Useful for inverse problem calculation and MPI testing.
 		bool forceSequence = false;
 	} globalSettings;
 
 	struct CubicGrid {
-		int dimensionality = 0;     // spatial dimensionality of the grid (model can have
-			                    // different)
-		Real3 lengths = {0, 0, 0};  // lengthes of cube in each direction
-		Real3 h = {0, 0, 0};        // spatial steps in each direction
-		Int3 sizes = {0, 0, 0};     // number of nodes along each direction
-		Real3 startR = {0, 0, 0};   // global coordinates of the first real node
-		int borderSize = 0;         // number of virtual border nodes for one border point
+		int dimensionality = 0;     ///< spatial dimensionality of the grid (model can have
+			                    ///< different)
+		Real3 lengths = {0, 0, 0};  ///< lengthes of cube in each direction
+		Real3 h = {0, 0, 0};        ///< spatial steps in each direction
+		Int3 sizes = {0, 0, 0};     ///< number of nodes along each direction
+		Real3 startR = {0, 0, 0};   ///< global coordinates of the first real node
+		int borderSize = 0;         ///< number of virtual border nodes for one border point
 	} cubicGrid;
 
 	struct Cgal2DGrid {
-		real spatialStep = 0;         // effective spatial step
+		real spatialStep = 0;         ///< effective spatial step
 	} cgal2DGrid;
 
-	// list of statements to calculate on the same geometry
+	/// list of statements to calculate on the same geometry
 	std::vector<Statement> statements;
 };
+
+/** @} */
 }
 
 #endif // LIBGCM_TASK_HPP

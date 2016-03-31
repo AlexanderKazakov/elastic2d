@@ -33,11 +33,11 @@ struct BorderConditions<TModel, CubicGrid, TMaterial> {
 		             std::shared_ptr<Area> area_, const Map& values_) :
 			direction(direction_), index(index_), normal(normal_),
 			area(area_), values(values_) { }
-		int direction;     // crossing axis
-		int index;         // index at crossing axis
-		int normal;        // -1 or 1 only
-		std::shared_ptr<Area> area;
-		Map values;        // fixed values
+		int direction;     ///< crossing axis
+		int index;         ///< index at crossing axis
+		int normal;        ///< -1 or 1 only
+		std::shared_ptr<Area> area; ///< area of surface
+		Map values;        ///< fixed values
 	};
 
 	BorderConditions(const Task& task);
@@ -46,11 +46,11 @@ struct BorderConditions<TModel, CubicGrid, TMaterial> {
 	void applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage);
 
 	private:
-		// list of conditions that applied in sequence (overwriting previous)
+		/// list of conditions that applied in sequence (overwriting previous)
 		std::vector<Condition> conditions;
-		// list of inner surfaces
+		/// list of inner surfaces
 		std::vector<InnerSurface> innerSurfaces;
-		// temporary values - just to not send between all the functions
+		/// temporary values - just to not send between all the functions
 		Mesh* mesh;
 		real timeStep;
 		int direction;
@@ -61,7 +61,7 @@ struct BorderConditions<TModel, CubicGrid, TMaterial> {
 		Real3 startR;  // mesh startR
 		Real3 lengths; // mesh lengths
 
-		// auxiliary mesh for fracture calculation
+		/// auxiliary mesh for fracture calculation
 		Mesh* helpMesh;
 
 		void handleSide() const;

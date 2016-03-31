@@ -13,7 +13,9 @@ namespace gcm {
 class Snapshotter {
 public:
 	typedef float precision;
-	// details of snapshot file name
+	
+	/** @name Details of snapshot file name */
+	///@{
 	const std::string CORE = std::string("core");
 	const std::string SNAPSHOTS = std::string("snapshots");
 	const std::string STATEMENT = std::string("statement");
@@ -23,7 +25,8 @@ public:
 
 	const int NUMBER_OF_DIGITS_IN_SNAP = 4;
 	const int NUMBER_OF_DIGITS_IN_CORE = 2;
-
+	///@}
+	
 	void initialize(const Task& task) {
 		if (task.statements.size() > 1) {
 			writeStatementToFileName = true;

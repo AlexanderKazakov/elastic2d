@@ -21,7 +21,7 @@ namespace linal {
 template<int TM, int TN>
 class DefaultMatrixContainer {
 public:
-	static const int SIZE = TM * TN;                 // size of storage in units of gcm::real
+	static const int SIZE = TM * TN; ///< size of storage in units of gcm::real
 	real values[SIZE];
 };
 
@@ -37,8 +37,8 @@ template<int TM, int TN, typename Container = DefaultMatrixContainer<TM, TN> >
 class Matrix : public Container {
 public:
 	typedef Container ContainerType;
-	static const int M = TM;                 // number of strings
-	static const int N = TN;                 // number of columns
+	static const int M = TM; ///< number of strings
+	static const int N = TN; ///< number of columns
 
 	static Matrix zeros() {
 		Matrix m;

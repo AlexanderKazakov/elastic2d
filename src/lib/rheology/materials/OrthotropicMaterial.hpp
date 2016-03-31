@@ -9,10 +9,10 @@ struct IsotropicMaterial;
 struct OrthotropicMaterial : public AbstractMaterial {
 	static const Materials::T ID;
 
-	real rho = 0;         // density
+	real rho = 0;          ///< density
 
 	union {
-		real c[9];         // elastic coefficients
+		real c[9];         ///< elastic coefficients
 		/* *INDENT-OFF* */
 			struct {
 				real c11, c12, c13,

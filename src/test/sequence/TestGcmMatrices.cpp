@@ -13,7 +13,7 @@ typedef typename Case::Material      Material;
 typedef typename Model::GCM_MATRICES GCM_MATRICES;
 typedef typename Model::PdeVector    PdeVector;
 
-static const int DIMENSIONALITY = GCM_MATRICES::DIMENSIONALITY;
+static const int DIMENSIONALITY = GCM_MATRICES::D;
 static const int M = GCM_MATRICES::M;
 
 static const int NUMBER_OF_TEST_ITERATIONS = 1000;

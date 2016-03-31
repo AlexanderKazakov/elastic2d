@@ -10,7 +10,7 @@ namespace linal {
 template<int M>
 class DiagonalMatrixContainer {
 public:
-	static const int SIZE = M;                 // size of storage in units of gcm::real
+	static const int SIZE = M; ///< size of storage in units of gcm::real
 	real values[SIZE];
 };
 
@@ -25,8 +25,8 @@ using DiagonalMatrix = Matrix<TM, TM, DiagonalMatrixContainer<TM> >;
 template<int TM>
 class Matrix<TM, TM, DiagonalMatrixContainer<TM> > : public DiagonalMatrixContainer<TM> {
 public:
-	static const int M = TM;                 // number of strings
-	static const int N = TM;                 // number of columns
+	static const int M = TM; ///< number of strings
+	static const int N = TM; ///< number of columns
 
 	/** Default constructor. */
 	Matrix() { }

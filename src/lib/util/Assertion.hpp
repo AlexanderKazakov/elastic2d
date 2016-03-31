@@ -20,7 +20,7 @@ inline std::string to_string(const std::string& s) {
 #define THROW_ASSERTION_FAILED(msg) DO_ONCE(;)
 #endif
 
-// assert_true
+/// assert_true
 #define __assert_true_debug(cond, debug_code) DO_ONCE( \
     if (!(cond)) \
 	{ \
@@ -30,7 +30,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_true_no_debug(cond) __assert_true_debug(cond, {})
 #define assert_true(...) GET_MACRO_2(__VA_ARGS__, __assert_true_debug, __assert_true_no_debug)(__VA_ARGS__)
-// assert_false
+/// assert_false
 #define __assert_false_debug(cond, debug_code) DO_ONCE( \
     if (cond) \
 	{ \
@@ -40,7 +40,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_false_no_debug(cond) __assert_false_debug(cond, {})
 #define assert_false(...) GET_MACRO_2(__VA_ARGS__, __assert_false_debug, __assert_false_no_debug)(__VA_ARGS__)
-// assert_ne
+/// assert_ne
 #define __assert_ne_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) == (v2)) \
 	{ \
@@ -50,7 +50,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_ne_no_debug(v1, v2) __assert_ne_debug(v1, v2, {})
 #define assert_ne(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_ne_debug, __assert_ne_no_debug)(v1, __VA_ARGS__)
-// assert_eq
+/// assert_eq
 #define __assert_eq_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) != (v2)) \
 	{ \
@@ -60,7 +60,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_eq_no_debug(v1, v2) __assert_eq_debug(v1, v2, {})
 #define assert_eq(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_eq_debug, __assert_eq_no_debug)(v1, __VA_ARGS__)
-// assert_gt
+/// assert_gt
 #define __assert_gt_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) <= (v2)) \
 	{ \
@@ -70,7 +70,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_gt_no_debug(v1, v2) __assert_gt_debug(v1, v2, {})
 #define assert_gt(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_gt_debug, __assert_gt_no_debug)(v1, __VA_ARGS__)
-// assert_ge
+/// assert_ge
 #define __assert_ge_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) < (v2)) \
 	{ \
@@ -80,7 +80,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_ge_no_debug(v1, v2) __assert_ge_debug(v1, v2, {})
 #define assert_ge(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_ge_debug, __assert_ge_no_debug)(v1, __VA_ARGS__)
-// assert_lt
+/// assert_lt
 #define __assert_lt_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) >= (v2)) \
 	{ \
@@ -90,7 +90,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_lt_no_debug(v1, v2) __assert_lt_debug(v1, v2, {})
 #define assert_lt(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_lt_debug, __assert_lt_no_debug)(v1, __VA_ARGS__)
-// assert_le
+/// assert_le
 #define __assert_le_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) > (v2)) \
 	{ \
@@ -100,7 +100,7 @@ inline std::string to_string(const std::string& s) {
 )
 #define __assert_le_no_debug(v1, v2) __assert_le_debug(v1, v2, {})
 #define assert_le(v1, ...) GET_MACRO_3(v1, __VA_ARGS__, __assert_le_debug, __assert_le_no_debug)(v1, __VA_ARGS__)
-// assert_near
+/// assert_near
 #define __assert_near_debug(v1, v2, equality_tolerance, debug_code) DO_ONCE( \
 	if (fabs(v1 - v2) > equality_tolerance) \
 	{ \

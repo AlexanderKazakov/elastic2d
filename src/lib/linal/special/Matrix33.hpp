@@ -10,7 +10,7 @@ namespace linal {
  */
 class Matrix33Container {
 public:
-	static const int SIZE = 3 * 3;                 // size of storage in units of gcm::real
+	static const int SIZE = 3 * 3; ///< size of storage in units of gcm::real
 	union {
 		real values[SIZE];
 		struct {

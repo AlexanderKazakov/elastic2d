@@ -7,6 +7,7 @@
 /* *INDENT-OFF* */
 
 /**
+ * @file
  * The file contains structs with enumerations and some properties for physical concepts used by the program.
  * The aim is to formalize and unify interconnection between parts of the program.
  * Use it every time when parts of the program communicate to each other by this concepts.

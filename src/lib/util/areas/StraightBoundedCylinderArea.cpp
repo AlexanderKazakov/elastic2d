@@ -14,11 +14,11 @@ StraightBoundedCylinderArea(const real& _radius,
 
 bool StraightBoundedCylinderArea::
 contains(const Real3& coords) const {
-	// check that the point is between caps
+	/// check that the point is between caps
 	if (linal::dotProduct(coords - begin,
 	                      axis) * linal::dotProduct(coords - end, axis) >= 0) { return false; }
 
-	// check that the point is on the less than radius distance from the axis
+	/// check that the point is on the less than radius distance from the axis
 	real projection = linal::dotProduct(coords - begin, axis);
 	return linal::dotProduct(coords - begin,
 	                         coords - begin) - projection * projection < radius * radius;

@@ -14,6 +14,12 @@ namespace gcm {
  */
 class CubicGrid : public StructuredGrid {
 public:
+	/** @name Iterators 
+	 * Different iteration over the grid.
+	 */
+	///@{
+
+	/** Base iterator */
 	struct Iterator : public Int3 {         // TODO - replace inheritance
 		Int3 bounds = {0, 0, 0};
 		Iterator(const Int3 start, const Int3 bounds_) {
@@ -96,6 +102,7 @@ public:
 	PartIterator box(const Int3 min, const Int3 max) const {
 		return PartIterator(min, min, max);
 	}
+	///@}
 
 	CubicGrid(const Task& task);
 	virtual ~CubicGrid() { }
@@ -134,12 +141,12 @@ public:
 		        indexMaker(2) * (z + borderSize) );
 	}
 
-	const int borderSize;  // number of virtual nodes on border
-	const Int3 sizes;      // numbers of nodes along each direction
-	const Int3 indexMaker; // increments of plain array index when corresponding
-	// dimensional index increases by one
-	const Real3 startR;    // global coordinates of the first real node of the grid
-	const Real3 h;         // spatial steps along each direction
+	const int borderSize;  ///< number of virtual nodes on border
+	const Int3 sizes;      ///< numbers of nodes along each direction
+	const Int3 indexMaker; ///< increments of plain array index when corresponding
+	                       ///< dimensional index increases by one
+	const Real3 startR;    ///< global coordinates of the first real node of the grid
+	const Real3 h;         ///< spatial steps along each direction
 
 	real getMinimalSpatialStep() const {
 		real minH = fmin(h(0), fmin(h(1), h(2)));
@@ -151,11 +158,13 @@ public:
 	static void preprocessTask(Task::CubicGrid& task);
 
 private:
-	// functions for setup precalculations
+	/** functions for setup precalculations */
+	///@{ 
 	static Int3 calculateSizes(const Task::CubicGrid& task);
 	static Real3 calculateStartR(const Task::CubicGrid& task);
 	static int numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task);
 	static Int3 calculateIndexMaker(const Task::CubicGrid& task);
+	///@}
 
 	USE_AND_INIT_LOGGER("gcm.CubicGrid")
 };

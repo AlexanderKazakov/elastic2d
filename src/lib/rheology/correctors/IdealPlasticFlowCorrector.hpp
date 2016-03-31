@@ -19,7 +19,7 @@ public:
 	void apply(TNodePtr node) const {
 		real pressure = node->pde().getPressure();
 		real J2 = node->pde().getJ2();
-		// Correction parameter
+		/// Correction parameter
 		real x = J2 / node->material()->yieldStrength;
 
 		if (x > 1) {
