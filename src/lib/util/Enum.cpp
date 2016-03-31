@@ -1,6 +1,7 @@
 #include <lib/util/Enum.hpp>
 
 using namespace gcm;
+/* *INDENT-OFF* */
 
 
 const std::map<PhysicalQuantities::T, std::string> PhysicalQuantities::NAME = {

@@ -23,7 +23,8 @@ int main(int argc, char** argv) {
 		Engine(parseTaskCgal2d()).run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+		auto duration =
+		        std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 		LOG_INFO("Time of calculation, microseconds = " << duration);
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
@@ -33,21 +34,24 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+
 Task parseTaskCgal2d() {
 	Task task;
-	
+
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CGAL2D;
 	task.snapshottersId = {Snapshotters::T::VTK};
-	
+
 	task.cgal2DGrid.spatialStep = 0.4;
 
 	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	statement.materialConditions.defaultMaterial =
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1,
+	                                            1);
 
 	statement.globalSettings.CourantNumber = 1.0;
 
@@ -59,22 +63,23 @@ Task parseTaskCgal2d() {
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
 	statement.initialCondition.quantities.push_back(pressure);
-	
+
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {
-			PhysicalQuantities::T::PRESSURE,
-			PhysicalQuantities::T::Sxx,
-			PhysicalQuantities::T::Sxy,
-			PhysicalQuantities::T::Syy
+		PhysicalQuantities::T::PRESSURE,
+		PhysicalQuantities::T::Sxx,
+		PhysicalQuantities::T::Sxy,
+		PhysicalQuantities::T::Syy
 	};
 
 	task.statements.push_back(statement);
 	return task;
 }
 
+
 Task parseTask2d() {
 	Task task;
-	
+
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
@@ -89,7 +94,9 @@ Task parseTask2d() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	statement.materialConditions.defaultMaterial =
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1,
+	                                            1);
 
 	statement.globalSettings.CourantNumber = 0.9;
 
@@ -109,14 +116,15 @@ Task parseTask2d() {
 	return task;
 }
 
+
 Task parseTask3d() {
 	Task task;
-	
+
 	task.modelId = Models::T::ELASTIC3D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK};
-	
+
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.dimensionality = 3;
 	task.cubicGrid.lengths = {4, 2, 1};
@@ -126,7 +134,9 @@ Task parseTask3d() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	statement.materialConditions.defaultMaterial =
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1,
+	                                            1);
 //	statement.materialConditions.defaultMaterial = std::make_shared<OrthotropicMaterial>
 //			(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 
@@ -147,3 +157,5 @@ Task parseTask3d() {
 	task.statements.push_back(statement);
 	return task;
 }
+
+

@@ -3,14 +3,15 @@
 using namespace gcm;
 
 
-Cgal2DGrid::Cgal2DGrid(const Task& task) :
-		UnstructuredGrid(task) {
+Cgal2DGrid::
+Cgal2DGrid(const Task& task) :
+	UnstructuredGrid(task) {
 	effectiveSpatialStep = task.cgal2DGrid.spatialStep;
 	triangulate();
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
-	for (auto it = triangulation.finite_vertices_begin(); 
-			it != triangulation.finite_vertices_end(); it++) {
+	for (auto it = triangulation.finite_vertices_begin();
+	     it != triangulation.finite_vertices_end(); it++) {
 		auto handle = it->handle();
 		vertexHandles[vertexIndex] = handle;
 		verticesIndices.insert({handle, vertexIndex});
@@ -18,7 +19,9 @@ Cgal2DGrid::Cgal2DGrid(const Task& task) :
 	}
 }
 
-void Cgal2DGrid::triangulate() {
+
+void Cgal2DGrid::
+triangulate() {
 	VertexHandle va = triangulation.insert(Point(-2, -1));
 	VertexHandle vb = triangulation.insert(Point(-1, 0));
 	VertexHandle vc = triangulation.insert(Point(0, -1));
@@ -55,3 +58,5 @@ void Cgal2DGrid::triangulate() {
 	LOG_DEBUG("Number of vertices: " << triangulation.number_of_vertices());
 	LOG_DEBUG("Number of faces: " << triangulation.number_of_faces());
 }
+
+

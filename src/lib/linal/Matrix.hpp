@@ -12,199 +12,236 @@
 
 
 namespace gcm {
-	namespace linal {
-		/**
-		 * Default implementation for matrix values container.
-		 * @tparam TM First matrix dimension (number of strings).
-		 * @tparam TN Second matrix dimension (number of columns).
-		 */
-		template<int TM, int TN>
-		class DefaultMatrixContainer {
-		public:
-			static const int SIZE = TM * TN; // size of storage in units of gcm::real
-			real values[SIZE];
-		};
+namespace linal {
+/**
+ * Default implementation for matrix values container.
+ * @tparam TM First matrix dimension (number of strings).
+ * @tparam TN Second matrix dimension (number of columns).
+ */
+template<int TM, int TN>
+class DefaultMatrixContainer {
+public:
+	static const int SIZE = TM * TN;                 // size of storage in units of gcm::real
+	real values[SIZE];
+};
 
-		/**
-		 * Generic matrix class.
-		 *
-		 * @tparam TM First matrix dimension (number of strings).
-		 * @tparam TN Second matrix dimension (number of columns).
-		 * @tparam Container Container class to hold values.
-		 */
-		template<int TM, int TN, typename Container=DefaultMatrixContainer<TM, TN>>
-		class Matrix : public Container {
-		public:
-			typedef Container ContainerType;
-			static const int M = TM; // number of strings
-			static const int N = TN; // number of columns
 
-			static Matrix zeros() {
-				Matrix m;
-				return clear(m);
-			}
+/**
+ * Generic matrix class.
+ *
+ * @tparam TM First matrix dimension (number of strings).
+ * @tparam TN Second matrix dimension (number of columns).
+ * @tparam Container Container class to hold values.
+ */
+template<int TM, int TN, typename Container = DefaultMatrixContainer<TM, TN> >
+class Matrix : public Container {
+public:
+	typedef Container ContainerType;
+	static const int M = TM;                 // number of strings
+	static const int N = TN;                 // number of columns
 
-			Matrix() { }
-			Matrix& operator=(const Matrix &m2) = default;
-			/** @param values Values to initialize matrix with, string by string */
-			Matrix(std::initializer_list<real> list) {
-				this->initialize(list);
-			}
-			/**
-			 * Copy constructor
-			 * @param m Matrix to construct from
-			 */
-			template<typename Container2>
-			Matrix(const Matrix<TM, TN, Container2> &m2) {
-				static_assert(this->SIZE == TM * TN, "Container must have enough memory to store values");
-				(*this) = m2;
-			}
-			/**
-			 * Assignment operator from matrix of equal size and any container
-			 * @return reference to modified matrix instance
-			 */
-			template<typename Container2>
-			Matrix& operator=(const Matrix<TM, TN, Container2> &m2) {
-				// TODO - rvalues?
-				static_assert(this->SIZE == m2.SIZE, "Containers must have equal size");
-				memcpy(this->values, m2.values, sizeof(this->values));
-				return *this;
-			}
-			/** @param values Values to initialize matrix with, string by string */
-			void initialize(std::initializer_list<real> list);
+	static Matrix zeros() {
+		Matrix m;
+		return clear(m);
+	}
 
-			/** Read-only access to matrix component */
-			real operator()(const int i, const int j) const {
-				return this->values[getIndex(i, j)];
-			}
-			/** Read/write access to matrix component */
-			real &operator()(const int i, const int j) {
-				return this->values[getIndex(i, j)];
-			}
-			/** Read-only access to vector component */
-			real operator()(const int i) const {
-				return this->values[i];
-			}
-			/** Read/write access to vector component */
-			real &operator()(const int i) {
-				return this->values[i];
-			}
+	Matrix() { }
+	Matrix& operator=(const Matrix& m2) = default;
 
-			/** @return transposed matrix */
-			Matrix<TN, TM, Container> transpose() const;
-			/** Transposes square matrix (modifying matrix contents) */
-			void transposeInplace();
+	/** @param values Values to initialize matrix with, string by string */
+	Matrix(std::initializer_list<real> list) {
+		this->initialize(list);
+	}
 
-			/**
-			 * Inverses matrix. Note this method returns Matrix<TN, TM> (not Matrix<TM, TN>) to make compilation fail
-			 * if matrix is not square.
-			 * @return inverted matrix.
-			 */
-			Matrix<TN, TM, Container> invert() const;
-			/** Inverses matrix modifying its contents */
-			void invertInplace();
+	/**
+	 * Copy constructor
+	 * @param m Matrix to construct from
+	 */
+	template<typename Container2>
+	Matrix(const Matrix<TM, TN, Container2>& m2) {
+		static_assert(this->SIZE == TM * TN,
+		              "Container must have enough memory to store values");
+		(*this) = m2;
+	}
 
-			/** @return i-th column. */
-			template<typename Container2 = DefaultMatrixContainer<TM, 1>>
-			Matrix<TM, 1, Container2> getColumn(const int i) const {
-				Matrix<TM, 1, Container2> ans;
-				for (int j = 0; j < TM; j++) {
-					ans(j) = (*this)(j, i);
-				}
-				return ans;
-			}
-			/** set i-th column */
-			template<typename Container2>
-			void setColumn(const int i, const Matrix<TM, 1, Container2> &column) {
-				for (int j = 0; j < TM; j++) {
-					(*this)(j, i) = column(j);
-				}
-			}
+	/**
+	 * Assignment operator from matrix of equal size and any container
+	 * @return reference to modified matrix instance
+	 */
+	template<typename Container2>
+	Matrix& operator=(const Matrix<TM, TN, Container2>& m2) {
+		// TODO - rvalues?
+		static_assert(this->SIZE == m2.SIZE, "Containers must have equal size");
+		memcpy(this->values, m2.values, sizeof(this->values));
+		return *this;
+	}
 
-			/** @return in vector diagonal of this matrix multiplied by matrix B */
-			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> diagonalMultiply(const Matrix<TN, TM> &B) const;
+	/** @param values Values to initialize matrix with, string by string */
+	void initialize(std::initializer_list<real> list);
 
-			/** @return trace of the matrix */
-			real trace() const;
+	/** Read-only access to matrix component */
+	real operator()(const int i, const int j) const {
+		return this->values[getIndex(i, j)];
+	}
 
-		protected:
-			/** @return values array index of matrix component */
-			int getIndex(const int i, const int j) const {
-				return i * TN + j;
-			}
-		};
+	/** Read/write access to matrix component */
+	real& operator()(const int i, const int j) {
+		return this->values[getIndex(i, j)];
+	}
 
-		template<int TM, int TN, typename Container>
-		void Matrix<TM, TN, Container>::initialize(std::initializer_list<real> list) {
-			assert_eq(this->SIZE, list.size());
-			int i = 0;
-			for (auto value: list)
-				this->values[i++] = value;
+	/** Read-only access to vector component */
+	real operator()(const int i) const {
+		return this->values[i];
+	}
+
+	/** Read/write access to vector component */
+	real& operator()(const int i) {
+		return this->values[i];
+	}
+
+	/** @return transposed matrix */
+	Matrix<TN, TM, Container> transpose() const;
+
+	/** Transposes square matrix (modifying matrix contents) */
+	void transposeInplace();
+
+	/**
+	 * Inverses matrix. Note this method returns Matrix<TN, TM> (not Matrix<TM, TN>) to make
+	 *compilation fail
+	 * if matrix is not square.
+	 * @return inverted matrix.
+	 */
+	Matrix<TN, TM, Container> invert() const;
+
+	/** Inverses matrix modifying its contents */
+	void invertInplace();
+
+	/** @return i-th column. */
+	template<typename Container2 = DefaultMatrixContainer<TM, 1> >
+	Matrix<TM, 1, Container2> getColumn(const int i) const {
+		Matrix<TM, 1, Container2> ans;
+		for (int j = 0; j < TM; j++) {
+			ans(j) = (*this)(j, i);
 		}
+		return ans;
+	}
 
-		template<int TM, int TN, typename Container>
-		Matrix<TN, TM, Container> Matrix<TM, TN, Container>::transpose() const {
-			Matrix<TN, TM, Container> result;
-			for (int i = 0; i < TM; i++)
-				for (int j = 0; j < TN; j++)
-					result(j, i) = (*this)(i, j);
-			return result;
+	/** set i-th column */
+	template<typename Container2>
+	void setColumn(const int i, const Matrix<TM, 1, Container2>& column) {
+		for (int j = 0; j < TM; j++) {
+			(*this)(j, i) = column(j);
 		}
+	}
 
-		template<int TM, int TN, typename Container>
-		void Matrix<TM, TN, Container>::transposeInplace() {
-			(*this) = transpose();
-		}
+	/** @return in vector diagonal of this matrix multiplied by matrix B */
+	Matrix<TM, 1,
+	       DefaultMatrixContainer<TM, 1> > diagonalMultiply(const Matrix<TN, TM>& B) const;
 
-		template<int TM, int TN, typename Container>
-		Matrix<TN, TM, Container> Matrix<TM, TN, Container>::invert() const {
-			return GslUtils::invert(*this);
-		}
+	/** @return trace of the matrix */
+	real trace() const;
 
-		template<int TM, int TN, typename Container>
-		void Matrix<TM, TN, Container>::invertInplace() {
-			(*this) = invert();
-		}
+protected:
+	/** @return values array index of matrix component */
+	int getIndex(const int i, const int j) const {
+		return i * TN + j;
+	}
 
-		template<int TM, int TN, typename Container>
-		Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> Matrix<TM, TN, Container>::diagonalMultiply(const Matrix<TN, TM> &B) const {
-			assert_eq(TM, TN);
-			Matrix<TM, 1, DefaultMatrixContainer<TM, 1>> ans;
-			for (int i = 0; i < TM; i++) {
-				ans(i) = 0;
-				for (int j = 0; j < TM; j++) {
-					ans(i) += (*this)(i, j) * B(j, i);
-				}
-			}
-			return ans;
-		}
+};
 
-		template<int TM, int TN, typename Container>
-		real Matrix<TM, TN, Container>::trace() const {
-			assert_eq(TM, TN);
-			real ans = 0.0;
-			for (int i = 0; i < TN; i++) {
-				ans += (*this)(i, i);
-			}
-			return ans;
-		}
+
+template<int TM, int TN, typename Container>
+void Matrix<TM, TN, Container>::
+initialize(std::initializer_list<real> list) {
+	assert_eq(this->SIZE, list.size());
+	int i = 0;
+	for (auto value : list) {
+		this->values[i++] = value;
 	}
 }
 
-namespace std {
-	template<int TM, int TN, typename Container>
-	inline std::ostream &operator<<(std::ostream &os, const gcm::linal::Matrix<TM, TN, Container> &matrix) {
 
-		os << std::endl;
-		for (int i = 0; i < TM; i++) {
-			for (int j = 0; j < TN; j++) {
-				os << matrix(i, j) << "\t";
-			}
-			os << "\n";
+template<int TM, int TN, typename Container>
+Matrix<TN, TM, Container> Matrix<TM, TN, Container>::
+transpose() const {
+	Matrix<TN, TM, Container> result;
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j < TN; j++) {
+			result(j, i) = (*this)(i, j);
 		}
-
-		return os;
 	}
+	return result;
+}
+
+
+template<int TM, int TN, typename Container>
+void Matrix<TM, TN, Container>::
+transposeInplace() {
+	(*this) = transpose();
+}
+
+
+template<int TM, int TN, typename Container>
+Matrix<TN, TM, Container> Matrix<TM, TN, Container>::
+invert() const {
+	return GslUtils::invert(*this);
+}
+
+
+template<int TM, int TN, typename Container>
+void Matrix<TM, TN, Container>::
+invertInplace() {
+	(*this) = invert();
+}
+
+
+template<int TM, int TN, typename Container>
+Matrix<TM, 1, DefaultMatrixContainer<TM, 1> > Matrix<TM, TN, Container>::
+diagonalMultiply(const Matrix<TN, TM>& B) const {
+	assert_eq(TM, TN);
+	Matrix<TM, 1, DefaultMatrixContainer<TM, 1> > ans;
+	for (int i = 0; i < TM; i++) {
+		ans(i) = 0;
+		for (int j = 0; j < TM; j++) {
+			ans(i) += (*this)(i, j) * B(j, i);
+		}
+	}
+	return ans;
+}
+
+
+template<int TM, int TN, typename Container>
+real Matrix<TM, TN, Container>::
+trace() const {
+	assert_eq(TM, TN);
+	real ans = 0.0;
+	for (int i = 0; i < TN; i++) {
+		ans += (*this)(i, i);
+	}
+	return ans;
+}
+
+
+}
+}
+
+namespace std {
+template<int TM, int TN, typename Container>
+inline std::ostream& operator<<(std::ostream& os, const gcm::linal::Matrix<TM, TN,
+                                                                           Container>& matrix) {
+
+	os << std::endl;
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j < TN; j++) {
+			os << matrix(i, j) << "\t";
+		}
+		os << "\n";
+	}
+
+	return os;
+}
+
+
 }
 
 #endif // LIBGCM_LINAL_MATRIX_HPP

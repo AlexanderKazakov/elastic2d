@@ -7,9 +7,9 @@
 #include <lib/linal/linal.hpp>
 
 namespace gcm {
-	struct AbstractMaterial {
-		virtual ~AbstractMaterial() = default;
-	};
+struct AbstractMaterial {
+	virtual ~AbstractMaterial() = default;
+};
 }
 
 #endif // LIBGCM_ABSTRACTMATERIAL_HPP

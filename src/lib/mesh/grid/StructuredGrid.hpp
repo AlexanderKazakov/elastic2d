@@ -7,20 +7,22 @@
 #include <lib/mesh/grid/AbstractGrid.hpp>
 
 namespace gcm {
-	/**
-	 * Non-movable structured grid
-	 */
-	class StructuredGrid : public AbstractGrid {
-	public:
-		typedef vtkStructuredGrid             VtkGridType;
-		typedef vtkXMLStructuredGridWriter    VtkWriterType;
+/**
+ * Non-movable structured grid
+ */
+class StructuredGrid : public AbstractGrid {
+public:
+	typedef vtkStructuredGrid          VtkGridType;
+	typedef vtkXMLStructuredGridWriter VtkWriterType;
 
-		StructuredGrid(const Task& task) : AbstractGrid(task) { }
-		virtual ~StructuredGrid() { }
+	StructuredGrid(const Task& task) : AbstractGrid(task) { }
+	virtual ~StructuredGrid() { }
 
-	protected:
-		USE_AND_INIT_LOGGER("gcm.StructuredGrid")
-	};
+protected:
+	USE_AND_INIT_LOGGER("gcm.StructuredGrid")
+};
+
+
 }
 
 #endif // LIBGCM_STRUCTUREDGRID_HPP

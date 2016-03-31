@@ -8,43 +8,43 @@
 
 
 namespace gcm {
-	/**
-	 * Work with border conditions on different mesh types
-	 */
-	template<typename TModel, typename TGrid, typename TMaterial> struct BorderConditions;
+/**
+ * Work with border conditions on different mesh types
+ */
+template<typename TModel, typename TGrid, typename TMaterial> struct BorderConditions;
 
-	template<typename TModel, typename TMaterial>
-	struct BorderConditions<TModel, CubicGrid, TMaterial> {
-		typedef DefaultMesh<TModel, CubicGrid, TMaterial>       Mesh;
-		typedef typename Mesh::PdeVector                        PdeVector;
-		typedef typename Mesh::Iterator                         Iterator;
-		typedef typename TModel::PdeVariables                   PdeVariables;
+template<typename TModel, typename TMaterial>
+struct BorderConditions<TModel, CubicGrid, TMaterial> {
+	typedef DefaultMesh<TModel, CubicGrid, TMaterial>       Mesh;
+	typedef typename Mesh::PdeVector                        PdeVector;
+	typedef typename Mesh::Iterator                         Iterator;
+	typedef typename TModel::PdeVariables                   PdeVariables;
 
-		typedef std::function<real(real)>                       TimeDependency;
-		typedef std::map<PhysicalQuantities::T, TimeDependency> Map;
-		struct Condition {
-			Condition(const std::shared_ptr<Area> area_, const Map& values_) :
-					area(area_), values(values_) { }
-			std::shared_ptr<Area> area;
-			Map values;
-		};
-		struct InnerSurface {
-			InnerSurface(const int direction_, const int index_, const int normal_,
-						 std::shared_ptr<Area> area_, const Map& values_) :
-					direction(direction_), index(index_), normal(normal_), 
-					area(area_), values(values_) { }
-			int direction; // crossing axis
-			int index; // index at crossing axis
-			int normal; // -1 or 1 only
-			std::shared_ptr<Area> area; 
-			Map values; // fixed values
-		};
-		
-		BorderConditions(const Task& task);
-		void beforeStatement(const Statement &statement);
-		void applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage);
-		void applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage);
-	
+	typedef std::function<real(real)>                       TimeDependency;
+	typedef std::map<PhysicalQuantities::T, TimeDependency> Map;
+	struct Condition {
+		Condition(const std::shared_ptr<Area> area_, const Map& values_) :
+			area(area_), values(values_) { }
+		std::shared_ptr<Area> area;
+		Map values;
+	};
+	struct InnerSurface {
+		InnerSurface(const int direction_, const int index_, const int normal_,
+		             std::shared_ptr<Area> area_, const Map& values_) :
+			direction(direction_), index(index_), normal(normal_),
+			area(area_), values(values_) { }
+		int direction;     // crossing axis
+		int index;         // index at crossing axis
+		int normal;        // -1 or 1 only
+		std::shared_ptr<Area> area;
+		Map values;        // fixed values
+	};
+
+	BorderConditions(const Task& task);
+	void beforeStatement(const Statement& statement);
+	void applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage);
+	void applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage);
+
 	private:
 		// list of conditions that applied in sequence (overwriting previous)
 		std::vector<Condition> conditions;
@@ -57,31 +57,32 @@ namespace gcm {
 		bool onTheRight;
 
 		// TODO - wtf? replace
-		Int3 sizes; // mesh sizes
-		Real3 startR; // mesh startR
+		Int3 sizes;    // mesh sizes
+		Real3 startR;  // mesh startR
 		Real3 lengths; // mesh lengths
 
 		// auxiliary mesh for fracture calculation
 		Mesh* helpMesh;
-		
+
 		void handleSide() const;
 		void handleBorderPoint(const Iterator& borderIter, const Map& values) const;
 		void allocateHelpMesh();
 		void handleInnerSurfacePoint(const Iterator& borderIter, const Map& values,
-									 const int surfaceNormal);
-	};
+		                             const int surfaceNormal);
 
-	template<typename TModel, typename TMaterial>
-	struct BorderConditions<TModel, Cgal2DGrid, TMaterial> {
-		typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial>      Mesh;
-		typedef typename Mesh::PdeVector                        PdeVector;
-		typedef typename Mesh::Iterator                         Iterator;
+};
 
-		BorderConditions(const Task&) { }
-		void beforeStatement(const Statement&) { }
-		void applyBorderBeforeStage(Mesh*, const real, const int) { }
-		void applyBorderAfterStage(Mesh*, const real, const int) { }
-	};
+template<typename TModel, typename TMaterial>
+struct BorderConditions<TModel, Cgal2DGrid, TMaterial> {
+	typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial> Mesh;
+	typedef typename Mesh::PdeVector                   PdeVector;
+	typedef typename Mesh::Iterator                    Iterator;
+
+	BorderConditions(const Task&) { }
+	void beforeStatement(const Statement&) { }
+	void applyBorderBeforeStage(Mesh*, const real, const int) { }
+	void applyBorderAfterStage(Mesh*, const real, const int) { }
+};
 }
 
 #endif // LIBGCM_BORDERCONDITIONS_HPP

@@ -10,7 +10,7 @@ using namespace gcm;
 Task parseTask();
 
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.seismo");
 
@@ -28,29 +28,33 @@ int main(int argc, char **argv) {
 
 Task parseTask() {
 	Task task;
-	
+
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
-	task.snapshottersId = {Snapshotters::T::BIN2DSEISM,
-		Snapshotters::T::VTK};
-	
+	task.snapshottersId = {
+		Snapshotters::T::BIN2DSEISM,
+		Snapshotters::T::VTK
+	};
+
 	task.globalSettings.forceSequence = true;
 
 	task.cubicGrid.borderSize = 3;
 	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.lengths = {1, 1, 1};
 	task.cubicGrid.sizes = {50, 50, 1};
-	
+
 	Statement statement;
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.binary2DSeismograph.quantityToWrite = PhysicalQuantities::T::PRESSURE;
-	statement.globalSettings.CourantNumber = 1.0; // number from Courant–Friedrichs–Lewy condition
+	statement.globalSettings.CourantNumber = 1.0; // number from Courant–Friedrichs–Lewy
+	                                              // condition
 
-	real rho = 4; // default density
-	real lambda = 2; // default Lame parameter
-	real mu = 1; // default Lame parameter
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	real rho = 4;                                 // default density
+	real lambda = 2;                              // default Lame parameter
+	real mu = 1;                                  // default Lame parameter
+	statement.materialConditions.defaultMaterial =
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
 	statement.globalSettings.numberOfSnaps = 50;
 	statement.globalSettings.stepsPerSnap = 1;
@@ -65,19 +69,21 @@ Task parseTask() {
 
 	statement.id = "0000";
 	task.statements.push_back(statement);
-	
-	Statement::BorderCondition borderCondition;	
+
+	Statement::BorderCondition borderCondition;
 	// y right free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(Real3({-10, 0.99, -10}), Real3({10, 10, 10}));
+	                               (Real3({-10, 0.99, -10}), Real3({10, 10, 10}));
 	borderCondition.values = {
-		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
-		{PhysicalQuantities::T::Syy, [](real){return 0;}}
+		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
+		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
 	};
 	statement.borderConditions.push_back(borderCondition);
-	
+
 	statement.id = "0001";
 	task.statements.push_back(statement);
-	
+
 	return task;
 }
+
+

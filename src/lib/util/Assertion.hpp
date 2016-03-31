@@ -7,14 +7,13 @@
 #include <lib/util/Exception.hpp>
 #include <lib/util/Macros.hpp>
 
-namespace std
-{
-    inline std::string to_string(const std::string& s)
-    {
-        return s;
-    }
+namespace std {
+inline std::string to_string(const std::string& s) {
+	return s;
+}
 }
 
+/* *INDENT-OFF* */
 #if CONFIG_ENABLE_ASSERTIONS
 #define THROW_ASSERTION_FAILED(msg) THROW(gcm::Exception::UNKNOWN, msg)
 #else
@@ -35,7 +34,7 @@ namespace std
 #define __assert_false_debug(cond, debug_code) DO_ONCE( \
     if (cond) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED("Condition evaluated to true instead of false. Condition: " #cond); \
 	} \
 )
@@ -45,7 +44,7 @@ namespace std
 #define __assert_ne_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) == (v2)) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED(std::string("Values " #v1 " and " #v2 " expected not to be equal, but both evaluate to ") + std::to_string(v1) + std::string(".")); \
 	} \
 )
@@ -55,7 +54,7 @@ namespace std
 #define __assert_eq_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) != (v2)) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED(std::string("Values " #v1 " and " #v2 " expected to be equal, but " #v1 " evaluates to ") + std::to_string(v1) + std::string(" and " #v2 " evaluates to ") + std::to_string(v2) + std::string(".")); \
 	} \
 )
@@ -65,7 +64,7 @@ namespace std
 #define __assert_gt_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) <= (v2)) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED(std::string("Value " #v1 " expected to be greater than " #v2 ", but " #v1 " evaluates to ") + std::to_string(v1) + std::string(" and " #v2 " evaluates to ") + std::to_string(v2) + std::string(".")); \
 	} \
 )
@@ -75,7 +74,7 @@ namespace std
 #define __assert_ge_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) < (v2)) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED(std::string("Value " #v1 " expected to be greater than (or equal to) " #v2 ", but " #v1 " evaluates to ") + std::to_string(v1) + std::string(" and " #v2 " evaluates to ") + std::to_string(v2) + std::string(".")); \
 	} \
 )
@@ -85,7 +84,7 @@ namespace std
 #define __assert_lt_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) >= (v2)) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED(std::string("Value " #v1 " expected to be less than " #v2 ", but " #v1 " evaluates to ") + std::to_string(v1) + std::string(" and " #v2 " evaluates to ") + std::to_string(v2) + std::string(".")); \
 	} \
 )
@@ -95,7 +94,7 @@ namespace std
 #define __assert_le_debug(v1, v2, debug_code) DO_ONCE( \
     if ((v1) > (v2)) \
 	{ \
-    	DO_ONCE(debug_code); \
+        DO_ONCE(debug_code); \
         THROW_ASSERTION_FAILED(std::string("Value " #v1 " expected to be less than (or equal to) " #v2 ", but " #v1 " evaluates to ") + std::to_string(v1) + std::string(" and " #v2 " evaluates to ") + std::to_string(v2) + std::string(".")); \
 	} \
 )

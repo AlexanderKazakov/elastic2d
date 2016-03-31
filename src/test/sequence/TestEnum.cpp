@@ -10,9 +10,12 @@ protected:
 	void testSizeOfMap() {
 		ASSERT_EQ(static_cast<int>(TConcept::T::SIZE_OF_ENUM), TConcept::NAME.size());
 	}
+
 };
 
-/** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc for explaination */
+
+/** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc
+  for explaination */
 #if GTEST_HAS_TYPED_TEST_P
 using testing::Types;
 TYPED_TEST_CASE_P(TestConcepts);

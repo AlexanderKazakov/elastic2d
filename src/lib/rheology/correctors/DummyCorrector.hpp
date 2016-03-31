@@ -4,21 +4,23 @@
 #include <lib/util/task/Task.hpp>
 
 namespace gcm {
+/**
+ * Dummy (stub) node state corrector.
+ */
+class DummyCorrector {
+public:
+	static const bool NonTrivial = false;
+
+	DummyCorrector(const Statement&) { }
+
 	/**
-	 * Dummy (stub) node state corrector.
+	 * This function should't be called at all, this is just stub
 	 */
-	class DummyCorrector {
-	public:
-		static const bool NonTrivial = false;
+	template<typename TNodePtr>
+	void apply(TNodePtr) const { }
+};
 
-		DummyCorrector(const Statement&) { }
 
-		/**
-		 * This function should't be called at all, this is just stub
-		 */
-		template<typename TNodePtr>
-		void apply(TNodePtr) const { }
-	};
 }
 
 #endif // LIBGCM_DUMMYCORRECTOR_HPP

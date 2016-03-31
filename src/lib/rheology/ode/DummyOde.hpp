@@ -8,21 +8,23 @@
 #include <lib/util/task/Task.hpp>
 
 namespace gcm {
-	/**
-	 * Dummy (stub) for cases when internal ODE is not present
-	 */
-	class DummyOde {
-	public:
-		static const bool NonTrivial = false;
-		struct Variables { };
+/**
+ * Dummy (stub) for cases when internal ODE is not present
+ */
+class DummyOde {
+public:
+	static const bool NonTrivial = false;
+	struct Variables { };
 
-		static const std::map<PhysicalQuantities::T, GetSetter<Variables>> QUANTITIES;
+	static const std::map<PhysicalQuantities::T, GetSetter<Variables> > QUANTITIES;
 
-		DummyOde(const Statement&) { }
+	DummyOde(const Statement&) { }
 
-		template<typename TNodePtr>
-		void nextStep(TNodePtr, const real) { }
-	};
+	template<typename TNodePtr>
+	void nextStep(TNodePtr, const real) { }
+};
+
+
 }
 
 #endif // LIBGCM_DUMMYODE_HPP

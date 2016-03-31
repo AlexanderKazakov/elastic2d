@@ -4,6 +4,7 @@
 #include <lib/util/Macros.hpp>
 #include <lib/config.hpp>
 
+/* *INDENT-OFF* */
 #if CONFIG_ENABLE_LOGGING
     #include <log4cxx/logger.h>
     #include <log4cxx/mdc.h>

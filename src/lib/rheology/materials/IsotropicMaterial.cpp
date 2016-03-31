@@ -4,12 +4,14 @@ using namespace gcm;
 
 const Materials::T IsotropicMaterial::ID = Materials::T::ISOTROPIC;
 
-IsotropicMaterial::IsotropicMaterial(const real rho_, const real lambda_, const real mu_,
-                                     const real yieldStrength_, const real continualDamageParameter_) :
-		rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
-		continualDamageParameter(continualDamageParameter_) { }
+IsotropicMaterial::
+IsotropicMaterial(const real rho_, const real lambda_, const real mu_,
+                  const real yieldStrength_, const real continualDamageParameter_) :
+	rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
+	continualDamageParameter(continualDamageParameter_) { }
 
-IsotropicMaterial IsotropicMaterial::generateRandomMaterial() {
+IsotropicMaterial IsotropicMaterial::
+generateRandomMaterial() {
 	const real RHO_MAX = 100.0;
 	const real RHO_MIN = 0.01;
 	const real LAMBDA_MAX = 1e+6;
@@ -23,4 +25,5 @@ IsotropicMaterial IsotropicMaterial::generateRandomMaterial() {
 
 	return IsotropicMaterial(rho, lambda, mu);
 }
+
 

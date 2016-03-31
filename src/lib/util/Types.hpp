@@ -3,15 +3,14 @@
 
 #include <lib/config.hpp>
 
-namespace gcm
-{
+namespace gcm {
 
 #if LIBGCM_DOUBLE_PRECISION
-	typedef double real;
-	const real EQUALITY_TOLERANCE = 1e-9;
+typedef double real;
+const real EQUALITY_TOLERANCE = 1e-9;
 #else
-	typedef float real;
-	const real EQUALITY_TOLERANCE = 1e-3;
+typedef float  real;
+const real EQUALITY_TOLERANCE = 1e-3;
 #endif
 
 }

@@ -13,13 +13,13 @@
 
 namespace gcm {
 
-	typedef linal::Real1    Real1;
-	typedef linal::Real2    Real2;
-	typedef linal::Real3    Real3;
+typedef linal::Real1 Real1;
+typedef linal::Real2 Real2;
+typedef linal::Real3 Real3;
 
-	typedef linal::Int1     Int1;
-	typedef linal::Int2     Int2;
-	typedef linal::Int3     Int3;
+typedef linal::Int1  Int1;
+typedef linal::Int2  Int2;
+typedef linal::Int3  Int3;
 
 }
 

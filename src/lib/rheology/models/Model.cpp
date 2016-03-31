@@ -1,6 +1,7 @@
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;
+/* *INDENT-OFF* (disable code formatter) */
 
 const MaterialsWavesMap Elastic1DModel::MATERIALS_WAVES_MAP = {
 		{IsotropicMaterial::ID, {

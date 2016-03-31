@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 
+/* *INDENT-OFF* */
+
 /**
  * The file contains structs with enumerations and some properties for physical concepts used by the program.
  * The aim is to formalize and unify interconnection between parts of the program.
@@ -14,122 +16,124 @@
 
 namespace gcm {
 
-	/**
-     * For all physical quantities used in the program.
-     */
-	struct PhysicalQuantities {
-		/** Type */
-		enum class T {
-			VELOCITY,
-			FORCE,
-			
-			Vx /* Velocity component along x-axis */,
-			Vy /* Velocity component along y-axis */,
-			Vz /* Velocity component along z-axis */,
+/**
+ * For all physical quantities used in the program.
+ */
+struct PhysicalQuantities {
+	/** Type */
+	enum class T {
+		VELOCITY,
+		FORCE,
 
-			Sxx /* Component of tension tensor */,
-			Sxy /* Component of tension tensor */,
-			Sxz /* Component of tension tensor */,
-			Syy /* Component of tension tensor */,
-			Syz /* Component of tension tensor */,
-			Szz /* Component of tension tensor */,
+		Vx /* Velocity component along x-axis */,
+		Vy /* Velocity component along y-axis */,
+		Vz /* Velocity component along z-axis */,
 
-			RHO /* Density */,
-			PRESSURE /* Pressure = -Sxx (1D), -(Sxx + Syy)/2 (2D), -(Sxx + Syy + Szz)/3 (3D) */,
+		Sxx /* Component of tension tensor */,
+		Sxy /* Component of tension tensor */,
+		Sxz /* Component of tension tensor */,
+		Syy /* Component of tension tensor */,
+		Syz /* Component of tension tensor */,
+		Szz /* Component of tension tensor */,
 
-			DAMAGE_MEASURE /* from continual damage model */,
+		RHO /* Density */,
+		PRESSURE /* Pressure = -Sxx (1D), -(Sxx + Syy)/2 (2D), -(Sxx + Syy + Szz)/3 (3D) */,
 
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
+		DAMAGE_MEASURE /* from continual damage model */,
 
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
+		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};
 
-	/**
-	 * For all types of waves used in the program.
-	 */
-	struct Waves {
-		/** Type */
-		enum class T {
-			P_FORWARD, P_BACKWARD,
-			S1_FORWARD, S1_BACKWARD,
-			S2_FORWARD, S2_BACKWARD,
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
 
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
+/**
+ * For all types of waves used in the program.
+ */
+struct Waves {
+	/** Type */
+	enum class T {
+		P_FORWARD, P_BACKWARD,
+		S1_FORWARD, S1_BACKWARD,
+		S2_FORWARD, S2_BACKWARD,
 
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
+		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};
 
-	/**
-	 * For all types of materials used in the program.
-	 */
-	struct Materials {
-		/** Type */
-		enum class T {
-			ISOTROPIC,
-			ORTHOTROPIC,
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
 
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
+/**
+ * For all types of materials used in the program.
+ */
+struct Materials {
+	/** Type */
+	enum class T {
+		ISOTROPIC,
+		ORTHOTROPIC,
 
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
+		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};
-	
-	/**
-	 * For all types of grids used in the program.
-	 */
-	struct Grids {
-		/** Type */
-		enum class T {
-			CUBIC,
-			CGAL2D,
 
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
 
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
+/**
+ * For all types of grids used in the program.
+ */
+struct Grids {
+	/** Type */
+	enum class T {
+		CUBIC,
+		CGAL2D,
+
+		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};
-	
-	/**
-	 * For all types of rheology models used in the program.
-	 */
-	struct Models {
-		/** Type */
-		enum class T {
-			ELASTIC1D,
-			ELASTIC2D,
-			ELASTIC3D,
 
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
 
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
+/**
+ * For all types of rheology models used in the program.
+ */
+struct Models {
+	/** Type */
+	enum class T {
+		ELASTIC1D,
+		ELASTIC2D,
+		ELASTIC3D,
+
+		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};
-	
-	/**
-	 * For all types of snapshotters used in the program.
-	 */
-	struct Snapshotters {
-		/** Type */
-		enum class T {
-			VTK,
-			BIN2DSEISM,
-			DETECTOR,
 
-			SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
-		};
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
 
-		/** string names of concepts */
-		static const std::map<T, std::string> NAME;
+/**
+ * For all types of snapshotters used in the program.
+ */
+struct Snapshotters {
+	/** Type */
+	enum class T {
+		VTK,
+		BIN2DSEISM,
+		DETECTOR,
+
+		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};
-	
-	enum class DIRECTION {X = 0, Y = 1, Z = 2};
+
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
+
+enum class DIRECTION {X = 0, Y = 1, Z = 2};
+
+
 }
 
 

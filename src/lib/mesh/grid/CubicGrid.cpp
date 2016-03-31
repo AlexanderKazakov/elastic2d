@@ -8,14 +8,15 @@
 using namespace gcm;
 
 
-CubicGrid::CubicGrid(const Task& task) :
-		StructuredGrid(task),
-		borderSize(task.cubicGrid.borderSize),
-		sizes(task.cubicGrid.sizes),
-		indexMaker(calculateIndexMaker(task.cubicGrid)),
-		startR(task.cubicGrid.startR),
-		h(task.cubicGrid.h) {
-	
+CubicGrid::
+CubicGrid(const Task& task) :
+	StructuredGrid(task),
+	borderSize(task.cubicGrid.borderSize),
+	sizes(task.cubicGrid.sizes),
+	indexMaker(calculateIndexMaker(task.cubicGrid)),
+	startR(task.cubicGrid.startR),
+	h(task.cubicGrid.h) {
+
 	assert_ge(borderSize, 1);
 	for (int i = 0; i < task.cubicGrid.dimensionality; i++) {
 		assert_ge(sizes(i), borderSize);
@@ -33,7 +34,9 @@ CubicGrid::CubicGrid(const Task& task) :
 	}
 }
 
-void CubicGrid::preprocessTask(Task::CubicGrid& task) {
+
+void CubicGrid::
+preprocessTask(Task::CubicGrid& task) {
 	// check before precalculations
 	assert_ge(task.dimensionality, 1);
 	assert_le(task.dimensionality, 3);
@@ -69,57 +72,66 @@ void CubicGrid::preprocessTask(Task::CubicGrid& task) {
 	task.startR = startR_;
 }
 
-Int3 CubicGrid::calculateSizes(const Task::CubicGrid& task) {
+
+Int3 CubicGrid::
+calculateSizes(const Task::CubicGrid& task) {
 	Int3 _sizes = task.sizes;
 	if (Mpi::ForceSequence()) {
 		return _sizes;
 	}
-	
+
 	// MPI - we divide the grid among processes equally along x-axis
 	_sizes(0) = numberOfNodesAlongXPerOneCore(task);
 	// in order to keep specified in task number of nodes
 	if (Mpi::Rank() == Mpi::Size() - 1) {
-		_sizes(0) = task.sizes(0) - 
-				numberOfNodesAlongXPerOneCore(task) * (Mpi::Size() - 1);
+		_sizes(0) = task.sizes(0) -
+		            numberOfNodesAlongXPerOneCore(task) * (Mpi::Size() - 1);
 	}
-	
+
 	return _sizes;
 }
 
-Real3 CubicGrid::calculateStartR(const Task::CubicGrid& task) {
+
+Real3 CubicGrid::
+calculateStartR(const Task::CubicGrid& task) {
 	Real3 _startR = task.startR;
 	if (Mpi::ForceSequence()) {
 		return _startR;
 	}
-	
+
 	// MPI - we divide the grid among processes equally along x-axis
 	_startR(0) += Mpi::Rank() * numberOfNodesAlongXPerOneCore(task) * task.h(0);
-	
+
 	return _startR;
 }
 
-int CubicGrid::numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
+
+int CubicGrid::
+numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
 	return (int) std::round((real) task.sizes(0) / Mpi::Size());
 }
 
-Int3 CubicGrid::calculateIndexMaker(const Task::CubicGrid& task) {
+
+Int3 CubicGrid::
+calculateIndexMaker(const Task::CubicGrid& task) {
 
 	Int3 _indexMaker = {0, 0, 0};
 	switch (task.dimensionality) {
-		case 1:
-			_indexMaker(0) = 1;
-			break;
-		case 2:
-			_indexMaker(0) = 2 * task.borderSize + task.sizes(1);
-			_indexMaker(1) = 1;
-			break;
-		case 3:
-			_indexMaker(0) = (2 * task.borderSize + task.sizes(1)) * (2 * task.borderSize + task.sizes(2));
-			_indexMaker(1) = 2 * task.borderSize + task.sizes(2);
-			_indexMaker(2) = 1;
-			break;
-		default:
-			THROW_INVALID_ARG("Invalid task dimensionality");
+	case 1:
+		_indexMaker(0) = 1;
+		break;
+	case 2:
+		_indexMaker(0) = 2 * task.borderSize + task.sizes(1);
+		_indexMaker(1) = 1;
+		break;
+	case 3:
+		_indexMaker(0) =
+		        (2 * task.borderSize + task.sizes(1)) * (2 * task.borderSize + task.sizes(2));
+		_indexMaker(1) = 2 * task.borderSize + task.sizes(2);
+		_indexMaker(2) = 1;
+		break;
+	default:
+		THROW_INVALID_ARG("Invalid task dimensionality");
 	}
 
 	return _indexMaker;

@@ -27,16 +27,24 @@ protected:
 
 		if (numberOfWorkers > 1) {
 			if (rank == 0) {
-				MPI_Sendrecv_replace(righValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
-				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Sendrecv_replace(righValues, (int) sizeof(Value) *
+				                     testNumberOfNodes, MPI_BYTE,
+				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD,
+				                     MPI_STATUS_IGNORE);
 			} else if (rank == numberOfWorkers - 1) {
-				MPI_Sendrecv_replace(lefValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
-				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Sendrecv_replace(lefValues, (int) sizeof(Value) *
+				                     testNumberOfNodes, MPI_BYTE,
+				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD,
+				                     MPI_STATUS_IGNORE);
 			} else {
-				MPI_Sendrecv_replace(righValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
-				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
-				MPI_Sendrecv_replace(lefValues, (int) sizeof(Value) * testNumberOfNodes, MPI_BYTE,
-				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Sendrecv_replace(righValues, (int) sizeof(Value) *
+				                     testNumberOfNodes, MPI_BYTE,
+				                     rank + 1, 1, rank + 1, 1, MPI::COMM_WORLD,
+				                     MPI_STATUS_IGNORE);
+				MPI_Sendrecv_replace(lefValues, (int) sizeof(Value) *
+				                     testNumberOfNodes, MPI_BYTE,
+				                     rank - 1, 1, rank - 1, 1, MPI::COMM_WORLD,
+				                     MPI_STATUS_IGNORE);
 			}
 
 			for (int k = 0; k < testNumberOfNodes; k++) {
@@ -53,9 +61,12 @@ protected:
 			}
 		}
 	}
+
 };
 
-/** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc for explaination */
+
+/** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc
+  for explaination */
 #if GTEST_HAS_TYPED_TEST_P
 using testing::Types;
 TYPED_TEST_CASE_P(TestMpiConnection);
@@ -66,32 +77,32 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiConnection, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-		Elastic1DModel::PdeVector,
-		Elastic2DModel::PdeVector,
-		Elastic3DModel::PdeVector
-> AllImplementations;
+        Elastic1DModel::PdeVector,
+        Elastic2DModel::PdeVector,
+        Elastic3DModel::PdeVector
+        > AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
 
 
-TEST(MPI, MpiEngineVsSequenceEngine)
-{
+TEST(MPI, MpiEngineVsSequenceEngine) {
 	Task task;
-	
+
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
-	
+
 	Statement statement;
 	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.sizes(0) = 20;
 	task.cubicGrid.sizes(1) = 10;
 	task.cubicGrid.lengths = {2, 1, 1};
-	
+
 	statement.globalSettings.CourantNumber = 1.8;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2, 0.5);	
+	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2,
+	                                                                                   0.5);
 	statement.globalSettings.numberOfSnaps = 5;
 
 	Statement::InitialCondition::Quantity pressure;
@@ -101,33 +112,36 @@ TEST(MPI, MpiEngineVsSequenceEngine)
 	statement.initialCondition.quantities.push_back(pressure);
 
 	task.statements.push_back(statement);
-	
+
 	// calculate in sequence
 	task.globalSettings.forceSequence = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> sequenceEngine(task);
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > sequenceEngine(
+	        task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.globalSettings.forceSequence = false;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>> mpiEngine(task);
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > mpiEngine(task);
 	mpiEngine.run();
 
 	// check that parallel result is equal to sequence result
 	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
 	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
 
-	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.cubicGrid.sizes(0) / Mpi::Size());
+	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.cubicGrid.sizes(
+	                                                             0) / Mpi::Size());
 	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {
-			ASSERT_EQ(mpiMesh->pde({x, y, 0}), sequenceMesh->pde({x + startX, y, 0}))
-					<< "x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
+			ASSERT_EQ(mpiMesh->pde({x, y,
+			                        0}), sequenceMesh->pde({x + startX, y, 0})) <<
+			"x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
 		}
 	}
 }
 
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 
 	testing::InitGoogleTest(&argc, argv);
@@ -136,3 +150,5 @@ int main(int argc, char **argv) {
 	MPI_Finalize();
 	return allTestsResult;
 }
+
+

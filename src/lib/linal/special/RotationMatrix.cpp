@@ -8,29 +8,35 @@ using namespace gcm::linal;
 #define rcos(a) static_cast<real>(cos(a))
 #define rsin(a) static_cast<real>(sin(a))
 
-Matrix33 gcm::linal::getXRotationMatrix(real angle) {
+Matrix33 gcm::linal::
+getXRotationMatrix(real angle) {
 	return Matrix33({
-			                1.0,  0.0,          0.0,
-			                0.0,  rcos(angle),  rsin(angle),
-			                0.0,  -rsin(angle), rcos(angle)
-	                });
+	                        1.0, 0.0, 0.0,
+	                        0.0, rcos(angle), rsin(angle),
+	                        0.0, -rsin(angle), rcos(angle)
+			});
 }
 
-Matrix33 gcm::linal::getYRotationMatrix(real angle) {
+
+Matrix33 gcm::linal::
+getYRotationMatrix(real angle) {
 	return Matrix33({
-			                rcos(angle), 0.0,  -rsin(angle),
-			                0.0,         1.0,  0.0,
-			                rsin(angle), 0.0,  rcos(angle)
-	                });
+	                        rcos(angle), 0.0, -rsin(angle),
+	                        0.0, 1.0, 0.0,
+	                        rsin(angle), 0.0, rcos(angle)
+			});
 }
 
-Matrix33 gcm::linal::getZRotationMatrix(real angle) {
+
+Matrix33 gcm::linal::
+getZRotationMatrix(real angle) {
 	return Matrix33({
-			                rcos(angle),  rsin(angle), 0.0,
-			                -rsin(angle), rcos(angle), 0.0,
-			                0.0,          0.0,         1.0
-	                });
+	                        rcos(angle), rsin(angle), 0.0,
+	                        -rsin(angle), rcos(angle), 0.0,
+	                        0.0, 0.0, 1.0
+			});
 }
+
 
 #undef rsin
 #undef rcos

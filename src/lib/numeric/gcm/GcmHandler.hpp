@@ -9,87 +9,93 @@
 
 
 namespace gcm {
+/**
+ * Bridge between grids of different types and grid-characteristic method
+ */
+template<typename TModel, typename TGrid, typename TMaterial>
+struct GcmHandler {
+	typedef TGrid                                Grid;
+	typedef DefaultMesh<TModel, Grid, TMaterial> Mesh;
+	typedef typename Mesh::Matrix                Matrix;
+	typedef typename Mesh::PdeVector             PdeVector;
+	typedef typename Mesh::Iterator              Iterator;
+
 	/**
-	 * Bridge between grids of different types and grid-characteristic method
+	 * Interpolate nodal values in specified points.
+	 * Interpolated value for k-th point in vector dx are
+	 * stored in k-th column of returned Matrix.
+	 * @param stage direction
+	 * @param it index-iterator of node
+	 * @param dx Vector of distances from reference node on which
+	 * values should be interpolated
+	 * @return Matrix with interpolated nodal values in columns
 	 */
-	template<typename TModel, typename TGrid, typename TMaterial>
-	struct GcmHandler {
-		typedef TGrid                                     Grid;
-		typedef DefaultMesh<TModel, Grid, TMaterial>      Mesh;
-		typedef typename Mesh::Matrix                     Matrix;
-		typedef typename Mesh::PdeVector                  PdeVector;
-		typedef typename Mesh::Iterator                   Iterator;
+	static Matrix interpolateValuesAround(const Mesh& mesh, const int stage, const Iterator& it,
+	                                      const PdeVector& dx);
 
-		/**
-		 * Interpolate nodal values in specified points.
-		 * Interpolated value for k-th point in vector dx are
-		 * stored in k-th column of returned Matrix.
-		 * @param stage direction
-		 * @param it index-iterator of node
-		 * @param dx Vector of distances from reference node on which
-		 * values should be interpolated
-		 * @return Matrix with interpolated nodal values in columns
-		 */
-		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage, const Iterator& it,
-		                                      const PdeVector& dx);
-	};
+};
 
-	template<typename TModel, typename TMaterial>
-	struct GcmHandler<TModel, CubicGrid, TMaterial> {
-		typedef CubicGrid                                 Grid;
-		typedef DefaultMesh<TModel, Grid, TMaterial>      Mesh;
-		typedef typename Mesh::Matrix                     Matrix;
-		typedef typename Mesh::PdeVector                  PdeVector;
-		typedef typename Mesh::Iterator                   Iterator;
+template<typename TModel, typename TMaterial>
+struct GcmHandler<TModel, CubicGrid, TMaterial> {
+	typedef CubicGrid                            Grid;
+	typedef DefaultMesh<TModel, Grid, TMaterial> Mesh;
+	typedef typename Mesh::Matrix                Matrix;
+	typedef typename Mesh::PdeVector             PdeVector;
+	typedef typename Mesh::Iterator              Iterator;
 
-		/** See the comment under */
-		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
-		                                      const Iterator& it, const PdeVector& dx) {
-			Matrix ans;
-			std::vector<PdeVector> src( (size_t) (mesh.borderSize + 1) );
-			PdeVector res;
-			Iterator shift({0, 0, 0}, mesh.sizes);
-			for (int k = 0; k < PdeVector::M; k++) {
-				shift(stage) = (dx(k) > 0) ? 1 : -1;
-				for (int i = 0; i < src.size(); i++) {
-					src[(size_t)i] = mesh.pde(it + shift * i);
-				}
-				EqualDistanceLineInterpolator<PdeVector>::minMaxInterpolate(res, src, fabs(dx(k)) / mesh.h(stage));
-				ans.setColumn(k, res);
+	/** See the comment under */
+	static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
+	                                      const Iterator& it, const PdeVector& dx) {
+		Matrix ans;
+		std::vector<PdeVector> src( (size_t) (mesh.borderSize + 1) );
+		PdeVector res;
+		Iterator shift({0, 0, 0}, mesh.sizes);
+		for (int k = 0; k < PdeVector::M; k++) {
+			shift(stage) = (dx(k) > 0) ? 1 : -1;
+			for (int i = 0; i < src.size(); i++) {
+				src[(size_t)i] = mesh.pde(it + shift * i);
 			}
-			return ans;
+			EqualDistanceLineInterpolator<PdeVector>::minMaxInterpolate(res, src,
+			                                                            fabs(dx(
+			                                                                         k))
+			                                                            / mesh.h(stage));
+			ans.setColumn(k, res);
 		}
-	};
+		return ans;
+	}
 
-	template<typename TModel, typename TMaterial>
-	struct GcmHandler<TModel, Cgal2DGrid, TMaterial> {
-		typedef Cgal2DGrid                                Grid;
-		typedef DefaultMesh<TModel, Grid, TMaterial>      Mesh;
-		typedef typename Mesh::Matrix                     Matrix;
-		typedef typename Mesh::PdeVector                  PdeVector;
-		typedef typename Mesh::Iterator                   Iterator;
-		typedef typename Mesh::Triangle                   Triangle;
+};
 
-		/** See the comment under */
-		static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
-		                                      const Iterator& it, const PdeVector& dx) {
-			Matrix ans;
-			for (int k = 0; k < PdeVector::M; k++) {
-				Real2 shift({(stage == 0) * dx(k), (stage == 1) * dx(k)});
-				auto t = mesh.findOwnerTriangle(it, shift);
-				PdeVector u; linal::clear(u);
-				if (t.inner) {
-					u = TriangleInterpolator<PdeVector>::interpolate(
-							mesh.coords2d(t.p[0]), mesh.pde(t.p[0]),
-							mesh.coords2d(t.p[1]), mesh.pde(t.p[1]),
-							mesh.coords2d(t.p[2]), mesh.pde(t.p[2]),
-							mesh.coords2d(it) + shift);
-				}
-				ans.setColumn(k, u);
+template<typename TModel, typename TMaterial>
+struct GcmHandler<TModel, Cgal2DGrid, TMaterial> {
+	typedef Cgal2DGrid                           Grid;
+	typedef DefaultMesh<TModel, Grid, TMaterial> Mesh;
+	typedef typename Mesh::Matrix                Matrix;
+	typedef typename Mesh::PdeVector             PdeVector;
+	typedef typename Mesh::Iterator              Iterator;
+	typedef typename Mesh::Triangle              Triangle;
+
+	/** See the comment under */
+	static Matrix interpolateValuesAround(const Mesh& mesh, const int stage,
+	                                      const Iterator& it, const PdeVector& dx) {
+		Matrix ans;
+		for (int k = 0; k < PdeVector::M; k++) {
+			Real2 shift({(stage == 0) * dx(k), (stage == 1) * dx(k)});
+			auto t = mesh.findOwnerTriangle(it, shift);
+			PdeVector u; linal::clear(u);
+			if (t.inner) {
+				u = TriangleInterpolator<PdeVector>::interpolate(
+				        mesh.coords2d(t.p[0]), mesh.pde(t.p[0]),
+				        mesh.coords2d(t.p[1]), mesh.pde(t.p[1]),
+				        mesh.coords2d(t.p[2]), mesh.pde(t.p[2]),
+				        mesh.coords2d(it) + shift);
 			}
-			return ans;
+			ans.setColumn(k, u);
 		}
-	};
+		return ans;
+	}
+
+};
 }
 
 #endif // LIBGCM_GCMHANDLER_HPP

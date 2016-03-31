@@ -5,14 +5,17 @@
 using namespace gcm;
 
 template<typename TModel, typename TMaterial>
-BorderConditions<TModel, CubicGrid, TMaterial>::BorderConditions(const Task& task) {
+BorderConditions<TModel, CubicGrid, TMaterial>::
+BorderConditions(const Task& task) {
 	sizes = task.cubicGrid.sizes;
 	startR = task.cubicGrid.startR;
 	lengths = task.cubicGrid.lengths;
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::beforeStatement(const Statement &statement) {
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+beforeStatement(const Statement& statement) {
 	for (const auto& bc : statement.borderConditions) {
 		for (const auto& q : bc.values) {
 			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
@@ -26,14 +29,15 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::beforeStatement(const State
 		int d = fr.direction;
 		int index = (int) (sizes(d) * (fr.coordinate - startR(d)) / lengths(d));
 		assert_gt(index, 0); assert_lt(index, sizes(d) - 1);
-		innerSurfaces.push_back(InnerSurface(d, index,   - 1, fr.area, fr.values));
+		innerSurfaces.push_back(InnerSurface(d, index, -1, fr.area, fr.values));
 		innerSurfaces.push_back(InnerSurface(d, index + 1, 1, fr.area, fr.values));
 	}
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderBeforeStage
-(Mesh* mesh_, const real timeStep_, const int stage) {
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage) {
 	// handling borders
 	mesh = mesh_; timeStep = timeStep_; direction = stage;
 	// special for x-axis (because MPI partitioning along x-axis)
@@ -55,11 +59,14 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderBeforeStage
 	handleSide();
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::handleSide() const {
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+handleSide() const {
 	auto borderIter = mesh->slice(direction, 0);
-	if (onTheRight)
+	if (onTheRight) {
 		borderIter = mesh->slice(direction, mesh->sizes(direction) - 1);
+	}
 	while (borderIter != borderIter.end()) {
 		for (const auto& condition : conditions) {
 			if (condition.area->contains(mesh->coords(borderIter))) {
@@ -70,29 +77,32 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::handleSide() const {
 	}
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::handleBorderPoint
-(const Iterator& borderIter, const Map& values) const {
-	
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+handleBorderPoint(const Iterator& borderIter, const Map& values) const {
+
 	int innerSign = onTheRight ? -1 : 1;
 	for (int a = 1; a <= mesh->borderSize; a++) {
 		auto realIter = borderIter; realIter(direction) += innerSign * a;
 		auto virtIter = borderIter; virtIter(direction) -= innerSign * a;
-	
+
 		mesh->_pde(virtIter) = mesh->pde(realIter);
 		for (const auto& q : values) {
 			const auto& quantity = q.first;
 			const auto& timeDependency = q.second;
-			real realValue = PdeVariables::QUANTITIES.at(quantity).Get(mesh->pde(realIter));
-			real virtValue = - realValue + 2 * timeDependency(Clock::Time());
+			real realValue =
+			        PdeVariables::QUANTITIES.at(quantity).Get(mesh->pde(realIter));
+			real virtValue = -realValue + 2 * timeDependency(Clock::Time());
 			PdeVariables::QUANTITIES.at(quantity).Set(virtValue, mesh->_pde(virtIter));
 		}
 	}
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderAfterStage
-(Mesh* mesh_, const real timeStep_, const int stage) {
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage) {
 	// handling inner surfaces
 	mesh = mesh_; timeStep = timeStep_; direction = stage;
 	for (const auto& innerSurface : innerSurfaces) {
@@ -101,7 +111,8 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderAfterStage
 			auto sliceIter = mesh->slice(direction, innerSurface.index);
 			while (sliceIter != sliceIter.end()) {
 				if (innerSurface.area->contains(mesh->coords(sliceIter))) {
-					handleInnerSurfacePoint(sliceIter, innerSurface.values, innerSurface.normal);
+					handleInnerSurfacePoint(sliceIter, innerSurface.values,
+					                        innerSurface.normal);
 				}
 				++sliceIter;
 			}
@@ -110,21 +121,25 @@ void BorderConditions<TModel, CubicGrid, TMaterial>::applyBorderAfterStage
 	}
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::allocateHelpMesh() {
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+allocateHelpMesh() {
 	Task::CubicGrid helpCubicGridTask;
 	helpCubicGridTask.dimensionality = 1;
 	helpCubicGridTask.borderSize = mesh->borderSize;
-	helpCubicGridTask.h = {mesh->h(0), std::numeric_limits<real>::max(), std::numeric_limits<real>::max()};
+	helpCubicGridTask.h =
+	{mesh->h(0), std::numeric_limits<real>::max(), std::numeric_limits<real>::max()};
 	helpCubicGridTask.sizes = {mesh->borderSize, 1, 1};
 	Task helpTask; helpTask.cubicGrid = helpCubicGridTask;
 	helpMesh = new Mesh(helpTask);
 	helpMesh->allocate();
 }
 
+
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::handleInnerSurfacePoint
-(const Iterator& iter, const Map& values, const int surfaceNormal) {
+void BorderConditions<TModel, CubicGrid, TMaterial>::
+handleInnerSurfacePoint(const Iterator& iter, const Map& values, const int surfaceNormal) {
 	// copy values to helpMesh
 	for (int i = 0; i < 2 * mesh->borderSize; i++) {
 		Iterator tmpIter = iter;
