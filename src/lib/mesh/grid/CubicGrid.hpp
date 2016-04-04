@@ -102,6 +102,10 @@ public:
 	PartIterator box(const Int3 min, const Int3 max) const {
 		return PartIterator(min, min, max);
 	}
+	
+	/// TODO
+	ForwardIterator borderBegin() const { return begin(); }
+	ForwardIterator borderEnd() const { return end(); }
 	///@}
 
 	CubicGrid(const Task& task);

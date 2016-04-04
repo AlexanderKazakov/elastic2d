@@ -126,8 +126,8 @@ struct Task {
 	} globalSettings;
 
 	struct CubicGrid {
-		int dimensionality = 0;     ///< spatial dimensionality of the grid (model can have
-			                    ///< different)
+		int dimensionality = 0;     ///< spatial dimensionality of the grid 
+		///< (model can have different)
 		Real3 lengths = {0, 0, 0};  ///< lengthes of cube in each direction
 		Real3 h = {0, 0, 0};        ///< spatial steps in each direction
 		Int3 sizes = {0, 0, 0};     ///< number of nodes along each direction
@@ -136,7 +136,19 @@ struct Task {
 	} cubicGrid;
 
 	struct Cgal2DGrid {
-		real spatialStep = 0;         ///< effective spatial step
+		bool movable = false;       ///< deformable(true) or immutable(false) grid
+		real spatialStep = 0;       ///< effective spatial step
+		
+		struct Body {
+			typedef std::vector<Real2> Border;
+			Body(const Border& outer_, const std::vector<Border>& inner_) :
+				outer(outer_), inner(inner_) { }
+			
+			Border outer;               ///< outer border of the body
+			std::vector<Border> inner;  ///< borders of the inner cavities
+		};
+		std::vector<Body> bodies; ///< list of bodies contained in the grid
+		
 	} cgal2DGrid;
 
 	/// list of statements to calculate on the same geometry

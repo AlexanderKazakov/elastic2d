@@ -11,7 +11,8 @@ namespace gcm {
 /**
  * Work with border conditions on different mesh types
  */
-template<typename TModel, typename TGrid, typename TMaterial> struct BorderConditions;
+template<typename TModel, typename TGrid, typename TMaterial> 
+struct BorderConditions;
 
 template<typename TModel, typename TMaterial>
 struct BorderConditions<TModel, CubicGrid, TMaterial> {
@@ -72,6 +73,7 @@ struct BorderConditions<TModel, CubicGrid, TMaterial> {
 
 };
 
+
 template<typename TModel, typename TMaterial>
 struct BorderConditions<TModel, Cgal2DGrid, TMaterial> {
 	typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial> Mesh;
@@ -81,8 +83,13 @@ struct BorderConditions<TModel, Cgal2DGrid, TMaterial> {
 	BorderConditions(const Task&) { }
 	void beforeStatement(const Statement&) { }
 	void applyBorderBeforeStage(Mesh*, const real, const int) { }
-	void applyBorderAfterStage(Mesh*, const real, const int) { }
+	void applyBorderAfterStage(Mesh* mesh, const real timeStep, const int stage);
+
+private:
+	USE_AND_INIT_LOGGER("gcm.Cgal2DGridBorderConditions")
 };
+
+
 }
 
 #endif // LIBGCM_BORDERCONDITIONS_HPP

@@ -9,6 +9,7 @@ namespace gcm {
 /**
  * Responsible for mesh motion
  */
+// TODO - template spec is not needed, just func overload 
 template<typename TModel, typename TGrid, typename TMaterial>
 struct MeshMover {
 	typedef DefaultMesh<TModel, TGrid, TMaterial> Mesh;
@@ -23,13 +24,15 @@ struct MeshMover<TModel, Cgal2DGrid, TMaterial> {
 	typedef typename Mesh::PdeVector                   PdeVector;
 
 	static void moveMesh(Mesh& mesh, const real timeStep) {
+		if (!mesh.movable) { return; }
+		
 		USE_AND_INIT_LOGGER("gcm.MeshMover")
 		LOG_DEBUG("Start mesh motion");
 		for (auto& it : mesh) {
-			Real2 dx = {
+			Real2 dx = { // TODO - use velocity getter indep from dimensions
 				mesh.pde(it).V[0] * timeStep,
 				mesh.pde(it).V[1] * timeStep
-			};                                                          // todo Getter?
+			};
 			mesh.move(it, dx);
 		}
 	}

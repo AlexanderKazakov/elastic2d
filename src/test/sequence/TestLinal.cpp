@@ -701,3 +701,17 @@ TEST(Linal, plainDivision) {
 	ASSERT_NEAR(-std::numeric_limits<real>::max(), plainDivision(-a, b) (0), EQUALITY_TOLERANCE);
 	ASSERT_ANY_THROW(plainDivision(b, b));
 }
+
+
+TEST(Linal, perpendicularClockwise) {
+	ASSERT_EQ(Real2({0, -1}), perpendicularClockwise(Real2({1, 0})));
+	ASSERT_EQ(Real2({5, 0}), perpendicularClockwise(Real2({0, 5})));
+	ASSERT_EQ(Real2({3, -2}), perpendicularClockwise(Real2({2, 3})));
+}
+
+
+
+
+
+
+

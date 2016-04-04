@@ -4,6 +4,8 @@
 
 using namespace gcm;
 
+/** ============================= CubicGrid ============================= */
+
 template<typename TModel, typename TMaterial>
 BorderConditions<TModel, CubicGrid, TMaterial>::
 BorderConditions(const Task& task) {
@@ -175,5 +177,26 @@ template class BorderConditions<SuperDuperModel, CubicGrid, IsotropicMaterial>;
 template class BorderConditions<Elastic2DModel, CubicGrid, OrthotropicMaterial>;
 template class BorderConditions<Elastic3DModel, CubicGrid, OrthotropicMaterial>;
 template class BorderConditions<SuperDuperModel, CubicGrid, OrthotropicMaterial>;
+
+
+
+/** ============================= Cgal2DGrid ============================= */
+
+template<typename TModel, typename TMaterial>
+void BorderConditions<TModel, Cgal2DGrid, TMaterial>::
+applyBorderAfterStage(Mesh* mesh, const real timeStep, const int stage) {
+	for (auto borderIter = mesh->borderBegin();
+	     borderIter != mesh->borderEnd(); ++borderIter) {
+		const Real2 normal = mesh->normal(borderIter);
+		
+		mesh->_pdeNew(*borderIter).V[0] = normal(0);
+		mesh->_pdeNew(*borderIter).V[1] = normal(1);
+	}
+}
+
+
+template class BorderConditions<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>;
+template class BorderConditions<Elastic2DModel, Cgal2DGrid, OrthotropicMaterial>;
+
 
 

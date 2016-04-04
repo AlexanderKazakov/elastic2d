@@ -116,10 +116,13 @@ afterStatement() {
 template<class TMesh>
 void DefaultSolver<TMesh>::
 stage(const int s, const real timeStep) {
+	LOG_DEBUG("Start stage " << s << " ... ");
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
+	
 	borderConditions->applyBorderBeforeStage(mesh, timeStep, s);
 	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
 	borderConditions->applyBorderAfterStage(mesh, timeStep, s);
+	
 	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return actual PDE values back to
 		                                          // pdeVectors
 }
@@ -130,7 +133,7 @@ void DefaultSolver<TMesh>::
 internalOdeNextStep(const real timeStep) {
 	if (InternalOde::NonTrivial) {
 		assert_eq(mesh->pdeVectors.size(), mesh->odeValues.size());
-		for (auto it :* mesh) {
+		for (auto it : *mesh) {
 			internalOde->nextStep(mesh->node(it), timeStep);
 		}
 	}
@@ -141,7 +144,7 @@ template<class TMesh>
 void DefaultSolver<TMesh>::
 applyCorrectors() {
 	if (Corrector::NonTrivial) {
-		for (auto it :* mesh) {
+		for (auto it : *mesh) {
 			corrector->apply(mesh->node(it));
 		}
 	}

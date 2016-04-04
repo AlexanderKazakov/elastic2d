@@ -15,13 +15,16 @@ typedef Vector<1> Real1;
 typedef Vector<2> Real2;
 typedef Vector<3> Real3;
 
-inline Real3 crossProduct(const Real3& v1, const Real3& v2);                 // to suppress the
-		                                                             // warning about
-		                                                             // missing declaration
 
 inline Real3 crossProduct(const Real3& v1, const Real3& v2) {
-	return Real3({v1(1) * v2(2) - v1(2) * v2(1), v1(2) * v2(0) - v1(0) * v2(2), v1(0) * v2(
-	                      1) - v1(1) * v2(0)});
+	return Real3({v1(1) * v2(2) - v1(2) * v2(1),
+	              v1(2) * v2(0) - v1(0) * v2(2),
+	              v1(0) * v2(1) - v1(1) * v2(0)});
+}
+
+
+inline Real2 perpendicularClockwise(const Real2& v) {
+	return {v(1), -v(0)};
 }
 
 

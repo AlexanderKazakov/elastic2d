@@ -137,10 +137,11 @@ void writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGri
 
 	auto triangle = vtkSmartPointer<vtkTriangle>::New();
 	for (auto it = gcmGrid.cellBegin(); it != gcmGrid.cellEnd(); ++it) {
-		int verticesIndices[3];
-		gcmGrid.getVerticesOfCell(it, verticesIndices);
-		for (int i = 0; i < 3; i++) {
-			triangle->GetPointIds()->SetId(i, verticesIndices[i]);
+		auto verticesIndices = gcmGrid.getVerticesOfCell(it);
+		int i = 0;
+		for (const auto& vI : verticesIndices) {
+			triangle->GetPointIds()->SetId(i, (vtkIdType)vI);
+			i++;
 		}
 		_vtkGrid->InsertNextCell(triangle->GetCellType(), triangle->GetPointIds());
 	}
