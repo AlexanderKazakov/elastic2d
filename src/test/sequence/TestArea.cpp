@@ -1,8 +1,20 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 
 using namespace gcm;
+
+TEST(Area, InfiniteArea) {
+	Area* area = new InfiniteArea();
+	ASSERT_EQ(true, area->contains({-10, 1, 300}));
+	ASSERT_EQ(true, area->contains({-4e+55, 2e+11, 3e-99}));
+	ASSERT_EQ(true, area->contains({0, 0, 0}));
+
+	area->move({1e+200, 1, 2});
+	ASSERT_EQ(true, area->contains({-10, 1, 3}));
+	ASSERT_EQ(true, area->contains({-4e+55, 2e+11, 3e-99}));
+	ASSERT_EQ(true, area->contains({0, 0, 0}));
+}
 
 TEST(Area, AxisAlignedBoxArea) {
 	Area* area = new AxisAlignedBoxArea({-5, 0, 2}, {-3, 2, 4});

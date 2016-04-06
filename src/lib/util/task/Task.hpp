@@ -8,7 +8,7 @@
 #include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Enum.hpp>
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 #include <lib/rheology/materials/materials.hpp>
 
 namespace gcm {
@@ -26,13 +26,13 @@ namespace gcm {
 struct Statement {
 	typedef std::function<real(real)> TimeDependency;
 
-	std::string id;         ///< name of statement
+	std::string id; ///< name of statement
 
 	struct GlobalSettings {
-		real CourantNumber = 0.0;        ///< number from Courant–Friedrichs–Lewy condition
+		real CourantNumber = 0.0; ///< number from Courant–Friedrichs–Lewy condition
 		int numberOfSnaps = 0;
 		int stepsPerSnap = 1;
-		real requiredTime = 0.0;         ///< optional, required time if (numberOfSnaps <= 0)
+		real requiredTime = 0.0;  ///< optional, required time if (numberOfSnaps <= 0)
 	} globalSettings;
 
 	struct MaterialCondition {
@@ -76,9 +76,17 @@ struct Statement {
 
 	} initialCondition;
 
-	struct BorderCondition {
+	struct CubicGridBorderCondition {
 		std::shared_ptr<Area> area;
 		std::map<PhysicalQuantities::T, TimeDependency> values;
+	};
+	std::vector<CubicGridBorderCondition> cubicGridBorderConditions;
+	
+	struct BorderCondition {
+		std::shared_ptr<Area> area;
+		BorderConditions::T type;
+		std::vector<TimeDependency> values; ///< size must be equal to 
+		///< legal number of outer characteristics
 	};
 	std::vector<BorderCondition> borderConditions;
 

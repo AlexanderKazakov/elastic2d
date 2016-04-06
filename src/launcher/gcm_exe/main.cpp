@@ -4,7 +4,7 @@
 #include <lib/rheology/models/Model.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/util/snapshot/VtkSnapshotter.hpp>
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 
 
 using namespace gcm;
@@ -43,18 +43,18 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL2D;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.5;
+	task.cgal2DGrid.spatialStep = 1.5;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 2}
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3},// {2, 2}
 	};
-	Task::Cgal2DGrid::Body::Border inner = {
-		{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}
-	};
+//	Task::Cgal2DGrid::Body::Border inner = {
+//		{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}
+//	};
 	task.cgal2DGrid.bodies = {
-		Task::Cgal2DGrid::Body(outer, {inner}),
-		Task::Cgal2DGrid::Body({{4, 4}, {4, 6}, /*{6, 6}*/{4.5, 4.5}, {6, 4}}, {})
+		Task::Cgal2DGrid::Body(outer, {/*inner*/}),
+//		Task::Cgal2DGrid::Body({{4, 4}, {4, 6}, /*{6, 6}*/{4.5, 4.5}, {6, 4}}, {})
 	};
 
 	Statement statement;
@@ -64,16 +64,34 @@ Task parseTaskCgal2d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 1.0;
+	statement.globalSettings.CourantNumber = 0.1;
 
-	statement.globalSettings.numberOfSnaps = /*2*/1;
+	statement.globalSettings.numberOfSnaps = 21;
 	statement.globalSettings.stepsPerSnap = 1;
 
-	Statement::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
-	statement.initialCondition.quantities.push_back(pressure);
+//	Statement::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 10.0;
+//	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
+//	statement.initialCondition.quantities.push_back(pressure);
+	
+//	Statement::InitialCondition::Wave wave;
+//	wave.waveType = Waves::T::P_FORWARD;
+//	wave.direction = 1;
+//	wave.quantity = PhysicalQuantities::T::PRESSURE;
+//	wave.quantityValue = 1;
+//	wave.area = std::make_shared<AxisAlignedBoxArea>(Real3({-10, 0, -10}), Real3({10, 1, 10}));
+//	statement.initialCondition.waves.push_back(wave);
+
+	Statement::BorderCondition borderCondition;
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-10, -10, -10}), Real3({-2.99, 10, 10}));
+	borderCondition.type = BorderConditions::T::FIXED_VELOCITY;
+	borderCondition.values = {
+		[](real) { return 0; },
+		[](real) { return -1; }
+	};
+	statement.borderConditions = {borderCondition};
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {
@@ -106,8 +124,7 @@ Task parseTask2d() {
 	real lambda = 2;
 	real mu = 1;
 	statement.materialConditions.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1,
-	                                            1);
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
 	statement.globalSettings.CourantNumber = 0.9;
 
@@ -146,8 +163,7 @@ Task parseTask3d() {
 	real lambda = 2;
 	real mu = 1;
 	statement.materialConditions.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1,
-	                                            1);
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 //	statement.materialConditions.defaultMaterial = std::make_shared<OrthotropicMaterial>
 //			(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
 

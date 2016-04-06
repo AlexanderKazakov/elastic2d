@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <test/wrappers/Wrappers.hpp>
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 #include <lib/rheology/models/Model.hpp>
 
 using namespace gcm;

@@ -19,7 +19,7 @@ public:
 	virtual void beforeStatement(const Statement& statement) = 0;
 	virtual void afterStatement() = 0;
 
-	virtual void nextTimeStep(const real timeStep) = 0;
+	virtual void nextTimeStep() = 0;
 
 	/** @return grid with actual values */
 	virtual AbstractGrid* getActualMesh() const = 0;

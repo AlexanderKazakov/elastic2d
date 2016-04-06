@@ -66,6 +66,18 @@ struct Waves {
 	static const std::map<T, std::string> NAME;
 };
 
+
+struct BorderConditions {
+	/** Type */
+	enum class T {
+		FIXED_FORCE,
+		FIXED_VELOCITY
+	};
+
+	/** string names of concepts */
+	static const std::map<T, std::string> NAME;
+};
+
 /**
  * For all types of materials used in the program.
  */

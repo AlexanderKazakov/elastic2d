@@ -37,6 +37,12 @@ const std::map<Waves::T, std::string> Waves::NAME = {
 };
 
 
+const std::map<BorderConditions::T, std::string> BorderConditions::NAME = {
+		{BorderConditions::T::FIXED_FORCE,    "fixed_force"},
+		{BorderConditions::T::FIXED_VELOCITY, "fixed_velocity"}
+};
+
+
 const std::map<Materials::T, std::string> Materials::NAME = {
 		{Materials::T::ISOTROPIC,    "isotropic"},
 		{Materials::T::ORTHOTROPIC,  "orthotropic"}

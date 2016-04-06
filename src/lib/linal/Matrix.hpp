@@ -133,6 +133,24 @@ public:
 			(*this)(j, i) = column(j);
 		}
 	}
+	
+	/** @return i-th string. */
+	template<typename Container2 = DefaultMatrixContainer<TN, 1> >
+	Matrix<TN, 1, Container2> getString(const int i) const {
+		Matrix<TN, 1, Container2> ans;
+		for (int j = 0; j < TN; j++) {
+			ans(j) = (*this)(i, j);
+		}
+		return ans;
+	}
+	
+	/** set i-th string */
+	template<typename Container2>
+	void setString(const int i, const Matrix<TN, 1, Container2>& column) {
+		for (int j = 0; j < TN; j++) {
+			(*this)(i, j) = column(j);
+		}
+	}
 
 	/** @return in vector diagonal of this matrix multiplied by matrix B */
 	Matrix<TM, 1,
@@ -222,13 +240,60 @@ trace() const {
 }
 
 
+typedef Matrix<1, 1> Matrix11;
+typedef Matrix<2, 2> Matrix22;
+typedef Matrix<3, 3> Matrix33;
+
+/**
+ * Arbitrary type 2x2 determinant
+ */
+template<
+        typename T11, typename T12,
+        typename T21, typename T22
+        >
+inline auto determinant(const T11 &m11, const T12 &m12,
+                        const T21 &m21, const T22 &m22)
+->decltype(m11 * m22) {
+	return m11 * m22 - m12 * m21;
+}
+
+inline real determinant(const Matrix22& m) {
+	return determinant(m(0, 0), m(0, 1),
+	                   m(1, 0), m(1, 1));
+}
+
+
+/**
+ * Arbitrary type 3x3 determinant
+ */
+template<
+        typename T11, typename T12, typename T13,
+        typename T21, typename T22, typename T23,
+        typename T31, typename T32, typename T33
+        >
+inline auto determinant(const T11 &m11, const T12 &m12, const T13 &m13,
+                        const T21 &m21, const T22 &m22, const T23 &m23,
+                        const T31 &m31, const T32 &m32, const T33 &m33)
+->decltype(m11 * m22 * m33) {
+	return m11 * (m22 * m33 - m23 * m32) -
+	       m12 * (m21 * m33 - m23 * m31) +
+	       m13 * (m21 * m32 - m22 * m31);
+}
+
+inline real determinant(const Matrix33& m) {
+	return determinant(m(0, 0), m(0, 1), m(0, 2),
+	                   m(1, 0), m(1, 1), m(1, 2),
+	                   m(2, 0), m(2, 1), m(2, 2));
+}
+
+
 }
 }
 
 namespace std {
 template<int TM, int TN, typename Container>
-inline std::ostream& operator<<(std::ostream& os, const gcm::linal::Matrix<TM, TN,
-                                                                           Container>& matrix) {
+inline std::ostream& operator<<(std::ostream& os,
+                                const gcm::linal::Matrix<TM, TN, Container>& matrix) {
 
 	os << std::endl;
 	for (int i = 0; i < TM; i++) {

@@ -10,7 +10,7 @@ using namespace gcm;
 using namespace gcm::linal;
 
 template<int M, int N>
-class MatrixWrapper : public gcm::linal::Matrix<M, N> {
+class MatrixWrapper : public Matrix<M, N> {
 public:
 	int _getIndex(int i, int j) const {
 		return this->getIndex(i, j);
@@ -32,28 +32,10 @@ TEST(Linal, ContainerIndex) {
 }
 
 TEST(Linal, MatrixConstruct) {
-	gcm::linal::Matrix<3, 3> m1({
-	                                    1.0, 2.0, 3.0,
-	                                    4.0, 5.0, 6.0,
-	                                    7.0, 8.0, 9.0
-				    });
 
-	ASSERT_EQ(m1.values[0], 1.0);
-	ASSERT_EQ(m1.values[1], 2.0);
-	ASSERT_EQ(m1.values[2], 3.0);
-	ASSERT_EQ(m1.values[3], 4.0);
-	ASSERT_EQ(m1.values[4], 5.0);
-	ASSERT_EQ(m1.values[5], 6.0);
-	ASSERT_EQ(m1.values[6], 7.0);
-	ASSERT_EQ(m1.values[7], 8.0);
-	ASSERT_EQ(m1.values[8], 9.0);
-
-
-	gcm::linal::Matrix<3, 3, Matrix33Container> m2({
-	                                                       1.0, 2.0, 3.0,
-	                                                       4.0, 5.0, 6.0,
-	                                                       7.0, 8.0, 9.0
-						       });
+	Matrix33 m2({1.0, 2.0, 3.0,
+	             4.0, 5.0, 6.0,
+	             7.0, 8.0, 9.0});
 
 	ASSERT_EQ(m2(0, 0), 1.0);
 	ASSERT_EQ(m2(0, 1), 2.0);
@@ -67,11 +49,9 @@ TEST(Linal, MatrixConstruct) {
 }
 
 TEST(Linal, MatrixAccess) {
-	gcm::linal::Matrix<3, 3> m({
-	                                   1.0, 2.0, 3.0,
-	                                   4.0, 5.0, 6.0,
-	                                   7.0, 8.0, 9.0
-				   });
+	Matrix<3, 3> m({1.0, 2.0, 3.0,
+	                4.0, 5.0, 6.0,
+	                7.0, 8.0, 9.0});
 
 	ASSERT_EQ(m(0, 0), 1.0);
 
@@ -85,15 +65,11 @@ TEST(Linal, MatrixAccess) {
 
 
 TEST(Linal, MatrixAdd) {
-	gcm::linal::Matrix<2, 2> m1({
-	                                    1.0, 2.0,
-	                                    3.0, 4.0
-				    });
+	Matrix<2, 2> m1({1.0, 2.0,
+	                 3.0, 4.0});
 
-	gcm::linal::Matrix<2, 2> m2({
-	                                    4.0, 3.0,
-	                                    2.0, 1.0
-				    });
+	Matrix<2, 2> m2({4.0, 3.0,
+	                             2.0, 1.0});
 
 	auto m3 = m1 + m2;
 
@@ -105,15 +81,11 @@ TEST(Linal, MatrixAdd) {
 
 
 TEST(Linal, MatrixAddCustomContainer) {
-	gcm::linal::Matrix<2, 2, gcm::linal::Matrix22Container> m1({
-	                                                                   1.0, 2.0,
-	                                                                   3.0, 4.0
-								   });
+	Matrix22 m1({1.0, 2.0,
+	             3.0, 4.0});
 
-	gcm::linal::Matrix<2, 2, Matrix22Container> m2({
-	                                                       4.0, 3.0,
-	                                                       2.0, 1.0
-						       });
+	Matrix22 m2({4.0, 3.0,
+	             2.0, 1.0});
 
 	auto m3 = m1 + m2;
 
@@ -124,10 +96,8 @@ TEST(Linal, MatrixAddCustomContainer) {
 }
 
 TEST(Linal, MatrixAssign) {
-	gcm::linal::Matrix<2, 2> m1({
-	                                    1.0, 2.0,
-	                                    3.0, 4.0
-				    });
+	Matrix<2, 2> m1({1.0, 2.0,
+	                 3.0, 4.0});
 
 	auto m2 = m1;
 
@@ -138,10 +108,8 @@ TEST(Linal, MatrixAssign) {
 }
 
 TEST(Linal, MatrixSubtract) {
-	gcm::linal::Matrix<2, 2> m1({
-	                                    1.0, 2.0,
-	                                    3.0, 4.0
-				    });
+	Matrix<2, 2> m1({1.0, 2.0,
+	                 3.0, 4.0});
 
 	auto m2 = m1;
 
@@ -155,10 +123,8 @@ TEST(Linal, MatrixSubtract) {
 }
 
 TEST(Linal, MatrixNegative) {
-	gcm::linal::Matrix<2, 2> m1({
-	                                    1.0, 2.0,
-	                                    3.0, 4.0
-				    });
+	Matrix<2, 2> m1({1.0, 2.0,
+	                 3.0, 4.0});
 
 	auto m2 = -m1;
 
@@ -169,10 +135,8 @@ TEST(Linal, MatrixNegative) {
 }
 
 TEST(Linal, MatrixSubtractCustomContainer) {
-	gcm::linal::Matrix<2, 2, Matrix22Container> m1({
-	                                                       1.0, 2.0,
-	                                                       3.0, 4.0
-						       });
+	Matrix22 m1({1.0, 2.0,
+	             3.0, 4.0});
 
 	auto m2 = m1;
 
@@ -185,14 +149,10 @@ TEST(Linal, MatrixSubtractCustomContainer) {
 }
 
 TEST(Linal, MatrixProduct) {
-	gcm::linal::Matrix<2, 2> m1({
-	                                    1.0, 2.0,
-	                                    3.0, 4.0
-				    });
+	Matrix<2, 2> m1({1.0, 2.0,
+	                 3.0, 4.0});
 
-	gcm::linal::Matrix<2, 1> m2({
-	                                    5.0, 6.0
-				    });
+	Matrix<2, 1> m2({5.0, 6.0});
 
 	auto m3 = m1 * m2;
 
@@ -201,10 +161,8 @@ TEST(Linal, MatrixProduct) {
 }
 
 TEST(Linal, MatrixProductSquare) {
-	gcm::linal::Matrix<2, 2, Matrix22Container> m1({
-	                                                       1.0, 2.0,
-	                                                       3.0, 4.0
-						       });
+	Matrix22 m1({1.0, 2.0,
+	             3.0, 4.0});
 
 	auto m2 = m1;
 
@@ -217,10 +175,8 @@ TEST(Linal, MatrixProductSquare) {
 }
 
 TEST(Linal, MatrixEqual) {
-	gcm::linal::Matrix<2, 3> m1({
-	                                    1.0, 2.0, 3.0,
-	                                    4.0, 5.0, 6.0
-				    });
+	Matrix<2, 3> m1({1.0, 2.0, 3.0,
+	                 4.0, 5.0, 6.0});
 
 	auto m2 = m1;
 
@@ -231,10 +187,8 @@ TEST(Linal, MatrixEqual) {
 }
 
 TEST(Linal, MatrixScalarMultiplication) {
-	gcm::linal::Matrix<2, 2, Matrix22Container> m({
-	                                                      1.0, 2.0,
-	                                                      3.0, 4.0
-						      });
+	Matrix22 m({1.0, 2.0,
+	            3.0, 4.0});
 
 	m = 1 * m * 2;
 
@@ -245,10 +199,8 @@ TEST(Linal, MatrixScalarMultiplication) {
 }
 
 TEST(Linal, MatrixScalarDivision) {
-	gcm::linal::Matrix<2, 2, Matrix22Container> m({
-	                                                      2.0, 4.0,
-	                                                      6.0, 8.0
-						      });
+	Matrix22 m({2.0, 4.0,
+	            6.0, 8.0});
 
 	m = m / 2;
 
@@ -259,10 +211,8 @@ TEST(Linal, MatrixScalarDivision) {
 }
 
 TEST(Linal, MatrixTranspose) {
-	gcm::linal::Matrix<2, 3> m1({
-	                                    1.0, 2.0, 3.0,
-	                                    4.0, 5.0, 6.0
-				    });
+	Matrix<2, 3> m1({1.0, 2.0, 3.0,
+	                 4.0, 5.0, 6.0});
 
 	auto m2 = m1.transpose();
 
@@ -279,10 +229,8 @@ TEST(Linal, MatrixTranspose) {
 }
 
 TEST(Linal, MatrixTransposeInplace) {
-	gcm::linal::Matrix<2, 2> m1({
-	                                    1.0, 2.0,
-	                                    3.0, 4.0
-				    });
+	Matrix<2, 2> m1({1.0, 2.0,
+	                 3.0, 4.0});
 
 	auto m2 = m1;
 
@@ -299,20 +247,14 @@ TEST(Linal, MatrixTransposeInplace) {
 }
 
 TEST(Linal, MatrixInvert) {
-	gcm::linal::Matrix<2, 2, Matrix22Container> m1({
-	                                                       1.0, 2.0,
-	                                                       1.0, 4.0
-						       });
+	Matrix22 m1({1.0, 2.0,
+	             1.0, 4.0});
 
-	gcm::linal::Matrix<2, 2, Matrix22Container> r({
-	                                                      2.0, -1.0,
-	                                                      -0.5, 0.5
-						      });
+	Matrix22 r({2.0, -1.0,
+	            -0.5, 0.5});
 
-	gcm::linal::Matrix<2, 2> i({
-	                                   1.0, 0.0,
-	                                   0.0, 1.0
-				   });
+	Matrix<2, 2> i({1.0, 0.0,
+	                0.0, 1.0});
 
 
 	auto m2 = m1.invert();
@@ -327,22 +269,16 @@ TEST(Linal, MatrixInvert) {
 }
 
 TEST(Linal, MatrixInvertInplace) {
-	gcm::linal::Matrix<2, 2, Matrix22Container> m1({
-	                                                       1.0, 2.0,
-	                                                       1.0, 4.0
-						       });
+	Matrix22 m1({1.0, 2.0,
+	             1.0, 4.0});
 
 	auto m2 = m1;
 
-	gcm::linal::Matrix<2, 2, Matrix22Container> r({
-	                                                      2.0, -1.0,
-	                                                      -0.5, 0.5
-						      });
+	Matrix22 r({2.0, -1.0,
+	            -0.5, 0.5});
 
-	gcm::linal::Matrix<2, 2> i({
-	                                   1.0, 0.0,
-	                                   0.0, 1.0
-				   });
+	Matrix<2, 2> i({1.0, 0.0,
+	                0.0, 1.0});
 
 
 	m1.invertInplace();
@@ -357,11 +293,9 @@ TEST(Linal, MatrixInvertInplace) {
 }
 
 TEST(Linal, Matrix33Construct) {
-	Matrix33 m1({
-	                    1.0, 2.0, 3.0,
-	                    4.0, 5.0, 6.0,
-	                    7.0, 8.0, 9.0
-		    });
+	Matrix33 m1({1.0, 2.0, 3.0,
+	             4.0, 5.0, 6.0,
+	             7.0, 8.0, 9.0});
 
 	ASSERT_EQ(m1(0, 0), 1.0);
 	ASSERT_EQ(m1(0, 1), 2.0);
@@ -375,11 +309,9 @@ TEST(Linal, Matrix33Construct) {
 }
 
 TEST(Linal, Matrix33Assign) {
-	Matrix33 m1({
-	                    1.0, 2.0, 3.0,
-	                    4.0, 5.0, 6.0,
-	                    7.0, 8.0, 9.0
-		    });
+	Matrix33 m1({1.0, 2.0, 3.0,
+	             4.0, 5.0, 6.0,
+	             7.0, 8.0, 9.0});
 
 	auto m2 = m1;
 
@@ -395,19 +327,15 @@ TEST(Linal, Matrix33Assign) {
 }
 
 TEST(Linal, Matrix33Determinant) {
-	Matrix33 m({
-	                   1.0, 2.0, 3.0,
-	                   3.0, 2.0, 1.0,
-	                   5.0, 7.0, 11.0
-		   });
+	Matrix33 m({1.0, 2.0, 3.0,
+	            3.0, 2.0, 1.0,
+	            5.0, 7.0, 11.0});
 
 	ASSERT_EQ(determinant(m), -8.0);
 }
 
 TEST(Linal, Real3Construct) {
-	Real3 m1({
-	                 1.0, 2.0, 3.0,
-		 });
+	Real3 m1({1.0, 2.0, 3.0});
 
 	ASSERT_EQ(m1(0), 1.0);
 	ASSERT_EQ(m1(1), 2.0);
@@ -415,9 +343,7 @@ TEST(Linal, Real3Construct) {
 }
 
 TEST(Linal, Real3Assign) {
-	Real3 m1({
-	                 1.0, 2.0, 3.0,
-		 });
+	Real3 m1({1.0, 2.0, 3.0});
 
 	auto m2 = m1;
 
@@ -427,41 +353,27 @@ TEST(Linal, Real3Assign) {
 }
 
 TEST(Linal, VectorLength) {
-	Real3 v({
-	                0.0, 3.0, 4.0,
-		});
+	Real3 v({0.0, 3.0, 4.0});
 
 	ASSERT_EQ(length(v), 5.0);
 }
 
 TEST(Linal, VectorDotProduct) {
-	Real3 v1({
-	                 1.0, 2.0, 3.0
-		 });
+	Real3 v1({1.0, 2.0, 3.0});
 
-	Real3 v2({
-	                 -2.0, 4.0, -2.0
-		 });
+	Real3 v2({-2.0, 4.0, -2.0});
 
 	ASSERT_EQ(dotProduct(v1, v2), 0.0);
 }
 
 TEST(Linal, VectorCrossProduct) {
-	Real3 v1({
-	                 1.0, 0.0, 0.0
-		 });
+	Real3 v1({1.0, 0.0, 0.0});
 
-	Real3 v2({
-	                 0.0, 1.0, 0.0
-		 });
+	Real3 v2({0.0, 1.0, 0.0});
 
-	Real3 v3({
-	                 0.0, 0.0, 1.0
-		 });
+	Real3 v3({0.0, 0.0, 1.0});
 
-	Real3 z({
-	                0.0, 0.0, 0.0
-		});
+	Real3 z({0.0, 0.0, 0.0});
 
 	ASSERT_EQ(crossProduct(v1, v2), v3);
 	ASSERT_EQ(crossProduct(v2, v3), v1);
@@ -477,9 +389,7 @@ TEST(Linal, VectorCrossProduct) {
 }
 
 TEST(Linal, VectorNormalize) {
-	Real3 v1({
-	                 2.0, 0.0, 0.0
-		 });
+	Real3 v1({2.0, 0.0, 0.0});
 
 	auto v = normalize(v1);
 
@@ -487,38 +397,25 @@ TEST(Linal, VectorNormalize) {
 	ASSERT_EQ(v(1), 0.0);
 	ASSERT_EQ(v(2), 0.0);
 
-	Real3 v2({
-	                 1.0, 2.0, 3.0
-		 });
+	Real3 v2({1.0, 2.0, 3.0});
 
 	v = normalize(v2);
 
 	ASSERT_NEAR(length(v), 1.0, 1e-5);
 
 #if CONFIG_ENABLE_ASSERTIONS
-	Real3 v3({
-	                 0.0, 0.0, 0.0
-		 });
+	Real3 v3({0.0, 0.0, 0.0});
 
-	ASSERT_THROW(
-	        normalize(v3),
-	        Exception
-	        );
+	ASSERT_THROW(normalize(v3), Exception);
 #endif
 }
 
 TEST(Linal, RotationMatrix) {
-	Real3 x({
-	                1.0, 0.0, 0.0
-		});
+	Real3 x({1.0, 0.0, 0.0});
 
-	Real3 y({
-	                0.0, 1.0, 0.0
-		});
+	Real3 y({0.0, 1.0, 0.0});
 
-	Real3 z({
-	                0.0, 0.0, 1.0
-		});
+	Real3 z({0.0, 0.0, 1.0});
 
 	ASSERT_EQ(getXRotationMatrix(M_PI / 2) * y, -z);
 	ASSERT_EQ(getXRotationMatrix(M_PI / 2) * z, y);
@@ -584,7 +481,7 @@ TEST(Linal, MatrixVectorMultiplication) {
 	}
 }
 
-TEST(Linal, TraceVerification) {
+TEST(Linal, Trace) {
 	Matrix<5, 5> A;
 	A(0, 0) = 12; A(1, 1) = 56.333; A(2, 2) = 1; A(3, 3) = 0; A(4, 4) = -34.0022;
 	ASSERT_NEAR(A.trace(), 35.3308, EQUALITY_TOLERANCE);
@@ -619,6 +516,39 @@ TEST(Linal, getColumn) {
 		Vector<22> column = matrix.getColumn(k);
 		for (int i = 0; i < column.M; i++) {
 			ASSERT_EQ(column(i), k);
+		}
+	}
+}
+
+TEST(Linal, setString) {
+	Matrix<15, 33> matrix;
+	for (int i = 0; i < matrix.M; i++) {
+		Vector<33> vector;
+		for (int j = 0; j < matrix.N; j++) {
+			vector(j) = i;
+		}
+		matrix.setString(i, vector);
+	}
+
+	for (int i = 0; i < matrix.M; i++) {
+		for (int j = 0; j < matrix.N; j++) {
+			ASSERT_EQ(matrix(i, j), i);
+		}
+	}
+}
+
+TEST(Linal, getString) {
+	Matrix<22, 13> matrix;
+	for (int i = 0; i < matrix.M; i++) {
+		for (int j = 0; j < matrix.N; j++) {
+			matrix(i, j) = i;
+		}
+	}
+
+	for (int k = 0; k < matrix.M; k++) {
+		Vector<13> string = matrix.getString(k);
+		for (int i = 0; i < string.M; i++) {
+			ASSERT_EQ(string(i), k);
 		}
 	}
 }
@@ -702,11 +632,25 @@ TEST(Linal, plainDivision) {
 	ASSERT_ANY_THROW(plainDivision(b, b));
 }
 
-
 TEST(Linal, perpendicularClockwise) {
 	ASSERT_EQ(Real2({0, -1}), perpendicularClockwise(Real2({1, 0})));
 	ASSERT_EQ(Real2({5, 0}), perpendicularClockwise(Real2({0, 5})));
 	ASSERT_EQ(Real2({3, -2}), perpendicularClockwise(Real2({2, 3})));
+}
+
+TEST(Linal, solveLinearSystem) {
+	Matrix<2, 2> A2 = {1, 2,
+	                   3, 4};
+	Vector<2> b2 = {5, 6};
+	auto x2 = solveLinearSystem(A2, b2);
+	ASSERT_EQ(Real2({-4, 4.5}), x2);
+	
+	Matrix<3, 3> A3 = {1, 3, -2,
+	                   3, 5, 6,
+	                   2, 4, 3};
+	Vector<3> b3 = {5, 7, 8};
+	auto x3 = solveLinearSystem(A3, b3);
+	ASSERT_EQ(Real3({-15, 8, 2}), x3);
 }
 
 

@@ -1,6 +1,7 @@
 #ifndef LIBGCM_DEFAULTMESH_HPP
 #define LIBGCM_DEFAULTMESH_HPP
 
+#include <lib/util/task/BorderCondition.hpp>
 #include <lib/util/task/InitialCondition.hpp>
 #include <lib/util/task/MaterialsCondition.hpp>
 
@@ -10,7 +11,7 @@ template<typename TMesh> class GridCharacteristicMethod;
 template<typename TModel, typename TGrid, typename TMaterial> struct GcmHandler;
 template<typename TModel, typename TGrid, typename TMaterial> struct DataBus;
 template<typename TModel, typename TGrid, typename TMaterial> struct MeshMover;
-template<typename TModel, typename TGrid, typename TMaterial> struct BorderConditions;
+template<typename TModel, typename TGrid, typename TMaterial> struct OldBorderConditions;
 
 /**
  * Mesh that implement the approach when all nodal data are stored
@@ -24,6 +25,7 @@ template<typename TModel, typename TGrid, typename TMaterial>
 class DefaultMesh : public TGrid {
 public:
 	typedef TModel                              Model;
+	typedef BorderCondition<Model>              BORDER_CONDITION;
 	typedef typename Model::PdeVector           PdeVector;
 	typedef typename Model::OdeVariables        OdeVariables;
 	typedef typename Model::GCM_MATRICES        GCM_MATRICES;
@@ -38,13 +40,13 @@ public:
 	typedef std::shared_ptr<Material>           MaterialPtr;
 	typedef std::shared_ptr<const Material>     ConstMaterialPtr;
 
-	typedef GcmHandler<Model, Grid, Material>   GCM_HANDLER;            // todo - unify with
-		                                                            // others
+	typedef GcmHandler<Model, Grid, Material>   GCM_HANDLER; 
 
 	// Dimensionality of rheology model, the grid can have different
 	static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
 
-	struct Node {
+	struct Node { // TODO - node is some sort of handle, it can be 
+		// realized in iterator
 		Node(const Iterator& iterator, DefaultMesh* const mesh_) :
 			it(iterator), mesh(mesh_) { }
 
@@ -66,14 +68,14 @@ public:
 		template<typename TNodePtr>
 		void copyFrom(TNodePtr origin) {
 			_pde() = origin->pde();
-			_ode() = origin->ode();         // TODO if ode is not present??
+			_ode() = origin->ode();         // TODO!!! if ode is not present??
 			_matrices() = origin->_matrices();
 			_material() = origin->_material();
 		}
 
-		private:
-			const Iterator it;
-			DefaultMesh* const mesh;
+	private:
+		const Iterator it;
+		DefaultMesh* const mesh;
 	};
 
 	DefaultMesh(const Task& task) : Grid(task) { }
@@ -144,23 +146,49 @@ protected:
 	 * Data storage. Real values plus auxiliary values on borders.
 	 * "...New" means on the next time layer.
 	 */
+	///@{
 	std::vector<PdeVector> pdeVectors;
 	std::vector<PdeVector> pdeVectorsNew;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
 	std::vector<OdeVariables> odeValues;
-	real maximalEigenvalue = 0;
+	///@}
 
+	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
+	
+	/// list of border conditions
+	std::vector<std::pair<std::shared_ptr<Area>,
+	                      BORDER_CONDITION> > borderConditions;
+	
+	/**
+	 * @return border condition for specified point. 
+	 * If several border conditions are overlapped here,
+	 * the last in borderConditions is returned.
+	 * If no border conditions in this point, nullptr returned.
+	 */
+	const BORDER_CONDITION* getBorderCondition(const Iterator& it) {
+		const BORDER_CONDITION* ans = nullptr;
+		for (const auto& bc : borderConditions) {
+			if (bc.first->contains(this->coords(it))) {
+				ans = &(bc.second);
+			}
+		}
+		return ans;
+	}
+	                      
 	void beforeStatement(const Statement& statement) {
 		// TODO - for movable meshes it should reconstruct the grid
 		allocate();
 		applyMaterialConditions(statement);
 		applyInitialConditions(statement);
+		setBorderConditions(statement);
 	}
 
+private:
 	void allocate();
 	void applyMaterialConditions(const Statement& statement);
 	void applyInitialConditions(const Statement& statement);
+	void setBorderConditions(const Statement& statement);
 
 	void recalculateMaximalLambda() { /* TODO for non-linear materials */ }
 	void afterStatement() { }
@@ -170,15 +198,14 @@ protected:
 	friend class GcmHandler<Model, Grid, Material>;
 	friend class DataBus<Model, Grid, Material>;
 	friend class MeshMover<Model, Grid, Material>;
-	friend class BorderConditions<Model, Grid, Material>;
+	friend class OldBorderConditions<Model, Grid, Material>;
 };
 
 
 template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
 allocate() {
-	auto zero = PdeVector::zeros();
-	pdeVectors.resize(this->sizeOfAllNodes(), zero /*PdeVector::zeros()*/);
+	pdeVectors.resize(this->sizeOfAllNodes(), PdeVector::zeros());
 	pdeVectorsNew.resize(this->sizeOfAllNodes(), PdeVector::zeros());
 	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
@@ -206,6 +233,16 @@ applyInitialConditions(const Statement& statement) {
 	initialCondition.initialize(statement);
 	for (auto it :* this) {
 		initialCondition.apply(_pde(it), this->coords(it));
+	}
+}
+
+
+template<typename TModel, typename TGrid, typename TMaterial>
+void DefaultMesh<TModel, TGrid, TMaterial>::
+setBorderConditions(const Statement& statement) {
+	borderConditions.clear();
+	for (const auto& bc : statement.borderConditions) {
+		borderConditions.push_back({bc.area, BORDER_CONDITION(bc)});
 	}
 }
 

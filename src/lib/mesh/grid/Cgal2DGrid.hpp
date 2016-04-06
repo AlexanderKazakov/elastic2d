@@ -100,7 +100,7 @@ public:
 	}
 	
 	/** Border normal in specified point */
-	Real2 normal(const BorderIterator& iter) const;
+	Real2 normal(const Iterator& iter) const;
 
 protected:
 	/** Move specified point on specified distance */
@@ -139,7 +139,7 @@ public:
 protected:
 	CDT triangulation;                               ///< CGAL triangulation data structure
 	std::vector<VertexHandle> vertexHandles;         ///< CGAL-"pointers" to each grid vertex
-	std::set<size_t> borderIndices;                  ///< indices of border vertices
+	std::set<size_t> borderIndices;                  ///< indices of border vertices in vertexHandles
 	std::map<VertexHandle, size_t> verticesIndices;  ///< map between triangulation and vertexHandles
 	real effectiveSpatialStep = 0;                   ///< used in triangulation criteria and Courant condition
 	bool movable = false;                            ///< deformable(true) or immutable(false) grid
@@ -163,7 +163,7 @@ protected:
 
 	FaceHandle findOwnerFace(const Iterator& it, const CgalVector2 shift) const {
 		auto beginVertex = vertexHandles[getIndex(it)];
-		auto q = beginVertex->point() + shift;         // point to find owner face for
+		auto q = beginVertex->point() + shift; // point to find owner face for
 		return triangulation.locate(q, beginVertex->incident_faces());
 	}
 

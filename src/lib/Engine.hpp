@@ -26,15 +26,37 @@ class Solver;
 class Snapshotter;
 
 /**
- * Current physical time in the calculated statement
+ * Current physical time and time step used by the program.
  */
 struct Clock {
+	/** Current physical time in the calculated statement */
 	static real Time() {
 		return time;
+	}
+	
+	/** Time step (aka "tau") used by the whole program to calculate the time layer */
+	static real TimeStep() {
+		return timeStep;
+	}
+	
+	/** Physical time in the calculated statement at next time layer */
+	static real TimeAtNextTimeLayer() {
+		return Time() + TimeStep();
 	}
 
 	private:
 		static real time;
+		static real timeStep;
+		
+		static void setZero() {
+			time = timeStep = 0;
+		}
+		
+		static void tickTack() {
+			time += timeStep;
+		}
+		
+		/// DO NOT put another "friends" here!
 		friend class Engine;
 };
 
@@ -70,6 +92,7 @@ struct Mpi {
 			forceSequence = forceSequence_;
 		}
 
+		/// DO NOT put another "friends" here!
 		friend class Engine;
 };
 
@@ -104,7 +127,7 @@ protected:
 	 */
 	void runStatement();
 
-	real estimateTimeStep();
+	void estimateTimeStep();
 
 	USE_AND_INIT_LOGGER("gcm.Engine")
 };

@@ -3,7 +3,7 @@
 #include <lib/numeric/solvers/DefaultSolver.hpp>
 #include <lib/util/snapshot/VtkSnapshotter.hpp>
 #include <lib/util/snapshot/Detector.hpp>
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 
 
 using namespace gcm;
@@ -56,7 +56,7 @@ Task parseTaskCagi2d() {
 	statement.globalSettings.numberOfSnaps = 251 / 1;
 	statement.globalSettings.stepsPerSnap = 1;
 
-	Statement::BorderCondition borderCondition;
+	Statement::CubicGridBorderCondition borderCondition;
 	// y bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 	                               (Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
@@ -64,7 +64,7 @@ Task parseTaskCagi2d() {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
 	};
-	statement.borderConditions.push_back(borderCondition);
+	statement.cubicGridBorderConditions.push_back(borderCondition);
 	// y up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 	                               (Real3({-10, Y - 1e-5, -10}), Real3({10, 10, 10}));
@@ -72,7 +72,7 @@ Task parseTaskCagi2d() {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
 	};
-	statement.borderConditions.push_back(borderCondition);
+	statement.cubicGridBorderConditions.push_back(borderCondition);
 
 	Statement::Fracture fracture;
 	fracture.direction = 1;
@@ -108,8 +108,8 @@ Task parseTaskCagi2d() {
 			{PhysicalQuantities::T::Syy, [A, T](real t) {return (t < T) ? A : 0; }},
 			{PhysicalQuantities::T::Sxy, [] (real) {return 0; }}
 		};
-		if (statement.borderConditions.size() == 3) {statement.borderConditions.pop_back(); }
-		statement.borderConditions.push_back(borderCondition);
+		if (statement.cubicGridBorderConditions.size() == 3) {statement.cubicGridBorderConditions.pop_back(); }
+		statement.cubicGridBorderConditions.push_back(borderCondition);
 		auto sensorArea = std::make_shared<AxisAlignedBoxArea>
 		                          (Real3({initSensorPosition, Y - 1e-5, -10}),
 		                          Real3({endSensorPosition, 10, 10}));
@@ -157,7 +157,7 @@ Task parseTaskCagi3d() {
 	statement.globalSettings.numberOfSnaps = 251 / 2;
 	statement.globalSettings.stepsPerSnap = 1;
 
-	Statement::BorderCondition borderCondition;
+	Statement::CubicGridBorderCondition borderCondition;
 	// z bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 	                               (Real3({-10, -10, -10}), Real3({10, 10, 1e-5}));
@@ -166,7 +166,7 @@ Task parseTaskCagi3d() {
 		{PhysicalQuantities::T::Syz, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Sxz, [] (real) {return 0; }}
 	};
-	statement.borderConditions.push_back(borderCondition);
+	statement.cubicGridBorderConditions.push_back(borderCondition);
 	// z up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 	                               (Real3({-10, -10, Z - 1e-5}), Real3({10, 10, 10}));
@@ -175,7 +175,7 @@ Task parseTaskCagi3d() {
 		{PhysicalQuantities::T::Syz, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Sxz, [] (real) {return 0; }}
 	};
-	statement.borderConditions.push_back(borderCondition);
+	statement.cubicGridBorderConditions.push_back(borderCondition);
 
 	Statement::Fracture fracture;
 	fracture.direction = 2;
@@ -224,9 +224,9 @@ Task parseTaskCagi3d() {
 				{PhysicalQuantities::T::Syz, [] (real) {return 0; }},
 				{PhysicalQuantities::T::Sxz, [] (real) {return 0; }}
 			};
-			if (statement.borderConditions.size() ==
-			    3) { statement.borderConditions.pop_back(); }
-			statement.borderConditions.push_back(borderCondition);
+			if (statement.cubicGridBorderConditions.size() ==
+			    3) { statement.cubicGridBorderConditions.pop_back(); }
+			statement.cubicGridBorderConditions.push_back(borderCondition);
 			auto sensorArea = std::make_shared<AxisAlignedBoxArea>
 			                          (Real3({initSensorPositionX, initSensorPositionY,
 			                                  Z - 1e-5}),

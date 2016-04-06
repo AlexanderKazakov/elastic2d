@@ -27,7 +27,7 @@ public:
 	typedef typename Model::Corrector               Corrector;
 	typedef typename Model::InternalOde             InternalOde;
 
-	typedef BorderConditions<Model, Grid, Material> Border;
+	typedef OldBorderConditions<Model, Grid, Material> Border;
 	typedef DataBus<Model, Grid, Material>          DATA_BUS;
 	typedef MeshMover<Model, Grid, Material>        MESH_MOVER;
 	typedef GridCharacteristicMethod<Mesh>          GCM;
@@ -38,7 +38,7 @@ public:
 	virtual void beforeStatement(const Statement& statement) override;
 	virtual void afterStatement() override;
 
-	virtual void nextTimeStep(const real timeStep) override;
+	virtual void nextTimeStep() override;
 
 	/** @return mesh with actual values */
 	virtual AbstractGrid* getActualMesh() const { return mesh; }
@@ -94,7 +94,8 @@ beforeStatement(const Statement& statement) {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::
-nextTimeStep(const real timeStep) {
+nextTimeStep() {
+	real timeStep = Clock::TimeStep();
 	for (int s = 0; s < Mesh::DIMENSIONALITY; s++) {
 		stage(s, timeStep);
 	}

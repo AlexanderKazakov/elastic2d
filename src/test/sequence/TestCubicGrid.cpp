@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/numeric/gcm/GcmHandler.hpp>
 #include <test/wrappers/Wrappers.hpp>
@@ -127,7 +127,7 @@ TEST(CubicGrid, interpolateValuesAround) {
 		                                              0});
 		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::Iterator it({1, 1, 0},
 		                                                                       grid.sizes);
-		auto m = GcmHandler<Elastic2DModel, CubicGrid, IsotropicMaterial>::
+		auto m = GcmHandler<Elastic2DModel, CubicGrid, IsotropicMaterial>().
 		         interpolateValuesAround(grid, stage, it, dx);
 
 		for (int i = 0;

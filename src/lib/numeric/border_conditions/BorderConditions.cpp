@@ -4,11 +4,9 @@
 
 using namespace gcm;
 
-/** ============================= CubicGrid ============================= */
-
 template<typename TModel, typename TMaterial>
-BorderConditions<TModel, CubicGrid, TMaterial>::
-BorderConditions(const Task& task) {
+OldBorderConditions<TModel, CubicGrid, TMaterial>::
+OldBorderConditions(const Task& task) {
 	sizes = task.cubicGrid.sizes;
 	startR = task.cubicGrid.startR;
 	lengths = task.cubicGrid.lengths;
@@ -16,9 +14,9 @@ BorderConditions(const Task& task) {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 beforeStatement(const Statement& statement) {
-	for (const auto& bc : statement.borderConditions) {
+	for (const auto& bc : statement.cubicGridBorderConditions) {
 		for (const auto& q : bc.values) {
 			assert_eq(PdeVariables::QUANTITIES.count(q.first), 1);
 		}
@@ -38,7 +36,7 @@ beforeStatement(const Statement& statement) {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage) {
 	// handling borders
 	mesh = mesh_; timeStep = timeStep_; direction = stage;
@@ -63,7 +61,7 @@ applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage) {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 handleSide() const {
 	auto borderIter = mesh->slice(direction, 0);
 	if (onTheRight) {
@@ -81,7 +79,7 @@ handleSide() const {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 handleBorderPoint(const Iterator& borderIter, const Map& values) const {
 
 	int innerSign = onTheRight ? -1 : 1;
@@ -103,7 +101,7 @@ handleBorderPoint(const Iterator& borderIter, const Map& values) const {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage) {
 	// handling inner surfaces
 	mesh = mesh_; timeStep = timeStep_; direction = stage;
@@ -125,7 +123,7 @@ applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage) {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 allocateHelpMesh() {
 	Task::CubicGrid helpCubicGridTask;
 	helpCubicGridTask.dimensionality = 1;
@@ -140,7 +138,7 @@ allocateHelpMesh() {
 
 
 template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, CubicGrid, TMaterial>::
+void OldBorderConditions<TModel, CubicGrid, TMaterial>::
 handleInnerSurfacePoint(const Iterator& iter, const Map& values, const int surfaceNormal) {
 	// copy values to helpMesh
 	for (int i = 0; i < 2 * mesh->borderSize; i++) {
@@ -169,34 +167,14 @@ handleInnerSurfacePoint(const Iterator& iter, const Map& values, const int surfa
 }
 
 
-template class BorderConditions<Elastic1DModel, CubicGrid, IsotropicMaterial>;
-template class BorderConditions<Elastic2DModel, CubicGrid, IsotropicMaterial>;
-template class BorderConditions<Elastic3DModel, CubicGrid, IsotropicMaterial>;
-template class BorderConditions<SuperDuperModel, CubicGrid, IsotropicMaterial>;
+template class OldBorderConditions<Elastic1DModel, CubicGrid, IsotropicMaterial>;
+template class OldBorderConditions<Elastic2DModel, CubicGrid, IsotropicMaterial>;
+template class OldBorderConditions<Elastic3DModel, CubicGrid, IsotropicMaterial>;
+template class OldBorderConditions<SuperDuperModel, CubicGrid, IsotropicMaterial>;
 
-template class BorderConditions<Elastic2DModel, CubicGrid, OrthotropicMaterial>;
-template class BorderConditions<Elastic3DModel, CubicGrid, OrthotropicMaterial>;
-template class BorderConditions<SuperDuperModel, CubicGrid, OrthotropicMaterial>;
-
-
-
-/** ============================= Cgal2DGrid ============================= */
-
-template<typename TModel, typename TMaterial>
-void BorderConditions<TModel, Cgal2DGrid, TMaterial>::
-applyBorderAfterStage(Mesh* mesh, const real timeStep, const int stage) {
-	for (auto borderIter = mesh->borderBegin();
-	     borderIter != mesh->borderEnd(); ++borderIter) {
-		const Real2 normal = mesh->normal(borderIter);
-		
-		mesh->_pdeNew(*borderIter).V[0] = normal(0);
-		mesh->_pdeNew(*borderIter).V[1] = normal(1);
-	}
-}
-
-
-template class BorderConditions<Elastic2DModel, Cgal2DGrid, IsotropicMaterial>;
-template class BorderConditions<Elastic2DModel, Cgal2DGrid, OrthotropicMaterial>;
+template class OldBorderConditions<Elastic2DModel, CubicGrid, OrthotropicMaterial>;
+template class OldBorderConditions<Elastic3DModel, CubicGrid, OrthotropicMaterial>;
+template class OldBorderConditions<SuperDuperModel, CubicGrid, OrthotropicMaterial>;
 
 
 

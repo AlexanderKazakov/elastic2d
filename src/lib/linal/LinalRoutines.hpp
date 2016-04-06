@@ -479,7 +479,109 @@ real directProduct(const Matrix<TM, TN, Container>& m) {
 }
 
 
-};
-};
+/** Solve SLE \f$ A \vec{x} = \vec{b} \f$ with NxN matrix, N > 3 */
+template<int N, typename MatrixContainer, typename VectorContainer>
+Vector<N> solveLinearSystem(const Matrix<N, N, MatrixContainer>& A,
+                            const Vector<N, VectorContainer>& b);
+
+/** Solve SLE \f$ A \vec{x} = \vec{b} \f$ with 1x1 matrix */
+template<typename MatrixContainer, typename VectorContainer>
+Vector<1> solveLinearSystem(const Matrix<1, 1, MatrixContainer>& A,
+                            const Vector<1, VectorContainer>& b) {
+	return {b(0) / A(0, 0)};
+}
+
+/** Solve SLE \f$ A \vec{x} = \vec{b} \f$ with 2x2 matrix */
+template<typename MatrixContainer, typename VectorContainer>
+Vector<2> solveLinearSystem(const Matrix<2, 2, MatrixContainer>& A,
+                            const Vector<2, VectorContainer>& b) {
+	real det = determinant(A);
+	assert_gt(fabs(det), 0);
+	
+	real det1 = determinant(b(0), A(0, 1),
+	                        b(1), A(1, 1));
+	                        
+	real det2 = determinant(A(0, 0), b(0),
+	                        A(1, 0), b(1));
+
+	return {det1 / det, det2 / det};
+}
+
+/** Solve SLE \f$ A \vec{x} = \vec{b} \f$ with 3x3 matrix */
+template<typename MatrixContainer, typename VectorContainer>
+Vector<3> solveLinearSystem(const Matrix<3, 3, MatrixContainer>& A,
+                            const Vector<3, VectorContainer>& b) {
+	real det = determinant(A);
+	assert_gt(fabs(det), 0);
+	
+	real det1 = determinant(b(0), A(0, 1), A(0, 2),
+	                        b(1), A(1, 1), A(1, 2),
+	                        b(2), A(2, 1), A(2, 2));
+	                        
+	real det2 = determinant(A(0, 0), b(0), A(0, 2),
+	                        A(1, 0), b(1), A(1, 2),
+	                        A(2, 0), b(2), A(2, 2));
+
+	real det3 = determinant(A(0, 0), A(0, 1), b(0),
+	                        A(1, 0), A(1, 1), b(1),
+	                        A(2, 0), A(2, 1), b(2));
+
+	return {det1 / det, det2 / det, det3 / det};
+}
+
+/** 
+ * @name Local basis creation
+ * Create local orthogonal basis for given vector n of unit length.
+ * @warning vector n MUST BE of unit length
+ * 
+ * In created basis, given vector n is always at last position
+ * and vector at the first position tau_1 is always in XY-plane.
+ * {tau_1, tau_2, n} is right-hand orthogonal triple of vectors.
+ * 
+ * In 3D, it's impossible to go around the whole sphere with local basis,
+ * continuos at every point. In current realization, the local basis is 
+ * continuos while going around the sphere slice by XY-plane, but it has 
+ * discontinuities while going through the points with normal(0, 0, n).
+ * 
+ *  
+ *          Z |      tau_2
+ *            |    / 
+ *  n         |   / 
+ *    \__     |  /
+ *       \__  | /
+ *          \ |/            Y
+ *            .-\-----------
+ *           / \/
+ *          /   \
+ *         /     \
+ *        /       \ 
+ *     X /          tau_1
+ * 
+ * 
+ * @return orthogonal transfer matrix from created basis to global {X, Y, Z} basis,
+ * i.e matrix with vectors of created basis in columns.
+ */
+ ///@{
+inline Matrix11 createLocalBasis(const Real1& n) {
+	return Matrix11({n(0)});
+}
+
+inline Matrix22 createLocalBasis(const Real2& n) {
+	const Real2 tau = perpendicularClockwise(n);
+	return Matrix22({tau(0), n(0),
+	                 tau(1), n(1)});
+}
+
+inline Matrix33 createLocalBasis(const Real3& n) {
+	const Real3 tau_1 = normalize(perpendicularClockwise(n));
+	const Real3 tau_2 = linal::crossProduct(n, tau_1);
+	return Matrix33({tau_1(0), tau_2(0), n(0),
+	                 tau_1(1), tau_2(1), n(1),
+	                 tau_1(2), tau_2(2), n(2)});
+}
+ ///@}
+
+}
+}
 
 #endif // LIBGCM_LINAL_LINALROUTINES_HPP

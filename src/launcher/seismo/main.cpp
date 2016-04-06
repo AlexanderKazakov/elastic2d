@@ -1,5 +1,5 @@
 #include <lib/Engine.hpp>
-#include <lib/util/areas/areas.hpp>
+#include <lib/util/Area.hpp>
 #include <lib/rheology/models/Model.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
@@ -70,7 +70,7 @@ Task parseTask() {
 	statement.id = "0000";
 	task.statements.push_back(statement);
 
-	Statement::BorderCondition borderCondition;
+	Statement::CubicGridBorderCondition borderCondition;
 	// y right free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 	                               (Real3({-10, 0.99, -10}), Real3({10, 10, 10}));
@@ -78,7 +78,7 @@ Task parseTask() {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
 	};
-	statement.borderConditions.push_back(borderCondition);
+	statement.cubicGridBorderConditions.push_back(borderCondition);
 
 	statement.id = "0001";
 	task.statements.push_back(statement);

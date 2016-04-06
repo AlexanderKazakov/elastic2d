@@ -5,8 +5,6 @@
 #include <lib/linal/Vector.hpp>
 #include <lib/linal/LinalRoutines.hpp>
 #include <lib/linal/special/DiagonalMatrix.hpp>
-#include <lib/linal/special/Matrix22.hpp>
-#include <lib/linal/special/Matrix33.hpp>
 #include <lib/linal/special/RotationMatrix.hpp>
 #include <lib/linal/special/SymmetricMatrix.hpp>
 #include <lib/linal/special/VectorInt.hpp>

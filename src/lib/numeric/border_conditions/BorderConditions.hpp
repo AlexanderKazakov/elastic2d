@@ -1,5 +1,5 @@
-#ifndef LIBGCM_BORDERCONDITIONS_HPP
-#define LIBGCM_BORDERCONDITIONS_HPP
+#ifndef LIBGCM_OldBorderConditions_HPP
+#define LIBGCM_OldBorderConditions_HPP
 
 #include <lib/linal/linal.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
@@ -12,10 +12,10 @@ namespace gcm {
  * Work with border conditions on different mesh types
  */
 template<typename TModel, typename TGrid, typename TMaterial> 
-struct BorderConditions;
+struct OldBorderConditions;
 
 template<typename TModel, typename TMaterial>
-struct BorderConditions<TModel, CubicGrid, TMaterial> {
+struct OldBorderConditions<TModel, CubicGrid, TMaterial> {
 	typedef DefaultMesh<TModel, CubicGrid, TMaterial>       Mesh;
 	typedef typename Mesh::PdeVector                        PdeVector;
 	typedef typename Mesh::Iterator                         Iterator;
@@ -41,7 +41,7 @@ struct BorderConditions<TModel, CubicGrid, TMaterial> {
 		Map values;        ///< fixed values
 	};
 
-	BorderConditions(const Task& task);
+	OldBorderConditions(const Task& task);
 	void beforeStatement(const Statement& statement);
 	void applyBorderBeforeStage(Mesh* mesh_, const real timeStep_, const int stage);
 	void applyBorderAfterStage(Mesh* mesh_, const real timeStep_, const int stage);
@@ -75,21 +75,21 @@ struct BorderConditions<TModel, CubicGrid, TMaterial> {
 
 
 template<typename TModel, typename TMaterial>
-struct BorderConditions<TModel, Cgal2DGrid, TMaterial> {
+struct OldBorderConditions<TModel, Cgal2DGrid, TMaterial> {
 	typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial> Mesh;
 	typedef typename Mesh::PdeVector                   PdeVector;
 	typedef typename Mesh::Iterator                    Iterator;
 
-	BorderConditions(const Task&) { }
+	OldBorderConditions(const Task&) { }
 	void beforeStatement(const Statement&) { }
 	void applyBorderBeforeStage(Mesh*, const real, const int) { }
-	void applyBorderAfterStage(Mesh* mesh, const real timeStep, const int stage);
+	void applyBorderAfterStage(Mesh*, const real, const int) { }
 
 private:
-	USE_AND_INIT_LOGGER("gcm.Cgal2DGridBorderConditions")
+	USE_AND_INIT_LOGGER("gcm.Cgal2DGridOldBorderConditions")
 };
 
 
 }
 
-#endif // LIBGCM_BORDERCONDITIONS_HPP
+#endif // LIBGCM_OldBorderConditions_HPP

@@ -25,7 +25,7 @@ public:
 		Iterator() : iter(0) { }
 		Iterator(size_t value) : iter(value) { }
 		
-		const Iterator& operator*() { return *this; }
+		const Iterator& operator*() const { return *this; }
 		
 		bool operator!=(const Iterator& other) const {
 			return iter != other.iter;

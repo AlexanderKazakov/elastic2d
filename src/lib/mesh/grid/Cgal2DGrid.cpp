@@ -26,8 +26,11 @@ Cgal2DGrid(const Task& task) :
 
 
 Real2 Cgal2DGrid::
-normal(const BorderIterator& iter) const {
-	VertexHandle v = vertexHandles[*iter];
+normal(const Iterator& it) const {
+	// only for border nodes
+	assert_true(borderIndices.find(it.iter) != borderIndices.end());
+
+	VertexHandle v = vertexHandles[it.iter];
 	
 	// find border edges as two neighbor different domain faces 
 	// moving counterclockwise around the vertex
@@ -135,14 +138,13 @@ findInnerPoint(const Polygon& polygon) {
 	Real2 a = PointToReal2(polygon.vertex(0));
 	Real2 b = PointToReal2(polygon.vertex(1));
 	Real2 middle = (a + b) / 2;
-	Real2 along = b - a;
-	Real2 cross = {along(1), -along(0)};
+	Real2 cross = linal::perpendicularClockwise(b - a);
 	Real2 innerPoint = middle + cross;
 	int n = 1; // iteration number
 	while (!polygon.has_on_bounded_side(Real2ToPoint(innerPoint))) {
 	// watching on the both sides of the edge, getting closer on each iteration
 		innerPoint = middle + cross / pow(-2, n);
-		if (n > 10) {
+		if (n > 20) {
 			THROW_BAD_MESH("Something is wrong with polygon inner point search");
 		}
 		n++;

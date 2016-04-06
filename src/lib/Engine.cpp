@@ -6,6 +6,7 @@
 using namespace gcm;
 
 real Clock::time = 0;
+real Clock::timeStep = 0;
 int Mpi::rank = 0;
 int Mpi::size = 1;
 bool Mpi::forceSequence = false;
@@ -14,11 +15,11 @@ Engine::
 Engine(const Task& task_) :
 	task(task_) {
 	LOG_INFO("Start Engine");
-	Clock::time = 0;
+	Clock::setZero();
 	Mpi::initialize(task.globalSettings.forceSequence);
 
 	assert_gt(task.statements.size(), 0);
-	if (task.gridId == Grids::T::CUBIC) {
+	if (task.gridId == Grids::T::CUBIC) { // TODO this is shit
 		CubicGrid::preprocessTask(task.cubicGrid);
 	}
 
@@ -53,11 +54,12 @@ run() {
 
 void Engine::
 beforeStatement(const Statement& statement) {
-	Clock::time = 0;
+	Clock::setZero();
 	solver->beforeStatement(statement);
+	estimateTimeStep();
 
 	requiredTime = statement.globalSettings.numberOfSnaps *
-	               statement.globalSettings.stepsPerSnap * estimateTimeStep();
+	               statement.globalSettings.stepsPerSnap * Clock::TimeStep();
 	if (statement.globalSettings.numberOfSnaps <= 0) {
 		requiredTime = statement.globalSettings.requiredTime;
 	}
@@ -74,9 +76,11 @@ void Engine::
 runStatement() {
 	int step = 0;
 	while (Clock::Time() < requiredTime) {
-		real timeStep = estimateTimeStep();
-		solver->nextTimeStep(timeStep);
-		step++; Clock::time += timeStep;
+		estimateTimeStep();
+		
+		solver->nextTimeStep();
+		step++; Clock::tickTack();
+		
 		for (auto snap : snapshotters) {
 			snap->snapshot(solver->getActualMesh(), step);
 		}
@@ -89,10 +93,10 @@ runStatement() {
 }
 
 
-real Engine::
+void Engine::
 estimateTimeStep() {
-	// when more than one solver will be ...
-	return solver->calculateTimeStep();
+	// when more solvers will be ..
+	Clock::timeStep = solver->calculateTimeStep();
 }
 
 
