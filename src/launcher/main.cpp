@@ -57,7 +57,7 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL2D;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 1.5;
+	task.cgal2DGrid.spatialStep = 0.5;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
@@ -78,9 +78,9 @@ Task parseTaskCgal2d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 0.1;
+	statement.globalSettings.CourantNumber = 0.2;
 
-	statement.globalSettings.numberOfSnaps = 21;
+	statement.globalSettings.numberOfSnaps = 100;
 	statement.globalSettings.stepsPerSnap = 1;
 
 //	Statement::InitialCondition::Quantity pressure;
@@ -97,15 +97,26 @@ Task parseTaskCgal2d() {
 //	wave.area = std::make_shared<AxisAlignedBoxArea>(Real3({-10, 0, -10}), Real3({10, 1, 10}));
 //	statement.initialCondition.waves.push_back(wave);
 
-	Statement::BorderCondition borderCondition;
-	borderCondition.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({-10, -10, -10}), Real3({-2.99, 10, 10}));
-	borderCondition.type = BorderConditions::T::FIXED_VELOCITY;
-	borderCondition.values = {
-		[](real) { return 0; },
-		[](real) { return -1; }
+	Statement::BorderCondition borderConditionLeft;
+	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
+	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionLeft.values = {
+		[] (real) { return 0; },
+		[] (real t) { return (t < 1) ? -1 : 0; }
 	};
-	statement.borderConditions = {borderCondition};
+	
+	Statement::BorderCondition borderConditionRight;
+	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({2.999, -10, -10}), Real3({10, 10, 10}));
+	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
+	borderConditionRight.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; }
+	};
+	
+	statement.borderConditions = {borderConditionLeft, borderConditionRight};
+
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

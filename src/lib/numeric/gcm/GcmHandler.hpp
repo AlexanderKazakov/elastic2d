@@ -137,14 +137,11 @@ struct GcmHandler<TModel, Cgal2DGrid, TMaterial> {
 			return;
 		}
 		
-//		const auto coords = mesh.coords2d(it);
-		
 		const BORDER_CONDITION* borderCondition = mesh.getBorderCondition(it);
-		if (borderCondition == nullptr) { return; }
+		if (borderCondition == nullptr) { return; } // non-reflection
 		
 		const Real2 normal = mesh.normal(it);
 		auto B = borderCondition->B(normal);
-//		std::cout << "B: " << B; 
 		auto b = borderCondition->b(normal);
 		OuterU1Matrix outerU1;	
 		for (int i = 0; i < OUTER_NUMBER; i++) {
@@ -153,10 +150,7 @@ struct GcmHandler<TModel, Cgal2DGrid, TMaterial> {
 		}
 		
 		const auto alpha = linal::solveLinearSystem(B * outerU1, b - B * mesh.pdeNew(it));
-		std::cout << "before: " << mesh.pdeNew(it);
 		mesh._pdeNew(it) = mesh.pdeNew(it) + outerU1 * alpha;
-		std::cout << "after: " << mesh.pdeNew(it);
-		return;
 	}
 
 private:

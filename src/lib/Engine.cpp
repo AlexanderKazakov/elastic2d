@@ -78,6 +78,7 @@ runStatement() {
 	while (Clock::Time() < requiredTime) {
 		estimateTimeStep();
 		
+		LOG_DEBUG("Start next time step. Time = " << Clock::Time());
 		solver->nextTimeStep();
 		step++; Clock::tickTack();
 		

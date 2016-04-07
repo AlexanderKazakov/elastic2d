@@ -16,6 +16,8 @@ template<typename TModel, typename TGrid, typename TMaterial> struct OldBorderCo
 /**
  * Mesh that implement the approach when all nodal data are stored
  * in separated vectors not in one node.
+ * (Mesh with any other approach (CalcNodes struct, ..) can be done,
+ * but it must have the same interfaces)
  * All nodes have the same type of rheology model, variables and material.
  * @tparam TModel     rheology model
  * @tparam TGrid      geometric aspects
