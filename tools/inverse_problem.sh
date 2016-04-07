@@ -23,7 +23,7 @@ rm -f *.log
 mkdir -p snapshots/1dseismo
 mkdir -p snapshots/vtk
 echo "Start ./build/gcm_inverse_problem with $np processes ..."
-mpirun -np $np ./build/gcm_inverse_problem
+mpirun -np $np ./build/gcm_exe -t inverse
 
 gnuplot tools/gnuplot-1d-binary.txt && eog snapshots/1dseismo/core00statement0000.bin.png
 
