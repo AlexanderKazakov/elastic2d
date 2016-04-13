@@ -19,10 +19,10 @@ struct DataBus<TModel, CubicGrid, TMaterial> {
 	static void exchangeNodesWithNeighbors(Mesh* mesh) {
 		if (Mpi::ForceSequence() || Mpi::Size() == 1) { return; }
 
-		exchangeSomethingWithNeighbors(mesh, mesh->pdeVectors);
+		exchangeSomethingWithNeighbors(mesh, mesh->pdeVariables);
 		if (TModel::InternalOde::NonTrivial) {
 			// TODO - make it compile time impossible to access empty ode etc
-			exchangeSomethingWithNeighbors(mesh, mesh->odeValues);
+			exchangeSomethingWithNeighbors(mesh, mesh->odeVariables);
 		}
 	}
 

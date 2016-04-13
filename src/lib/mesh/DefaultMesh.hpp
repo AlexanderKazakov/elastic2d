@@ -28,6 +28,7 @@ class DefaultMesh : public TGrid {
 public:
 	typedef TModel                              Model;
 	typedef BorderCondition<Model>              BORDER_CONDITION;
+	typedef typename Model::PdeVariables        PdeVariables;
 	typedef typename Model::PdeVector           PdeVector;
 	typedef typename Model::OdeVariables        OdeVariables;
 	typedef typename Model::GCM_MATRICES        GCM_MATRICES;
@@ -47,8 +48,8 @@ public:
 	// Dimensionality of rheology model, the grid can have different
 	static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
 
-	struct Node { // TODO - node is some sort of handle, it can be 
-		// realized in iterator
+	struct Node { // TODO - node is some sort of handle, this 
+		// functionality can be moved to iterator
 		Node(const Iterator& iterator, DefaultMesh* const mesh_) :
 			it(iterator), mesh(mesh_) { }
 
@@ -83,19 +84,27 @@ public:
 	DefaultMesh(const Task& task) : Grid(task) { }
 	virtual ~DefaultMesh() { }
 
-	/** Read-only access to actual PDE vectors */
+	/** Read-only access to actual PDE variables */
+	const PdeVariables& pdeVars(const Iterator& it) const {
+		return this->pdeVariables[this->getIndex(it)];
+	}
+	
+	/** 
+	 * Read-only access to actual PDE vectors.
+	 * Yes, it has to be a different function from pdeVars.
+	 */
 	const PdeVector& pde(const Iterator& it) const {
-		return this->pdeVectors[this->getIndex(it)];
+		return this->pdeVariables[this->getIndex(it)];
 	}
 
 	/** Read-only access to actual ODE values */
 	const OdeVariables& ode(const Iterator& it) const {
-		return this->odeValues[this->getIndex(it)];
+		return this->odeVariables[this->getIndex(it)];
 	}
 
 	/** Read-only access to PDE vectors on next time layer */
 	const PdeVector& pdeNew(const Iterator& it) const {
-		return this->pdeVectorsNew[this->getIndex(it)];
+		return this->pdeVariablesNew[this->getIndex(it)];
 	}
 
 	/** Read-only access to GCM matrices */
@@ -121,17 +130,17 @@ protected:
 
 	/** Read / write access to actual PDE vectors */
 	PdeVector& _pde(const Iterator& it) {
-		return this->pdeVectors[this->getIndex(it)];
+		return this->pdeVariables[this->getIndex(it)];
 	}
 
 	/** Read / write access to actual ODE vectors */
 	OdeVariables& _ode(const Iterator& it) {
-		return this->odeValues[this->getIndex(it)];
+		return this->odeVariables[this->getIndex(it)];
 	}
 
 	/** Read / write access to PDE vectors in auxiliary "on next time layer" storage */
 	PdeVector& _pdeNew(const Iterator& it) {
-		return this->pdeVectorsNew[this->getIndex(it)];
+		return this->pdeVariablesNew[this->getIndex(it)];
 	}
 
 	/** Read / write access to actual GCM matrices */
@@ -149,11 +158,11 @@ protected:
 	 * "...New" means on the next time layer.
 	 */
 	///@{
-	std::vector<PdeVector> pdeVectors;
-	std::vector<PdeVector> pdeVectorsNew;
+	std::vector<PdeVariables> pdeVariables;
+	std::vector<PdeVariables> pdeVariablesNew;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
-	std::vector<OdeVariables> odeValues;
+	std::vector<OdeVariables> odeVariables;
 	///@}
 
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
@@ -177,7 +186,7 @@ protected:
 		}
 		return ans;
 	}
-	                      
+                
 	void beforeStatement(const Statement& statement) {
 		// TODO - for movable meshes it should reconstruct the grid
 		allocate();
@@ -207,12 +216,12 @@ private:
 template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
 allocate() {
-	pdeVectors.resize(this->sizeOfAllNodes(), PdeVector::zeros());
-	pdeVectorsNew.resize(this->sizeOfAllNodes(), PdeVector::zeros());
+	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::zeros());
+	pdeVariablesNew.resize(this->sizeOfAllNodes(), PdeVariables::zeros());
 	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
 	if (Model::InternalOde::NonTrivial) {
-		odeValues.resize(this->sizeOfAllNodes());
+		odeVariables.resize(this->sizeOfAllNodes());
 	}
 }
 

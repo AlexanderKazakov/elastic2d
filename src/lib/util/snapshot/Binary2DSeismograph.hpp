@@ -11,10 +11,10 @@ namespace gcm {
 template<class TMesh>
 class Binary2DSeismograph : public Snapshotter {
 public:
-	typedef typename TMesh::Model        Model;
-	typedef typename Model::PdeVariables PdeVariables;
-	typedef GetSetter<PdeVariables>      GETSETTER;
-	typedef typename GETSETTER::Getter   Getter;
+	typedef typename TMesh::Model             Model;
+	typedef typename Model::PdeVariables      PdeVariables;
+	typedef typename PdeVariables::GETSETTER  GETSETTER;
+	typedef typename GETSETTER::Getter        Getter;
 
 	const std::string FILE_EXTENSION = std::string("bin");
 	const std::string FOLDER_NAME = std::string("2dseismo");

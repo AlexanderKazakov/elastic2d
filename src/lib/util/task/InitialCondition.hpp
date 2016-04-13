@@ -8,8 +8,9 @@ namespace gcm {
 template<typename TModel, typename TMaterial>
 class InitialCondition {
 public:
-	typedef typename TModel::PdeVector    PdeVector;
-	typedef typename TModel::GCM_MATRICES GCM_MATRICES;
+	typedef typename TModel::PdeVariables    PdeVariables;
+	typedef typename TModel::PdeVector       PdeVector;
+	typedef typename TModel::GCM_MATRICES    GCM_MATRICES;
 
 	/** Convert task terms of initial conditions to own format */
 	void initialize(const Statement& statement);

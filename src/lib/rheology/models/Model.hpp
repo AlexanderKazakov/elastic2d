@@ -32,14 +32,14 @@ public:
 	typedef VelocitySigmaVariables<DIMENSIONALITY> PdeVariables;
 	typedef DummyOde                               InternalOde;
 	typedef DummyCorrector                         Corrector;
+	typedef typename PdeVariables::PdeVector       PdeVector;
 
-	static const int PDE_SIZE = PdeVariables::SIZE;
+	static const int PDE_SIZE = PdeVector::SIZE;
 
-	typedef linal::Vector<PDE_SIZE, PdeVariables> PdeVector;
-	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
-	typedef typename InternalOde::Variables       OdeVariables;
-	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
-	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
+	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY>  GCM_MATRICES;
+	typedef typename InternalOde::Variables        OdeVariables;
+	typedef std::shared_ptr<GCM_MATRICES>          GcmMatricesPtr;
+	typedef std::shared_ptr<const GCM_MATRICES>    ConstGcmMatricesPtr;
 
 	static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
@@ -58,14 +58,14 @@ public:
 	typedef VelocitySigmaVariables<DIMENSIONALITY> PdeVariables;
 	typedef DummyOde                               InternalOde;
 	typedef DummyCorrector                         Corrector;
+	typedef typename PdeVariables::PdeVector       PdeVector;
 
-	static const int PDE_SIZE = PdeVariables::SIZE;
-
-	typedef linal::Vector<PDE_SIZE, PdeVariables> PdeVector;
-	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
-	typedef typename InternalOde::Variables       OdeVariables;
-	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
-	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
+	static const int PDE_SIZE = PdeVector::SIZE;
+	
+	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY>  GCM_MATRICES;
+	typedef typename InternalOde::Variables        OdeVariables;
+	typedef std::shared_ptr<GCM_MATRICES>          GcmMatricesPtr;
+	typedef std::shared_ptr<const GCM_MATRICES>    ConstGcmMatricesPtr;
 
 	static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
@@ -89,14 +89,14 @@ public:
 	typedef VelocitySigmaVariables<DIMENSIONALITY> PdeVariables;
 	typedef DummyOde                               InternalOde;
 	typedef DummyCorrector                         Corrector;
+	typedef typename PdeVariables::PdeVector       PdeVector;
 
-	static const int PDE_SIZE = PdeVariables::SIZE;
-
-	typedef linal::Vector<PDE_SIZE, PdeVariables> PdeVector;
-	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
-	typedef typename InternalOde::Variables       OdeVariables;
-	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
-	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
+	static const int PDE_SIZE = PdeVector::SIZE;
+	
+	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY>  GCM_MATRICES;
+	typedef typename InternalOde::Variables        OdeVariables;
+	typedef std::shared_ptr<GCM_MATRICES>          GcmMatricesPtr;
+	typedef std::shared_ptr<const GCM_MATRICES>    ConstGcmMatricesPtr;
 
 	static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
@@ -120,14 +120,14 @@ public:
 	typedef VelocitySigmaVariables<DIMENSIONALITY> PdeVariables;
 	typedef ContinualDamageOde                     InternalOde;
 	typedef IdealPlasticFlowCorrector              Corrector;
+	typedef typename PdeVariables::PdeVector       PdeVector;
 
-	static const int PDE_SIZE = PdeVariables::SIZE;
-
-	typedef linal::Vector<PDE_SIZE, PdeVariables> PdeVector;
-	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
-	typedef typename InternalOde::Variables       OdeVariables;
-	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
-	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
+	static const int PDE_SIZE = PdeVector::SIZE;
+	 
+	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY>  GCM_MATRICES;
+	typedef typename InternalOde::Variables        OdeVariables;
+	typedef std::shared_ptr<GCM_MATRICES>          GcmMatricesPtr;
+	typedef std::shared_ptr<const GCM_MATRICES>    ConstGcmMatricesPtr;
 
 	static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 
@@ -147,7 +147,7 @@ constructGcmMatrices(GcmMatricesPtr m, std::shared_ptr<const IsotropicMaterial> 
 	const real rho = material->rho;
 	const real lambda = material->lambda;
 	const real mu = material->mu;
-	const real E = mu * (3 * lambda + 2 * mu) / (lambda + mu);         // Young's modulus
+	const real E = mu * (3 * lambda + 2 * mu) / (lambda + mu); // Young's modulus
 
 	m->m[0].A.initialize({0.0, -1.0 / rho,
 	                      -E, 0.0});

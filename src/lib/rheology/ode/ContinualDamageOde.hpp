@@ -20,9 +20,12 @@ public:
 	};
 
 	static const std::map<PhysicalQuantities::T, GetSetter<Variables> > QUANTITIES;
-	static real GetHi(const Variables& variablesToGetFrom) { return variablesToGetFrom.hi; }
-	static void SetHi(const real& value, Variables& variablesToSetTo) { variablesToSetTo.hi =
-		                                                                    value; }
+	static real GetHi(const Variables& variablesToGetFrom) {
+		return variablesToGetFrom.hi;
+	}
+	static void SetHi(const real& value, Variables& variablesToSetTo) {
+		variablesToSetTo.hi = value;
+	}
 
 	ContinualDamageOde(const Statement&) { }
 

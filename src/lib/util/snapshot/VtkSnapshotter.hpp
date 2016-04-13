@@ -38,7 +38,7 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	vtkGrid = VtkGridType::New();
 	writeGeometry(*mesh, vtkGrid);
 
-	for (auto& quantity : TMesh::PdeVector::VECTORS) {
+	for (auto& quantity : TMesh::Model::PdeVariables::VECTORS) {
 		writeQuantity(quantity.first, &VtkSnapshotter::insertVector, 3);
 	}
 	for (auto& quantity : quantitiesToSnap) {
@@ -87,7 +87,7 @@ void writeQuantity(PhysicalQuantities::T quantity, InsertFunc insertFunc,
 
 void insertVector(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
                   const typename TMesh::VtkIterator& it) {
-	auto Get = TMesh::PdeVector::VECTORS.at(quantity).Get;
+	auto Get = TMesh::Model::PdeVariables::VECTORS.at(quantity).Get;
 	auto linalVec = Get(mesh->pde(it));
 	float vtkVec[3];
 	for (int i = 0; i < 3; i++) {
@@ -98,7 +98,7 @@ void insertVector(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray>
 
 void insertQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatArray> vtkArr,
                     const typename TMesh::VtkIterator& it) {
-	auto Get = TMesh::PdeVector::QUANTITIES.at(quantity).Get;
+	auto Get = TMesh::Model::PdeVariables::QUANTITIES.at(quantity).Get;
 	vtkArr->InsertNextValue((float)Get(mesh->pde(it)));
 }
 

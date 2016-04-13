@@ -24,7 +24,7 @@ initialize(const Statement& statement) {
 		auto A = gcmMatricesPtr->m[wave.direction];
 		int columnNumber = TModel::MATERIALS_WAVES_MAP.at(TMaterial::ID).at(wave.waveType);
 		PdeVector tmp = A.U1.getColumn(columnNumber);
-		real currentValue = PdeVector::QUANTITIES.at(wave.quantity).Get(tmp);
+		real currentValue = PdeVariables::QUANTITIES.at(wave.quantity).Get(tmp);
 		assert_ne(currentValue, 0.0);
 		tmp *= wave.quantityValue / currentValue;
 		pdeConditions.push_back(PdeCondition(wave.area, tmp));
@@ -33,7 +33,7 @@ initialize(const Statement& statement) {
 	for (auto& q : statement.initialCondition.quantities) {
 		PdeVector tmp;
 		linal::clear(tmp);
-		PdeVector::QUANTITIES.at(q.physicalQuantity).Set(q.value, tmp);
+		PdeVariables::QUANTITIES.at(q.physicalQuantity).Set(q.value, tmp);
 		pdeConditions.push_back(PdeCondition(q.area, tmp));
 	}
 }

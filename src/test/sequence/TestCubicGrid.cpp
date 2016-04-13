@@ -15,8 +15,8 @@ TEST(CubicGrid, initialize) {
 	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.sizes = {7, 9, 1};
 	task.cubicGrid.lengths = {20, 8, 1};
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2,
-	                                                                                   0.5);
+	statement.materialConditions.defaultMaterial = 
+			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	task.statements.push_back(statement);
 
 	CubicGrid::preprocessTask(task.cubicGrid);
@@ -110,13 +110,13 @@ TEST(CubicGrid, interpolateValuesAround) {
 		for (int x = 0; x < task.cubicGrid.sizes(0); x++) {
 			for (int y = 0; y < task.cubicGrid.sizes(1); y++) {
 				// check that values is set properly
-				ASSERT_EQ(grid.pde({x, y, 0}).V[0], 0.0);
-				ASSERT_EQ(grid.pde({x, y, 0}).V[1], 0.0);
-				ASSERT_EQ(grid.pde({x, y, 0}).sigma(0,
+				ASSERT_EQ(grid.pdeVars({x, y, 0}).velocity(0), 0.0);
+				ASSERT_EQ(grid.pdeVars({x, y, 0}).velocity(1), 0.0);
+				ASSERT_EQ(grid.pdeVars({x, y, 0}).sigma(0,
 				                                    0),
 				          (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(grid.pde({x, y, 0}).sigma(0, 1), 0.0);
-				ASSERT_EQ(grid.pde({x, y, 0}).sigma(1,
+				ASSERT_EQ(grid.pdeVars({x, y, 0}).sigma(0, 1), 0.0);
+				ASSERT_EQ(grid.pdeVars({x, y, 0}).sigma(1,
 				                                    1),
 				          (x == 1 && y == 1) ? 1.0 : 0.0);
 			}

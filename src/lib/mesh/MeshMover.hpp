@@ -30,8 +30,8 @@ struct MeshMover<TModel, Cgal2DGrid, TMaterial> {
 		LOG_DEBUG("Start mesh motion");
 		for (auto& it : mesh) {
 			Real2 dx = { // TODO - use velocity getter indep from dimensions
-				mesh.pde(it).V[0] * timeStep,
-				mesh.pde(it).V[1] * timeStep
+				mesh.pdeVars(it).velocity(0) * timeStep,
+				mesh.pdeVars(it).velocity(1) * timeStep
 			};
 			mesh.move(it, dx);
 		}

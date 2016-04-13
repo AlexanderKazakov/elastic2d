@@ -35,7 +35,7 @@ public:
 	/// Legal number of outer characteristics in border node
 	static const int OUTER_NUMBER = DIMENSIONALITY;
 	
-	typedef typename TModel::PdeVector            PdeVector;
+	typedef typename TModel::PdeVariables         PdeVariables;
 	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
 	typedef linal::Vector<OUTER_NUMBER>           BorderVector;
 	typedef std::function<BorderVector(real)>     BorderVectorTimeDependency;
@@ -86,7 +86,7 @@ private:
 	///	Set border matrix for the case of fixed force on border
 		BorderMatrix B_;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-			PdeVector pde = PdeVector::zeros();
+			PdeVariables pde = PdeVariables::zeros();
 			for (int j = 0; j < DIMENSIONALITY; j++) {
 				pde.sigma(i, j) = normal(j);
 			}
@@ -101,8 +101,8 @@ private:
 	/// Velocity border matrix B is independent from border normal
 		BorderMatrix B_;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-			PdeVector pde = PdeVector::zeros();
-			pde.V[i] = 1;
+			PdeVariables pde = PdeVariables::zeros();
+			pde.velocity(i) = 1;
 			B_.setString(i, pde);
 		}
 		return B_;

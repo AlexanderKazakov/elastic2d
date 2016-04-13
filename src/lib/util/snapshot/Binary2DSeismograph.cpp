@@ -42,8 +42,7 @@ snapshotImpl(const AbstractGrid* mesh_, const int) {
 	assert_eq(mesh->sizes(1), sizeY); // TODO slice iterator
 	surface[0] = (precision) Clock::Time();
 	for (size_t y = 0; y < sizeY; y++) {
-		surface[y +
-		        1] = (precision) valuesGetter(mesh->pde(linal::VectorInt<3>({0, (int)y, 0})));
+		surface[y + 1] = (precision) valuesGetter(mesh->pde(Int3({0, (int)y, 0})));
 	}
 	FileUtils::writeStdVectorToBinaryFileStream(fileStream, surface);
 }

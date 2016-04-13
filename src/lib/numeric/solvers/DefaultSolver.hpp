@@ -121,11 +121,11 @@ stage(const int s, const real timeStep) {
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	
 	borderConditions->applyBorderBeforeStage(mesh, timeStep, s);
-	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVectorsNew
+	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVariablesNew
 	borderConditions->applyBorderAfterStage(mesh, timeStep, s);
 	
-	std::swap(mesh->pdeVectors, mesh->pdeVectorsNew); // return actual PDE values back to
-		                                          // pdeVectors
+	 // return actual PDE values back to pdeVariables
+	std::swap(mesh->pdeVariables, mesh->pdeVariablesNew);
 }
 
 
@@ -133,7 +133,7 @@ template<class TMesh>
 void DefaultSolver<TMesh>::
 internalOdeNextStep(const real timeStep) {
 	if (InternalOde::NonTrivial) {
-		assert_eq(mesh->pdeVectors.size(), mesh->odeValues.size());
+		assert_eq(mesh->pdeVariables.size(), mesh->odeVariables.size());
 		for (auto it : *mesh) {
 			internalOde->nextStep(mesh->node(it), timeStep);
 		}
