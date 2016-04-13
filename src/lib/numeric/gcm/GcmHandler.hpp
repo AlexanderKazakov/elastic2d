@@ -75,7 +75,7 @@ struct GcmHandler<TModel, Cgal2DGrid, TMaterial> {
 	 * Interpolated value for k-th point in vector dx are
 	 * stored in k-th column of returned Matrix.
 	 * If specified point appears out of body, matrix column is set to zeros
-	 * and outerInvariants is added with another index.
+	 * and outerInvariants is added with the index.
 	 * @param stage direction
 	 * @param it index-iterator of node
 	 * @param dx Vector of distances from reference node on which

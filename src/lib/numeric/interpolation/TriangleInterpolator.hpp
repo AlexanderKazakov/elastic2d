@@ -1,9 +1,7 @@
 #ifndef LIBGCM_TRIANGLEINTERPOLATOR_HPP
 #define LIBGCM_TRIANGLEINTERPOLATOR_HPP
 
-#include <vector>
 #include <lib/linal/linal.hpp>
-#include <lib/util/Types.hpp>
 
 
 namespace gcm {

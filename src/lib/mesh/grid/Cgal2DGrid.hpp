@@ -3,7 +3,7 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
-//#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Delaunay_mesher_2.h>
 #include <CGAL/Delaunay_mesh_face_base_2.h>
 #include <CGAL/Delaunay_mesh_size_criteria_2.h>
@@ -21,9 +21,8 @@ class Cgal2DGrid : public UnstructuredGrid {
 public:
 	typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 	typedef CGAL::Polygon_2<K>                                  Polygon;
-//	typedef CGAL::Triangulation_vertex_base_with_info_2
-//	                                                 <Flags, K> Vb;
-	typedef CGAL::Triangulation_vertex_base_2<K>                Vb;
+	typedef CGAL::Triangulation_vertex_base_with_info_2
+	                                                <size_t, K> Vb;
 	typedef CGAL::Delaunay_mesh_face_base_2<K>                  Fb;
 	typedef CGAL::Triangulation_data_structure_2<Vb, Fb>        Tds;
 	typedef CGAL::Constrained_Delaunay_triangulation_2<K, Tds>  CDT;
@@ -123,9 +122,17 @@ public:
 	std::array<size_t, 3> getVerticesOfCell(const CellIterator& it) const {
 		std::array<size_t, 3> vertices;
 		for (size_t i = 0; i < 3; i++) {
-			vertices[i] = verticesIndices.at(it->vertex((int)i));
+			vertices[i] = it->vertex((int)i)->info();
 		}
 		return vertices;
+	}
+	
+	const CDT& getTriangulation() const {
+		return triangulation;
+	}
+	
+	Iterator getIterator(const VertexHandle& v) const {
+		return v->info();
 	}
 
 	size_t sizeOfRealNodes() const {
@@ -137,13 +144,15 @@ public:
 	}
 
 protected:
+	/// Data
+	///@{
 	CDT triangulation;                               ///< CGAL triangulation data structure
 	std::vector<VertexHandle> vertexHandles;         ///< CGAL-"pointers" to each grid vertex
 	std::set<size_t> borderIndices;                  ///< indices of border vertices in vertexHandles
-	std::map<VertexHandle, size_t> verticesIndices;  ///< map between triangulation and vertexHandles
 	real effectiveSpatialStep = 0;                   ///< used in triangulation criteria and Courant condition
 	bool movable = false;                            ///< deformable(true) or immutable(false) grid
-	
+	///@}
+
 	real getMinimalSpatialStep() const {
 		assert_gt(effectiveSpatialStep, 0);
 		return effectiveSpatialStep;
@@ -155,7 +164,7 @@ protected:
 		if (ownerFace->is_in_domain()) {
 			ans.inner = true;
 			for (int i = 0; i < Triangle::N; i++) {
-				ans.p[i] = Iterator((size_t)(verticesIndices.at(ownerFace->vertex(i))));
+				ans.p[i] = getIterator(ownerFace->vertex(i));
 			}
 		}
 		return ans;

@@ -16,8 +16,8 @@ Cgal2DGrid(const Task& task) :
 	for (auto it = triangulation.finite_vertices_begin();
 	     it != triangulation.finite_vertices_end(); it++) {
 		auto handle = it->handle();
+		handle->info() = vertexIndex;
 		vertexHandles[vertexIndex] = handle;
-		verticesIndices.insert({handle, vertexIndex});
 		vertexIndex++;
 	}
 
@@ -164,7 +164,7 @@ void Cgal2DGrid::markBorders() {
 			for (int i = 0; i < 3; i++) {
 				VertexHandle v = cell->vertex(i);
 				if (!triangulation.is_infinite(v)) {
-					borderIndices.insert(verticesIndices.at(v));
+					borderIndices.insert(v->info());
 				}
 			}
 		}
