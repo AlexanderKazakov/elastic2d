@@ -216,8 +216,8 @@ private:
 template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
 allocate() {
-	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::zeros());
-	pdeVariablesNew.resize(this->sizeOfAllNodes(), PdeVariables::zeros());
+	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
+	pdeVariablesNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
 	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
 	if (Model::InternalOde::NonTrivial) {

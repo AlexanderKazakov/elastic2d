@@ -39,7 +39,7 @@ public:
 		        mesh.getTriangulation(), Point(query(0), query(1)), nearVertex);
 
 		/// first order classic Sibson interpolation
-		Value ans = Value::zeros();
+		Value ans = Value::Zeros();
 		for (const auto& neighbor : neighbors) {
 			const Value neighborValue =
 			        mesh.pde(mesh.getIterator(neighbor.first));

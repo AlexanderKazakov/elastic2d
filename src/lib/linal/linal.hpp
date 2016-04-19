@@ -2,12 +2,13 @@
 #define LIBGCM_LINAL_HPP
 
 #include <lib/linal/Matrix.hpp>
-#include <lib/linal/Vector.hpp>
-#include <lib/linal/LinalRoutines.hpp>
-#include <lib/linal/special/DiagonalMatrix.hpp>
+#include <lib/linal/operators.hpp>
+#include <lib/linal/determinants.hpp>
+#include <lib/linal/linearSystems.hpp>
+#include <lib/linal/basis.hpp>
+#include <lib/linal/functions.hpp>
+
 #include <lib/linal/special/RotationMatrix.hpp>
-#include <lib/linal/special/SymmetricMatrix.hpp>
-#include <lib/linal/special/VectorInt.hpp>
 
 namespace gcm {
 

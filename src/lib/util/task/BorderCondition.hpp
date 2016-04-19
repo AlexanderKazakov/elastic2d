@@ -86,11 +86,11 @@ private:
 	///	Set border matrix for the case of fixed force on border
 		BorderMatrix B_;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-			PdeVariables pde = PdeVariables::zeros();
+			PdeVariables pde = PdeVariables::Zeros();
 			for (int j = 0; j < DIMENSIONALITY; j++) {
 				pde.sigma(i, j) = normal(j);
 			}
-			B_.setString(i, pde);
+			B_.setRow(i, pde);
 		}
 		return B_;
 	}
@@ -101,9 +101,9 @@ private:
 	/// Velocity border matrix B is independent from border normal
 		BorderMatrix B_;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-			PdeVariables pde = PdeVariables::zeros();
+			PdeVariables pde = PdeVariables::Zeros();
 			pde.velocity(i) = 1;
-			B_.setString(i, pde);
+			B_.setRow(i, pde);
 		}
 		return B_;
 	}

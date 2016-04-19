@@ -8,14 +8,14 @@ namespace gcm {
 /**
  * Non-movable structured rectangular grid.
  * Dimensionality from 1 to 3.
- * If dimensionality is 2, the grid lies in plain XY, and size by Z is 1.
+ * If dimensionality is 2, the grid lies in plane XY, and size by Z is 1.
  * If dimensionality is 1, the grid lies on axis X and sizes by Y and Z are 1.
  * The slowest index is always X (if going through the memory sequentially)
  */
 class CubicGrid : public StructuredGrid {
 public:
-	/** @name Iterators 
-	 * Different iteration over the grid.
+	/** 
+	 * @name Iterators 
 	 */
 	///@{
 
@@ -27,7 +27,7 @@ public:
 			bounds = bounds_;
 		}
 
-		using Int3::Matrix;
+		using Int3::Int3;
 		using Int3::operator=;
 		const Iterator& operator*() const { return *this; }
 
@@ -129,21 +129,9 @@ public:
 	 * @return index in std::vector
 	 */
 	size_t getIndex(const Iterator& it) const {
-		return getIndex(it(0), it(1), it(2));
+		return (size_t) linal::dotProduct(indexMaker, it + borderSize * Int3::Ones());
 	}
 
-	/**
-	 * @param x x index < sizes(0)
-	 * @param y y index < sizes(1)
-	 * @param z z index < sizes(2)
-	 * @return index in std::vector
-	 */
-	size_t getIndex(const int x, const int y, const int z) const {
-		return (size_t)
-		       (indexMaker(0) * (x + borderSize) +
-		        indexMaker(1) * (y + borderSize) +
-		        indexMaker(2) * (z + borderSize) );
-	}
 
 	const int borderSize;  ///< number of virtual nodes on border
 	const Int3 sizes;      ///< numbers of nodes along each direction

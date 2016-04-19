@@ -3,26 +3,28 @@
 
 #include <gsl/gsl_linalg.h>
 
-#include <lib/util/Exception.hpp>
+#include <lib/linal/Matrix.hpp>
 
 namespace gcm {
-template<int M> class SymmetricMatrix;
 
 class GslUtils {
 public:
-	template<typename TMatrix>
-	static TMatrix invert(const TMatrix& matrix) {
-		static_assert(TMatrix::M == TMatrix::N, "Only quadratic matrices can be inverted");
-		TMatrix result;
+	template<int TM, 
+	         template<int, typename> class TContainer>
+	static
+	linal::MatrixBase<TM, TM, real, linal::NonSymmetric, TContainer>
+	invert(const linal::MatrixBase<TM, TM, real, linal::NonSymmetric, TContainer>& m) {
+	
+		linal::MatrixBase<TM, TM, real, linal::NonSymmetric, TContainer> result;
 
-		gsl_matrix* Z1 = gsl_matrix_alloc(TMatrix::M, TMatrix::M);
-		gsl_matrix* Z = gsl_matrix_alloc(TMatrix::M, TMatrix::M);
-		gsl_permutation* perm = gsl_permutation_alloc(TMatrix::M);
+		gsl_matrix* Z1 = gsl_matrix_alloc(TM, TM);
+		gsl_matrix* Z = gsl_matrix_alloc(TM, TM);
+		gsl_permutation* perm = gsl_permutation_alloc(TM);
 		int k;
 
-		for (int i = 0; i < TMatrix::M; i++) {
-			for (int j = 0; j < TMatrix::M; j++) {
-				gsl_matrix_set(Z1, (size_t)i, (size_t)j, matrix(i, j));
+		for (int i = 0; i < TM; i++) {
+			for (int j = 0; j < TM; j++) {
+				gsl_matrix_set(Z1, (size_t)i, (size_t)j, m(i, j));
 			}
 		}
 
@@ -34,8 +36,8 @@ public:
 			THROW_INVALID_ARG("gsl_linalg_LU_invert failed");
 		}
 
-		for (int i = 0; i < TMatrix::M; i++) {
-			for (int j = 0; j < TMatrix::M; j++) {
+		for (int i = 0; i < TM; i++) {
+			for (int j = 0; j < TM; j++) {
 				result(i, j) = gsl_matrix_get(Z, (size_t)i, (size_t)j);
 			}
 		}
@@ -48,8 +50,12 @@ public:
 	}
 
 	// TODO - special gsl function
-	template<int M>
-	static SymmetricMatrix<M> invertSymmetric(const SymmetricMatrix<M>& matrix);
+	template<int TM, 
+	         template<int, typename> class TContainer>
+	static
+	linal::MatrixBase<TM, TM, real, linal::Symmetric, TContainer>
+	invertSymmetric(
+		const linal::MatrixBase<TM, TM, real, linal::Symmetric, TContainer>& m);
 
 };
 

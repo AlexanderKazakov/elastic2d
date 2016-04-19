@@ -12,7 +12,11 @@ namespace linal {
  *
  * @return Rotation matrix.
  */
-Matrix33 getXRotationMatrix(real angle);
+inline Matrix33 getXRotationMatrix(real angle) {
+	return {1.0,  0.0,        0.0,
+	        0.0,  cos(angle), sin(angle),
+	        0.0, -sin(angle), cos(angle)};
+}
 
 /**
  * Returns rotation matrix to perform rotation around Y axis.
@@ -21,7 +25,11 @@ Matrix33 getXRotationMatrix(real angle);
  *
  * @return Rotation matrix.
  */
-Matrix33 getYRotationMatrix(real angle);
+inline Matrix33 getYRotationMatrix(real angle) {
+	return {cos(angle), 0.0, -sin(angle),
+	        0.0,        1.0, 0.0,
+	        sin(angle), 0.0, cos(angle)};
+}
 
 /**
  * Returns rotation matrix to perform rotation around Z axis.
@@ -30,7 +38,12 @@ Matrix33 getYRotationMatrix(real angle);
  *
  * @return Rotation matrix.
  */
-Matrix33 getZRotationMatrix(real angle);
+inline Matrix33 getZRotationMatrix(real angle) {
+	return {cos(angle),  sin(angle), 0.0,
+	        -sin(angle), cos(angle), 0.0,
+	        0.0,         0.0,        1.0};
+}
+
 
 }
 }

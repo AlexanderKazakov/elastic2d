@@ -9,27 +9,74 @@ const int LINAL_TEST_NUMBER_ITERATIONS = 1000;
 using namespace gcm;
 using namespace gcm::linal;
 
-template<int M, int N>
-class MatrixWrapper : public Matrix<M, N> {
-public:
-	int _getIndex(int i, int j) const {
-		return this->getIndex(i, j);
+
+TEST(Linal, Assignment) {
+	Matrix<1, 4> r = {1, 0, -3.4, 1.5};
+	
+	MatrixInt<1, 4> i = r;
+	ASSERT_EQ((MatrixInt<1, 4>({1, 0, -3, 1})), i);
+	
+	Matrix<1, 4> r2 = i;
+	ASSERT_EQ((MatrixInt<1, 4>({1, 0, -3, 1})), r2);
+	
+	Matrix<1, 4> r3 = r;
+	ASSERT_EQ((Matrix<1, 4>({1, 0, -3.4, 1.5})), r3);
+	
+	ASSERT_EQ(1,    r3(0));
+	ASSERT_EQ(0,    r3(1));
+	ASSERT_EQ(-3.4, r3(2));
+	ASSERT_EQ(1.5,  r3(3));
+}
+
+
+TEST(Linal, zeroOnes) {
+	for (int i = 0; i < 12; i++) {
+		for (int j = 0; j < 12; j++) {
+			ASSERT_EQ(1, (Matrix<12, 12>::Ones()(i, j)));
+			ASSERT_EQ(0, (Matrix<12, 12>::Zeros()(i, j)));
+			ASSERT_EQ((i == j), (Matrix<12, 12>::Identity()(i, j)));
+			
+			ASSERT_EQ(1, (MatrixInt<12, 12>::Ones()(i, j)));
+			ASSERT_EQ(0, (MatrixInt<12, 12>::Zeros()(i, j)));
+			ASSERT_EQ((i == j), (MatrixInt<12, 12>::Identity()(i, j)));
+		}
 	}
+	
+	Matrix<2, 4> m = {1, 1, 2, 3, 3, 5, 6, 0};
+	auto m2 = zeros(m);
+	ASSERT_EQ((Matrix<2, 4>({0, 0, 0, 0, 0, 0, 0, 0})), m2);
+	
+	auto m3 = ones(m);
+	ASSERT_EQ((Matrix<2, 4>({1, 1, 1, 1, 1, 1, 1, 1})), m3);
+	
+	auto m4 = clear(m3);
+	ASSERT_EQ(m2, m4);
+	ASSERT_EQ(m2, m3);
+	
+	Matrix<2, 2> identityMatrix = identity(Matrix22());
+	ASSERT_EQ((Matrix<2, 2>({1, 0, 0, 1})), identityMatrix);
+}
 
-};
 
+TEST(Linal, getIndex) {
+	ASSERT_EQ((Symmetric<3, 3>::getIndex(0, 0)), 0);
+	ASSERT_EQ((Symmetric<3, 3>::getIndex(0, 2)), 2);
+	ASSERT_EQ((Symmetric<3, 3>::getIndex(2, 2)), 5);
+	ASSERT_EQ((Symmetric<5, 5>::getIndex(4, 3)), 13);
 
-TEST(Linal, ContainerIndex) {
-	MatrixWrapper<2, 8> m1;
-	MatrixWrapper<8, 2> m2;
+	ASSERT_EQ((NonSymmetric<3, 3>::getIndex(0, 0)), 0);
+	ASSERT_EQ((NonSymmetric<3, 3>::getIndex(0, 2)), 2);
+	ASSERT_EQ((NonSymmetric<3, 3>::getIndex(2, 2)), 8);
+	ASSERT_EQ((NonSymmetric<5, 5>::getIndex(4, 3)), 23);
 
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 8; j++) {
-			ASSERT_LT(m1._getIndex(i, j), 16);
-			ASSERT_LT(m2._getIndex(j, i), 16);
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			ASSERT_EQ((Symmetric<10, 10>::getIndex(i, j)),
+			          (Symmetric<10, 10>::getIndex(j, i)));
 		}
 	}
 }
+
 
 TEST(Linal, MatrixConstruct) {
 
@@ -46,6 +93,11 @@ TEST(Linal, MatrixConstruct) {
 	ASSERT_EQ(m2(2, 0), 7.0);
 	ASSERT_EQ(m2(2, 1), 8.0);
 	ASSERT_EQ(m2(2, 2), 9.0);
+
+#if CONFIG_ENABLE_ASSERTIONS
+	ASSERT_THROW((Matrix<2, 2>({1})), Exception);
+	ASSERT_THROW((Matrix<2, 2>({1, 1, 1, 1, 1})), Exception);
+#endif
 }
 
 TEST(Linal, MatrixAccess) {
@@ -54,13 +106,43 @@ TEST(Linal, MatrixAccess) {
 	                7.0, 8.0, 9.0});
 
 	ASSERT_EQ(m(0, 0), 1.0);
+	ASSERT_EQ(m(0, 1), 2.0);
+	ASSERT_EQ(m(0, 2), 3.0);
+	ASSERT_EQ(m(1, 0), 4.0);
+	ASSERT_EQ(m(1, 1), 5.0);
+	ASSERT_EQ(m(1, 2), 6.0);
+	ASSERT_EQ(m(2, 0), 7.0);
+	ASSERT_EQ(m(2, 1), 8.0);
+	ASSERT_EQ(m(2, 2), 9.0);
 
 	const auto& m_ref = m;
 
-	ASSERT_EQ(m_ref(0, 0), 1.0);
+	ASSERT_EQ(m_ref(0, 2), 3.0);
 
-	m(0, 0) = 10.0;
-	ASSERT_EQ(m(0, 0), 10.0);
+	m(0, 2) = 10.0;
+	ASSERT_EQ(m(0, 2), 10.0);
+
+
+	SymmetricMatrix<3> sm({1.0, 2.0, 3.0,
+	                            4.0, 5.0,
+	                                 6.0});
+
+	ASSERT_EQ(sm(0, 0), 1.0);
+	ASSERT_EQ(sm(0, 1), 2.0);
+	ASSERT_EQ(sm(0, 2), 3.0);
+	ASSERT_EQ(sm(1, 0), 2.0);
+	ASSERT_EQ(sm(1, 1), 4.0);
+	ASSERT_EQ(sm(1, 2), 5.0);
+	ASSERT_EQ(sm(2, 0), 3.0);
+	ASSERT_EQ(sm(2, 1), 5.0);
+	ASSERT_EQ(sm(2, 2), 6.0);
+	
+	const DiagonalMatrix<3> dm = {1, 2, 3};
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			ASSERT_EQ((i == j) * (i + 1), dm(i, j));
+		}
+	}
 }
 
 
@@ -69,7 +151,7 @@ TEST(Linal, MatrixAdd) {
 	                 3.0, 4.0});
 
 	Matrix<2, 2> m2({4.0, 3.0,
-	                             2.0, 1.0});
+	                 2.0, 1.0});
 
 	auto m3 = m1 + m2;
 
@@ -77,35 +159,21 @@ TEST(Linal, MatrixAdd) {
 	ASSERT_EQ(m3(0, 1), 5.0);
 	ASSERT_EQ(m3(1, 0), 5.0);
 	ASSERT_EQ(m3(1, 1), 5.0);
+	
+	
+	MatrixInt<2, 2> mi = {1, 1, 2, 2};
+	Matrix<2, 2> mr = {0.5, 1.5, 0, 2.2};
+	
+	auto res = mi + mr;
+	ASSERT_EQ(res(0, 0), 1.5);
+	ASSERT_EQ(res(0, 1), 2.5);
+	ASSERT_EQ(res(1, 0), 2.0);
+	ASSERT_EQ(res(1, 1), 4.2);
+	
+	auto res2 = mr + mi;
+	ASSERT_EQ(res, res2);
 }
 
-
-TEST(Linal, MatrixAddCustomContainer) {
-	Matrix22 m1({1.0, 2.0,
-	             3.0, 4.0});
-
-	Matrix22 m2({4.0, 3.0,
-	             2.0, 1.0});
-
-	auto m3 = m1 + m2;
-
-	ASSERT_EQ(m3(0, 0), 5.0);
-	ASSERT_EQ(m3(0, 1), 5.0);
-	ASSERT_EQ(m3(1, 0), 5.0);
-	ASSERT_EQ(m3(1, 1), 5.0);
-}
-
-TEST(Linal, MatrixAssign) {
-	Matrix<2, 2> m1({1.0, 2.0,
-	                 3.0, 4.0});
-
-	auto m2 = m1;
-
-	ASSERT_EQ(m2(0, 0), 1.0);
-	ASSERT_EQ(m2(0, 1), 2.0);
-	ASSERT_EQ(m2(1, 0), 3.0);
-	ASSERT_EQ(m2(1, 1), 4.0);
-}
 
 TEST(Linal, MatrixSubtract) {
 	Matrix<2, 2> m1({1.0, 2.0,
@@ -134,19 +202,6 @@ TEST(Linal, MatrixNegative) {
 	ASSERT_EQ(m2(1, 1), -4.0);
 }
 
-TEST(Linal, MatrixSubtractCustomContainer) {
-	Matrix22 m1({1.0, 2.0,
-	             3.0, 4.0});
-
-	auto m2 = m1;
-
-	auto m3 = m1 - m2;
-
-	ASSERT_EQ(m3(0, 0), 0.0);
-	ASSERT_EQ(m3(0, 1), 0.0);
-	ASSERT_EQ(m3(1, 0), 0.0);
-	ASSERT_EQ(m3(1, 1), 0.0);
-}
 
 TEST(Linal, MatrixProduct) {
 	Matrix<2, 2> m1({1.0, 2.0,
@@ -158,21 +213,38 @@ TEST(Linal, MatrixProduct) {
 
 	ASSERT_EQ(m3(0, 0), 17.0);
 	ASSERT_EQ(m3(1, 0), 39.0);
-}
+		
+	MatrixInt<2, 3> i = {1, 0, 0,
+	                     0, 0, -2};
+	                     
+	Matrix<3, 2> r = {1, 2,
+	                  3, 4,
+	                  5, 6};
+	              
+	SymmetricMatrix<2> s = {-2, 1, 0};
+	
+	DiagonalMatrix<2> d = {-5, 5};
+	
+	auto ir = i * r;
+	ASSERT_EQ(Matrix22({1, 2, -10, -12}), ir);
+	
+	auto irs = ir * s;
+	ASSERT_EQ(Matrix22({0, 1, 8, -10}), irs);
+	
+	auto irsd = irs * d;
+	ASSERT_EQ(Matrix22({0, 5, -40, -50}), irsd);
 
-TEST(Linal, MatrixProductSquare) {
-	Matrix22 m1({1.0, 2.0,
+
+	Matrix22 m4({1.0, 2.0,
 	             3.0, 4.0});
-
-	auto m2 = m1;
-
-	auto m3 = m1 * m2;
-
-	ASSERT_EQ(m3(0, 0), 7.0);
-	ASSERT_EQ(m3(0, 1), 10.0);
-	ASSERT_EQ(m3(1, 0), 15.0);
-	ASSERT_EQ(m3(1, 1), 22.0);
+	auto m5 = m4;
+	auto m6 = m4 * m5;
+	ASSERT_EQ(m6(0, 0), 7.0);
+	ASSERT_EQ(m6(0, 1), 10.0);
+	ASSERT_EQ(m6(1, 0), 15.0);
+	ASSERT_EQ(m6(1, 1), 22.0);
 }
+
 
 TEST(Linal, MatrixEqual) {
 	Matrix<2, 3> m1({1.0, 2.0, 3.0,
@@ -180,17 +252,24 @@ TEST(Linal, MatrixEqual) {
 
 	auto m2 = m1;
 
-	auto m3 = m1 * 2;
+	auto m3 = m1 * 2.0;
 
 	ASSERT_EQ(m1, m2);
 	ASSERT_NE(m1, m3);
+	
+	m1(0, 0) -= EQUALITY_TOLERANCE / 2;
+	ASSERT_NE(m1, m2);
+	ASSERT_TRUE(approximatelyEqual(m1, m2));
+	m1(0, 0) -= EQUALITY_TOLERANCE;
+	ASSERT_TRUE(approximatelyEqual(m1, m2, 2 * EQUALITY_TOLERANCE));
 }
+
 
 TEST(Linal, MatrixScalarMultiplication) {
 	Matrix22 m({1.0, 2.0,
 	            3.0, 4.0});
 
-	m = 1 * m * 2;
+	m = 1.0 * m * 2.0;
 
 	ASSERT_EQ(m(0, 0), 2.0);
 	ASSERT_EQ(m(0, 1), 4.0);
@@ -198,11 +277,12 @@ TEST(Linal, MatrixScalarMultiplication) {
 	ASSERT_EQ(m(1, 1), 8.0);
 }
 
+
 TEST(Linal, MatrixScalarDivision) {
 	Matrix22 m({2.0, 4.0,
 	            6.0, 8.0});
 
-	m = m / 2;
+	m = m / 2.0;
 
 	ASSERT_EQ(m(0, 0), 1.0);
 	ASSERT_EQ(m(0, 1), 2.0);
@@ -210,11 +290,12 @@ TEST(Linal, MatrixScalarDivision) {
 	ASSERT_EQ(m(1, 1), 4.0);
 }
 
+
 TEST(Linal, MatrixTranspose) {
 	Matrix<2, 3> m1({1.0, 2.0, 3.0,
 	                 4.0, 5.0, 6.0});
 
-	auto m2 = m1.transpose();
+	auto m2 = transpose(m1);
 
 	ASSERT_EQ(m2(0, 0), 1.0);
 	ASSERT_EQ(m2(1, 0), 2.0);
@@ -223,10 +304,11 @@ TEST(Linal, MatrixTranspose) {
 	ASSERT_EQ(m2(1, 1), 5.0);
 	ASSERT_EQ(m2(2, 1), 6.0);
 
-	auto m3 = m2.transpose();
+	auto m3 = transpose(m2);
 
 	ASSERT_EQ(m1, m3);
 }
+
 
 TEST(Linal, MatrixTransposeInplace) {
 	Matrix<2, 2> m1({1.0, 2.0,
@@ -246,6 +328,7 @@ TEST(Linal, MatrixTransposeInplace) {
 	ASSERT_EQ(m1, m2);
 }
 
+
 TEST(Linal, MatrixInvert) {
 	Matrix22 m1({1.0, 2.0,
 	             1.0, 4.0});
@@ -257,16 +340,17 @@ TEST(Linal, MatrixInvert) {
 	                0.0, 1.0});
 
 
-	auto m2 = m1.invert();
+	auto m2 = invert(m1);
 
 	ASSERT_EQ(m2, r);
 
-	auto m3 = m2.invert();
+	auto m3 = invert(m2);
 
 	ASSERT_EQ(m1, m3);
 
 	ASSERT_EQ(m1 * m2, i);
 }
+
 
 TEST(Linal, MatrixInvertInplace) {
 	Matrix22 m1({1.0, 2.0,
@@ -292,47 +376,17 @@ TEST(Linal, MatrixInvertInplace) {
 	ASSERT_EQ(m1, m2);
 }
 
-TEST(Linal, Matrix33Construct) {
-	Matrix33 m1({1.0, 2.0, 3.0,
-	             4.0, 5.0, 6.0,
-	             7.0, 8.0, 9.0});
 
-	ASSERT_EQ(m1(0, 0), 1.0);
-	ASSERT_EQ(m1(0, 1), 2.0);
-	ASSERT_EQ(m1(0, 2), 3.0);
-	ASSERT_EQ(m1(1, 0), 4.0);
-	ASSERT_EQ(m1(1, 1), 5.0);
-	ASSERT_EQ(m1(1, 2), 6.0);
-	ASSERT_EQ(m1(2, 0), 7.0);
-	ASSERT_EQ(m1(2, 1), 8.0);
-	ASSERT_EQ(m1(2, 2), 9.0);
+TEST(Linal, determinant) {
+	Matrix33 m3({1.0, 2.0, 3.0,
+	             3.0, 2.0, 1.0,
+	             5.0, 7.0, 11.0});
+	ASSERT_EQ(determinant(m3), -8.0);
+	
+	Matrix22 m2 = {1, 2, 3, 4};
+	ASSERT_EQ(determinant(m2), -2);
 }
 
-TEST(Linal, Matrix33Assign) {
-	Matrix33 m1({1.0, 2.0, 3.0,
-	             4.0, 5.0, 6.0,
-	             7.0, 8.0, 9.0});
-
-	auto m2 = m1;
-
-	ASSERT_EQ(m2(0, 0), 1.0);
-	ASSERT_EQ(m2(0, 1), 2.0);
-	ASSERT_EQ(m2(0, 2), 3.0);
-	ASSERT_EQ(m2(1, 0), 4.0);
-	ASSERT_EQ(m2(1, 1), 5.0);
-	ASSERT_EQ(m2(1, 2), 6.0);
-	ASSERT_EQ(m2(2, 0), 7.0);
-	ASSERT_EQ(m2(2, 1), 8.0);
-	ASSERT_EQ(m2(2, 2), 9.0);
-}
-
-TEST(Linal, Matrix33Determinant) {
-	Matrix33 m({1.0, 2.0, 3.0,
-	            3.0, 2.0, 1.0,
-	            5.0, 7.0, 11.0});
-
-	ASSERT_EQ(determinant(m), -8.0);
-}
 
 TEST(Linal, Real3Construct) {
 	Real3 m1({1.0, 2.0, 3.0});
@@ -340,11 +394,7 @@ TEST(Linal, Real3Construct) {
 	ASSERT_EQ(m1(0), 1.0);
 	ASSERT_EQ(m1(1), 2.0);
 	ASSERT_EQ(m1(2), 3.0);
-}
-
-TEST(Linal, Real3Assign) {
-	Real3 m1({1.0, 2.0, 3.0});
-
+	
 	auto m2 = m1;
 
 	ASSERT_EQ(m2(0), 1.0);
@@ -352,19 +402,24 @@ TEST(Linal, Real3Assign) {
 	ASSERT_EQ(m2(2), 3.0);
 }
 
+
 TEST(Linal, VectorLength) {
 	Real3 v({0.0, 3.0, 4.0});
 
 	ASSERT_EQ(length(v), 5.0);
 }
 
+
 TEST(Linal, VectorDotProduct) {
 	Real3 v1({1.0, 2.0, 3.0});
-
 	Real3 v2({-2.0, 4.0, -2.0});
-
 	ASSERT_EQ(dotProduct(v1, v2), 0.0);
+	
+	Real3 v3({2, 2, 5});
+	ASSERT_EQ(dotProduct(v1, v3), 21);
+	ASSERT_EQ(dotProduct(v3, v1), 21);
 }
+
 
 TEST(Linal, VectorCrossProduct) {
 	Real3 v1({1.0, 0.0, 0.0});
@@ -388,6 +443,7 @@ TEST(Linal, VectorCrossProduct) {
 	ASSERT_EQ(crossProduct(v3, v3), z);
 }
 
+
 TEST(Linal, VectorNormalize) {
 	Real3 v1({2.0, 0.0, 0.0});
 
@@ -410,6 +466,7 @@ TEST(Linal, VectorNormalize) {
 #endif
 }
 
+
 TEST(Linal, RotationMatrix) {
 	Real3 x({1.0, 0.0, 0.0});
 
@@ -417,21 +474,23 @@ TEST(Linal, RotationMatrix) {
 
 	Real3 z({0.0, 0.0, 1.0});
 
-	ASSERT_EQ(getXRotationMatrix(M_PI / 2) * y, -z);
-	ASSERT_EQ(getXRotationMatrix(M_PI / 2) * z, y);
-	ASSERT_EQ(getXRotationMatrix(-M_PI / 2) * y, z);
-	ASSERT_EQ(getXRotationMatrix(-M_PI / 2) * z, -y);
+	ASSERT_TRUE(approximatelyEqual(getXRotationMatrix(M_PI / 2) * y, -z)) 
+		<< getXRotationMatrix(M_PI / 2) * y << "vs" << -z;
+	ASSERT_TRUE(approximatelyEqual(getXRotationMatrix(M_PI / 2) * z, y));
+	ASSERT_TRUE(approximatelyEqual(getXRotationMatrix(-M_PI / 2) * y, z));
+	ASSERT_TRUE(approximatelyEqual(getXRotationMatrix(-M_PI / 2) * z, -y));
 
-	ASSERT_EQ(getYRotationMatrix(M_PI / 2) * x, z);
-	ASSERT_EQ(getYRotationMatrix(M_PI / 2) * z, -x);
-	ASSERT_EQ(getYRotationMatrix(-M_PI / 2) * z, x);
-	ASSERT_EQ(getYRotationMatrix(-M_PI / 2) * x, -z);
+	ASSERT_TRUE(approximatelyEqual(getYRotationMatrix(M_PI / 2) * x, z));
+	ASSERT_TRUE(approximatelyEqual(getYRotationMatrix(M_PI / 2) * z, -x));
+	ASSERT_TRUE(approximatelyEqual(getYRotationMatrix(-M_PI / 2) * z, x));
+	ASSERT_TRUE(approximatelyEqual(getYRotationMatrix(-M_PI / 2) * x, -z));
 
-	ASSERT_EQ(getZRotationMatrix(M_PI / 2) * y, x);
-	ASSERT_EQ(getZRotationMatrix(M_PI / 2) * x, -y);
-	ASSERT_EQ(getZRotationMatrix(-M_PI / 2) * y, -x);
-	ASSERT_EQ(getZRotationMatrix(-M_PI / 2) * x, y);
+	ASSERT_TRUE(approximatelyEqual(getZRotationMatrix(M_PI / 2) * y, x));
+	ASSERT_TRUE(approximatelyEqual(getZRotationMatrix(M_PI / 2) * x, -y));
+	ASSERT_TRUE(approximatelyEqual(getZRotationMatrix(-M_PI / 2) * y, -x));
+	ASSERT_TRUE(approximatelyEqual(getZRotationMatrix(-M_PI / 2) * x, y));
 }
+
 
 TEST(Linal, MatrixMatrixMultiplication) {
 	Matrix<5, 5> A; Matrix<5, 5> B; Matrix<5, 5> C; // C = A * B
@@ -462,6 +521,7 @@ TEST(Linal, MatrixMatrixMultiplication) {
 	}
 }
 
+
 TEST(Linal, MatrixVectorMultiplication) {
 	Matrix<5, 5> A; Vector<5> b; Vector<5> c; // c = A * b
 
@@ -481,11 +541,13 @@ TEST(Linal, MatrixVectorMultiplication) {
 	}
 }
 
+
 TEST(Linal, Trace) {
 	Matrix<5, 5> A;
 	A(0, 0) = 12; A(1, 1) = 56.333; A(2, 2) = 1; A(3, 3) = 0; A(4, 4) = -34.0022;
-	ASSERT_NEAR(A.trace(), 35.3308, EQUALITY_TOLERANCE);
+	ASSERT_NEAR(trace(A), 35.3308, EQUALITY_TOLERANCE);
 }
+
 
 TEST(Linal, setColumn) {
 	Matrix<15, 33> matrix;
@@ -504,6 +566,7 @@ TEST(Linal, setColumn) {
 	}
 }
 
+
 TEST(Linal, getColumn) {
 	Matrix<22, 13> matrix;
 	for (int i = 0; i < matrix.M; i++) {
@@ -520,14 +583,15 @@ TEST(Linal, getColumn) {
 	}
 }
 
-TEST(Linal, setString) {
+
+TEST(Linal, setRow) {
 	Matrix<15, 33> matrix;
 	for (int i = 0; i < matrix.M; i++) {
 		Vector<33> vector;
 		for (int j = 0; j < matrix.N; j++) {
 			vector(j) = i;
 		}
-		matrix.setString(i, vector);
+		matrix.setRow(i, vector);
 	}
 
 	for (int i = 0; i < matrix.M; i++) {
@@ -537,7 +601,8 @@ TEST(Linal, setString) {
 	}
 }
 
-TEST(Linal, getString) {
+
+TEST(Linal, getRow) {
 	Matrix<22, 13> matrix;
 	for (int i = 0; i < matrix.M; i++) {
 		for (int j = 0; j < matrix.N; j++) {
@@ -546,12 +611,13 @@ TEST(Linal, getString) {
 	}
 
 	for (int k = 0; k < matrix.M; k++) {
-		Vector<13> string = matrix.getString(k);
+		Vector<13> string = matrix.getRow(k);
 		for (int i = 0; i < string.M; i++) {
 			ASSERT_EQ(string(i), k);
 		}
 	}
 }
+
 
 TEST(Linal, diagonalMultiply) {
 	Matrix<9, 9> A, B;
@@ -567,7 +633,7 @@ TEST(Linal, diagonalMultiply) {
 		}
 
 		Matrix<9, 9> C = A * B;
-		Vector<9> d = A.diagonalMultiply(B);
+		Vector<9> d = diagonalMultiply(A, B);
 
 		for (int k = 0; k < d.M; k++) {
 			ASSERT_EQ(C(k, k), d(k));
@@ -577,13 +643,19 @@ TEST(Linal, diagonalMultiply) {
 }
 
 
+TEST(Linal, diag) {
+	Matrix33 m = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+	ASSERT_EQ(Real3({1, 5, 9}), diag(m));
+}
+
+
 TEST(Linal, VectorOperators) {
 	Vector<7> vector;
 	for (int i = 0; i < vector.M; i++) {
 		vector(i) = (real) i - 3;
 	}
 
-	vector = vector * 2;
+	vector = vector * 2.0;
 	for (int j = 0; j < vector.M; j++) {
 		ASSERT_EQ(vector(j), 2 * ((real) j - 3));
 	}
@@ -597,7 +669,11 @@ TEST(Linal, VectorOperators) {
 	for (int j = 0; j < vector.M; j++) {
 		ASSERT_EQ(vector(j), 2 * ((real) j - 3));
 	}
+	
+	vector -= vector;
+	ASSERT_EQ(Vector<7>::Zeros(), vector);
 }
+
 
 TEST(Linal, VectorInt) {
 	VectorInt<3> i = {1, 3, 4};
@@ -615,6 +691,7 @@ TEST(Linal, VectorInt) {
 	ASSERT_NEAR(2.8, plainRealMultpl(2), EQUALITY_TOLERANCE);
 }
 
+
 TEST(Linal, plainDivision) {
 	VectorInt<3> i = {1, 3, 4};
 	Vector<3> r = {0.1, 0.3, 0.7};
@@ -626,11 +703,24 @@ TEST(Linal, plainDivision) {
 
 	Vector<1> a = {1};
 	Vector<1> b = {0};
-	ASSERT_NEAR(  std::numeric_limits<real>::max(), plainDivision(  a, b) (
-	                      0), EQUALITY_TOLERANCE);
-	ASSERT_NEAR(-std::numeric_limits<real>::max(), plainDivision(-a, b) (0), EQUALITY_TOLERANCE);
-	ASSERT_ANY_THROW(plainDivision(b, b));
+	ASSERT_NEAR(std::numeric_limits<real>::max(),
+	            plainDivision(a, b)(0), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(-std::numeric_limits<real>::max(),
+	            plainDivision(-a, b) (0), EQUALITY_TOLERANCE);
+#if CONFIG_ENABLE_ASSERTIONS
+	ASSERT_THROW(plainDivision(b, b), Exception);
+#endif
 }
+
+
+TEST(Linal, directProduct) {
+	VectorInt<4> i = {1, 2, 3, 4};
+	ASSERT_EQ(24, directProduct(i));
+	
+	Vector<8> r = {1, 2, 3, 4, 5, 6, 7, 0.5};
+	ASSERT_EQ(2520, directProduct(r));
+}
+
 
 TEST(Linal, perpendicularClockwise) {
 	ASSERT_EQ(Real2({0, -1}), perpendicularClockwise(Real2({1, 0})));
@@ -638,7 +728,13 @@ TEST(Linal, perpendicularClockwise) {
 	ASSERT_EQ(Real2({3, -2}), perpendicularClockwise(Real2({2, 3})));
 }
 
+
 TEST(Linal, solveLinearSystem) {
+	Matrix<1, 1> A1 = {5};
+	Vector<1> b1 = {5};
+	auto x1 = solveLinearSystem(A1, b1);
+	ASSERT_EQ(Real1({1}), x1);
+
 	Matrix<2, 2> A2 = {1, 2,
 	                   3, 4};
 	Vector<2> b2 = {5, 6};
@@ -654,8 +750,124 @@ TEST(Linal, solveLinearSystem) {
 }
 
 
+TEST(Linal, createLocalBasis) {
+	auto b1 = createLocalBasis(Real1({1}));
+	ASSERT_EQ(Matrix11({1}), b1);
+	
+	auto b2 = createLocalBasis(Real2({0, 1}));
+	ASSERT_EQ(Matrix22({1, 0,
+	                    0, 1}), b2);
+	
+	b2 = createLocalBasis(Real2({1, 0}));
+	ASSERT_EQ(Matrix22({0, 1,
+	                   -1, 0}), b2);
+	
+	auto b3 = createLocalBasis(Real3({0, 0, 1}));
+	ASSERT_EQ(Matrix33({1, 0, 0,
+	                    0, 1, 0,
+	                    0, 0, 1}), b3);
+
+	b3 = createLocalBasis(Real3({0, 1, 0}));
+	ASSERT_EQ(Matrix33({1,  0, 0,
+	                    0,  0, 1,
+	                    0, -1, 0}), b3);	
+
+	b3 = createLocalBasis(Real3({1, 0, 0}));
+	ASSERT_EQ(Matrix33({0,  0, 1,
+	                   -1,  0, 0,
+	                    0, -1, 0}), b3);
+}
 
 
+TEST(Linal, cross_verification) {
+	Matrix<3, 3> A, B, C;
+	Vector<3> f;
+	srand((unsigned int)time(0));
+
+	for (int l = 0; l < LINAL_TEST_NUMBER_ITERATIONS; l++) {
+
+		for (int i = 0; i < A.M; i++) {
+			for (int j = 0; j < A.N; j++) {
+				A(i, j) = rand() - RAND_MAX / 2.0;
+				B(i, j) = rand() - RAND_MAX / 2.0;
+			}
+			f(i) = rand() - RAND_MAX / 2.0;
+		}
+		
+		// plus - minus
+		C = A + B;
+		ASSERT_EQ(A, C - B);
+		ASSERT_EQ(B, C - A);
+		C -= B;
+		ASSERT_EQ(A, C);
+		C -= A;
+		ASSERT_EQ(zeros(C), C);
+		C = 2.0 * A;
+		C = C - 3.0 * A;
+		ASSERT_EQ(- A, C);
+		
+		
+		// multiplication
+		C = A * B;
+		ASSERT_EQ(transpose(B) * transpose(A), transpose(C));
+		ASSERT_NEAR(determinant(B) * determinant(A), 
+		            determinant(C), EQUALITY_TOLERANCE  * fabs(determinant(C)));
+		auto C1 = invert(C);
+		ASSERT_TRUE(approximatelyEqual(invert(B) * invert(A), C1));
+		ASSERT_TRUE(approximatelyEqual(identity(C), C * C1, 1000 * EQUALITY_TOLERANCE));
+		ASSERT_TRUE(approximatelyEqual(identity(C), C1 * C, 1000 * EQUALITY_TOLERANCE));
+		
+		// SLE
+		auto x = solveLinearSystem(A, f);
+		ASSERT_TRUE(approximatelyEqual(f, A * x)) << "Ax - f = " << A * x - f;
+		ASSERT_TRUE(approximatelyEqual(f, solveLinearSystem(A, A * f)));
+		// SLE + least squares
+		ASSERT_TRUE(approximatelyEqual(solveLinearSystem(A, f), 
+		                               linearLeastSquares(A, f),
+		                               1000 * EQUALITY_TOLERANCE))
+			<< solveLinearSystem(A, f) << "vs" << linearLeastSquares(A, f);
+	}
+}
+
+
+TEST(Linal, SLE_with_vectors_at_right_side) {
+	Matrix22 A = {1, 0,
+	              0, 1};
+	Vector<3> b1 = {1, 2, 3};
+	Vector<3> b2 = {4, 5, 6};
+	
+	VECTOR<2, Vector<3>> b = {b1, b2};
+	
+	auto x = solveLinearSystem(A, b);
+	
+	ASSERT_EQ(b1, x(0));
+	ASSERT_EQ(b2, x(1));
+	
+	A = {1, 2,
+	     1, 0};
+	b = {{1, 0, 1}, {0, 0, 2}};
+	x = solveLinearSystem(A, b);
+	ASSERT_EQ(Vector<3>({0,   0,  2  }), x(0));
+	ASSERT_EQ(Vector<3>({0.5, 0, -0.5}), x(1));
+}
+
+
+TEST(Linal, linearLeastSquares) {
+	real a1 = 1, a2 = 2, b1 = 3, b2 = 4;
+	Matrix<2, 1> A = {a1, a2};
+	Vector<2> b = {b1, b2};
+	
+	auto x = linearLeastSquares(A, b);
+	ASSERT_EQ((a1*b1 + a2*b2) / (a1*a1 + a2*a2), x(0));
+	
+	Matrix<5, 2> A5 = {1, 1,
+	                   2, 0,
+	                   3, 0,
+	                   4, 0,
+	                   5, 0};
+	Vector<5> b5 = {1, 2, 3, 4, 5};
+	ASSERT_EQ(Vector<2>({1, 0}), linearLeastSquares(A5, b5));
+}
 
 
 

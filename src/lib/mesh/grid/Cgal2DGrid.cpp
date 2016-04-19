@@ -137,7 +137,7 @@ findInnerPoint(const Polygon& polygon) {
 	/// find inner point in polygon
 	Real2 a = PointToReal2(polygon.vertex(0));
 	Real2 b = PointToReal2(polygon.vertex(1));
-	Real2 middle = (a + b) / 2;
+	Real2 middle = (a + b) / 2.0;
 	Real2 cross = linal::perpendicularClockwise(b - a);
 	Real2 innerPoint = middle + cross;
 	int n = 1; // iteration number

@@ -133,8 +133,8 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {
-			ASSERT_EQ(mpiMesh->pde({x, y,
-			                        0}), sequenceMesh->pde({x + startX, y, 0})) <<
+			ASSERT_EQ(mpiMesh->pde({x, y, 0}),
+			          sequenceMesh->pde({x + startX, y, 0})) <<
 			"x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
 		}
 	}

@@ -66,7 +66,7 @@ struct GcmMatrices {
 
 	void checkTraces() const {
 		for (int s = 0; s < D; s++) {
-			assert_near(m[s].A.trace(), m[s].L.trace(), EQUALITY_TOLERANCE);
+			assert_near(linal::trace(m[s].A), linal::trace(m[s].L), EQUALITY_TOLERANCE);
 		}
 	}
 

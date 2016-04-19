@@ -43,7 +43,7 @@ generateRandomMaterial() {
 			help(i, j) = ((C_MAX - C_MIN) * rand()) / RAND_MAX + C_MIN;
 		}
 	}
-	linal::Matrix<3, 3> symm = help * help.transpose();
+	linal::Matrix<3, 3> symm = help * linal::transpose(help);
 
 	real c11 = symm(0, 0); real c12 = symm(0, 1); real c13 = symm(0, 2);
 	real c22 = symm(1, 1); real c23 = symm(1, 2);

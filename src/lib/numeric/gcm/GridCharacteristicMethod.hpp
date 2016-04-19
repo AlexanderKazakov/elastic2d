@@ -27,12 +27,13 @@ public:
 			auto dx = -timeStep * linal::diag(mesh->matrices(it)->m[s].L);
 
 			mesh->_pdeNew(it) =
-			        /* new values = U1 * Riemann solvers */
-			        mesh->matrices(it)->m[s].U1 *
-			        /* Riemann solvers = U * old values */
-			        mesh->matrices(it)->m[s].U.diagonalMultiply
-			        /* old values are in columns of the matrix */
-			                (gcmHandler.interpolateValuesAround(*mesh, s, it, dx));
+				/* new values = U1 * Riemann solvers */
+				mesh->matrices(it)->m[s].U1 *
+					linal::diagonalMultiply(
+						/* Riemann solvers = U * old values */
+						mesh->matrices(it)->m[s].U,
+						/* old values are in columns of the matrix */
+						gcmHandler.interpolateValuesAround(*mesh, s, it, dx));
 			
 			gcmHandler.borderCorrector(*mesh, s, it, dx);
 		}

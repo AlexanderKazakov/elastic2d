@@ -20,7 +20,9 @@ static const int NUMBER_OF_TEST_ITERATIONS = 1000;
 
 void testTraces(const GCM_MATRICES& matrix) {
 	for (int i = 0; i < DIMENSIONALITY; i++) {
-		ASSERT_NEAR(matrix.m[i].A.trace(), matrix.m[i].L.trace(), EQUALITY_TOLERANCE) <<
+		ASSERT_NEAR(linal::trace(matrix.m[i].A),
+		            linal::trace(matrix.m[i].L),
+		            EQUALITY_TOLERANCE) <<
 		"(" << i << ") A = " << matrix.m[i].A << "L = " << matrix.m[i].L;
 	}
 }

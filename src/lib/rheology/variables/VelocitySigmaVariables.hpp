@@ -27,7 +27,7 @@ struct VelocitySigmaVariables : public linal::Vector<Size> {
 
 	static const int DIMENSIONALITY = Dimensionality;	
 	
-	using PdeVector::Matrix;
+	using PdeVector::PdeVector;
 	using PdeVector::operator=;
 	
 	/** Access to velocity */
@@ -49,14 +49,14 @@ struct VelocitySigmaVariables : public linal::Vector<Size> {
 		assert_lt(i, DIMENSIONALITY);
 		assert_lt(j, DIMENSIONALITY);
 		return (*this)(DIMENSIONALITY + 
-		               linal::SymmetricMatrix<DIMENSIONALITY>::getIndex(i, j));
+		               linal::Symmetric<DIMENSIONALITY>::getIndex(i, j));
 	}
 
 	real& sigma(const int i, const int j) {
 		assert_lt(i, DIMENSIONALITY);
 		assert_lt(j, DIMENSIONALITY);
 		return (*this)(DIMENSIONALITY + 
-		               linal::SymmetricMatrix<DIMENSIONALITY>::getIndex(i, j));
+		               linal::Symmetric<DIMENSIONALITY>::getIndex(i, j));
 	}
 	///@}
 
