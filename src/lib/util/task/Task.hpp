@@ -34,6 +34,9 @@ namespace gcm {
 
 		IsotropicMaterial isotropicMaterial;
 		OrthotropicMaterial orthotropicMaterial;
+		
+		std::vector<std::pair<std::shared_ptr<Area>, OrthotropicMaterial>>
+				inhomogenity;
 
 		/**
 		 * All listed here initial conditions will be applied in sequence, 

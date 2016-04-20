@@ -89,6 +89,16 @@ namespace gcm {
 				gcmMatrix = gcmMatricesPtr;
 			}
 			this->maximalLambda = gcmMatricesPtr->getMaximalEigenvalue();
+			
+			for (const auto& inhomogenity : statement.inhomogenity) {
+				typename TModel::Material otherMaterial(inhomogenity.second);
+				auto otherMatrix = new GCM_MATRICES(otherMaterial);
+				for (auto it : *this) {
+					if (inhomogenity.first->contains(this->coords(it))) {
+						this->_matrix(it) = otherMatrix;
+					}
+				}
+			}
 		};
 		void applyInitialConditions(const Statement& statement) {
 			InitialCondition<TModel> initialCondition;

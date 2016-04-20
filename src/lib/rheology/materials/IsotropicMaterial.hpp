@@ -6,6 +6,7 @@
 
 namespace gcm {
 	struct Statement;
+	class OrthotropicMaterial;
 	
 	class IsotropicMaterial {
 	public:
@@ -19,6 +20,10 @@ namespace gcm {
 		real continualDamageParameter = 0; // parameter in continual damage equation
 
 		IsotropicMaterial(const IsotropicMaterial& other) = default;
+		IsotropicMaterial(const OrthotropicMaterial&) {
+			THROW_UNSUPPORTED("This is duct tape");
+		}
+
 		IsotropicMaterial(const real rho_ = 0, const real lambda_ = 0, const real mu_ = 0,
 		                  const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
 		

@@ -10,6 +10,7 @@ using namespace gcm;
 
 Task parseTaskCagi2d();
 Task parseTaskCagi3d();
+Task parseTaskArticle();
 
 const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 
@@ -18,10 +19,10 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 	try {
 		Engine engine;
-		engine.setSolver(new DefaultSolver<DefaultMesh<Elastic3DModel, CubicGrid>>());
-//		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<Elastic3DModel, CubicGrid>>());
-		engine.addSnapshotter(new Detector<DefaultMesh<Elastic3DModel, CubicGrid>>());
-		engine.initialize(parseTaskCagi3d());
+		engine.setSolver(new DefaultSolver<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>());
+		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>());
+		engine.addSnapshotter(new Detector<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>());
+		engine.initialize(parseTaskArticle());
 		engine.run();
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
@@ -29,6 +30,100 @@ int main(int argc, char** argv) {
 
 	MPI_Finalize();
 	return 0;
+}
+
+
+Task parseTaskArticle() {
+	Task task;
+	task.accuracyOrder = 3;
+	task.enableSnapshotting = true;
+
+	real X = 25, Y = 25, Z = 5;
+	task.lengthes = {X, Y, Z};
+	task.sizes = {40, 40, 40};
+
+	Statement statement;
+	statement.orthotropicMaterial = OrthotropicMaterial(1.6, 
+		{163944.8, 3767.9, 3767.9,
+		           8875.6, 2899.1,
+		                   8875.6,
+		                           4282.6, 4282.6, 4282.6});
+		                           
+	OrthotropicMaterial rotated90(1.6, 
+		{8875.6, 3767.9, 2899.1,
+		       163944.8, 3767.9,
+		                 8875.6,
+		                         4282.6, 4282.6, 4282.6});
+	
+	auto rotatedArea = std::make_shared<AxisAlignedBoxArea>(
+			linal::Vector3({-1e+10, -1e+10, -1e+10}),
+			linal::Vector3({ 1e+10,  1e+10,  Z / 2}));
+	
+	statement.inhomogenity = {
+		{rotatedArea, rotated90}
+	};
+	
+	
+	statement.CourantNumber = 2.0;
+	statement.numberOfSnaps = 50;
+	statement.stepsPerSnap = 3;
+	
+
+	Statement::BorderCondition borderCondition;	
+	// quantities to snapshot
+	statement.quantitiesToVtk = {PhysicalQuantities::T::PRESSURE};
+	statement.detector.quantities = {PhysicalQuantities::T::Vz};
+	
+	
+	// z bottom free border
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-1e+10, -1e+10, -1e+10}), linal::Vector3({1e+10, 1e+10, 1e-5}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+	};
+	statement.borderConditions.push_back(borderCondition);
+	// z up free border
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+		(linal::Vector3({-1e+10, -1e+10, Z-1e-5}), linal::Vector3({1e+10, 1e+10, 1e+10}));
+	borderCondition.values = {
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+	};
+	statement.borderConditions.push_back(borderCondition);
+	
+	// fracture
+	Statement::Fracture fracture;
+	fracture.direction = 2;
+	fracture.coordinate = Z/2;
+	fracture.area = std::make_shared<SphereArea>(Z/2, linal::Vector3({X/2, Y/2, Z/2}));
+	fracture.values = {
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+	};
+	statement.fractures.push_back(fracture); 
+		
+	// z up detector
+	auto detectorArea = std::make_shared<StraightBoundedCylinderArea>
+		(X / 4, linal::Vector3({X / 2, Y / 2, Z-1e-5}),
+		        linal::Vector3({X / 2, Y / 2, Z+1e-5}));
+	real frequency = 10e+6, T = 1.0 / frequency; real A = - 1e+6;
+	borderCondition.area = detectorArea;
+	borderCondition.values = {
+		{PhysicalQuantities::T::Szz, [A, T](real t){return (t < T) ? A : 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+	};
+	statement.borderConditions.push_back(borderCondition);
+	
+	statement.detector.area = detectorArea;
+
+	task.statements.push_back(statement);
+
+	return task;
 }
 
 

@@ -68,6 +68,7 @@ endif()
 
 # source files
 include_directories(src)
+FILE(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp")
 file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/gcm_exe/*.cpp")
 file(GLOB_RECURSE SEISMO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/seismo/*.cpp")
 file(GLOB_RECURSE INVERSE_PROBLEM_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/inverse_problem/*.cpp")
@@ -80,7 +81,7 @@ set(TEST_CGAL_FILES src/test/cgal/TestCgal.cpp src/test/sequence/TestMain.cpp)
 add_library(gcm SHARED ${LIB_SOURCES})
 
 # gcm_exe
-add_executable(gcm_exe ${GCM_EXE_SOURCES})
+add_executable(gcm_exe ${GCM_EXE_SOURCES} ${HEADERS})
 target_link_libraries(gcm_exe gcm ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # gcm_seismo
