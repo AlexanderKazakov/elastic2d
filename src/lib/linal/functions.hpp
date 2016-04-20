@@ -101,17 +101,26 @@ invert(const MatrixBase<TM, TN, TElement, Diagonal, TContainer>& m) {
  * Calculation of non-diagonal elements of C is not performed.
  * @return diagonal of A * B
  */
-template<typename TMatrix1, typename TMatrix2>
-typename TMatrix1::ColumnType
-diagonalMultiply(const TMatrix1& A, const TMatrix2& B) {
-	static_assert(TMatrix1::M == TMatrix1::N &&
-	              TMatrix2::M == TMatrix2::N &&
-	              TMatrix1::M == TMatrix2::M, "Square only supported yet (TODO)");
-	typename TMatrix1::ColumnType result;
-	static const int M = TMatrix1::M;
-	for (int i = 0; i < M; i++) {
+template<int TM,
+         typename TElement1,
+         template<int, int> class TSymmetry1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, int> class TSymmetry2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, 1,
+           decltype(TElement1() * TElement2()),
+           NonSymmetric, TContainer3>
+diagonalMultiply(const MatrixBase<TM, TM, TElement1, TSymmetry1, TContainer1>& A,
+                 const MatrixBase<TM, TM, TElement2, TSymmetry2, TContainer2>& B) {
+
+	MatrixBase<TM, 1,
+               decltype(TElement1() * TElement2()),
+               NonSymmetric, TContainer3> result;
+	for (int i = 0; i < TM; i++) {
 		result(i) = A(i, 0) * B(0, i);
-		for (int j = 1; j < M; j++) {
+		for (int j = 1; j < TM; j++) {
 			result(i) += A(i, j) * B(j, i);
 		}
 	}

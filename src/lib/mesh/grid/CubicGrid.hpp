@@ -127,9 +127,12 @@ public:
 	/**
 	 * @param it begin() <= iterator < end()
 	 * @return index in std::vector
+	 * @note - no dotProduct here for performance
 	 */
 	size_t getIndex(const Iterator& it) const {
-		return (size_t) linal::dotProduct(indexMaker, it + borderSize * Int3::Ones());
+		return (size_t) (indexMaker(0) * (it(0) + borderSize) + 
+		                 indexMaker(1) * (it(1) + borderSize) + 
+		                 indexMaker(2) * (it(2) + borderSize));
 	}
 
 
