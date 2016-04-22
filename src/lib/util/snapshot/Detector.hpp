@@ -32,6 +32,11 @@ namespace gcm {
 			seismo.clear();
 		};
 		virtual void snapshotImpl(const AbstractGrid* mesh_, const int) override {
+			assert_eq(mesh_->getNumberOfWorkers() % 2, 1); // the shit for "only center core write the seismo"
+				// in snapshotImpl
+			writeSeismo = mesh_->getRank() == (mesh_->getNumberOfWorkers() / 2); // only center core write the seismo
+			if ( !writeSeismo ) { return; } 
+			LOG_INFO("in snapImpl..");
 			const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
 			for (auto it = mesh->slice(direction, indexOfDetectingSide);
 			          it != it.end(); ++it) {
@@ -45,8 +50,22 @@ namespace gcm {
 					/ (real) valuesInArea.size();
 			valuesInArea.clear();
 			seismo.push_back((precision)valueToWrite);
+			
+			afterStatementImpl();
+			LOG_INFO("in snapImpl - done");
 		};
 		virtual void afterStatementImpl() override {
+			if ( !writeSeismo ) { return; }
+			
+			LOG_INFO("Write txt..");
+			
+			FileUtils::openTextFileStream(fileStream, makeFileNameForSnapshot
+					(-1, "txt", FOLDER_NAME));
+			FileUtils::writeStdVectorToTextFileStream(fileStream, seismo);
+			FileUtils::closeFileStream(fileStream);
+			
+			LOG_INFO("write bin..");
+			
 			FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
 					(-1, FILE_EXTENSION, FOLDER_NAME));
 			FileUtils::writeStdVectorToBinaryFileStream(fileStream, seismo);
@@ -61,6 +80,8 @@ namespace gcm {
 		int direction = 0;
 		int indexOfDetectingSide = 0;
 		
+		bool writeSeismo = false;
+		
 		PhysicalQuantities::T quantityToWrite;
 		
 		std::ofstream fileStream;
@@ -69,6 +90,8 @@ namespace gcm {
 			real realValue = PdeVariables::QUANTITIES.at(quantityToWrite).Get(pde);
 			valuesInArea.push_back(realValue);
 		};
+		
+		USE_AND_INIT_LOGGER("gcm.Detector");
 	};
 }
 

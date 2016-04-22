@@ -10,7 +10,7 @@ using namespace gcm;
 
 Task parseTaskCagi2d();
 Task parseTaskCagi3d();
-Task parseTaskArticle();
+Task parseTaskArticle(const int numberOfLayers);
 
 const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 
@@ -22,7 +22,8 @@ int main(int argc, char** argv) {
 		engine.setSolver(new DefaultSolver<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>());
 		engine.addSnapshotter(new VtkSnapshotter<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>());
 		engine.addSnapshotter(new Detector<DefaultMesh<OrthotropicElastic3DModel, CubicGrid>>());
-		engine.initialize(parseTaskArticle());
+		assert_eq(argc, 2);
+		engine.initialize(parseTaskArticle(atoi(argv[1])));
 		engine.run();
 	} catch (Exception e) {
 		LOG_FATAL(e.what());
@@ -33,14 +34,20 @@ int main(int argc, char** argv) {
 }
 
 
-Task parseTaskArticle() {
+Task parseTaskArticle(const int numberOfLayers) {
+	assert_gt(numberOfLayers, 1);
+	const real eps = 1e-10;
+	
 	Task task;
-	task.accuracyOrder = 3;
+	task.accuracyOrder = 2;
 	task.enableSnapshotting = true;
 
+	int debugDecrease = 1;
 	real X = 25, Y = 25, Z = 5;
+	real layerH = Z / numberOfLayers;
+	real fractureR = Z / 4;
 	task.lengthes = {X, Y, Z};
-	task.sizes = {40, 40, 40};
+	task.sizes = {120 / debugDecrease, 120 / debugDecrease, 120 / debugDecrease};
 
 	Statement statement;
 	statement.orthotropicMaterial = OrthotropicMaterial(1.6, 
@@ -55,18 +62,20 @@ Task parseTaskArticle() {
 		                 8875.6,
 		                         4282.6, 4282.6, 4282.6});
 	
-	auto rotatedArea = std::make_shared<AxisAlignedBoxArea>(
-			linal::Vector3({-1e+10, -1e+10, -1e+10}),
-			linal::Vector3({ 1e+10,  1e+10,  Z / 2}));
+	for (int i = 1; i < numberOfLayers; i+= 2) {
+		real Zmin = Z - (i + 1) * layerH - eps;
+		real Zmax = Z - i * layerH;
+		auto rotatedArea = std::make_shared<AxisAlignedBoxArea>(
+			linal::Vector3({-1e+10, -1e+10, Zmin}),
+			linal::Vector3({ 1e+10,  1e+10, Zmax}));
+		
+		statement.inhomogenity.push_back({rotatedArea, rotated90});
+	}
 	
-	statement.inhomogenity = {
-		{rotatedArea, rotated90}
-	};
 	
-	
-	statement.CourantNumber = 2.0;
-	statement.numberOfSnaps = 50;
-	statement.stepsPerSnap = 3;
+	statement.CourantNumber = 1;
+	statement.numberOfSnaps = 150 / debugDecrease;
+	statement.stepsPerSnap = 8;
 	
 
 	Statement::BorderCondition borderCondition;	
@@ -77,7 +86,7 @@ Task parseTaskArticle() {
 	
 	// z bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-1e+10, -1e+10, -1e+10}), linal::Vector3({1e+10, 1e+10, 1e-5}));
+		(linal::Vector3({-1e+10, -1e+10, -1e+10}), linal::Vector3({1e+10, 1e+10, eps}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
@@ -86,30 +95,18 @@ Task parseTaskArticle() {
 	statement.borderConditions.push_back(borderCondition);
 	// z up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-1e+10, -1e+10, Z-1e-5}), linal::Vector3({1e+10, 1e+10, 1e+10}));
+		(linal::Vector3({-1e+10, -1e+10, Z-eps}), linal::Vector3({1e+10, 1e+10, 1e+10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
 		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
 	};
 	statement.borderConditions.push_back(borderCondition);
-	
-	// fracture
-	Statement::Fracture fracture;
-	fracture.direction = 2;
-	fracture.coordinate = Z/2;
-	fracture.area = std::make_shared<SphereArea>(Z/2, linal::Vector3({X/2, Y/2, Z/2}));
-	fracture.values = {
-		{PhysicalQuantities::T::Szz, [](real){return 0;}},
-		{PhysicalQuantities::T::Syz, [](real){return 0;}},
-		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
-	};
-	statement.fractures.push_back(fracture); 
 		
 	// z up detector
 	auto detectorArea = std::make_shared<StraightBoundedCylinderArea>
-		(X / 4, linal::Vector3({X / 2, Y / 2, Z-1e-5}),
-		        linal::Vector3({X / 2, Y / 2, Z+1e-5}));
+		(2*fractureR, linal::Vector3({X / 2, Y / 2, Z-eps}),
+		              linal::Vector3({X / 2, Y / 2, Z+eps}));
 	real frequency = 10e+6, T = 1.0 / frequency; real A = - 1e+6;
 	borderCondition.area = detectorArea;
 	borderCondition.values = {
@@ -121,6 +118,22 @@ Task parseTaskArticle() {
 	
 	statement.detector.area = detectorArea;
 
+	statement.id = "_clean";
+	task.statements.push_back(statement);
+	
+	// fracture
+	Statement::Fracture fracture;
+	fracture.direction = 2;
+	fracture.coordinate = layerH; // between the two bottom layers
+	fracture.area = std::make_shared<SphereArea>(fractureR, linal::Vector3({X/2, Y/2, layerH}));
+	fracture.values = {
+		{PhysicalQuantities::T::Szz, [](real){return 0;}},
+		{PhysicalQuantities::T::Syz, [](real){return 0;}},
+		{PhysicalQuantities::T::Sxz, [](real){return 0;}}
+	};
+	statement.fractures.push_back(fracture); 
+	
+	statement.id = "_damaged";
 	task.statements.push_back(statement);
 
 	return task;
@@ -128,6 +141,7 @@ Task parseTaskArticle() {
 
 
 Task parseTaskCagi2d() {
+	const real eps = 1e-10;
 	Task task;
 	task.accuracyOrder = 2;
 	task.forceSequence = true;
@@ -151,7 +165,7 @@ Task parseTaskCagi2d() {
 	Statement::BorderCondition borderCondition;	
 	// y bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 1e-5, 10}));
+		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, eps, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
@@ -159,7 +173,7 @@ Task parseTaskCagi2d() {
 	statement.borderConditions.push_back(borderCondition);
 	// y up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, Y-1e-5, -10}), linal::Vector3({10, 10, 10}));
+		(linal::Vector3({-10, Y-eps, -10}), linal::Vector3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [](real){return 0;}},
 		{PhysicalQuantities::T::Syy, [](real){return 0;}}
@@ -191,7 +205,7 @@ Task parseTaskCagi2d() {
 		real endSrcPosition = initSrcPosition + sourceSize;
 		// y up sensor
 		auto srcArea = std::make_shared<AxisAlignedBoxArea>
-			(linal::Vector3({initSrcPosition, Y - 1e-5, -10}),
+			(linal::Vector3({initSrcPosition, Y - eps, -10}),
 			 linal::Vector3({endSrcPosition, 10, 10}));
 		real frequency = 10e+6, T = 1.0 / frequency;
 		real A = - 1e+6;
@@ -203,7 +217,7 @@ Task parseTaskCagi2d() {
 		if (statement.borderConditions.size() == 3) statement.borderConditions.pop_back();
 		statement.borderConditions.push_back(borderCondition);
 		auto sensorArea = std::make_shared<AxisAlignedBoxArea>
-			(linal::Vector3({initSensorPosition, Y - 1e-5, -10}),
+			(linal::Vector3({initSensorPosition, Y - eps, -10}),
 			 linal::Vector3({endSensorPosition, 10, 10}));
 		statement.detector.area = sensorArea;
 
@@ -218,6 +232,7 @@ Task parseTaskCagi2d() {
 
 
 Task parseTaskCagi3d() {
+	const real eps = 1e-10;
 	Task task;
 	task.accuracyOrder = 2;
 	task.forceSequence = true;
@@ -242,7 +257,7 @@ Task parseTaskCagi3d() {
 	Statement::BorderCondition borderCondition;	
 	// z bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 10, 1e-5}));
+		(linal::Vector3({-10, -10, -10}), linal::Vector3({10, 10, eps}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
@@ -251,7 +266,7 @@ Task parseTaskCagi3d() {
 	statement.borderConditions.push_back(borderCondition);
 	// z up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-		(linal::Vector3({-10, -10, Z-1e-5}), linal::Vector3({10, 10, 10}));
+		(linal::Vector3({-10, -10, Z-eps}), linal::Vector3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [](real){return 0;}},
 		{PhysicalQuantities::T::Syz, [](real){return 0;}},
@@ -295,7 +310,7 @@ Task parseTaskCagi3d() {
 			real endSrcPositionY = endSensorPositionY;
 			// z up sensor
 			auto srcArea = std::make_shared<AxisAlignedBoxArea>
-				(linal::Vector3({initSrcPositionX, initSrcPositionY, Z - 1e-5}),
+				(linal::Vector3({initSrcPositionX, initSrcPositionY, Z - eps}),
 				 linal::Vector3({endSrcPositionX, endSrcPositionY, 10}));
 			real frequency = 10e+6, T = 1.0 / frequency;
 			real A = - 1e+6;
@@ -308,7 +323,7 @@ Task parseTaskCagi3d() {
 			if (statement.borderConditions.size() == 3) statement.borderConditions.pop_back();
 			statement.borderConditions.push_back(borderCondition);
 			auto sensorArea = std::make_shared<AxisAlignedBoxArea>
-				(linal::Vector3({initSensorPositionX, initSensorPositionY, Z - 1e-5}),
+				(linal::Vector3({initSensorPositionX, initSensorPositionY, Z - eps}),
 				 linal::Vector3({endSensorPositionX, endSensorPositionY, 10}));
 			statement.detector.area = sensorArea;
 

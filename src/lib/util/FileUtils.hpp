@@ -25,8 +25,9 @@ namespace gcm {
 		template<typename T>
 		static void writeStdVectorToTextFileStream(std::ofstream& fileStream,
 		                                           const std::vector<T>& vec) {
-			for(const auto& it : vec)
-				fileStream << it << std::endl;
+			for (const auto& t : vec) {
+				fileStream << t << std::endl;
+			}
 		};
 		
 		template<typename T>

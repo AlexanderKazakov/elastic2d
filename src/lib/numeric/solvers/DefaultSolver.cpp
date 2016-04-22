@@ -37,7 +37,6 @@ void DefaultSolver<TMesh>::beforeStatementImpl(const Statement& statement) {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::nextTimeStepImpl() {
-	LOG_INFO("Start time step " << step);
 	mesh->beforeStep();
 	real tau = calculateTau();
 

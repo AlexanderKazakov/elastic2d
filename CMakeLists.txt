@@ -4,13 +4,17 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 
 set(WARNING_FLAGS "-Wall -Wextra -Wsign-conversion -Wconversion -Wundef -Wcast-align -Wwrite-strings -Wlogical-op -Wmissing-declarations -Wredundant-decls -Wshadow -Woverloaded-virtual")
 set(ADDITIONAL_OPTIMIZATION_FLAGS "-march=native -Ofast -msse3 -ffast-math -funroll-loops")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pipe ${WARNING_FLAGS} -frounding-math -fsignaling-nans")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pipe ${WARNING_FLAGS} -frounding-math -fsignaling-nans -fopenmp")
 
 # Show compiler output (default is not)
 option(VERBOSE_MAKE "VERBOSE_MAKE" OFF)
 IF(VERBOSE_MAKE)
     set(CMAKE_VERBOSE_MAKEFILE ON)
 ENDIF()
+
+# OPEN-MP
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fopenmp")
 
 # add "-g"
 option(DEBUGG "DEBUGG" OFF)
@@ -62,6 +66,8 @@ if(VTK_MAJOR_VERSION EQUAL 5)
     set(CONFIG_VTK_5 1)
 elseif (VTK_MAJOR_VERSION EQUAL 6)
     set(CONFIG_VTK_6 1)
+elseif (VTK_MAJOR_VERSION EQUAL 7)
+    set(CONFIG_VTK_7 1)
 else()
     message(FATAL_ERROR "Unsupported VTK version found: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
 endif()

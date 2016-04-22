@@ -5,6 +5,7 @@
 #include <lib/util/FileUtils.hpp>
 #include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/numeric/solvers/Solver.hpp>
+#include <lib/util/Logging.hpp>
 
 namespace gcm {
 	/**

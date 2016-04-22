@@ -1,0 +1,18 @@
+reset
+set term png
+
+unset key
+set xrange [0:75]
+set yrange [0:0.55]
+set xlabel "time interval"
+set ylabel "layer width"
+set grid
+
+set output "line.png"
+
+set multiplot
+
+f(x) = a * x + b
+fit f(x) "line.txt" using 1:2 via a, b
+plot [t=5:70] f(t), "line.txt" using 1:2 w p
+
