@@ -30,6 +30,10 @@ public:
 		bool operator!=(const Iterator& other) const {
 			return iter != other.iter;
 		}
+		
+		bool operator<(const Iterator& other) const {
+			return iter < other.iter;
+		}
 
 		Iterator& operator++() {
 			iter++;

@@ -57,7 +57,7 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL2D;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.5;
+	task.cgal2DGrid.spatialStep = 0.2;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
@@ -68,7 +68,7 @@ Task parseTaskCgal2d() {
 //	};
 	task.cgal2DGrid.bodies = {
 		Task::Cgal2DGrid::Body(outer, {/*inner*/}),
-//		Task::Cgal2DGrid::Body({{4, 4}, {4, 6}, /*{6, 6}*/{4.5, 4.5}, {6, 4}}, {})
+//		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 
 	Statement statement;
@@ -81,7 +81,7 @@ Task parseTaskCgal2d() {
 	statement.globalSettings.CourantNumber = 0.2;
 
 	statement.globalSettings.numberOfSnaps = 100;
-	statement.globalSettings.stepsPerSnap = 1;
+	statement.globalSettings.stepsPerSnap = 4;
 
 //	Statement::InitialCondition::Quantity pressure;
 //	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -97,6 +97,14 @@ Task parseTaskCgal2d() {
 //	wave.area = std::make_shared<AxisAlignedBoxArea>(Real3({-10, 0, -10}), Real3({10, 1, 10}));
 //	statement.initialCondition.waves.push_back(wave);
 
+	Statement::BorderCondition borderConditionAll;
+	borderConditionAll.area = std::make_shared<InfiniteArea>();
+	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionAll.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; }
+	};
+
 	Statement::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
@@ -106,17 +114,18 @@ Task parseTaskCgal2d() {
 		[] (real t) { return (t < 1) ? -1 : 0; }
 	};
 	
-	Statement::BorderCondition borderConditionRight;
-	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({2.999, -10, -10}), Real3({10, 10, 10}));
-	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
-	borderConditionRight.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; }
-	};
+//	Statement::BorderCondition borderConditionMid;
+//	borderConditionMid.area = std::make_shared<AxisAlignedBoxArea>(
+//			Real3({-2.5, -2.5, -10}), Real3({0.5, 0.5, 10}));
+//	borderConditionMid.type = BorderConditions::T::FIXED_VELOCITY;
+//	borderConditionMid.values = {
+//		[] (real) { return 0; },
+//		[] (real) { return 0; }
+//	};
 	
-	statement.borderConditions = {borderConditionLeft, borderConditionRight};
-
+	statement.borderConditions = {borderConditionAll,
+	                              borderConditionLeft,
+	                              /*borderConditionMid*/};
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

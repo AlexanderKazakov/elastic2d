@@ -36,6 +36,10 @@ TEST(Linal, zeroOnes) {
 			ASSERT_EQ(0, (Matrix<12, 12>::Zeros()(i, j)));
 			ASSERT_EQ((i == j), (Matrix<12, 12>::Identity()(i, j)));
 			
+			ASSERT_EQ((i == j), (DiagonalMatrix<12>::Ones()(i, j)));
+			ASSERT_EQ(0, (DiagonalMatrix<12>::Zeros()(i, j)));
+			ASSERT_EQ((i == j), (DiagonalMatrix<12>::Identity()(i, j)));
+			
 			ASSERT_EQ(1, (MatrixInt<12, 12>::Ones()(i, j)));
 			ASSERT_EQ(0, (MatrixInt<12, 12>::Zeros()(i, j)));
 			ASSERT_EQ((i == j), (MatrixInt<12, 12>::Identity()(i, j)));
@@ -246,6 +250,19 @@ TEST(Linal, MatrixProduct) {
 }
 
 
+TEST(Linal, DiagonalMatrix) {
+	DiagonalMatrix<9> d = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+	ASSERT_EQ(Vector<9>({1, 2, 3, 4, 5, 6, 7, 8, 9}), diag(d));
+	DiagonalMatrix<9> d2 = DiagonalMatrix<9>::Ones() * 2;
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			ASSERT_EQ((i == j) * 2 * (i + 1), (d*d2)(i, j));
+			ASSERT_EQ((d*d2)(i, j), (d2*d)(i, j));
+		}
+	}
+}
+
+
 TEST(Linal, MatrixEqual) {
 	Matrix<2, 3> m1({1.0, 2.0, 3.0,
 	                 4.0, 5.0, 6.0});
@@ -411,13 +428,21 @@ TEST(Linal, VectorLength) {
 
 
 TEST(Linal, VectorDotProduct) {
+	SymmetricMatrix<3> H  = SymmetricMatrix<3>::Identity();
+	SymmetricMatrix<3> H2 = {2, -1,  0,
+	                             2, -1,
+	                                 2};
 	Real3 v1({1.0, 2.0, 3.0});
 	Real3 v2({-2.0, 4.0, -2.0});
 	ASSERT_EQ(dotProduct(v1, v2), 0.0);
+	ASSERT_EQ(dotProduct(v1, H, v2), 0.0);
+	ASSERT_EQ(dotProduct(v1, H2, v2), -8.0);
 	
 	Real3 v3({2, 2, 5});
 	ASSERT_EQ(dotProduct(v1, v3), 21);
 	ASSERT_EQ(dotProduct(v3, v1), 21);
+	ASSERT_EQ(dotProduct(v3, H2, v1), 20);
+	ASSERT_EQ(dotProduct(v1, H2, v3), 20);
 }
 
 
@@ -780,7 +805,8 @@ TEST(Linal, createLocalBasis) {
 
 
 TEST(Linal, cross_verification) {
-	Matrix<3, 3> A, B, C;
+	Matrix<3, 3> A, B, C, D1;
+	DiagonalMatrix<3> D;
 	Vector<3> f;
 	srand((unsigned int)time(0));
 
@@ -790,7 +816,9 @@ TEST(Linal, cross_verification) {
 			for (int j = 0; j < A.N; j++) {
 				A(i, j) = rand() - RAND_MAX / 2.0;
 				B(i, j) = rand() - RAND_MAX / 2.0;
+				D1(i, j) = 0;
 			}
+			D1(i, i) = D(i) = rand() - RAND_MAX / 2.0;
 			f(i) = rand() - RAND_MAX / 2.0;
 		}
 		
@@ -810,12 +838,15 @@ TEST(Linal, cross_verification) {
 		// multiplication
 		C = A * B;
 		ASSERT_EQ(transpose(B) * transpose(A), transpose(C));
+		ASSERT_EQ(transpose(A) * B, transposeMultiply(A, B));
 		ASSERT_NEAR(determinant(B) * determinant(A), 
 		            determinant(C), EQUALITY_TOLERANCE  * fabs(determinant(C)));
 		auto C1 = invert(C);
 		ASSERT_TRUE(approximatelyEqual(invert(B) * invert(A), C1));
 		ASSERT_TRUE(approximatelyEqual(identity(C), C * C1, 1000 * EQUALITY_TOLERANCE));
 		ASSERT_TRUE(approximatelyEqual(identity(C), C1 * C, 1000 * EQUALITY_TOLERANCE));
+		ASSERT_EQ(A * D1, A * D);
+		ASSERT_EQ(D1 * A, D * A);
 		
 		// SLE
 		auto x = solveLinearSystem(A, f);
@@ -867,6 +898,16 @@ TEST(Linal, linearLeastSquares) {
 	                   5, 0};
 	Vector<5> b5 = {1, 2, 3, 4, 5};
 	ASSERT_EQ(Vector<2>({1, 0}), linearLeastSquares(A5, b5));
+	ASSERT_EQ(Vector<2>({1, 0}), linearLeastSquares(A5, b5, DiagonalMatrix<5>::Identity()));
+	
+	A = {1, 2};
+	b = {1, 1};
+	DiagonalMatrix<2> W = {7, 0};
+	ASSERT_EQ(1, linearLeastSquares(A, b, W)(0));
+	W = {0, 1};
+	ASSERT_EQ(0.5, linearLeastSquares(A, b, W)(0));
+	W = {1, 2};
+	ASSERT_EQ(5.0 / 9.0, linearLeastSquares(A, b, W)(0));
 }
 
 

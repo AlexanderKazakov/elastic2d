@@ -122,7 +122,12 @@ solveLinearSystem(const MatrixBase<3, 3,
 /** 
  * Solve overdetermined SLE \f$ \matrix{A} * \vec{x} = \vec{b} \f$
  * with TMxTN-matrix A, TM-vector b and TN-vector x, where TM >= TN,
- * with the Linear Least Squares Method.
+ * by the Linear Least Squares Method with weight matrix W.
+ * @param A matrix of SLE
+ * @param b right part of SLE
+ * @param W diagonal matrix of weights in linear least squares method,
+ * W(i) determines the importance of the i-th row of the SLE
+ * @return solution of the SLE in terms of least square deviation
  */
 template<int TM, int TN,
          typename TVectorElement,
@@ -132,16 +137,14 @@ template<int TM, int TN,
 MatrixBase<TN, 1,
            decltype(TVectorElement() / TMatrixElement()),
            NonSymmetric, TVectorContainer>
-linearLeastSquares(const MatrixBase<TM, TN,
-                                   TMatrixElement,
-                                   NonSymmetric, TMatrixContainer>& A,
-                  const MatrixBase<TM, 1,
-                                   TVectorElement,
-                                   NonSymmetric, TVectorContainer>& b) {
+linearLeastSquares(
+		const MatrixBase<TM, TN, TMatrixElement, NonSymmetric, TMatrixContainer>& A,
+		const MatrixBase<TM, 1, TVectorElement, NonSymmetric, TVectorContainer>& b,
+		const MatrixBase<TM, TM, TMatrixElement, Diagonal, TMatrixContainer>& W = 
+				MatrixBase<TM, TM, TMatrixElement, Diagonal, TMatrixContainer>::Identity()) {
 	
-	static_assert(TM >= TN, "");
-	// TODO - special function for transpose(X) * Y
-	return solveLinearSystem(transpose(A) * A, transpose(A) * b);
+	static_assert(TM >= TN, "The system has to be at least determined");
+	return solveLinearSystem(transposeMultiply(A, W * A), transposeMultiply(A, W * b));
 }
 
 

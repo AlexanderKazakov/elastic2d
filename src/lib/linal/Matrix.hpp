@@ -21,7 +21,6 @@ template<int TSize, typename TElement>
 struct DefaultContainer {
 
 	typedef TElement ElementType;
-
 	
 	/// @name Construction and assignment @{
 	
@@ -154,13 +153,14 @@ struct MatrixBase :
 		TContainer<TSymmetry<TM, TN>::SIZE, TElement> {
 		
 	typedef TSymmetry<TM, TN> Symmetry;
-	static const int  M = Symmetry::M;
-	static const int  N = Symmetry::N;
+	static const int  M   = Symmetry::M;
+	static const int  N   = Symmetry::N;
+	static const int SIZE = Symmetry::SIZE;
 
 	typedef MatrixBase<M, 1, TElement, NonSymmetric, TContainer>  ColumnType;
 	typedef MatrixBase<1, N, TElement, NonSymmetric, TContainer>  RowType;
 	
-	typedef TContainer<TSymmetry<TM, TN>::SIZE, TElement>         Container;
+	typedef TContainer<SIZE, TElement>                            Container;
 
 	using Container::Container;
 	using Container::operator();
@@ -238,16 +238,24 @@ struct MatrixBase<TM, TM, TElement, Diagonal, TContainer> :
 		TContainer<Diagonal<TM, TM>::SIZE, TElement> {
 		
 	typedef Diagonal<TM, TM> Symmetry;
-	static const int M = Symmetry::M;
-	static const int N = Symmetry::N;
+	static const int  M   = Symmetry::M;
+	static const int  N   = Symmetry::N;
+	static const int SIZE = Symmetry::SIZE;
 
 	typedef MatrixBase<M, 1, TElement, NonSymmetric, TContainer>  ColumnType;
 	typedef MatrixBase<1, N, TElement, NonSymmetric, TContainer>  RowType;
 	
-	typedef TContainer<Diagonal<TM, TM>::SIZE, TElement>          Container;
+	typedef TContainer<SIZE, TElement>                            Container;
 
 	using Container::Container;
 	using Container::operator();
+
+	/** @return zero-filled matrix */
+	inline static MatrixBase Zeros();
+	/** @return matrix with all ones */
+	inline static MatrixBase Ones();
+	/** @return identity matrix */
+	inline static MatrixBase Identity();
 
 	///@name Access to elements @{
 	/** 
@@ -344,9 +352,17 @@ template<int TM, typename TElement> struct VECTOR :
 	using Base::Base;
 };
 
+template<int TM, typename TElement> struct SYMMETRIC_MATRIX :
+	MatrixBase<TM, TM, TElement, Symmetric, DefaultContainer> {
+	
+	typedef MatrixBase<TM, TM, TElement, Symmetric, DefaultContainer> Base;
+	using Base::Base;
+};
+
 /// @}
 
-/// @name Fill in the matrix with some value
+
+/// @name Fill in the matrix with some values
 /// @{
 
 /**
@@ -376,6 +392,21 @@ zeros(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&) {
 	return result;
 }
 
+/**
+ * @return zero-filled diagonal matrix
+ */
+template<int TM,
+         typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>
+zeros(const MatrixBase<TM, TM, TElement, Diagonal, TContainer>&) {
+	MatrixBase<TM, TM, TElement, Diagonal, TContainer> result;
+	for (int i = 0; i < TM; i++) {
+		result(i) = zeros(result(i));
+	}
+	return result;
+}
+
 
 /**
  * Bottom of recursion for ones function for matrices
@@ -400,6 +431,21 @@ ones(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&) {
 		for (int j = 0; j < TN; j++) {
 			result(i, j) = ones(result(i, j));
 		}
+	}
+	return result;
+}
+
+/**
+ * @return diagonal matrix with all unit elements at diagonal
+ */
+template<int TM,
+         typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>
+ones(const MatrixBase<TM, TM, TElement, Diagonal, TContainer>&) {
+	MatrixBase<TM, TM, TElement, Diagonal, TContainer> result;
+	for (int i = 0; i < TM; i++) {
+		result(i) = ones(result(i));
 	}
 	return result;
 }
@@ -436,6 +482,17 @@ identity(const MatrixBase<TM, TM, TElement, TSymmetry, TContainer>&) {
 	return result;
 }
 
+/**
+ * @return identity (aka unity) matrix with TSymmetry == Diagonal
+ */
+template<int TM,
+         typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>
+identity(const MatrixBase<TM, TM, TElement, Diagonal, TContainer>& m) {
+	return ones(m);
+}
+
 
 /**
  * Fill in the matrix with zeros
@@ -462,6 +519,16 @@ Zeros() {
 	return zeros(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>());
 }
 
+template<int TM,
+         typename TElement,
+         template<int, typename> class TContainer>
+inline
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>::
+Zeros() {
+	return zeros(MatrixBase<TM, TM, TElement, Diagonal, TContainer>());
+}
+
 
 template<int TM, int TN,
          typename TElement,
@@ -472,6 +539,16 @@ MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>::
 Ones() {
 	return ones(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>());
+}
+
+template<int TM,
+         typename TElement,
+         template<int, typename> class TContainer>
+inline
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>::
+Ones() {
+	return ones(MatrixBase<TM, TM, TElement, Diagonal, TContainer>());
 }
 
 
@@ -485,6 +562,16 @@ MatrixBase<TM, TN, TElement, TSymmetry, TContainer>::
 Identity() {
 	static_assert(TM == TN, "");
 	return identity(MatrixBase<TM, TM, TElement, TSymmetry, TContainer>());
+}
+
+template<int TM,
+         typename TElement,
+         template<int, typename> class TContainer>
+inline
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer>::
+Identity() {
+	return identity(MatrixBase<TM, TM, TElement, Diagonal, TContainer>());
 }
 
 

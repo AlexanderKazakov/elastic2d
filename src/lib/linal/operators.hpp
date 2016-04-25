@@ -120,19 +120,30 @@ operator*(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
 
 
 /**
- * @return Result of scalar multiplication.
+ * Computes product of two matrices C = m1 * m2, where m2 is diagonal (faster)
+ * m1: TMxTN.
+ * m2: TNxTN.
+ * C:  TMxTN.
+ * @return Matrix product ( m1 * m2 )
  */
 template<int TM, int TN,
-         typename TElement,
-         template<int, int> class TSymmetry,
-         template<int, typename> class TContainer>
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer> 
-operator*(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
-          const TElement& x) {
-	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> result;
+         typename TElement1,
+         template<int, int> class TSymmetry1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, TN,
+           decltype(TElement1() * TElement2()),
+           NonSymmetric, TContainer3>
+operator*(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
+          const MatrixBase<TN, TN, TElement2, Diagonal,   TContainer2>& m2) {
+	MatrixBase<TM, TN,
+	           decltype(TElement1() * TElement2()),
+	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
-			result(i, j) = m(i, j) * x;
+			result(i, j) = m1(i, j) * m2(j);
 		}
 	}
 	return result;
@@ -140,29 +151,105 @@ operator*(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
 
 
 /**
- * @return Result of scalar multiplication.
+ * Computes product of two matrices C = m1 * m2, where m1 is diagonal (faster)
+ * m1: TMxTM.
+ * m2: TMxTN.
+ * C:  TMxTN.
+ * @return Matrix product ( m1 * m2 )
  */
+template<int TM, int TN,
+         typename TElement1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, int> class TSymmetry2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, TN,
+           decltype(TElement1() * TElement2()),
+           NonSymmetric, TContainer3>
+operator*(const MatrixBase<TM, TM, TElement1, Diagonal,   TContainer1>& m1,
+          const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
+	MatrixBase<TM, TN,
+	           decltype(TElement1() * TElement2()),
+	           NonSymmetric, TContainer3> result;
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j < TN; j++) {
+			result(i, j) = m1(i) * m2(i, j);
+		}
+	}
+	return result;
+}
+
+
+/**
+ * Computes product of two diagonal matrices C = m1 * m2 (faster)
+ * m1: TMxTM.
+ * m2: TMxTM.
+ * C:  TMxTM.
+ * @return Matrix product ( m1 * m2 ) - diagonal matrix
+ */
+template<int TM,
+         typename TElement1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, TM,
+           decltype(TElement1() * TElement2()),
+           Diagonal, TContainer3>
+operator*(const MatrixBase<TM, TM, TElement1, Diagonal, TContainer1>& m1,
+          const MatrixBase<TM, TM, TElement2, Diagonal, TContainer2>& m2) {
+	MatrixBase<TM, TM,
+	           decltype(TElement1() * TElement2()),
+	           Diagonal, TContainer3> result;
+	for (int i = 0; i < TM; i++) {
+		result(i) = m1(i) * m2(i);
+	}
+	return result;
+}
+
+
+/** Multiplication by scalar arithmetic number (real, int, ...) */
 template<int TM, int TN,
          typename TElement,
          template<int, int> class TSymmetry,
-         template<int, typename> class TContainer>
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer> 
-operator*(const TElement& x, 
+         template<int, typename> class TContainer,
+         typename Number>
+typename std::enable_if<std::is_arithmetic<Number>::value,
+	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> >::type
+operator*(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
+          const Number x) {
+	typedef MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ResultMatrixT;
+	ResultMatrixT result;
+	for (int i = 0; i < ResultMatrixT::SIZE; i++) {
+		result(i) = m(i) * x;
+	}
+	return result;
+}
+
+
+/** Multiplication by scalar arithmetic number (real, int, ...) */
+template<int TM, int TN,
+         typename TElement,
+         template<int, int> class TSymmetry,
+         template<int, typename> class TContainer,
+         typename Number>
+typename std::enable_if<std::is_arithmetic<Number>::value,
+	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> >::type
+operator*(const Number x, 
           const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m) {
 	return m * x;
 }
 
 
-/**
- * @return Result of scalar division.
- */
+/** Scalar division by real */
 template<int TM, int TN,
          typename TElement,
          template<int, int> class TSymmetry,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer> 
 operator/(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
-          const TElement& x) {
+          const real& x) {
 	return m * (1.0 / x);
 }
 
@@ -237,21 +324,22 @@ operator-=(      MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
 template<int TM, int TN,
          typename TElement,
          template<int, int> class TSymmetry,
-         template<int, typename> class TContainer>
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&
+         template<int, typename> class TContainer,
+         typename Number>
+typename std::enable_if<std::is_arithmetic<Number>::value,
+	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> >::type&
 operator*=(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
-           const TElement& x) {
-	for (int i = 0; i < TM; i++) {
-		for (int j = 0; j < TN; j++) {
-			m(i, j) *= x;
-		}
+           const Number& x) {
+	typedef MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ResultMatrixT;
+	for (int i = 0; i < ResultMatrixT::SIZE; i++) {
+		m(i) *= x;
 	}
 	return m;
 }
 
 
 /**
- * Scalar division m by x modifying m. 
+ * Scalar division m by real x modifying m. 
  */
 template<int TM, int TN,
          typename TElement,
@@ -259,11 +347,10 @@ template<int TM, int TN,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&
 operator/=(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
-           const TElement& x) {
-	for (int i = 0; i < TM; i++) {
-		for (int j = 0; j < TN; j++) {
-			m(i, j) /= x;
-		}
+           const real& x) {
+	typedef MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ResultMatrixT;
+	for (int i = 0; i < ResultMatrixT::SIZE; i++) {
+		m(i) /= x;
 	}
 	return m;
 }

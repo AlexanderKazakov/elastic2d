@@ -63,6 +63,28 @@ normal(const Iterator& it) const {
 }
 
 
+std::set<Cgal2DGrid::Iterator> Cgal2DGrid::
+findNeighborVertices(const Iterator& it) const {
+	VertexHandle v = vertexHandles[it.iter];
+	std::set<Iterator> ans;
+	
+	auto beginFace = triangulation.incident_faces(v);
+	auto faceCirculator = beginFace;
+	do {
+		if (faceCirculator->is_in_domain()) {
+			int vLocalIndex = faceCirculator->index(v);
+			ans.insert(getIterator(
+					faceCirculator->vertex(faceCirculator->cw(vLocalIndex))));
+			ans.insert(getIterator(
+					faceCirculator->vertex(faceCirculator->ccw(vLocalIndex))));
+		}
+		++faceCirculator;
+	} while (faceCirculator != beginFace);
+	
+	return ans;
+}
+
+
 void Cgal2DGrid::
 triangulate(const Task::Cgal2DGrid& task) {
 	// Special "seeds" in the interior of inner cavities
@@ -119,13 +141,13 @@ insertPolygon(const Polygon& polygon) {
 	auto point = polygon.vertices_begin();
 	VertexHandle first = triangulation.insert(*point);
 	VertexHandle last = first;
-	point++;
+	++point;
 	
 	while(point != polygon.vertices_end()) {
 		VertexHandle current = triangulation.insert(*point);
 		triangulation.insert_constraint(last, current);
 		last = current;
-		point++;
+		++point;
 	}
 	
 	triangulation.insert_constraint(last, first);

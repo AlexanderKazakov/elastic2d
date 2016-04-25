@@ -100,6 +100,9 @@ public:
 	
 	/** Border normal in specified point */
 	Real2 normal(const Iterator& iter) const;
+	
+	/** All vertices connected with specified vertex */
+	std::set<Iterator> findNeighborVertices(const Iterator& it) const;
 
 protected:
 	/** Move specified point on specified distance */
@@ -160,6 +163,8 @@ protected:
 
 	Triangle findOwnerTriangle(const Iterator& it, const Real2& shift) const {
 		Triangle ans;
+		ans.inner = false;
+		
 		auto ownerFace = findOwnerFace(it, CgalVector2(shift(0), shift(1)));
 		if (ownerFace->is_in_domain()) {
 			ans.inner = true;
@@ -167,6 +172,8 @@ protected:
 				ans.p[i] = getIterator(ownerFace->vertex(i));
 			}
 		}
+		// TODO - handle the case of exact hit to the border edge, when outer face is chosen
+		
 		return ans;
 	}
 

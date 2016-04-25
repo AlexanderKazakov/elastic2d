@@ -49,6 +49,7 @@ public:
 protected:
 	real CourantNumber = 0.0; ///< number from Courant–Friedrichs–Lewy condition
 
+	GCM gridCharacteristicMethod;
 	Corrector* corrector = nullptr;
 	InternalOde* internalOde = nullptr;
 	Border* borderConditions = nullptr;
@@ -121,7 +122,8 @@ stage(const int s, const real timeStep) {
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	
 	borderConditions->applyBorderBeforeStage(mesh, timeStep, s);
-	GCM::stage(s, timeStep, mesh); // now actual PDE values is in pdeVariablesNew
+	gridCharacteristicMethod.stage(s, timeStep, *mesh);
+			// now actual PDE values is in pdeVariablesNew
 	borderConditions->applyBorderAfterStage(mesh, timeStep, s);
 	
 	 // return actual PDE values back to pdeVariables

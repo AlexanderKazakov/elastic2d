@@ -96,6 +96,42 @@ invert(const MatrixBase<TM, TN, TElement, Diagonal, TContainer>& m) {
 
 
 /**
+ * Computes product of two matrices, but the first one is transposed:
+ * C = transpose(m1) * m2.
+ * m1: TNxTM.
+ * m2: TNxTK.
+ * C:  TMxTK.
+ * @return equal to ( transpose(m1) * m2 )
+ */
+template<int TM, int TN, int TK,
+         typename TElement1,
+         template<int, int> class TSymmetry1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, int> class TSymmetry2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, TK,
+           decltype(TElement1() * TElement2()),
+           NonSymmetric, TContainer3>
+transposeMultiply(const MatrixBase<TN, TM, TElement1, TSymmetry1, TContainer1>& m1,
+                  const MatrixBase<TN, TK, TElement2, TSymmetry2, TContainer2>& m2) {
+	MatrixBase<TM, TK,
+	           decltype(TElement1() * TElement2()),
+	           NonSymmetric, TContainer3> result;
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j < TK; j++) {
+			result(i, j) = m1(0, i) * m2(0, j);
+			for (int n = 1; n < TN; n++) {
+				result(i, j) += m1(n, i) * m2(n, j);
+			}
+		}
+	}
+	return result;
+}
+
+
+/**
  * Let matrix \f$ \matrix{C} = \matrix{A} * \matrix{B} \f$.
  * Then diagonal of C is returned. 
  * Calculation of non-diagonal elements of C is not performed.
@@ -158,7 +194,8 @@ diag(const TMatrix& m) {
 
 
 /** 
- * @return dot (aka scalar) product of specified vectors 
+ * @return dot (aka scalar) product of specified vectors v1, v2
+ * @note equal to transpose(v1) * v2
  */
 template<int TM,
          typename TElement1,
@@ -171,6 +208,31 @@ dotProduct(const MatrixBase<TM, 1, TElement1, NonSymmetric, TContainer1>& v1,
 	auto result = v1(0) * v2(0);
 	for (int i = 1; i < TM; i++) {
 		result += v1(i) * v2(i);
+	}
+	return result;
+}
+
+
+/** 
+ * @return dot (aka scalar) product of specified vectors v1, v2
+ * with specified symmetric Gramian matrix H
+ * @note equal to transpose(v1) * H * v2
+ */
+template<int TM,
+         typename TElement1,
+         template<int, typename> class TContainer1,
+         typename TElementH,
+         template<int, typename> class TContainerH,
+         typename TElement2,
+         template<int, typename> class TContainer2>
+decltype(TElement1() * TElementH() * TElement2())
+dotProduct(const MatrixBase<TM,  1, TElement1, NonSymmetric, TContainer1>& v1,
+           const MatrixBase<TM, TM, TElementH,    Symmetric, TContainerH>& H,
+           const MatrixBase<TM,  1, TElement2, NonSymmetric, TContainer2>& v2) {
+	auto v1H = transposeMultiply(v1, H);
+	auto result = v1H(0) * v2(0);
+	for (int i = 1; i < TM; i++) {
+		result += v1H(i) * v2(i);
 	}
 	return result;
 }

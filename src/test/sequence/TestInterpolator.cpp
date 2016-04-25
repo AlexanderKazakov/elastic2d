@@ -142,3 +142,98 @@ TEST(EqualDistanceLineInterpolator, Exceptions) {
 	ASSERT_ANY_THROW(interpolator.minMaxInterpolate(res, src, -0.3));
 	ASSERT_ANY_THROW(interpolator.minMaxInterpolate(res, src, 2.5));
 }
+
+
+TEST(TriangleInterpolator, barycentric2D) {
+	Real2 a = {0, 0};
+	Real2 b = {1, 0};
+	Real2 c = {0, 1};
+	
+	ASSERT_EQ(Real3({1, 0, 0}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 1, 0}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, c));
+
+	ASSERT_EQ(Real3({0, 0.5, 0.5}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (b+c)/2.0));
+	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+
+	// affine invariance
+	
+	Matrix22 S = {3, 5,
+	             -2, 10};
+	Real2 shift = {5, -6};
+	
+	a = S * a + shift;
+	b = S * b + shift;
+	c = S * c + shift;
+	
+	ASSERT_EQ(Real3({1, 0, 0}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 1, 0}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, c));
+
+	ASSERT_EQ(Real3({0, 0.5, 0.5}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (b+c)/2.0));
+	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
+	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+}
+
+
+TEST(TriangleInterpolator, linear2D) {
+	auto f = [](Real2 x) { return 5*x(0) + 8*x(1) - 2; };
+	
+	srand((unsigned int)time(0));
+	for (int i = 0; i < 1000; i++) {
+		Real2 a = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 b = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 c = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 q = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		
+		ASSERT_NEAR(f(q), 
+		            TriangleInterpolator<real>::interpolate(a, f(a),
+		                                                    b, f(b),
+		                                                    c, f(c),
+		                                                    q),
+		            EQUALITY_TOLERANCE * fabs(f(q)));
+	}
+}
+
+
+TEST(TriangleInterpolator, quadratic2D) {
+	auto f = [](Real2 x) {
+		return 8*x(0)*x(0) + 10*x(0)*x(1) - 15*x(1)*x(1) + 5*x(0) + 8*x(1) - 2;
+	};
+	auto g = [](Real2 x) { // = Df / D(x, y)
+		return linal::VECTOR<2, real>({ 16*x(0) + 10*x(1) + 5,
+		                               -30*x(1) + 10*x(0) + 8});
+	};
+		
+	srand((unsigned int)time(0));
+	for (int i = 0; i < 1000; i++) {
+		Real2 a = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 b = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 c = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 q = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		
+		ASSERT_NEAR(f(q), 
+		            TriangleInterpolator<real>::interpolate(a, f(a), g(a),
+		                                                    b, f(b), g(b),
+		                                                    c, f(c), g(c),
+		                                                    q),
+		            EQUALITY_TOLERANCE * fabs(f(q)));
+	}
+}
+
+
+
+
+
+
+
+

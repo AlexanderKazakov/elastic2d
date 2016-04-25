@@ -156,7 +156,7 @@ handleInnerSurfacePoint(const Iterator& iter, const Map& values, const int surfa
 	mesh = tmpMesh; direction = tmpDirection;
 
 	// calculate stage on the helpMesh
-	GridCharacteristicMethod<Mesh>::stage(0, timeStep * surfaceNormal, helpMesh);
+	GridCharacteristicMethod<Mesh>().stage(0, timeStep * surfaceNormal, *helpMesh);
 
 	// copy calculated values to real mesh
 	for (int i = 0; i < mesh->borderSize; i++) {
