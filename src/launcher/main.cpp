@@ -57,7 +57,7 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL2D;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.2;
+	task.cgal2DGrid.spatialStep = 0.1;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
@@ -78,10 +78,10 @@ Task parseTaskCgal2d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 0.2;
+	statement.globalSettings.CourantNumber = 1;
 
 	statement.globalSettings.numberOfSnaps = 100;
-	statement.globalSettings.stepsPerSnap = 4;
+	statement.globalSettings.stepsPerSnap = 1;
 
 //	Statement::InitialCondition::Quantity pressure;
 //	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;

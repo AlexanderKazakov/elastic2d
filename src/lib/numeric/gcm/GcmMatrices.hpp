@@ -29,11 +29,15 @@ struct GcmMatrices {
 
 	/** Matrix in PDE along some direction with its eigensystem */
 	struct GcmMatrix {
-		Matrix A; ///< matrix for some axis in PDE // TODO - skip this in Release mode?
-		///< A = U1 * L * U  and so right eigenvectors are columns of the U1.
-		Matrix U;                   ///< matrix of left eigenvectors (aka eigenstrings)
-		Matrix U1;                  ///< matrix of right eigenvectors
-		linal::DiagonalMatrix<M> L; ///< diagonal eigenvalue matrix
+		/// matrix for some axis in PDE // TODO - skip this in Release mode?
+		/// A = U1 * L * U  and so right eigenvectors are columns of the U1.
+		Matrix A;
+		/// matrix of left eigenvectors (aka eigenstrings)
+		Matrix U;
+		/// matrix of right eigenvectors
+		Matrix U1;
+		///< diagonal eigenvalue matrix
+		linal::DiagonalMatrix<M> L;
 
 		real getMaximalEigenvalue() const {
 			real ans = 0;
@@ -58,54 +62,20 @@ struct GcmMatrices {
 
 	/** @throw gcm::Exception */
 	void checkDecomposition() const {
-		checkTraces();
-		checkLeftEigenvectors();
-		checkRightEigenvectors();
-		checkInverseMatrices();
-	}
-
-	void checkTraces() const {
 		for (int s = 0; s < D; s++) {
+			// traces
 			assert_near(linal::trace(m[s].A), linal::trace(m[s].L), EQUALITY_TOLERANCE);
-		}
-	}
-
-	void checkLeftEigenvectors() const {
-		for (int s = 0; s < D; s++) {
-			Matrix AU1 = m[s].A * m[s].U1;
-			Matrix U1L = m[s].U1 * m[s].L;
-			for (int i = 0; i < M; i++) {
-				for (int j = 0; j < M; j++) {
-					assert_near(AU1(i, j), U1L(i, j), EQUALITY_TOLERANCE);
-				}
-			}
-		}
-	}
-
-	void checkRightEigenvectors() const {
-		for (int s = 0; s < D; s++) {
-			Matrix UA = m[s].U * m[s].A;
-			Matrix LU = m[s].L * m[s].U;
-			for (int i = 0; i < M; i++) {
-				for (int j = 0; j < M; j++) {
-					assert_near(UA(i, j), LU(i, j), EQUALITY_TOLERANCE);
-				}
-			}
-		}
-	}
-
-	void checkInverseMatrices() const {
-		for (int s = 0; s < D; s++) {
-			Matrix UU1 = m[s].U * m[s].U1;
-			for (int i = 0; i < M; i++) {
-				for (int j = 0; j < M; j++) {
-					assert_near(UU1(i, j), (i == j), EQUALITY_TOLERANCE);
-				}
-			}
+			// eigenvectors
+			assert_true(linal::approximatelyEqual(m[s].A * m[s].U1, m[s].U1 * m[s].L, EQUALITY_TOLERANCE));
+			// eigenraws
+			assert_true(linal::approximatelyEqual(m[s].U * m[s].A, m[s].L * m[s].U, EQUALITY_TOLERANCE*1000));
+			// inverse matrices
+			assert_true(linal::approximatelyEqual(m[s].U * m[s].U1, Matrix::Identity(), EQUALITY_TOLERANCE*100));
 		}
 	}
 
 };
+
 
 }
 

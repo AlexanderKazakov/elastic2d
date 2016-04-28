@@ -9,10 +9,21 @@ namespace linal {
 /**
  * Cross (aka vector) product
  */
-inline Real3 crossProduct(const Real3& v1, const Real3& v2) {
-	return Real3({v1(1) * v2(2) - v1(2) * v2(1),
-	              v1(2) * v2(0) - v1(0) * v2(2),
-	              v1(0) * v2(1) - v1(1) * v2(0)});
+inline Real3 crossProduct(const Real3& a, const Real3& b) {
+	return Real3({a(1) * b(2) - a(2) * b(1),
+	              a(2) * b(0) - a(0) * b(2),
+	              a(0) * b(1) - a(1) * b(0)});
+}
+
+
+/**
+ * Cross (aka vector) product for two vectors in XY-plane.
+ * The result is equal to Z-component of cross product.
+ * I.e, for right pair of vectors the result is positive,
+ * for left pair - negative.
+ */
+inline real crossProduct(const Real2& a, const Real2& b) {
+	return a(0) * b(1) - a(1) * b(0);
 }
 
 

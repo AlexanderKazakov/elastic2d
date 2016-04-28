@@ -144,47 +144,6 @@ TEST(EqualDistanceLineInterpolator, Exceptions) {
 }
 
 
-TEST(TriangleInterpolator, barycentric2D) {
-	Real2 a = {0, 0};
-	Real2 b = {1, 0};
-	Real2 c = {0, 1};
-	
-	ASSERT_EQ(Real3({1, 0, 0}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, a));
-	ASSERT_EQ(Real3({0, 1, 0}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, b));
-	ASSERT_EQ(Real3({0, 0, 1}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, c));
-
-	ASSERT_EQ(Real3({0, 0.5, 0.5}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (b+c)/2.0));
-	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
-
-	// affine invariance
-	
-	Matrix22 S = {3, 5,
-	             -2, 10};
-	Real2 shift = {5, -6};
-	
-	a = S * a + shift;
-	b = S * b + shift;
-	c = S * c + shift;
-	
-	ASSERT_EQ(Real3({1, 0, 0}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, a));
-	ASSERT_EQ(Real3({0, 1, 0}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, b));
-	ASSERT_EQ(Real3({0, 0, 1}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, c));
-
-	ASSERT_EQ(Real3({0, 0.5, 0.5}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (b+c)/2.0));
-	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
-	          TriangleInterpolator<real>::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
-}
-
-
 TEST(TriangleInterpolator, linear2D) {
 	auto f = [](Real2 x) { return 5*x(0) + 8*x(1) - 2; };
 	
@@ -231,7 +190,14 @@ TEST(TriangleInterpolator, quadratic2D) {
 }
 
 
-
+TEST(TriangleInterpolator, interpolateInOwner) {
+	ASSERT_EQ(1, TriangleInterpolator<real>::interpolateInOwner(
+			{0, 0}, 1,
+			{0, 1}, 1,
+			{1, 0}, 1,
+			{1, 1}, 1e+100,
+		    {0.2, 0.2}));
+}
 
 
 

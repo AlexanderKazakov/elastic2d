@@ -7,6 +7,7 @@
 #include <lib/linal/linearSystems.hpp>
 #include <lib/linal/basis.hpp>
 #include <lib/linal/functions.hpp>
+#include <lib/linal/geometry.hpp>
 
 #include <lib/linal/special/RotationMatrix.hpp>
 

@@ -32,7 +32,7 @@ public:
 	typedef CDT::Face_handle                                    FaceHandle;
 	typedef CDT::Geom_traits::Vector_2                          CgalVector2;
 	typedef CDT::Triangle                                       CgalTriangle2;
-	typedef CDT::Point                                          Point;
+	typedef CDT::Point                                          CgalPoint2;
 	typedef CDT::Finite_faces_iterator                          FiniteFacesIterator;
 	typedef CDT::Finite_vertices_iterator                       FiniteVerticesIterator;
 	typedef CDT::Line_face_circulator                           LineFaceCirculator;
@@ -52,9 +52,14 @@ public:
 	/** Iteration over all border nodes */
 	///@{
 	typedef typename std::set<size_t>::const_iterator BorderIterator;
-	
 	BorderIterator borderBegin() const { return borderIndices.begin(); }
 	BorderIterator borderEnd() const { return borderIndices.end(); }
+	///@}
+	/** Iteration over all inner nodes */
+	///@{
+	typedef typename std::set<size_t>::const_iterator InnerIterator;
+	InnerIterator innerBegin() const { return innerIndices.begin(); }
+	InnerIterator innerEnd() const { return innerIndices.end(); }
 	///@}
 
 	/**
@@ -95,11 +100,13 @@ public:
 
 	/** Read-only access to real coordinates */
 	Real2 coords2d(const Iterator& it) const {
-		return PointToReal2(vertexHandles[it.iter]->point());
+		return real2(vertexHandles[it.iter]->point());
 	}
 	
 	/** Border normal in specified point */
-	Real2 normal(const Iterator& iter) const;
+	Real2 normal(const Iterator& it) const {
+		return normal(findBorderNeighbors(it));
+	}
 	
 	/** All vertices connected with specified vertex */
 	std::set<Iterator> findNeighborVertices(const Iterator& it) const;
@@ -109,7 +116,7 @@ protected:
 	void move(const Iterator& it, const Real2& d) {
 		assert_true(movable);
 		auto& point = vertexHandles[it.iter]->point();
-		point = point + CgalVector2(d(0), d(1));
+		point = point + cgalVector2(d);
 	}
 
 	/**
@@ -137,6 +144,10 @@ public:
 	Iterator getIterator(const VertexHandle& v) const {
 		return v->info();
 	}
+	
+	bool isBorder(const Iterator& it) const {
+		return borderIndices.find(it.iter) != borderIndices.end();
+	}
 
 	size_t sizeOfRealNodes() const {
 		return vertexHandles.size();
@@ -149,11 +160,12 @@ public:
 protected:
 	/// Data
 	///@{
-	CDT triangulation;                               ///< CGAL triangulation data structure
-	std::vector<VertexHandle> vertexHandles;         ///< CGAL-"pointers" to each grid vertex
-	std::set<size_t> borderIndices;                  ///< indices of border vertices in vertexHandles
-	real effectiveSpatialStep = 0;                   ///< used in triangulation criteria and Courant condition
-	bool movable = false;                            ///< deformable(true) or immutable(false) grid
+	CDT triangulation;                       ///< CGAL triangulation data structure
+	std::vector<VertexHandle> vertexHandles; ///< CGAL-"pointers" to each grid vertex
+	std::set<size_t> borderIndices;          ///< indices of border vertices in vertexHandles
+	std::set<size_t> innerIndices;           ///< indices of inner vertices in vertexHandles
+	real effectiveSpatialStep = 0;           ///< used in triangulation criteria and Courant condition
+	bool movable = false;                    ///< deformable(true) or immutable(false) grid
 	///@}
 
 	real getMinimalSpatialStep() const {
@@ -165,7 +177,7 @@ protected:
 		Triangle ans;
 		ans.inner = false;
 		
-		auto ownerFace = findOwnerFace(it, CgalVector2(shift(0), shift(1)));
+		auto ownerFace = findOwnerFace(it, cgalVector2(shift));
 		if (ownerFace->is_in_domain()) {
 			ans.inner = true;
 			for (int i = 0; i < Triangle::N; i++) {
@@ -182,6 +194,31 @@ protected:
 		auto q = beginVertex->point() + shift; // point to find owner face for
 		return triangulation.locate(q, beginVertex->incident_faces());
 	}
+	
+	/**
+	 * Starting from specified point along the line in specified direction,
+	 * find the nearest border edge crossed by the line.
+	 * Border edge represented by the pair of its vertices.
+	 * @note cases when go from border node outside the body aren't handled
+	 * @return crossed border edge as the pair of its border points
+	 */
+	std::pair<Iterator, Iterator> findCrossingBorder(
+			const Iterator& start, const Real2& direction) const;
+	
+	/**
+	 * @return pair of border vertices {v1, v2} incident to given border vertex;
+	 * the order of border vertices is so that outer body normal = perpendicularClockwise(v2-v1)
+	 * @see normal
+	 */
+	std::pair<Iterator, Iterator> findBorderNeighbors(const Iterator& it) const;
+	
+	/**
+	 * Given with two neighbor border points, go along the border from first to 
+	 * second and so on while the border is straight line collinear to (second - first)
+	 * @return the point where the border bends from the line
+	 */
+	Iterator findBorderFlexion(Iterator first, Iterator second) const;
+
 
 private:
 	/** Functions for building the triangulation */
@@ -189,16 +226,39 @@ private:
 	void triangulate(const Task::Cgal2DGrid& task);
 	void insertPolygon(const Polygon& polygon);
 	static Polygon makePolygon(const std::vector<Real2>& points);
-	static Point findInnerPoint(const Polygon& polygon);
-	void markBorders();
+	static CgalPoint2 findInnerPoint(const Polygon& polygon);
+	void markInnersAndBorders();
 	///@}
+
+	/// Auxilliary functions for handling numerical methods queries 
+	/// @{
+	FaceHandle findCrossedFace(const VertexHandle start, const Real2& direction) const;
+	std::pair<Iterator, Iterator> findCrossingBorder(
+			const VertexHandle& v, const FaceHandle& f, const Real2& direction) const;
+	VertexHandle commonVertex(const FaceHandle& a, const FaceHandle& b) const;
+
+	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
+		VertexHandle first  = vertexHandles[borderNeighbors.first.iter];
+		VertexHandle second = vertexHandles[borderNeighbors.second.iter];
+		Real2 borderVector = real2(second->point()) - real2(first->point());
+		return linal::normalize(
+		       linal::perpendicularClockwise(borderVector));
+	}
+	/// @}
+
+	void printFace(const FaceHandle& f, const std::string& name = "") const;
  
-	static Point Real2ToPoint(const Real2& p) {
-		return Point(p(0), p(1));
+ 
+	static CgalPoint2 cgalPoint2(const Real2& p) {
+		return CgalPoint2(p(0), p(1));
 	}
 	
-	static Real2 PointToReal2(const Point& p) {
+	static Real2 real2(const CgalPoint2& p) {
 		return {p.x(), p.y()};
+	}
+	
+	static CgalVector2 cgalVector2(const Real2& p) {
+		return CgalVector2(p(0), p(1));
 	}
 
 	USE_AND_INIT_LOGGER("gcm.Cgal2DGrid")

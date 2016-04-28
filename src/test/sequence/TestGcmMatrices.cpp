@@ -33,10 +33,7 @@ void testLeftEigenVectors(const GCM_MATRICES& matrix) {
 		auto U1L = matrix.m[s].U1 * matrix.m[s].L;
 		for (int i = 0; i < M; i++) {
 			for (int j = 0; j < M; j++) {
-				ASSERT_NEAR(AU1(i,
-				                j),
-				            U1L(i,
-				                j),
+				ASSERT_NEAR(AU1(i, j), U1L(i, j),
 				            EQUALITY_TOLERANCE) << "(" << s << ") U1 = " <<
 				matrix.m[s].U1;
 			}
@@ -50,12 +47,8 @@ void testRightEigenVectors(const GCM_MATRICES& matrix) {
 		auto LU = matrix.m[s].L * matrix.m[s].U;
 		for (int i = 0; i < M; i++) {
 			for (int j = 0; j < M; j++) {
-				ASSERT_NEAR(UA(i,
-				               j),
-				            LU(i,
-				               j),
-				            EQUALITY_TOLERANCE) << "(" << s << ") U = " <<
-				matrix.m[s].U;
+				ASSERT_NEAR(UA(i, j), LU(i, j),
+				            EQUALITY_TOLERANCE) << "(" << s << ") U = " << matrix.m[s].U;
 			}
 		}
 	}
@@ -66,9 +59,7 @@ void testInverseMatrix(const GCM_MATRICES& matrix) {
 		auto UU1 = matrix.m[s].U * matrix.m[s].U1;
 		for (int i = 0; i < M; i++) {
 			for (int j = 0; j < M; j++) {
-				ASSERT_NEAR(UU1(i,
-				                j), (i == j),
-				            EQUALITY_TOLERANCE) << "(" << s << ") UU1 = " << UU1;
+				ASSERT_NEAR(UU1(i, j), (i == j), EQUALITY_TOLERANCE) << "(" << s << ") UU1 = " << UU1;
 			}
 		}
 	}

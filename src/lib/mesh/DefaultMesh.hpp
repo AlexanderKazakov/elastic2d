@@ -7,8 +7,7 @@
 
 namespace gcm {
 template<typename TMesh> class DefaultSolver;
-template<typename TMesh> class GridCharacteristicMethod;
-template<typename TModel, typename TGrid, typename TMaterial> struct GcmHandler;
+template<typename TModel, typename TGrid, typename TMaterial> class GridCharacteristicMethod;
 template<typename TModel, typename TGrid, typename TMaterial> struct DataBus;
 template<typename TModel, typename TGrid, typename TMaterial> struct MeshMover;
 template<typename TModel, typename TGrid, typename TMaterial> struct OldBorderConditions;
@@ -42,8 +41,6 @@ public:
 	typedef TMaterial                           Material;
 	typedef std::shared_ptr<Material>           MaterialPtr;
 	typedef std::shared_ptr<const Material>     ConstMaterialPtr;
-
-	typedef GcmHandler<Model, Grid, Material>   GCM_HANDLER; 
 
 	// Dimensionality of rheology model, the grid can have different
 	static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
@@ -205,8 +202,7 @@ private:
 	void afterStatement() { }
 
 	friend class DefaultSolver<DefaultMesh>;
-	friend class GridCharacteristicMethod<DefaultMesh>;
-	friend class GcmHandler<Model, Grid, Material>;
+	friend class GridCharacteristicMethod<Model, Grid, Material>;
 	friend class DataBus<Model, Grid, Material>;
 	friend class MeshMover<Model, Grid, Material>;
 	friend class OldBorderConditions<Model, Grid, Material>;

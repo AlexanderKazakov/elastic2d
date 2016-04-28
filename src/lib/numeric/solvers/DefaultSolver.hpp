@@ -19,18 +19,18 @@ namespace gcm {
 template<class TMesh>
 class DefaultSolver : public Solver {
 public:
-	typedef TMesh                                   Mesh;
-	typedef typename Mesh::Model                    Model;
-	typedef typename Mesh::Grid                     Grid;
-	typedef typename Mesh::Material                 Material;
+	typedef TMesh                                           Mesh;
+	typedef typename Mesh::Model                            Model;
+	typedef typename Mesh::Grid                             Grid;
+	typedef typename Mesh::Material                         Material;
 
-	typedef typename Model::Corrector               Corrector;
-	typedef typename Model::InternalOde             InternalOde;
+	typedef typename Model::Corrector                       Corrector;
+	typedef typename Model::InternalOde                     InternalOde;
 
-	typedef OldBorderConditions<Model, Grid, Material> Border;
-	typedef DataBus<Model, Grid, Material>          DATA_BUS;
-	typedef MeshMover<Model, Grid, Material>        MESH_MOVER;
-	typedef GridCharacteristicMethod<Mesh>          GCM;
+	typedef OldBorderConditions<Model, Grid, Material>      Border;
+	typedef DataBus<Model, Grid, Material>                  DATA_BUS;
+	typedef MeshMover<Model, Grid, Material>                MESH_MOVER;
+	typedef GridCharacteristicMethod<Model, Grid, Material> GcmMethod;
 
 	DefaultSolver(const Task& task);
 	virtual ~DefaultSolver();
@@ -49,7 +49,7 @@ public:
 protected:
 	real CourantNumber = 0.0; ///< number from Courant–Friedrichs–Lewy condition
 
-	GCM gridCharacteristicMethod;
+	GcmMethod gridCharacteristicMethod;
 	Corrector* corrector = nullptr;
 	InternalOde* internalOde = nullptr;
 	Border* borderConditions = nullptr;

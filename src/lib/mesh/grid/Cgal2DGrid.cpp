@@ -21,45 +21,7 @@ Cgal2DGrid(const Task& task) :
 		vertexIndex++;
 	}
 
-	markBorders();
-}
-
-
-Real2 Cgal2DGrid::
-normal(const Iterator& it) const {
-	// only for border nodes
-	assert_true(borderIndices.find(it.iter) != borderIndices.end());
-
-	VertexHandle v = vertexHandles[it.iter];
-	
-	// find border edges as two neighbor different domain faces 
-	// moving counterclockwise around the vertex
-	auto firstFace = triangulation.incident_faces(v);
-	auto secondFace = firstFace; ++secondFace;
-	
-	while ( !(  firstFace->is_in_domain() && 
-	           !secondFace->is_in_domain() ) ) {
-		++firstFace; ++secondFace;
-	}
-	
-	VertexHandle firstBorderNeighbour = 
-			firstFace->vertex(firstFace->cw(firstFace->index(v)));
-	assert_true(secondFace->has_vertex(firstBorderNeighbour));
-	
-	while ( !( !firstFace->is_in_domain() && 
-	            secondFace->is_in_domain() ) ) {
-		++firstFace; ++secondFace;
-	}
-	
-	VertexHandle secondBorderNeighbour = 
-			firstFace->vertex(firstFace->cw(firstFace->index(v)));
-	assert_true(secondFace->has_vertex(secondBorderNeighbour));
-	
-	Real2 borderVector = PointToReal2(secondBorderNeighbour->point()) -
-						 PointToReal2(firstBorderNeighbour->point());
-	
-	return linal::normalize(
-	       linal::perpendicularClockwise(borderVector));
+	markInnersAndBorders();
 }
 
 
@@ -85,11 +47,56 @@ findNeighborVertices(const Iterator& it) const {
 }
 
 
+std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
+findCrossingBorder(const Iterator& start, const Real2& direction) const {
+	VertexHandle v = vertexHandles[start.iter];
+	FaceHandle startFace = findCrossedFace(v, direction);
+	return findCrossingBorder(v, startFace, direction);
+}
+
+
+std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
+findBorderNeighbors(const Iterator& it) const {
+	/// only for border nodes
+	assert_true(isBorder(it));
+	VertexHandle v = vertexHandles[it.iter];
+	
+	/// find border edges as two neighbor different domain faces 
+	/// moving counterclockwise around the vertex
+	auto firstFace = triangulation.incident_faces(v);
+	auto secondFace = firstFace; ++secondFace;
+	
+	while ( !(  firstFace->is_in_domain() && 
+	           !secondFace->is_in_domain() ) ) {
+		++firstFace; ++secondFace;
+	}
+	VertexHandle firstBorderNeighbour = 
+			firstFace->vertex(firstFace->cw(firstFace->index(v)));
+	assert_true(secondFace->has_vertex(firstBorderNeighbour));
+	
+	while ( !( !firstFace->is_in_domain() && 
+	            secondFace->is_in_domain() ) ) {
+		++firstFace; ++secondFace;
+	}
+	VertexHandle secondBorderNeighbour = 
+			firstFace->vertex(firstFace->cw(firstFace->index(v)));
+	assert_true(secondFace->has_vertex(secondBorderNeighbour));
+	
+	return {getIterator(firstBorderNeighbour), getIterator(secondBorderNeighbour)};
+}
+
+
+Cgal2DGrid::Iterator Cgal2DGrid::
+findBorderFlexion(Iterator /*first*/, Iterator second) const {
+	return second; // TODO !!!
+}
+
+
 void Cgal2DGrid::
 triangulate(const Task::Cgal2DGrid& task) {
 	// Special "seeds" in the interior of inner cavities
 	// to tell CGAL do not mesh these cavities
-	std::list<Point> listOfSeeds;
+	std::list<CgalPoint2> listOfSeeds;
 	
 	// insert all task outer borders and inner cavities
 	for (const auto& body : task.bodies) {
@@ -127,7 +134,7 @@ makePolygon(const std::vector<Real2>& points) {
 	
 	Polygon polygon;
 	for (const auto& p : points) {
-		polygon.push_back(Real2ToPoint(p));
+		polygon.push_back(cgalPoint2(p));
 	}
 	assert_true(polygon.is_simple()); // has not intersections
 	
@@ -154,45 +161,158 @@ insertPolygon(const Polygon& polygon) {
 }
 
 
-Cgal2DGrid::Point Cgal2DGrid::
+Cgal2DGrid::CgalPoint2 Cgal2DGrid::
 findInnerPoint(const Polygon& polygon) {
 	/// find inner point in polygon
-	Real2 a = PointToReal2(polygon.vertex(0));
-	Real2 b = PointToReal2(polygon.vertex(1));
+	Real2 a = real2(polygon.vertex(0));
+	Real2 b = real2(polygon.vertex(1));
 	Real2 middle = (a + b) / 2.0;
 	Real2 cross = linal::perpendicularClockwise(b - a);
 	Real2 innerPoint = middle + cross;
 	int n = 1; // iteration number
-	while (!polygon.has_on_bounded_side(Real2ToPoint(innerPoint))) {
+	while (!polygon.has_on_bounded_side(cgalPoint2(innerPoint))) {
 	// watching on the both sides of the edge, getting closer on each iteration
 		innerPoint = middle + cross / pow(-2, n);
 		if (n > 20) {
-			THROW_BAD_MESH("Something is wrong with polygon inner point search");
+			THROW_BAD_MESH("Exceed number of iterations in polygon inner point search");
 		}
 		n++;
 	}
-	return Real2ToPoint(innerPoint);
+	return cgalPoint2(innerPoint);
 }
 
 
-void Cgal2DGrid::markBorders() {
+void Cgal2DGrid::markInnersAndBorders() {
 	/// insert indices of border vertices into borderIndices
+	/// and indices of inner vertices into innerIndices
 	borderIndices.clear();
+	innerIndices.clear();
+	
+	for (auto v  = triangulation.finite_vertices_begin();
+	          v != triangulation.finite_vertices_end(); ++v) {
 
-	for (auto cell = triangulation.all_faces_begin();
-		 cell != triangulation.all_faces_end(); ++cell) {
-		
-		if (!cell->is_in_domain()) {
-			for (int i = 0; i < 3; i++) {
-				VertexHandle v = cell->vertex(i);
-				if (!triangulation.is_infinite(v)) {
-					borderIndices.insert(v->info());
-				}
+		bool isBorderNode = false;
+		auto beginFace = triangulation.incident_faces(v);
+		auto faceCirculator = beginFace;
+		do {
+			if ( !faceCirculator->is_in_domain() ) {
+				isBorderNode = true;
+				break;
 			}
+			++faceCirculator;
+		} while (faceCirculator != beginFace);
+		
+		if (isBorderNode) {
+			borderIndices.insert(getIterator(v).iter);
+		} else {
+			innerIndices.insert(getIterator(v).iter);
+		}
+		
+	}
+	
+	assert_eq(borderIndices.size() + innerIndices.size(), sizeOfAllNodes());
+	LOG_DEBUG("Number of border vertices: " << borderIndices.size());
+	LOG_DEBUG("Number of inner vertices: " << innerIndices.size());
+}
+
+
+Cgal2DGrid::FaceHandle Cgal2DGrid::
+findCrossedFace(const VertexHandle start, const Real2& direction) const {
+	/// Choose among incident faces of the given point that one which is
+	/// crossed by the line from that point in specified direction.
+
+	auto faceCirculatorBegin = triangulation.incident_faces(start);
+	while (triangulation.is_infinite(faceCirculatorBegin)) { ++faceCirculatorBegin; }
+	int n = 1; // iteration number
+	FaceHandle ans = NULL;
+	while (ans == NULL) {
+		auto faceCirculator = faceCirculatorBegin;
+		do {
+			CgalPoint2 q = start->point() + cgalVector2(direction / pow(2, n));
+			if (!triangulation.triangle(faceCirculator).has_on_unbounded_side(q)) {
+				ans = faceCirculator;
+				break;
+			}
+			while (triangulation.is_infinite(faceCirculator)) { ++faceCirculator; }
+		} while (faceCirculator != faceCirculatorBegin);
+		
+		++n; 
+		if (n > 20) {
+			THROW_BAD_MESH("Exceed number of iterations in findCrossedFace");
 		}
 	}
-	LOG_DEBUG("Number of border vertices: " << borderIndices.size());
+	
+	return ans;	
 }
+
+
+Cgal2DGrid::VertexHandle Cgal2DGrid::
+commonVertex(const FaceHandle& a, const FaceHandle& b) const {
+	/// return some common vertex of given faces
+	/// or throw Exception if there aren't such
+	for (int i = 0; i < 3; i++) {
+		VertexHandle candidate = a->vertex(i);
+		if (b->has_vertex(candidate)) {
+			return candidate;
+		}
+	}
+	THROW_INVALID_ARG("There aren't common vertices");
+}
+
+
+std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
+findCrossingBorder(const VertexHandle& v, const FaceHandle& f,
+		const Real2& direction) const {
+	/// given a start point and direction, go along this line until
+	/// intersection with border;
+	/// @note face is incident for given vertex,
+	/// given line must go across given face
+	/// @return found border as pair of its vertices
+	
+	assert_true(f->is_in_domain());
+	
+	auto lineWalker = triangulation.line_walk(
+			v->point(), v->point() + cgalVector2(direction), f);
+	while (lineWalker->is_in_domain()) {
+	// go along the line until come out of the body
+		++lineWalker;
+	}
+	
+	FaceHandle outerFace = lineWalker;
+	FaceHandle innerFace = --lineWalker;
+	
+	Iterator first;
+	Iterator second;
+	int neighborIndex = -1;
+	if (innerFace->has_neighbor(outerFace, neighborIndex)) {
+	// line is crossing common edge
+		first = getIterator(innerFace->vertex(innerFace->cw(neighborIndex)));
+		second = getIterator(innerFace->vertex(innerFace->ccw(neighborIndex)));
+	} else {
+	// line hits exact to unique common vertex
+		first = getIterator(commonVertex(outerFace, innerFace));
+		second = findBorderNeighbors(first).first;
+	}
+	
+	return {first, second};
+}
+
+
+void Cgal2DGrid::
+printFace(const FaceHandle& f, const std::string& name) const {
+	/// debugging helper
+	LOG_DEBUG("Face " << name << ":");
+	for (int i = 0; i < 3; i++) {
+		if (triangulation.is_infinite(f->vertex(i))) {
+			LOG_DEBUG("\nINFINITE\n");
+		} else {
+			LOG_DEBUG(real2(f->vertex(i)->point()));
+		}
+	}
+}
+
+
+
 
 
 

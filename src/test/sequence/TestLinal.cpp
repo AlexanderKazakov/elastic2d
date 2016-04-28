@@ -466,6 +466,12 @@ TEST(Linal, VectorCrossProduct) {
 	ASSERT_EQ(crossProduct(v1, v1), z);
 	ASSERT_EQ(crossProduct(v2, v2), z);
 	ASSERT_EQ(crossProduct(v3, v3), z);
+	
+	ASSERT_EQ(1, crossProduct(Real2({1, 0}), Real2({1, 1})));
+	ASSERT_EQ(1, crossProduct(Real2({1, 1}), Real2({1, 0})));
+	
+	ASSERT_EQ(crossProduct(Real3({12, 5, 0}), Real3({-10, 1, 0}))(2),
+	          crossProduct(Real2({12, 5}), Real2({-10, 1})));
 }
 
 
@@ -909,6 +915,93 @@ TEST(Linal, linearLeastSquares) {
 	W = {1, 2};
 	ASSERT_EQ(5.0 / 9.0, linearLeastSquares(A, b, W)(0));
 }
+
+
+TEST(Linal, linesIntersection) {
+	ASSERT_EQ(Real2({1, 1}), linesIntersection({1, 0}, {1, 2}, {0, 1}, {2, 1}));
+	ASSERT_EQ(Real2({0, 0}), linesIntersection({-1, -1}, {1, 1}, {-1, 1}, {1, -1}));
+	ASSERT_EQ(Real2({1, 1}), linesIntersection({-1, -1}, {-2, -2}, {1, 0}, {1, -3}));
+}
+
+
+TEST(Linal, barycentric2D) {
+	Real2 a = {0, 0};
+	Real2 b = {1, 0};
+	Real2 c = {0, 1};
+	
+	ASSERT_EQ(Real3({1, 0, 0}),
+	          linal::barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 1, 0}),
+	          linal::barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}),
+	          linal::barycentricCoordinates(a, b, c, c));
+
+	ASSERT_EQ(Real3({0, 0.5, 0.5}),
+	          linal::barycentricCoordinates(a, b, c, (b+c)/2.0));
+	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
+	          linal::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+
+	// affine invariance
+	
+	Matrix22 S = {3, 5,
+	             -2, 10};
+	Real2 shift = {5, -6};
+	
+	a = S * a + shift;
+	b = S * b + shift;
+	c = S * c + shift;
+	
+	ASSERT_EQ(Real3({1, 0, 0}),
+	          linal::barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 1, 0}),
+	          linal::barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}),
+	          linal::barycentricCoordinates(a, b, c, c));
+
+	ASSERT_EQ(Real3({0, 0.5, 0.5}),
+	          linal::barycentricCoordinates(a, b, c, (b+c)/2.0));
+	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
+	          linal::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+}
+
+
+TEST(Linal, isPerpendicular) {
+	ASSERT_TRUE (isPerpendicular(Real2({0, 1}), Real2({1, 0})));
+	ASSERT_FALSE(isPerpendicular(Real2({0, 1}), Real2({1, 1})));
+	ASSERT_TRUE (isPerpendicular(Real3({0, 1, 0}), Real3({1, 0, 1})));
+	ASSERT_FALSE(isPerpendicular(Real3({1, 0, 1}), Real3({1, 0, 0})));
+}
+
+
+TEST(Linal, isDegenerate) {
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({0, 0})));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 1}), Real2({0, 2})));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({1, 1}), Real2({2, 2})));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({1, 1})));
+	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({1, 0}), Real2({0, 1})));
+	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7})));
+}
+
+
+TEST(Linal, isInsideAngle) {
+	ASSERT_EQ(POSITION::INSIDE, positionRelativeToAngle(
+			Real2({1, 0}), Real2({0, 0}), Real2({0, 1}), Real2({1, 1})));
+		
+	ASSERT_EQ(POSITION::OUTSIDE, positionRelativeToAngle(
+			Real2({1, 0}), Real2({0, 0}), Real2({0, 1}), Real2({-1, 1})));
+	
+	ASSERT_EQ(POSITION::OUTSIDE, positionRelativeToAngle(
+			Real2({0, 1}), Real2({0, 0}), Real2({1, 0}), Real2({1, 1})));
+		
+	ASSERT_EQ(POSITION::INSIDE, positionRelativeToAngle(
+			Real2({0, 1}), Real2({0, 0}), Real2({1, 0}), Real2({-1, 1})));
+}
+
+
+
+
+
+
 
 
 
