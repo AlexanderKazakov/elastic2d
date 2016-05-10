@@ -27,7 +27,7 @@ Cgal2DGrid(const Task& task) :
 
 std::set<Cgal2DGrid::Iterator> Cgal2DGrid::
 findNeighborVertices(const Iterator& it) const {
-	VertexHandle v = vertexHandles[it.iter];
+	VertexHandle v = vertexHandles[getIndex(it)];
 	std::set<Iterator> ans;
 	
 	auto beginFace = triangulation.incident_faces(v);
@@ -49,7 +49,7 @@ findNeighborVertices(const Iterator& it) const {
 
 std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
 findCrossingBorder(const Iterator& start, const Real2& direction) const {
-	VertexHandle v = vertexHandles[start.iter];
+	VertexHandle v = vertexHandles[getIndex(start)];
 	FaceHandle startFace = findCrossedFace(v, direction);
 	return findCrossingBorder(v, startFace, direction);
 }
@@ -59,7 +59,7 @@ std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
 findBorderNeighbors(const Iterator& it) const {
 	/// only for border nodes
 	assert_true(isBorder(it));
-	VertexHandle v = vertexHandles[it.iter];
+	VertexHandle v = vertexHandles[getIndex(it)];
 	
 	/// find border edges as two neighbor different domain faces 
 	/// moving counterclockwise around the vertex
@@ -82,13 +82,27 @@ findBorderNeighbors(const Iterator& it) const {
 			firstFace->vertex(firstFace->cw(firstFace->index(v)));
 	assert_true(secondFace->has_vertex(secondBorderNeighbour));
 	
-	return {getIterator(firstBorderNeighbour), getIterator(secondBorderNeighbour)};
+	return {getIterator(secondBorderNeighbour), getIterator(firstBorderNeighbour)};
 }
 
 
 Cgal2DGrid::Iterator Cgal2DGrid::
-findBorderFlexion(Iterator /*first*/, Iterator second) const {
-	return second; // TODO !!!
+findBorderFlexion(Iterator first, Iterator second) const {
+	
+	auto findThird = [&]() {
+		auto neighbors = findBorderNeighbors(second);
+		return (first != neighbors.first) ? neighbors.first
+		                                  : neighbors.second;
+	};
+	
+	Iterator third = findThird();
+	while (linal::isDegenerate(coords2d(first), coords2d(second), coords2d(third))) {
+		first = second;
+		second = third;
+		third = findThird();
+	}
+	
+	return second;
 }
 
 
@@ -203,9 +217,9 @@ void Cgal2DGrid::markInnersAndBorders() {
 		} while (faceCirculator != beginFace);
 		
 		if (isBorderNode) {
-			borderIndices.insert(getIterator(v).iter);
+			borderIndices.insert(getIndex(getIterator(v)));
 		} else {
-			innerIndices.insert(getIterator(v).iter);
+			innerIndices.insert(getIndex(getIterator(v)));
 		}
 		
 	}
@@ -233,7 +247,7 @@ findCrossedFace(const VertexHandle start, const Real2& direction) const {
 				ans = faceCirculator;
 				break;
 			}
-			while (triangulation.is_infinite(faceCirculator)) { ++faceCirculator; }
+			do { ++faceCirculator; } while (triangulation.is_infinite(faceCirculator));
 		} while (faceCirculator != faceCirculatorBegin);
 		
 		++n; 
@@ -249,7 +263,7 @@ findCrossedFace(const VertexHandle start, const Real2& direction) const {
 Cgal2DGrid::VertexHandle Cgal2DGrid::
 commonVertex(const FaceHandle& a, const FaceHandle& b) const {
 	/// return some common vertex of given faces
-	/// or throw Exception if there aren't such
+	/// or throw Exception if there isn't such
 	for (int i = 0; i < 3; i++) {
 		VertexHandle candidate = a->vertex(i);
 		if (b->has_vertex(candidate)) {

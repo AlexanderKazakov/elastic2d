@@ -200,9 +200,9 @@ private:
 			// characteristic hits into body
 			// second order interpolate inner value in triangle on current time layer
 				u = TriangleInterpolator<PdeVector>::interpolate(
-					mesh.coords2d(t.p[0]), mesh.pde(t.p[0]), gradients[t.p[0].iter],
-					mesh.coords2d(t.p[1]), mesh.pde(t.p[1]), gradients[t.p[1].iter],
-					mesh.coords2d(t.p[2]), mesh.pde(t.p[2]), gradients[t.p[2].iter],
+					mesh.coords2d(t.p[0]), mesh.pde(t.p[0]), gradients[mesh.getIndex(t.p[0])],
+					mesh.coords2d(t.p[1]), mesh.pde(t.p[1]), gradients[mesh.getIndex(t.p[1])],
+					mesh.coords2d(t.p[2]), mesh.pde(t.p[2]), gradients[mesh.getIndex(t.p[2])],
 					mesh.coords2d(it) + shift);
 					
 			} else {
@@ -274,6 +274,7 @@ private:
 			const Iterator& it, const Real2& shift) const {
 		/// first order interpolate in triangle formed by border points from
 		/// current and next time layers (triangle in space-time)
+
 		auto borderEdge = mesh.findCrossingBorder(it, shift);
 		Real2 r1 = mesh.coords2d(borderEdge.first);
 		Real2 r2 = mesh.coords2d(borderEdge.second);
@@ -314,22 +315,22 @@ private:
 			const Iterator& it, const Real2& shift) const {
 		
 		auto borderNeighbors = mesh.findBorderNeighbors(it);
-		Real2 a = mesh.coords2d(borderNeighbors.second);
+		Real2 a = mesh.coords2d(borderNeighbors.first);
 		Real2 b = mesh.coords2d(it);
-		Real2 c = mesh.coords2d(borderNeighbors.first); // TODO first-second
+		Real2 c = mesh.coords2d(borderNeighbors.second);
 		
 		switch (linal::positionRelativeToAngle(a, b, c, b + shift)) {
 			case (linal::POSITION::INSIDE):
 				return interpolateInSpaceTime(mesh, it, shift);
 				break;
 			case (linal::POSITION::FIRST_BORDER):
-				return interpolateInSpaceTimeAlongBorder(mesh, it, borderNeighbors.second, shift);
-				break;
-			case (linal::POSITION::SECOND_BORDER):
 				return interpolateInSpaceTimeAlongBorder(mesh, it, borderNeighbors.first, shift);
 				break;
+			case (linal::POSITION::SECOND_BORDER):
+				return interpolateInSpaceTimeAlongBorder(mesh, it, borderNeighbors.second, shift);
+				break;
 			case (linal::POSITION::OUTSIDE):
-			// really border case would be already handled before
+			// really border case is already handled before
 				LOG_DEBUG("Bad case: outside the body in whenInnerBorderIsOuter at "
 						<< mesh.coords2d(it));
 				return mesh.pde(it);
@@ -365,7 +366,7 @@ private:
 				i++; if (i > 7) { break; }
 			}
 			
-			gradients[v.iter] = linal::linearLeastSquares(A, b, W);
+			gradients[mesh.getIndex(v)] = linal::linearLeastSquares(A, b, W);
 		}
 	}
 	
@@ -389,14 +390,14 @@ private:
 			int i = 0;
 			for (auto neighbor : neighbors) {
 				A.setRow(i, mesh.coords2d(neighbor) - mesh.coords2d(v));
-				b(i) = gradients[neighbor.iter] - gradients[v.iter];
+				b(i) = gradients[mesh.getIndex(neighbor)] - gradients[mesh.getIndex(v)];
 				
 				i++; if (i > 7) { break; }
 			}
 			
 			auto H = linal::linearLeastSquares(A, b); // gradient of gradient
 			
-			hessians[v.iter] = {H(0)(0), (H(0)(1) + H(1)(0)) / 2.0, H(1)(1)};
+			hessians[mesh.getIndex(v)] = {H(0)(0), (H(0)(1) + H(1)(0)) / 2.0, H(1)(1)};
 		}
 	}
 	

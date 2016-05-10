@@ -94,13 +94,13 @@ public:
 
 	/** Read-only access to real coordinates with auxiliary 0 at z */
 	Real3 coords(const Iterator& it) const {
-		auto point = vertexHandles[it.iter]->point();
+		auto point = vertexHandles[getIndex(it)]->point();
 		return {point.x(), point.y(), 0};
 	}
 
 	/** Read-only access to real coordinates */
 	Real2 coords2d(const Iterator& it) const {
-		return real2(vertexHandles[it.iter]->point());
+		return real2(vertexHandles[getIndex(it)]->point());
 	}
 	
 	/** Border normal in specified point */
@@ -115,7 +115,7 @@ protected:
 	/** Move specified point on specified distance */
 	void move(const Iterator& it, const Real2& d) {
 		assert_true(movable);
-		auto& point = vertexHandles[it.iter]->point();
+		auto& point = vertexHandles[getIndex(it)]->point();
 		point = point + cgalVector2(d);
 	}
 
@@ -146,7 +146,7 @@ public:
 	}
 	
 	bool isBorder(const Iterator& it) const {
-		return borderIndices.find(it.iter) != borderIndices.end();
+		return borderIndices.find(getIndex(it)) != borderIndices.end();
 	}
 
 	size_t sizeOfRealNodes() const {
@@ -173,26 +173,28 @@ protected:
 		return effectiveSpatialStep;
 	}
 
+	/**
+	 * Find triangle that contains point on specified distance (shift) 
+	 * from specified point (it)
+	 */
 	Triangle findOwnerTriangle(const Iterator& it, const Real2& shift) const {
+		
+		auto beginVertex = vertexHandles[getIndex(it)];
+		auto q = beginVertex->point() + cgalVector2(shift); // point to find owner face for
+		
+		auto ownerFace = triangulation.locate(q, beginVertex->incident_faces());
+		
 		Triangle ans;
 		ans.inner = false;
-		
-		auto ownerFace = findOwnerFace(it, cgalVector2(shift));
 		if (ownerFace->is_in_domain()) {
 			ans.inner = true;
-			for (int i = 0; i < Triangle::N; i++) {
+			for (int i = 0; i < 3; i++) {
 				ans.p[i] = getIterator(ownerFace->vertex(i));
 			}
 		}
 		// TODO - handle the case of exact hit to the border edge, when outer face is chosen
 		
 		return ans;
-	}
-
-	FaceHandle findOwnerFace(const Iterator& it, const CgalVector2 shift) const {
-		auto beginVertex = vertexHandles[getIndex(it)];
-		auto q = beginVertex->point() + shift; // point to find owner face for
-		return triangulation.locate(q, beginVertex->incident_faces());
 	}
 	
 	/**
@@ -207,7 +209,7 @@ protected:
 	
 	/**
 	 * @return pair of border vertices {v1, v2} incident to given border vertex;
-	 * the order of border vertices is so that outer body normal = perpendicularClockwise(v2-v1)
+	 * the order of border vertices is so that outer body normal = perpendicularClockwise(v1-v2)
 	 * @see normal
 	 */
 	std::pair<Iterator, Iterator> findBorderNeighbors(const Iterator& it) const;
@@ -238,9 +240,9 @@ private:
 	VertexHandle commonVertex(const FaceHandle& a, const FaceHandle& b) const;
 
 	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
-		VertexHandle first  = vertexHandles[borderNeighbors.first.iter];
-		VertexHandle second = vertexHandles[borderNeighbors.second.iter];
-		Real2 borderVector = real2(second->point()) - real2(first->point());
+		VertexHandle first  = vertexHandles[getIndex(borderNeighbors.first)];
+		VertexHandle second = vertexHandles[getIndex(borderNeighbors.second)];
+		Real2 borderVector = real2(first->point()) - real2(second->point());
 		return linal::normalize(
 		       linal::perpendicularClockwise(borderVector));
 	}

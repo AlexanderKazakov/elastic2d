@@ -61,13 +61,13 @@ Task parseTaskCgal2d() {
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3},// {2, 2}
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 2}
 	};
-//	Task::Cgal2DGrid::Body::Border inner = {
-//		{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}
-//	};
+	Task::Cgal2DGrid::Body::Border inner = {
+		{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}
+	};
 	task.cgal2DGrid.bodies = {
-		Task::Cgal2DGrid::Body(outer, {/*inner*/}),
+		Task::Cgal2DGrid::Body(outer, {inner}),
 //		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 
@@ -78,9 +78,9 @@ Task parseTaskCgal2d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 1;
+	statement.globalSettings.CourantNumber = 2;
 
-	statement.globalSettings.numberOfSnaps = 100;
+	statement.globalSettings.numberOfSnaps = 40;
 	statement.globalSettings.stepsPerSnap = 1;
 
 //	Statement::InitialCondition::Quantity pressure;

@@ -75,7 +75,7 @@ bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
  * b is the vertex of the triangle.
  * "inside" means that going from side b-a to side b-c counterclockwise,
  * we meet the point q.
- * "first border" means line a-b, "second border" means line c-b.
+ * "FIRST_BORDER" means ray b-a, "SECOND_BORDER" means ray b-c.
  * 
  *       c                          a          
  *        /                          /         
@@ -89,13 +89,14 @@ inline POSITION positionRelativeToAngle(
 		const Real2& a, const Real2& b, const Real2& c, const Real2& q) {
 
 	if (isDegenerate(a, b, c)) {
-	
+		assert_lt(dotProduct(a - b, c - b), 0); // 180 degrees angle
+		
 		if (isDegenerate(a, b, q)) {
 			return (length(q - a) < length(q - c)) ? POSITION::FIRST_BORDER
-			                                       : POSITION::SECOND_BORDER;
+												   : POSITION::SECOND_BORDER;
 		} else {
 			return (crossProduct(a - b, q - b) > 0) ? POSITION::INSIDE
-			                                        : POSITION::OUTSIDE;
+													: POSITION::OUTSIDE;
 		}
 		
 	} else {
