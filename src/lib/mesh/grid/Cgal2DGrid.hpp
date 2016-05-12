@@ -111,14 +111,6 @@ public:
 	/** All vertices connected with specified vertex */
 	std::set<Iterator> findNeighborVertices(const Iterator& it) const;
 
-protected:
-	/** Move specified point on specified distance */
-	void move(const Iterator& it, const Real2& d) {
-		assert_true(movable);
-		auto& point = vertexHandles[getIndex(it)]->point();
-		point = point + cgalVector2(d);
-	}
-
 	/**
 	 * @param it begin() <= iterator < end()
 	 * @return index in std::vector
@@ -127,7 +119,6 @@ protected:
 		return it.iter;
 	}
 
-public:
 	/** @return indices of all vertices in vertexHandles which specified cell owns */
 	std::array<size_t, 3> getVerticesOfCell(const CellIterator& it) const {
 		std::array<size_t, 3> vertices;
@@ -135,10 +126,6 @@ public:
 			vertices[i] = it->vertex((int)i)->info();
 		}
 		return vertices;
-	}
-	
-	const CDT& getTriangulation() const {
-		return triangulation;
 	}
 	
 	Iterator getIterator(const VertexHandle& v) const {
@@ -157,17 +144,6 @@ public:
 		return sizeOfRealNodes();
 	}
 
-protected:
-	/// Data
-	///@{
-	CDT triangulation;                       ///< CGAL triangulation data structure
-	std::vector<VertexHandle> vertexHandles; ///< CGAL-"pointers" to each grid vertex
-	std::set<size_t> borderIndices;          ///< indices of border vertices in vertexHandles
-	std::set<size_t> innerIndices;           ///< indices of inner vertices in vertexHandles
-	real effectiveSpatialStep = 0;           ///< used in triangulation criteria and Courant condition
-	bool movable = false;                    ///< deformable(true) or immutable(false) grid
-	///@}
-
 	real getMinimalSpatialStep() const {
 		assert_gt(effectiveSpatialStep, 0);
 		return effectiveSpatialStep;
@@ -175,27 +151,21 @@ protected:
 
 	/**
 	 * Find triangle that contains point on specified distance (shift) 
-	 * from specified point (it)
+	 * from specified point (it) by line walk from it to (it+shift).
+	 * If the line goes out of the body, returned triangle.inner == false, 
+	 * triangle points are not set.
+	 * @note for convex bodies result is the same with locateOwnerTriangle
 	 */
-	Triangle findOwnerTriangle(const Iterator& it, const Real2& shift) const {
-		
-		auto beginVertex = vertexHandles[getIndex(it)];
-		auto q = beginVertex->point() + cgalVector2(shift); // point to find owner face for
-		
-		auto ownerFace = triangulation.locate(q, beginVertex->incident_faces());
-		
-		Triangle ans;
-		ans.inner = false;
-		if (ownerFace->is_in_domain()) {
-			ans.inner = true;
-			for (int i = 0; i < 3; i++) {
-				ans.p[i] = getIterator(ownerFace->vertex(i));
-			}
-		}
-		// TODO - handle the case of exact hit to the border edge, when outer face is chosen
-		
-		return ans;
-	}
+	Triangle findOwnerTriangle(const Iterator& it, const Real2& shift) const;
+	
+	/**
+	 * Find triangle that contains point on specified distance (shift) 
+	 * from specified point (it) by triangulation.locate function. 
+	 * If found face is not "in_domain", returned triangle.inner == false, 
+	 * triangle points are not set.
+	 * @note for convex bodies result is the same with findOwnerTriangle
+	 */
+	Triangle locateOwnerTriangle(const Iterator& it, const Real2& shift) const;
 	
 	/**
 	 * Starting from specified point along the line in specified direction,
@@ -222,6 +192,25 @@ protected:
 	Iterator findBorderFlexion(Iterator first, Iterator second) const;
 
 
+protected:
+	/// Data
+	///@{
+	CDT triangulation;                       ///< CGAL triangulation data structure
+	std::vector<VertexHandle> vertexHandles; ///< CGAL-"pointers" to each grid vertex
+	std::set<size_t> borderIndices;          ///< indices of border vertices in vertexHandles
+	std::set<size_t> innerIndices;           ///< indices of inner vertices in vertexHandles
+	real effectiveSpatialStep = 0;           ///< used in triangulation criteria and Courant condition
+	bool movable = false;                    ///< deformable(true) or immutable(false) grid
+	///@}
+
+	/** Move specified point on specified distance */
+	void move(const Iterator& it, const Real2& d) {
+		assert_true(movable);
+		auto& point = vertexHandles[getIndex(it)]->point();
+		point = point + cgalVector2(d);
+	}
+
+	
 private:
 	/** Functions for building the triangulation */
 	///@{
@@ -235,8 +224,10 @@ private:
 	/// Auxilliary functions for handling numerical methods queries 
 	/// @{
 	FaceHandle findCrossedFace(const VertexHandle start, const Real2& direction) const;
+	
 	std::pair<Iterator, Iterator> findCrossingBorder(
 			const VertexHandle& v, const FaceHandle& f, const Real2& direction) const;
+	
 	VertexHandle commonVertex(const FaceHandle& a, const FaceHandle& b) const;
 
 	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
@@ -248,8 +239,8 @@ private:
 	}
 	/// @}
 
+
 	void printFace(const FaceHandle& f, const std::string& name = "") const;
- 
  
 	static CgalPoint2 cgalPoint2(const Real2& p) {
 		return CgalPoint2(p(0), p(1));

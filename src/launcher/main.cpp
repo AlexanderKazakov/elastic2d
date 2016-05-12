@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 	Task task;
 	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
+	else if (taskId == "2d"        ) { task = parseTask2d();     }
 	else if (taskId == "inverse"   ) { task = parseTaskCagi2d(); }
 	else {
 		LOG_FATAL("Invalid task file");
@@ -80,14 +81,14 @@ Task parseTaskCgal2d() {
 
 	statement.globalSettings.CourantNumber = 2;
 
-	statement.globalSettings.numberOfSnaps = 40;
+	statement.globalSettings.numberOfSnaps = 100;
 	statement.globalSettings.stepsPerSnap = 1;
 
-//	Statement::InitialCondition::Quantity pressure;
-//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-//	pressure.value = 10.0;
-//	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
-//	statement.initialCondition.quantities.push_back(pressure);
+	Statement::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+	pressure.value = 10.0;
+	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
+	statement.initialCondition.quantities.push_back(pressure);
 	
 //	Statement::InitialCondition::Wave wave;
 //	wave.waveType = Waves::T::P_FORWARD;
@@ -114,18 +115,18 @@ Task parseTaskCgal2d() {
 		[] (real t) { return (t < 1) ? -1 : 0; }
 	};
 	
-//	Statement::BorderCondition borderConditionMid;
-//	borderConditionMid.area = std::make_shared<AxisAlignedBoxArea>(
-//			Real3({-2.5, -2.5, -10}), Real3({0.5, 0.5, 10}));
-//	borderConditionMid.type = BorderConditions::T::FIXED_VELOCITY;
-//	borderConditionMid.values = {
-//		[] (real) { return 0; },
-//		[] (real) { return 0; }
-//	};
+	Statement::BorderCondition borderConditionMid;
+	borderConditionMid.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-2.5, -2.5, -10}), Real3({0.5, 0.5, 10}));
+	borderConditionMid.type = BorderConditions::T::FIXED_VELOCITY;
+	borderConditionMid.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; }
+	};
 	
 	statement.borderConditions = {borderConditionAll,
 	                              borderConditionLeft,
-	                              /*borderConditionMid*/};
+	                              borderConditionMid};
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

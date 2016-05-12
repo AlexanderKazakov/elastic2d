@@ -35,23 +35,23 @@ generateRandomMaterial() {
 	const real C_MAX = 1e+3;
 	const real C_MIN = 1.0;
 
-	real rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
+	real rho = Utils::randomReal(RHO_MIN, RHO_MAX);
 	// Generate symmetric positive-definite matrix TODO - to linal
 	linal::Matrix<3, 3> help;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			help(i, j) = ((C_MAX - C_MIN) * rand()) / RAND_MAX + C_MIN;
+			help(i, j) = Utils::randomReal(C_MIN, C_MAX);
 		}
 	}
-	linal::Matrix<3, 3> symm = help * linal::transpose(help);
+	linal::Matrix<3, 3> symm = linal::transposeMultiply(help, help);
 
 	real c11 = symm(0, 0); real c12 = symm(0, 1); real c13 = symm(0, 2);
 	real c22 = symm(1, 1); real c23 = symm(1, 2);
 	real c33 = symm(2, 2);
 
-	real c44 = ((C_MAX * C_MAX - C_MIN * C_MIN) * rand()) / RAND_MAX + C_MIN * C_MIN;
-	real c55 = ((C_MAX * C_MAX - C_MIN * C_MIN) * rand()) / RAND_MAX + C_MIN * C_MIN;
-	real c66 = ((C_MAX * C_MAX - C_MIN * C_MIN) * rand()) / RAND_MAX + C_MIN * C_MIN;
+	real c44 = Utils::randomReal(C_MIN*C_MIN, C_MAX*C_MAX);
+	real c55 = Utils::randomReal(C_MIN*C_MIN, C_MAX*C_MAX);
+	real c66 = Utils::randomReal(C_MIN*C_MIN, C_MAX*C_MAX);
 
 	return OrthotropicMaterial(rho, {c11, c12, c13, c22, c23, c33, c44, c55, c66});
 }

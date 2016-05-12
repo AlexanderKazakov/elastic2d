@@ -652,14 +652,14 @@ TEST(Linal, getRow) {
 
 TEST(Linal, diagonalMultiply) {
 	Matrix<9, 9> A, B;
-	srand((unsigned int)time(0));
+	Utils::seedRand();
 
 	for (int l = 0; l < LINAL_TEST_NUMBER_ITERATIONS; l++) {
 
 		for (int i = 0; i < A.M; i++) {
 			for (int j = 0; j < A.N; j++) {
-				A(i, j) = rand() - RAND_MAX / 2.0;
-				B(i, j) = rand() - RAND_MAX / 2.0;
+				A(i, j) = Utils::randomReal(-1e+6, 1e+6);
+				B(i, j) = Utils::randomReal(-1e+6, 1e+6);
 			}
 		}
 
@@ -814,31 +814,31 @@ TEST(Linal, cross_verification) {
 	Matrix<3, 3> A, B, C, D1;
 	DiagonalMatrix<3> D;
 	Vector<3> f;
-	srand((unsigned int)time(0));
+	Utils::seedRand();
 
 	for (int l = 0; l < LINAL_TEST_NUMBER_ITERATIONS; l++) {
 
 		for (int i = 0; i < A.M; i++) {
 			for (int j = 0; j < A.N; j++) {
-				A(i, j) = rand() - RAND_MAX / 2.0;
-				B(i, j) = rand() - RAND_MAX / 2.0;
+				A(i, j) = Utils::randomReal(-1e+6, 1e+6);
+				B(i, j) = Utils::randomReal(-1e+6, 1e+6);
 				D1(i, j) = 0;
 			}
-			D1(i, i) = D(i) = rand() - RAND_MAX / 2.0;
-			f(i) = rand() - RAND_MAX / 2.0;
+			D1(i, i) = D(i) = Utils::randomReal(-1e+6, 1e+6);
+			f(i) = Utils::randomReal(-1e+6, 1e+6);
 		}
 		
 		// plus - minus
 		C = A + B;
-		ASSERT_EQ(A, C - B);
-		ASSERT_EQ(B, C - A);
+		ASSERT_TRUE(approximatelyEqual(A, C - B));
+		ASSERT_TRUE(approximatelyEqual(B, C - A));
 		C -= B;
-		ASSERT_EQ(A, C);
+		ASSERT_TRUE(approximatelyEqual(A, C));
 		C -= A;
-		ASSERT_EQ(zeros(C), C);
+		ASSERT_TRUE(approximatelyEqual(zeros(C), C, 1000 * EQUALITY_TOLERANCE));
 		C = 2.0 * A;
 		C = C - 3.0 * A;
-		ASSERT_EQ(- A, C);
+		ASSERT_TRUE(approximatelyEqual(- A, C));
 		
 		
 		// multiplication

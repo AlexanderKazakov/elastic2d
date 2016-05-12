@@ -1,9 +1,6 @@
 #ifndef LIBGCM_UNSTRUCTUREDGRID_HPP
 #define LIBGCM_UNSTRUCTUREDGRID_HPP
 
-#include <vtkUnstructuredGrid.h>
-#include <vtkXMLUnstructuredGridWriter.h>
-
 #include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/mesh/Elements.hpp>
 
@@ -13,8 +10,6 @@ namespace gcm {
  */
 class UnstructuredGrid : public AbstractGrid {
 public:
-	typedef vtkUnstructuredGrid          VtkGridType;
-	typedef vtkXMLUnstructuredGridWriter VtkWriterType;
 
 	/** 
 	 * Simple size_t index iterator over all mesh nodes
@@ -27,8 +22,12 @@ public:
 		
 		const Iterator& operator*() const { return *this; }
 		
+		bool operator==(const Iterator& other) const {
+			return iter == other.iter;
+		}
+		
 		bool operator!=(const Iterator& other) const {
-			return iter != other.iter;
+			return !( (*this) == other );
 		}
 		
 		bool operator<(const Iterator& other) const {

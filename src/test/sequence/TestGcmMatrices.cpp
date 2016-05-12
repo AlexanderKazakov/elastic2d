@@ -71,7 +71,7 @@ void testValuesOrdersConcerted(const GCM_MATRICES& matrix);
 
 protected:
 	void testDiagonalization() {
-		srand((unsigned int)time(0));
+		Utils::seedRand();
 		for (int i = 0; i < NUMBER_OF_TEST_ITERATIONS; i++) {
 			auto material = std::make_shared<Material>(Material::generateRandomMaterial());
 			auto matrix = std::shared_ptr<GCM_MATRICES>(new GCM_MATRICES());

@@ -10,6 +10,7 @@ IsotropicMaterial(const real rho_, const real lambda_, const real mu_,
 	rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
 	continualDamageParameter(continualDamageParameter_) { }
 
+
 IsotropicMaterial IsotropicMaterial::
 generateRandomMaterial() {
 	const real RHO_MAX = 100.0;
@@ -19,9 +20,9 @@ generateRandomMaterial() {
 	const real MU_MAX = 1e+6;
 	const real MU_MIN = 1.0;
 
-	real rho = ((RHO_MAX - RHO_MIN) * rand()) / RAND_MAX + RHO_MIN;
-	real lambda = ((LAMBDA_MAX - LAMBDA_MIN) * rand()) / RAND_MAX + LAMBDA_MIN;
-	real mu = ((MU_MAX - MU_MIN) * rand()) / RAND_MAX + MU_MIN;
+	real rho = Utils::randomReal(RHO_MIN, RHO_MAX);
+	real lambda = Utils::randomReal(LAMBDA_MIN, LAMBDA_MAX);
+	real mu = Utils::randomReal(MU_MIN, MU_MAX);
 
 	return IsotropicMaterial(rho, lambda, mu);
 }

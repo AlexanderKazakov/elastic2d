@@ -37,6 +37,21 @@ public:
 		
 		return relativeError2 < tolerance * tolerance;
 	}
+	
+	/**
+	 * Seed random generator to produce different values
+	 */
+	static void seedRand() {
+		srand((unsigned int)time(0));
+	}
+	
+	/**
+	 * Produce pseudorandom uniformly distributed real number from min to max inclusive
+	 * @note do not forget seedRand
+	 */
+	static real randomReal(const real min, const real max) {
+		return ((max - min) * rand()) / RAND_MAX + min;
+	}
 
 };
 

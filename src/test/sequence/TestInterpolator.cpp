@@ -147,12 +147,12 @@ TEST(EqualDistanceLineInterpolator, Exceptions) {
 TEST(TriangleInterpolator, linear2D) {
 	auto f = [](Real2 x) { return 5*x(0) + 8*x(1) - 2; };
 	
-	srand((unsigned int)time(0));
+	Utils::seedRand();
 	for (int i = 0; i < 1000; i++) {
-		Real2 a = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
-		Real2 b = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
-		Real2 c = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
-		Real2 q = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 a = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real2 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real2 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real2 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		
 		ASSERT_NEAR(f(q), 
 		            TriangleInterpolator<real>::interpolate(a, f(a),
@@ -173,12 +173,12 @@ TEST(TriangleInterpolator, quadratic2D) {
 		                               -30*x(1) + 10*x(0) + 8});
 	};
 		
-	srand((unsigned int)time(0));
+	Utils::seedRand();
 	for (int i = 0; i < 1000; i++) {
-		Real2 a = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
-		Real2 b = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
-		Real2 c = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
-		Real2 q = {rand() - RAND_MAX / 2.0, rand() - RAND_MAX / 2.0};
+		Real2 a = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real2 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real2 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real2 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		
 		ASSERT_NEAR(f(q), 
 		            TriangleInterpolator<real>::interpolate(a, f(a), g(a),

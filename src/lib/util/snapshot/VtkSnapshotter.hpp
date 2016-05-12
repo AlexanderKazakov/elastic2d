@@ -14,11 +14,128 @@
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkTriangle.h>
 
+
 namespace gcm {
+
+template<typename TGrid> struct VtkTypesBase;
+
+template<> struct VtkTypesBase<Cgal2DGrid> {
+	typedef vtkUnstructuredGrid          GridType;
+	typedef vtkXMLUnstructuredGridWriter WriterType;
+};
+template<> struct VtkTypesBase<CubicGrid> {
+	typedef vtkStructuredGrid          GridType;
+	typedef vtkXMLStructuredGridWriter WriterType;
+};
+
+
+template<typename TGrid>
+struct VtkTypes : public VtkTypesBase<TGrid> {
+	typedef VtkTypesBase<TGrid>       Base;
+	typedef typename Base::GridType   GridType;
+	typedef typename Base::WriterType WriterType;
+	
+	static vtkSmartPointer<GridType> NewGrid() {
+		return vtkSmartPointer<GridType>::New();
+	}
+
+	static vtkSmartPointer<WriterType> NewWriter() {
+		return vtkSmartPointer<WriterType>::New();
+	}
+	
+	static std::string FileExtension() {
+		return NewWriter()->GetDefaultFileExtension();
+	}
+};
+
+
+class VtkUtils {
+public:
+
+/**
+ * Write cubic grid geometry to vtk
+ */
+static void 
+writeGeometry(const CubicGrid& gcmGrid, vtkSmartPointer<vtkStructuredGrid> vtkGrid) {
+	auto sizes = gcmGrid.sizes;
+	vtkGrid->SetDimensions(sizes(0), sizes(1), sizes(2));
+
+	auto points = vtkSmartPointer<vtkPoints>::New();
+	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
+	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
+		auto coords = gcmGrid.coords(it);
+		real point[3] = {coords(0), coords(1), coords(2)};
+		points->InsertNextPoint(point);
+	}
+	vtkGrid->SetPoints(points);
+}
+
+/**
+ * Write CGAL 2D grid geometry to vtk
+ */
+static void 
+writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+	auto points = vtkSmartPointer<vtkPoints>::New();
+	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
+	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
+		auto coords = gcmGrid.coords(it);
+		real point[3] = {coords(0), coords(1), coords(2)};
+		points->InsertNextPoint(point);
+	}
+	vtkGrid->SetPoints(points);
+
+	auto triangle = vtkSmartPointer<vtkTriangle>::New();
+	for (auto it = gcmGrid.cellBegin(); it != gcmGrid.cellEnd(); ++it) {
+		auto verticesIndices = gcmGrid.getVerticesOfCell(it);
+		int i = 0;
+		for (const auto& vI : verticesIndices) {
+			triangle->GetPointIds()->SetId(i, (vtkIdType)vI);
+			i++;
+		}
+		vtkGrid->InsertNextCell(triangle->GetCellType(), triangle->GetPointIds());
+	}
+}
+
+/**
+ * Write vtk grid to vtk file with vtk writer
+ */
+template<typename VtkGridType, typename VtkWriterType>
+static void
+writeToFile(vtkSmartPointer<VtkGridType> vtkGrid,
+            vtkSmartPointer<VtkWriterType> vtkWriter,
+            const std::string name) {
+#ifdef CONFIG_VTK_5
+	vtkWriter->SetInput(vtkGrid);
+#else
+	vtkWriter->SetInputData(vtkGrid);
+#endif
+	vtkWriter->SetFileName(name.c_str());
+	vtkWriter->Write();
+}
+
+/**
+ * Write geometry of the given grid to vtk file
+ */
+template<typename GridType>
+static void dumpGridToVtk(const GridType& grid, const std::string name = "grid") {
+	typedef VtkTypes<GridType> VTK_TYPES;
+	
+	auto vtkGrid = VTK_TYPES::NewGrid();
+	writeGeometry(grid, vtkGrid);
+	writeToFile(vtkGrid, VTK_TYPES::NewWriter(), name + "." + VTK_TYPES::FileExtension());
+}
+
+};
+
+
 template<typename TMesh>
 class VtkSnapshotter : public Snapshotter {
-typedef typename TMesh::VtkGridType   VtkGridType;
-typedef typename TMesh::VtkWriterType VtkWriterType;
+
+typedef typename TMesh::Grid           Grid;
+typedef VtkTypes<Grid>                 VTK_TYPES;
+typedef typename VTK_TYPES::GridType   VtkGrid;
+typedef typename VTK_TYPES::WriterType VtkWriter;
+
 const std::string FOLDER_NAME = std::string("vtk");
 
 bool enableSnapshotting = false;
@@ -31,12 +148,15 @@ virtual void beforeStatementImpl(const Statement& statement) override {
 
 virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	if (!enableSnapshotting) { return; }
+	
 	mesh = dynamic_cast<const TMesh*>(_mesh);
 	assert_true(mesh);
+	
 	// TODO - in this approach, we create a structure of size of the whole mesh,
 	// and then write it, allocate size of mesh at every time step is not a good idea
-	vtkGrid = VtkGridType::New();
-	writeGeometry(*mesh, vtkGrid);
+	// @see http://www.vtk.org/Wiki/VTK/Tutorials/SmartPointers
+	vtkGrid = VTK_TYPES::NewGrid();
+	VtkUtils::writeGeometry(*mesh, vtkGrid);
 
 	for (auto& quantity : TMesh::Model::PdeVariables::VECTORS) {
 		writeQuantity(quantity.first, &VtkSnapshotter::insertVector, 3);
@@ -47,31 +167,25 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	for (auto& quantity : TMesh::Model::InternalOde::QUANTITIES) {
 		writeQuantity(quantity.first, &VtkSnapshotter::insertOdeQuantity, 1);
 	}
-
-	vtkWriter = VtkWriterType::New();
-#ifdef CONFIG_VTK_5
-	vtkWriter->SetInput(vtkGrid);
-#else
-	vtkWriter->SetInputData(vtkGrid);
-#endif
-	vtkWriter->SetFileName(makeFileNameForSnapshot(step,
-	                                               vtkWriter->GetDefaultFileExtension(),
-	                                               FOLDER_NAME).c_str());
-	vtkWriter->Write();
+	
+	VtkUtils::writeToFile(vtkGrid, VTK_TYPES::NewWriter(), makeFileNameForSnapshot(
+			step, VTK_TYPES::FileExtension(), FOLDER_NAME));
 }
 
+
 USE_AND_INIT_LOGGER("gcm.VtkSnapshotter")
-const TMesh * mesh;
-vtkSmartPointer<VtkGridType> vtkGrid;
-vtkSmartPointer<VtkWriterType> vtkWriter;
+
+const TMesh* mesh; ///< local grid
+vtkSmartPointer<VtkGrid> vtkGrid; ///< vtk grid
+
 
 /**
  * The code below is for writing pde, ode, etc data for any rheology model
  */
 
-typedef void (VtkSnapshotter::* InsertFunc)(PhysicalQuantities::T quantity,
-                                            vtkSmartPointer<vtkFloatArray> vtkArr,
-                                            const typename TMesh::VtkIterator& it);
+typedef void (VtkSnapshotter::*InsertFunc)(PhysicalQuantities::T quantity,
+                                           vtkSmartPointer<vtkFloatArray> vtkArr,
+                                           const typename TMesh::VtkIterator& it);
 
 void writeQuantity(PhysicalQuantities::T quantity, InsertFunc insertFunc,
                    const int numOfComponents) {
@@ -108,44 +222,6 @@ void insertOdeQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatA
 	vtkArr->InsertNextValue((float)Get(mesh->ode(it)));
 }
 
-/**
- * Below are implementations of geometry writing for meshes of different types
- */
-void writeGeometry(const CubicGrid& gcmGrid, vtkSmartPointer<vtkStructuredGrid> _vtkGrid) {
-	auto sizes = gcmGrid.sizes;
-	_vtkGrid->SetDimensions(sizes(0), sizes(1), sizes(2));
-
-	auto points = vtkSmartPointer<vtkPoints>::New();
-	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
-	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
-		auto coords = gcmGrid.coords(it);
-		real point[3] = {coords(0), coords(1), coords(2)};
-		points->InsertNextPoint(point);
-	}
-	_vtkGrid->SetPoints(points);
-}
-
-void writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> _vtkGrid) {
-	auto points = vtkSmartPointer<vtkPoints>::New();
-	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
-	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
-		auto coords = gcmGrid.coords(it);
-		real point[3] = {coords(0), coords(1), coords(2)};
-		points->InsertNextPoint(point);
-	}
-	_vtkGrid->SetPoints(points);
-
-	auto triangle = vtkSmartPointer<vtkTriangle>::New();
-	for (auto it = gcmGrid.cellBegin(); it != gcmGrid.cellEnd(); ++it) {
-		auto verticesIndices = gcmGrid.getVerticesOfCell(it);
-		int i = 0;
-		for (const auto& vI : verticesIndices) {
-			triangle->GetPointIds()->SetId(i, (vtkIdType)vI);
-			i++;
-		}
-		_vtkGrid->InsertNextCell(triangle->GetCellType(), triangle->GetPointIds());
-	}
-}
 
 };
 

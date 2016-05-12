@@ -47,6 +47,86 @@ findNeighborVertices(const Iterator& it) const {
 }
 
 
+Cgal2DGrid::Triangle Cgal2DGrid::
+findOwnerTriangle(const Iterator& it, const Real2& shift) const {
+	/// zero shift not handled to reduce if-else hell
+	assert_true(shift != Real2({0, 0}));
+	
+	Triangle ans;
+	ans.inner = false;
+		
+	VertexHandle startVertex = vertexHandles[getIndex(it)];
+	CgalPoint2 query = startVertex->point() + cgalVector2(shift);
+	auto startFace = startVertex->incident_faces();
+	auto lineWalker = triangulation.line_walk(startVertex->point(), query, startFace);
+	
+	if (!lineWalker.is_empty()) {
+	// normal situation; go along the line until found or come out of the body
+		while (lineWalker->is_in_domain() &&
+		       triangulation.triangle(lineWalker).has_on_unbounded_side(query)) {
+			++lineWalker;
+		}
+		
+	} else {
+	// LineFaceCirculator recognizes tangent faces if they are at the left 
+	// of the line only; try to change line direction
+		lineWalker = triangulation.line_walk(query, startVertex->point());
+		
+		if (!lineWalker.is_empty()) {
+		// the line is tangent to border yet; go along the line in the inverse direction
+			auto lineWalkerBegin = lineWalker;
+			while ( !(lineWalker->has_vertex(startVertex) && lineWalker->is_in_domain()) ) {
+				--lineWalker;
+				if (lineWalker == lineWalkerBegin) {
+				// some convex corner
+					return ans;
+				}
+			}
+			while (lineWalker->is_in_domain() &&
+			       triangulation.triangle(lineWalker).has_on_unbounded_side(query)) {
+				--lineWalker;
+			}
+			
+		} else {
+		// really empty (some convex corner too)
+			return ans;
+		}
+		
+	}
+	
+	if (lineWalker->is_in_domain()) {
+		ans.inner = true;
+		for (int i = 0; i < 3; i++) {
+			ans.p[i] = getIterator(lineWalker->vertex(i));
+		}
+	}
+	
+	// TODO - handle the case of exact hit to the border edge, when outer face is chosen
+	return ans;
+}
+
+
+Cgal2DGrid::Triangle Cgal2DGrid::
+locateOwnerTriangle(const Iterator& it, const Real2& shift) const {
+	Triangle ans;
+	ans.inner = false;
+
+	VertexHandle beginVertex = vertexHandles[getIndex(it)];
+	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
+	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
+	
+	if (ownerFace->is_in_domain()) {
+		ans.inner = true;
+		for (int i = 0; i < 3; i++) {
+			ans.p[i] = getIterator(ownerFace->vertex(i));
+		}
+	}
+	// TODO - handle the case of exact hit to the border edge, when outer face is chosen
+	
+	return ans;
+}
+
+
 std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
 findCrossingBorder(const Iterator& start, const Real2& direction) const {
 	VertexHandle v = vertexHandles[getIndex(start)];
