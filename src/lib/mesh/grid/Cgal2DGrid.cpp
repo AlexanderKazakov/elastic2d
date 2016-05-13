@@ -49,23 +49,22 @@ findNeighborVertices(const Iterator& it) const {
 
 Cgal2DGrid::Triangle Cgal2DGrid::
 findOwnerTriangle(const Iterator& it, const Real2& shift) const {
-	/// zero shift not handled to reduce if-else hell
-	assert_true(shift != Real2({0, 0}));
-	
-	Triangle ans;
-	ans.inner = false;
-		
 	VertexHandle startVertex = vertexHandles[getIndex(it)];
-	CgalPoint2 query = startVertex->point() + cgalVector2(shift);
 	auto startFace = startVertex->incident_faces();
+	while (!startFace->is_in_domain()) { ++startFace; }
+
+	if (shift == Real2({0, 0})) { return createTriangle(startFace); }
+	
+	CgalPoint2 query = startVertex->point() + cgalVector2(shift);
 	auto lineWalker = triangulation.line_walk(startVertex->point(), query, startFace);
 	
 	if (!lineWalker.is_empty()) {
 	// normal situation; go along the line until found or come out of the body
 		while (lineWalker->is_in_domain() &&
 		       triangulation.triangle(lineWalker).has_on_unbounded_side(query)) {
-			++lineWalker;
+				++lineWalker;
 		}
+		return createTriangle(lineWalker);
 		
 	} else {
 	// LineFaceCirculator recognizes tangent faces if they are at the left 
@@ -73,50 +72,42 @@ findOwnerTriangle(const Iterator& it, const Real2& shift) const {
 		lineWalker = triangulation.line_walk(query, startVertex->point());
 		
 		if (!lineWalker.is_empty()) {
-		// the line is tangent to border yet; go along the line in the inverse direction
+		// the line is tangent to border edge; go along the line in the inverse direction
 			auto lineWalkerBegin = lineWalker;
 			while ( !(lineWalker->has_vertex(startVertex) && lineWalker->is_in_domain()) ) {
 				--lineWalker;
 				if (lineWalker == lineWalkerBegin) {
 				// some convex corner
-					return ans;
+					return createTriangle(NULL);
 				}
 			}
 			while (lineWalker->is_in_domain() &&
 			       triangulation.triangle(lineWalker).has_on_unbounded_side(query)) {
 				--lineWalker;
 			}
+			return createTriangle(lineWalker);
 			
 		} else {
 		// really empty (some convex corner too)
-			return ans;
+			return createTriangle(NULL);
 		}
 		
 	}
-	
-	if (lineWalker->is_in_domain()) {
-		ans.inner = true;
-		for (int i = 0; i < 3; i++) {
-			ans.p[i] = getIterator(lineWalker->vertex(i));
-		}
-	}
-	
-	// TODO - handle the case of exact hit to the border edge, when outer face is chosen
-	return ans;
+		
 }
 
 
 Cgal2DGrid::Triangle Cgal2DGrid::
 locateOwnerTriangle(const Iterator& it, const Real2& shift) const {
 	Triangle ans;
-	ans.inner = false;
+	ans.valid = false;
 
 	VertexHandle beginVertex = vertexHandles[getIndex(it)];
 	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
 	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
 	
 	if (ownerFace->is_in_domain()) {
-		ans.inner = true;
+		ans.valid = true;
 		for (int i = 0; i < 3; i++) {
 			ans.p[i] = getIterator(ownerFace->vertex(i));
 		}
@@ -183,6 +174,17 @@ findBorderFlexion(Iterator first, Iterator second) const {
 	}
 	
 	return second;
+}
+
+
+Cgal2DGrid::Iterator Cgal2DGrid::
+findVertexByCoordinates(const Real2& coordinates) const {
+	for (const auto& it : *this) {
+		if (coords2d(it) == coordinates) {
+			return it;
+		}
+	}
+	THROW_INVALID_ARG("There isn't a vertex with such coordinates");
 }
 
 

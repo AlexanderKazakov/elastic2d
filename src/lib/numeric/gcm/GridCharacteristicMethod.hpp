@@ -196,7 +196,7 @@ private:
 			auto t = mesh.findOwnerTriangle(it, shift);
 			auto u = PdeVector::Zeros();
 			
-			if (t.inner) {
+			if (t.valid) {
 			// characteristic hits into body
 			// second order interpolate inner value in triangle on current time layer
 				u = TriangleInterpolator<PdeVector>::interpolate(
@@ -218,11 +218,11 @@ private:
 				// however it is not the border case
 					if (!isBorder) {
 					// it is from inner node 
-						u = interpolateInSpaceTime(mesh, it, shift);
+						u = PdeVector::Zeros(); // interpolateInSpaceTime(mesh, it, shift);
 						
 					} else {
 					// it is from border node that is "inner" on that stage
-						u = whenInnerBorderIsOuter(mesh, it, shift);
+						u = PdeVector::Zeros(); // whenInnerBorderIsOuter(mesh, it, shift);
 						
 					}
 				}

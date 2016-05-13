@@ -14,12 +14,28 @@ namespace elements {
 template<typename Point, int TN>
 struct Element {
 
-	static const int N = TN;
-	Point p[N];
-	bool inner = false;
+	static const int N = TN; ///< number of points
+	Point p[N];              ///< points
+	bool valid = false;      ///< indicates that points are set
+	
+	Element() = default;
+	
+	Element(std::initializer_list<Point> list) {
+		assert_eq(list.size(), N);
+		std::copy(list.begin(), list.end(), p);
+	}
+	
+	template<typename OtherPointType>
+	Element(const Element<OtherPointType, N>& other,
+			std::function<Point(const OtherPointType&)> transformFunc) {
+		this->valid = other.valid;
+		for (int i = 0; i < N; i++) {
+			this->p[i] = transformFunc(other.p[i]);
+		}
+	}
 	
 	bool operator==(const Element& other) const {
-		if (this->inner != other.inner) {
+		if (this->valid != other.valid) {
 			return false;
 		}
 		/// points order does matter
@@ -37,7 +53,7 @@ struct Element {
 	
 	/** Return all points owned by both elements */
 	std::set<Point> equalPoints(const Element& other) {
-		assert_true(this->inner && other.inner);
+		assert_true(this->valid && other.valid);
 		std::set<Point> ans;
 		
 		for (int i = 0; i < N; i++) {
@@ -57,6 +73,25 @@ struct Element {
 template<typename Point> using Triangle = Element<Point, 3>;
 
 }
+
+}
+
+
+namespace std {
+
+template<typename Point, int TN>
+inline std::ostream& operator<<(std::ostream& os, 
+		const gcm::elements::Element<Point, TN>& element) {
+
+	os << "Element valid : " << element.valid << std::endl;
+	for (int j = 0; j < TN; j++) {
+		os << element.p[j] << "\t";
+	}
+	os << std::endl;
+
+	return os;
+}
+
 
 }
 

@@ -152,7 +152,7 @@ public:
 	/**
 	 * Find triangle that contains point on specified distance (shift) 
 	 * from specified point (it) by line walk from it to (it+shift).
-	 * If the line goes out of the body, returned triangle.inner == false, 
+	 * If the line goes out of the body, returned triangle.valid == false, 
 	 * triangle points are not set.
 	 * @note for convex bodies result is the same with locateOwnerTriangle
 	 */
@@ -161,7 +161,7 @@ public:
 	/**
 	 * Find triangle that contains point on specified distance (shift) 
 	 * from specified point (it) by triangulation.locate function. 
-	 * If found face is not "in_domain", returned triangle.inner == false, 
+	 * If found face is not "in_domain", returned triangle.valid == false, 
 	 * triangle points are not set.
 	 * @note for convex bodies result is the same with findOwnerTriangle
 	 */
@@ -190,6 +190,9 @@ public:
 	 * @return the point where the border bends from the line
 	 */
 	Iterator findBorderFlexion(Iterator first, Iterator second) const;
+	
+	/** Find vertex with specified coordinates. Throw Exception if there isn't such. */
+	Iterator findVertexByCoordinates(const Real2& coordinates) const;
 
 
 protected:
@@ -233,9 +236,27 @@ private:
 	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
 		VertexHandle first  = vertexHandles[getIndex(borderNeighbors.first)];
 		VertexHandle second = vertexHandles[getIndex(borderNeighbors.second)];
+		
 		Real2 borderVector = real2(first->point()) - real2(second->point());
+		
 		return linal::normalize(
 		       linal::perpendicularClockwise(borderVector));
+	}
+	
+	Triangle createTriangle(const FaceHandle fh) const {
+		Triangle ans;
+		ans.valid = false;
+		
+		if (fh == NULL) { return ans; }
+		
+		if (fh->is_in_domain()) {
+			ans.valid = true;
+			for (int i = 0; i < 3; i++) {
+				ans.p[i] = getIterator(fh->vertex(i));
+			}
+		}
+		
+		return ans;
 	}
 	/// @}
 

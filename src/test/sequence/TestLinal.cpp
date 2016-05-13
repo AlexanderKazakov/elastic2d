@@ -104,6 +104,7 @@ TEST(Linal, MatrixConstruct) {
 #endif
 }
 
+
 TEST(Linal, MatrixAccess) {
 	Matrix<3, 3> m({1.0, 2.0, 3.0,
 	                4.0, 5.0, 6.0,
@@ -147,6 +148,24 @@ TEST(Linal, MatrixAccess) {
 			ASSERT_EQ((i == j) * (i + 1), dm(i, j));
 		}
 	}
+}
+
+
+TEST(Linal, equalityInequality) {
+	Matrix<2, 2> A = {1,  2, 3, 4};
+	Matrix<2, 2> B = {1,  2, 3, 5};
+	Matrix<2, 2> C = {1, -2, 9, 4};
+	Matrix<2, 2> D = {0,  9, 9, 9};
+		
+	ASSERT_TRUE(A == A);
+	ASSERT_TRUE(A != B);
+	ASSERT_TRUE(A < B);
+	ASSERT_TRUE(C < A);
+	ASSERT_TRUE(C < B);
+	ASSERT_TRUE(D < C);
+	ASSERT_FALSE(B < A);
+	ASSERT_FALSE(B < B);
+	ASSERT_FALSE(A != A);
 }
 
 

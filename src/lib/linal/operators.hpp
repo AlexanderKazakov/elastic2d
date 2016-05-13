@@ -395,6 +395,35 @@ bool operator!=(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1
 }
 
 
+/**
+ * Is m1 lexicographically less than m2 (comparison string-by-string)
+ */
+template<int TM, int TN,
+         typename TElement1,
+         template<int, int> class TSymmetry1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, int> class TSymmetry2,
+         template<int, typename> class TContainer2>
+bool operator<(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
+               const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
+               
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j < TN; j++) {
+		
+			if (m1(i, j) < m2(i, j)) {
+				return true;
+			} else if (m1(i, j) > m2(i, j)) {
+				return false;
+			}
+			
+		}
+	}
+	
+	return false;
+}
+
+
 }
 }
 

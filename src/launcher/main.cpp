@@ -58,18 +58,18 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL2D;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.1;
+	task.cgal2DGrid.spatialStep = 0.25;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 2}
-	};
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3},// {2, 2}
+	};/*
 	Task::Cgal2DGrid::Body::Border inner = {
 		{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}
-	};
+	};*/
 	task.cgal2DGrid.bodies = {
-		Task::Cgal2DGrid::Body(outer, {inner}),
-//		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
+		Task::Cgal2DGrid::Body(outer, {/*inner*/}),
+		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 
 	Statement statement;
@@ -79,15 +79,15 @@ Task parseTaskCgal2d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 2;
+	statement.globalSettings.CourantNumber = 1;
 
-	statement.globalSettings.numberOfSnaps = 100;
+	statement.globalSettings.numberOfSnaps = 40;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.4, Real3({0.5, 0.5, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
 	statement.initialCondition.quantities.push_back(pressure);
 	
 //	Statement::InitialCondition::Wave wave;
@@ -124,9 +124,9 @@ Task parseTaskCgal2d() {
 		[] (real) { return 0; }
 	};
 	
-	statement.borderConditions = {borderConditionAll,
-	                              borderConditionLeft,
-	                              borderConditionMid};
+	statement.borderConditions = {/*borderConditionAll,*/
+	                              /*borderConditionLeft,*/
+	                              /*borderConditionMid*/};
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {
