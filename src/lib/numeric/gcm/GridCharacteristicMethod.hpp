@@ -218,11 +218,11 @@ private:
 				// however it is not the border case
 					if (!isBorder) {
 					// it is from inner node 
-						u = PdeVector::Zeros(); // interpolateInSpaceTime(mesh, it, shift);
+						u = interpolateInSpaceTime(mesh, it, shift);
 						
 					} else {
 					// it is from border node that is "inner" on that stage
-						u = PdeVector::Zeros(); // whenInnerBorderIsOuter(mesh, it, shift);
+						u = whenInnerBorderIsOuter(mesh, it, shift);
 						
 					}
 				}

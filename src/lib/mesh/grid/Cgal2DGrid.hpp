@@ -231,7 +231,7 @@ private:
 	std::pair<Iterator, Iterator> findCrossingBorder(
 			const VertexHandle& v, const FaceHandle& f, const Real2& direction) const;
 	
-	VertexHandle commonVertex(const FaceHandle& a, const FaceHandle& b) const;
+	std::vector<VertexHandle> commonVertices(const FaceHandle& a, const FaceHandle& b) const;
 
 	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
 		VertexHandle first  = vertexHandles[getIndex(borderNeighbors.first)];
@@ -260,6 +260,112 @@ private:
 	}
 	/// @}
 
+	/**
+	 * Wrapper around CGAL LineFaceCirculator in order to prevent different
+	 * yield situations with line_walk (empty circulator when the line is 
+	 * tangent to body and body is at the right of the line, etc..)
+	 */
+	struct LineWalker {
+	
+		/** Create line walker from point it in direction determined by shift */
+		LineWalker(const Cgal2DGrid* grid_, const Iterator& it, const Real2& shift) :
+				grid(grid_), p(grid->coords2d(it)), q(p + shift) {
+			assert_true(p != q);
+
+			alongBorder = false;
+			if (grid->isBorder(it)) {
+				auto borderNeighbors = grid->findBorderNeighbors(it);
+				alongBorder = 
+						linal::isDegenerate(p, q, grid->coords2d(borderNeighbors.first)) ||
+						linal::isDegenerate(p, q, grid->coords2d(borderNeighbors.second));		
+			}
+			
+			// find not empty LineFaceCirculator		
+			VertexHandle startVertex = grid->vertexHandles[grid->getIndex(it)];
+			plusPlus = true;
+			lfc = grid->triangulation.line_walk(cgalPoint2(p), cgalPoint2(q),
+					startVertex->incident_faces());
+			currentFace = lfc;
+			
+			if (currentFace == NULL) { // lfc is empty
+			// LineFaceCirculator recognizes tangent faces if they are at the left 
+			// of the line only; try to change line direction
+				plusPlus = false;
+				lfc = grid->triangulation.line_walk(cgalPoint2(q), cgalPoint2(p));
+				currentFace = lfc;
+			}
+			
+			if (currentFace != NULL) {
+			// Now, lfc is not empty.
+			// Make it on "in_domain" face which has startVertex
+				correctBorderYieldCase();
+				auto lfcBegin = lfc;
+				while ( !(faceHandle()->is_in_domain() &&
+				          faceHandle()->has_vertex(startVertex)) ) {
+					next();
+					if (lfc == lfcBegin) {
+						currentFace = NULL;
+						break;
+					}
+				}
+			}
+		}
+		
+		/** Go to the next face */
+		void next() {
+			if (plusPlus) { ++lfc; }
+			else          { --lfc; }
+			currentFace = lfc;
+			correctBorderYieldCase();
+		}
+		
+		FaceHandle faceHandle() const {
+			return currentFace;
+		}
+		bool isValid() const { 
+			return currentFace != NULL && currentFace->is_in_domain();
+		}
+		
+	private:
+		const Cgal2DGrid * const grid;
+		const Real2 p, q; // start and finish
+		LineFaceCirculator lfc;
+		FaceHandle currentFace; // not always equal to lfc
+		
+		bool plusPlus; // use "++" not "--" to go to the next face
+		bool alongBorder; // lfc goes along the border not inside the body
+		
+		void correctBorderYieldCase() {
+			if (alongBorder && !currentFace->is_in_domain()) {
+			// try neighbor face on the other side of the line
+				Real2 currentCenter = linal::center({
+						real2(currentFace->vertex(0)->point()), 
+						real2(currentFace->vertex(1)->point()), 
+						real2(currentFace->vertex(2)->point()) });
+				for (int i = 0; i < 3; i++) {
+					FaceHandle neighbor = currentFace->neighbor(i);
+					if ( !neighbor->is_in_domain() ) { continue; }
+					Real2 neighborCenter = linal::center({
+							real2(neighbor->vertex(0)->point()), 
+							real2(neighbor->vertex(1)->point()), 
+							real2(neighbor->vertex(2)->point()) });
+					
+					if ( linal::crossProduct(q - p, currentCenter - p) *
+					     linal::crossProduct(q - p, neighborCenter - p) < 0 ) {
+					// on the different sides of the line
+						auto common = grid->commonVertices(currentFace, neighbor);
+						if (linal::isDegenerate(p, q, real2(common.at(0)->point())) &&
+						    linal::isDegenerate(p, q, real2(common.at(1)->point()))) {
+						// their common vertices lie on the line
+							currentFace = neighbor;
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+	};
 
 	void printFace(const FaceHandle& f, const std::string& name = "") const;
  

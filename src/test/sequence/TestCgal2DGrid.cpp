@@ -159,24 +159,25 @@ TEST(Cgal2DGrid, findOwnerTriangleTwoBodies) {
 		Task::Cgal2DGrid::Body({{3, 3}, {-3, 3}, {-3, -3}, {3, -3}}, { }),
 	};
 	Cgal2DGrid oneBody(task);
-	VtkUtils::dumpGridToVtk(oneBody, "one");
 	
 	task.cgal2DGrid.bodies.push_back(
 			Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, { }));
+	task.cgal2DGrid.bodies.push_back(
+			Task::Cgal2DGrid::Body({{-7, -1}, {-5, -4},  {-2, -5},  {2, -5}, {0, -7}, {-7, -7}}, { }));
+	task.cgal2DGrid.bodies.push_back(
+			Task::Cgal2DGrid::Body({{-10, -10}, {-10, 10}, {10, 10}, {10, -10}},
+					{ {{-9, -9}, {-9, 9}, {9, 9}, {9, -9}} }));
 	Cgal2DGrid twoBodies(task);
-	VtkUtils::dumpGridToVtk(twoBodies, "two");
-
 	
 	// fortunately, triangulations of the first bodies are equal in
 	// both triangulations with such parameters
 	Utils::seedRand();
-	/*for (int multiplier = 1; multiplier < 10; multiplier++)*/ {
-//		real step = h / 3 * multiplier;
-		/*for (auto& it1 : oneBody)*/ {
-			Cgal2DGrid::Iterator it1 = 7;
+	for (int multiplier = 1; multiplier < 10; multiplier++) {
+		real step = h / 3 * multiplier;
+		for (auto& it1 : oneBody) {
 			auto it2 = twoBodies.findVertexByCoordinates(oneBody.coords2d(it1));
 			
-			/*for (int test_counter = 0; test_counter < 8; test_counter++)*/ {
+			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
 				auto checkTriangles = [&]() {
 					auto triangle1 = oneBody.findOwnerTriangle(it1, shift);
@@ -221,16 +222,86 @@ TEST(Cgal2DGrid, findOwnerTriangleTwoBodies) {
 					
 				};
 				
-//				shift = {Utils::randomReal(-step, step), Utils::randomReal(-step, step)};
-//				checkTriangles();
+				shift = {Utils::randomReal(-step, step), Utils::randomReal(-step, step)};
+				checkTriangles();
 				
-//				shift = {Utils::randomReal(-step, step), 0};
-//				checkTriangles();
+				shift = {Utils::randomReal(-step, step), 0};
+				checkTriangles();
 				
-//				shift = {0, Utils::randomReal(-step, step)};
-				shift = {2, 0};
+				shift = {0, Utils::randomReal(-step, step)};
 				checkTriangles();
 			}
 		}
 	}
 }
+
+
+TEST(Cgal2DGrid, miscellaneous) {
+	Task task;
+	task.cgal2DGrid.spatialStep = 0.5;
+	task.cgal2DGrid.bodies = {
+		Task::Cgal2DGrid::Body({ {0, 0}, {0, 1}, {1, 1}, {1, 0} }, { })
+	};
+	Cgal2DGrid grid(task);
+	VtkUtils::dumpGridToVtk(grid);
+	ASSERT_EQ(21, grid.sizeOfAllNodes());
+	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
+	
+	
+	ASSERT_THROW(grid.normal(*(grid.innerBegin())), Exception);
+	
+	for (auto borderIt = grid.borderBegin();
+	          borderIt != grid.borderEnd(); ++borderIt) {
+		if (grid.coords2d(*borderIt) == Real2({0, 0})) {
+			ASSERT_TRUE(linal::approximatelyEqual(
+					linal::normalize(Real2({-1, -1})), grid.normal(*borderIt)));
+					
+		} else if (grid.coords2d(*borderIt) == Real2({0, 1})) {
+			ASSERT_TRUE(linal::approximatelyEqual(
+					linal::normalize(Real2({-1, 1})), grid.normal(*borderIt)));
+					
+		} else if (grid.coords2d(*borderIt) == Real2({1, 1})) {
+			ASSERT_TRUE(linal::approximatelyEqual(
+					linal::normalize(Real2({1, 1})), grid.normal(*borderIt)));
+					
+		} else if (grid.coords2d(*borderIt) == Real2({1, 0})) {
+			ASSERT_TRUE(linal::approximatelyEqual(
+					linal::normalize(Real2({1, -1})), grid.normal(*borderIt)));
+					
+		} else if (grid.coords2d(*borderIt)(0) == 0) {
+			ASSERT_EQ(Real2({-1, 0}), grid.normal(*borderIt));
+					
+		} else if (grid.coords2d(*borderIt)(0) == 1) {
+			ASSERT_EQ(Real2({1, 0}), grid.normal(*borderIt));
+					
+		} else if (grid.coords2d(*borderIt)(1) == 0) {
+			ASSERT_EQ(Real2({0, -1}), grid.normal(*borderIt));
+					
+		} else if (grid.coords2d(*borderIt)(1) == 1) {
+			ASSERT_EQ(Real2({0, 1}), grid.normal(*borderIt));
+					
+		} else {
+			THROW_BAD_MESH("Unknown border node");
+		}
+	}
+	
+	ASSERT_EQ(task.cgal2DGrid.spatialStep, grid.getMinimalSpatialStep());
+	
+	ASSERT_EQ(2, grid.findNeighborVertices(grid.findVertexByCoordinates({0, 0})).size());
+	ASSERT_EQ(4, grid.findNeighborVertices(grid.findVertexByCoordinates({0.5, 0.5})).size());
+	
+	auto anglePoint = grid.findVertexByCoordinates({0, 0});
+	auto borderNeighbors = grid.findBorderNeighbors(anglePoint);
+	auto oneCorner = grid.findBorderFlexion(anglePoint, borderNeighbors.first);
+	auto anotherCorner = grid.findBorderFlexion(anglePoint, borderNeighbors.second);
+	
+	ASSERT_EQ(grid.findVertexByCoordinates({1, 0}), oneCorner);
+	ASSERT_EQ(grid.findVertexByCoordinates({0, 1}), anotherCorner);
+	ASSERT_EQ(anglePoint, grid.findBorderFlexion(borderNeighbors.first, anglePoint));
+	ASSERT_EQ(anglePoint, grid.findBorderFlexion(borderNeighbors.second, anglePoint));
+}
+
+
+
+
+

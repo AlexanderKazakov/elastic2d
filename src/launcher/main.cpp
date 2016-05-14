@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
 		auto t1 = std::chrono::high_resolution_clock::now();
 		Engine(task).run();
 		auto t2 = std::chrono::high_resolution_clock::now();
+		SUPPRESS_WUNUSED(t1); SUPPRESS_WUNUSED(t2);
 
 		LOG_INFO("Time of calculation, microseconds = " << 
 			std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
@@ -62,13 +63,11 @@ Task parseTaskCgal2d() {
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3},// {2, 2}
-	};/*
-	Task::Cgal2DGrid::Body::Border inner = {
-		{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}
-	};*/
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 2}
+	};
 	task.cgal2DGrid.bodies = {
-		Task::Cgal2DGrid::Body(outer, {/*inner*/}),
+		Task::Cgal2DGrid::Body(outer, 
+				{{{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}}, {{1, 1}, {1, 2}, {2, 2}, {2, 1}}}),
 		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 
@@ -86,8 +85,8 @@ Task parseTaskCgal2d() {
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
+	pressure.value = 0.5;
+	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 6, 0}));
 	statement.initialCondition.quantities.push_back(pressure);
 	
 //	Statement::InitialCondition::Wave wave;
@@ -124,9 +123,9 @@ Task parseTaskCgal2d() {
 		[] (real) { return 0; }
 	};
 	
-	statement.borderConditions = {/*borderConditionAll,*/
-	                              /*borderConditionLeft,*/
-	                              /*borderConditionMid*/};
+	statement.borderConditions = {borderConditionAll,
+	                              borderConditionLeft,
+	                              borderConditionMid};
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

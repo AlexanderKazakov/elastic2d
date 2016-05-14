@@ -20,6 +20,7 @@ public:
 		return (t > 0) ? 1 : -1;
 	}
 	
+	
 	/**
 	 * Approach to compare two real numbers with given tolerance.
 	 * 
@@ -38,12 +39,14 @@ public:
 		return relativeError2 < tolerance * tolerance;
 	}
 	
+	
 	/**
 	 * Seed random generator to produce different values
 	 */
 	static void seedRand() {
 		srand((unsigned int)time(0));
 	}
+	
 	
 	/**
 	 * Produce pseudorandom uniformly distributed real number from min to max inclusive

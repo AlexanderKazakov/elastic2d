@@ -49,72 +49,28 @@ findNeighborVertices(const Iterator& it) const {
 
 Cgal2DGrid::Triangle Cgal2DGrid::
 findOwnerTriangle(const Iterator& it, const Real2& shift) const {
-	VertexHandle startVertex = vertexHandles[getIndex(it)];
-	auto startFace = startVertex->incident_faces();
-	while (!startFace->is_in_domain()) { ++startFace; }
-
-	if (shift == Real2({0, 0})) { return createTriangle(startFace); }
-	
-	CgalPoint2 query = startVertex->point() + cgalVector2(shift);
-	auto lineWalker = triangulation.line_walk(startVertex->point(), query, startFace);
-	
-	if (!lineWalker.is_empty()) {
-	// normal situation; go along the line until found or come out of the body
-		while (lineWalker->is_in_domain() &&
-		       triangulation.triangle(lineWalker).has_on_unbounded_side(query)) {
-				++lineWalker;
-		}
-		return createTriangle(lineWalker);
-		
-	} else {
-	// LineFaceCirculator recognizes tangent faces if they are at the left 
-	// of the line only; try to change line direction
-		lineWalker = triangulation.line_walk(query, startVertex->point());
-		
-		if (!lineWalker.is_empty()) {
-		// the line is tangent to border edge; go along the line in the inverse direction
-			auto lineWalkerBegin = lineWalker;
-			while ( !(lineWalker->has_vertex(startVertex) && lineWalker->is_in_domain()) ) {
-				--lineWalker;
-				if (lineWalker == lineWalkerBegin) {
-				// some convex corner
-					return createTriangle(NULL);
-				}
-			}
-			while (lineWalker->is_in_domain() &&
-			       triangulation.triangle(lineWalker).has_on_unbounded_side(query)) {
-				--lineWalker;
-			}
-			return createTriangle(lineWalker);
-			
-		} else {
-		// really empty (some convex corner too)
-			return createTriangle(NULL);
-		}
-		
+	if (shift == Real2({0, 0})) {
+		auto startFace = vertexHandles[getIndex(it)]->incident_faces();
+		while (!startFace->is_in_domain()) { ++startFace; }
+		return createTriangle(startFace);
 	}
-		
+	
+	LineWalker lineWalker(this, it, shift);
+	CgalPoint2 query = cgalPoint2(coords2d(it) + shift);	
+	while (lineWalker.isValid() &&
+	       triangulation.triangle(lineWalker.faceHandle()).has_on_unbounded_side(query)) {
+		lineWalker.next();
+	}
+	return createTriangle(lineWalker.faceHandle());
 }
 
 
 Cgal2DGrid::Triangle Cgal2DGrid::
 locateOwnerTriangle(const Iterator& it, const Real2& shift) const {
-	Triangle ans;
-	ans.valid = false;
-
 	VertexHandle beginVertex = vertexHandles[getIndex(it)];
 	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
 	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
-	
-	if (ownerFace->is_in_domain()) {
-		ans.valid = true;
-		for (int i = 0; i < 3; i++) {
-			ans.p[i] = getIterator(ownerFace->vertex(i));
-		}
-	}
-	// TODO - handle the case of exact hit to the border edge, when outer face is chosen
-	
-	return ans;
+	return createTriangle(ownerFace);
 }
 
 
@@ -342,17 +298,17 @@ findCrossedFace(const VertexHandle start, const Real2& direction) const {
 }
 
 
-Cgal2DGrid::VertexHandle Cgal2DGrid::
-commonVertex(const FaceHandle& a, const FaceHandle& b) const {
-	/// return some common vertex of given faces
-	/// or throw Exception if there isn't such
+std::vector<Cgal2DGrid::VertexHandle> Cgal2DGrid::
+commonVertices(const FaceHandle& a, const FaceHandle& b) const {
+	/// return common vertices of given faces
+	std::vector<VertexHandle> ans;
 	for (int i = 0; i < 3; i++) {
 		VertexHandle candidate = a->vertex(i);
 		if (b->has_vertex(candidate)) {
-			return candidate;
+			ans.push_back(candidate);
 		}
 	}
-	THROW_INVALID_ARG("There aren't common vertices");
+	return ans;
 }
 
 
@@ -386,7 +342,7 @@ findCrossingBorder(const VertexHandle& v, const FaceHandle& f,
 		second = getIterator(innerFace->vertex(innerFace->ccw(neighborIndex)));
 	} else {
 	// line hits exact to unique common vertex
-		first = getIterator(commonVertex(outerFace, innerFace));
+		first = getIterator(commonVertices(outerFace, innerFace).at(0));
 		second = findBorderNeighbors(first).first;
 	}
 	
@@ -397,6 +353,7 @@ findCrossingBorder(const VertexHandle& v, const FaceHandle& f,
 void Cgal2DGrid::
 printFace(const FaceHandle& f, const std::string& name) const {
 	/// debugging helper
+	SUPPRESS_WUNUSED(name);
 	LOG_DEBUG("Face " << name << ":");
 	for (int i = 0; i < 3; i++) {
 		if (triangulation.is_infinite(f->vertex(i))) {

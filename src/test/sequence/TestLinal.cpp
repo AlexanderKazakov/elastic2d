@@ -1040,8 +1040,22 @@ TEST(Linal, positionRelativeToAngle) {
 }
 
 
+TEST(Linal, area) {
+	ASSERT_EQ(0, linal::area({0, 0}, {0, 1}, {0, 2}));
+	ASSERT_EQ(0, linal::area({0, 0}, {1, 1}, {2, 2}));
+	ASSERT_EQ(2, linal::area({0, 0}, {0, 2}, {2, 0}));
+	ASSERT_EQ(2, linal::area({0, 0}, {-2, 0}, {0, 2}));
+}
 
 
+TEST(Linal, center) {
+	ASSERT_EQ(Real2({0, 1}), linal::center({Real2({0, 0}), Real2({0, 1}), Real2({0, 2})}));
+	ASSERT_EQ(Real2({0, 2}), linal::center({Real2({0, 2})}));
+	ASSERT_EQ(Real3({1, 1, 1}), linal::center({Real3({0, 0, 0}), Real3({2, 2, 2}),
+			Real3({0, 2, 2}), Real3({2, 0, 0})}));
+	
+	ASSERT_THROW(linal::center(std::initializer_list<real>()), Exception);
+}
 
 
 
