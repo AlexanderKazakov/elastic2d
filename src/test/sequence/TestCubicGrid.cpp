@@ -21,23 +21,23 @@ TEST(CubicGrid, initialize) {
 	CubicGrid::preprocessTask(task.cubicGrid);
 	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > grid(task);
 	grid.beforeStatementForTest(statement);
+	
 	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.h(1), 1.0, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMaximalEigenvalue(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
+	
 	for (int x = 0; x < task.cubicGrid.sizes(0); x++) {
 		for (int y = 0; y < task.cubicGrid.sizes(1); y++) {
 			for (int z = 0; z < task.cubicGrid.sizes(2); z++) {
-				for (int i = 0;
-				     i <
-				     DefaultMesh<Elastic2DModel, CubicGrid,
-				                 IsotropicMaterial>::PdeVector::M; i++) {
+				for (int i = 0; i < 5; i++) {
 					ASSERT_EQ(grid.pde({x, y, z}) (i), 0.0);
 				}
 			}
 		}
 	}
 }
+
 
 TEST(CubicGrid, PartIterator) {
 	Task task;
@@ -83,68 +83,3 @@ TEST(CubicGrid, PartIterator) {
 }
 
 
-TEST(CubicGrid, interpolateValuesAround) {
-	Task task;
-	Statement statement;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(2, 2, 1);
-
-	task.cubicGrid.dimensionality = 2;
-	task.cubicGrid.sizes = {3, 3, 1};
-	task.cubicGrid.borderSize = 1;
-	task.cubicGrid.lengths = {2, 2, 2}; // h_x = h_y = 1.0
-
-	Statement::InitialCondition::Quantity quantity;
-	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	quantity.value = -1.0;
-	quantity.area = std::make_shared<SphereArea>(0.1, Real3({1, 1, 0}));
-	statement.initialCondition.quantities.push_back(quantity);
-
-	task.statements.push_back(statement);
-	CubicGrid::preprocessTask(task.cubicGrid);
-
-	for (int stage = 0; stage <= 1; stage++) {
-
-		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > grid(task);
-		grid.beforeStatementForTest(statement);
-		for (int x = 0; x < task.cubicGrid.sizes(0); x++) {
-			for (int y = 0; y < task.cubicGrid.sizes(1); y++) {
-				// check that values is set properly
-				ASSERT_EQ(grid.pdeVars({x, y, 0}).velocity(0), 0.0);
-				ASSERT_EQ(grid.pdeVars({x, y, 0}).velocity(1), 0.0);
-				ASSERT_EQ(grid.pdeVars({x, y, 0}).sigma(0,
-				                                    0),
-				          (x == 1 && y == 1) ? 1.0 : 0.0);
-				ASSERT_EQ(grid.pdeVars({x, y, 0}).sigma(0, 1), 0.0);
-				ASSERT_EQ(grid.pdeVars({x, y, 0}).sigma(1,
-				                                    1),
-				          (x == 1 && y == 1) ? 1.0 : 0.0);
-			}
-		}
-
-		DefaultMesh<Elastic2DModel, CubicGrid,
-		            IsotropicMaterial>::PdeVector dx({-1, 1, -0.5, 0.5,
-		                                              0});
-		DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::Iterator it({1, 1, 0},
-		                                                                       grid.sizes);
-		auto m = GridCharacteristicMethod<Elastic2DModel, CubicGrid, IsotropicMaterial>().
-		         interpolateValuesAround(grid, stage, it, dx);
-
-		for (int i = 0;
-		     i < DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial>::PdeVector::M;
-		     i++) {
-			ASSERT_EQ(m(i, 0), 0.0) << "i = " << i; // Courant = 1
-			ASSERT_EQ(m(i, 1), 0.0) << "i = " << i; // Courant = 1
-			ASSERT_EQ(m(0, i), 0.0) << "i = " << i; // Vx
-			ASSERT_EQ(m(1, i), 0.0) << "i = " << i; // Vy
-			ASSERT_EQ(m(3, i), 0.0) << "i = " << i; // Sxy
-		}
-
-		ASSERT_EQ(m(2, 2), 0.5); // Courant = 0.5
-		ASSERT_EQ(m(2, 3), 0.5); // Courant = 0.5
-		ASSERT_EQ(m(4, 2), 0.5); // Courant = 0.5
-		ASSERT_EQ(m(4, 3), 0.5); // Courant = 0.5
-
-		ASSERT_EQ(m(2, 4), 1.0); // Courant = 0
-		ASSERT_EQ(m(4, 4), 1.0); // Courant = 0
-	}
-}

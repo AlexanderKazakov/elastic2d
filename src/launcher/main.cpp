@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
 	Task task;
 	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
-	else if (taskId == "2d"        ) { task = parseTask2d();     }
+	else if (taskId == "cubic"     ) { task = parseTask3d();     }
 	else if (taskId == "inverse"   ) { task = parseTaskCagi2d(); }
 	else {
 		LOG_FATAL("Invalid task file");
@@ -183,27 +183,25 @@ Task parseTask3d() {
 	Task task;
 
 	task.modelId = Models::T::ELASTIC3D;
-	task.materialId = Materials::T::ISOTROPIC;
+	task.materialId = Materials::T::ORTHOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.dimensionality = 3;
 	task.cubicGrid.lengths = {4, 2, 1};
-	task.cubicGrid.sizes = {100, 50, 25};
+	task.cubicGrid.sizes = {200, 100, 50};
 
 	Statement statement;
 	real rho = 4;
-	real lambda = 2;
-	real mu = 1;
-	statement.materialConditions.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
-//	statement.materialConditions.defaultMaterial = std::make_shared<OrthotropicMaterial>
-//			(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1);
+//	statement.materialConditions.defaultMaterial =
+//	        std::make_shared<IsotropicMaterial>(rho, 2, 1, 1, 1);
+	statement.materialConditions.defaultMaterial = std::shared_ptr<OrthotropicMaterial>(
+			new OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1));
 
-	statement.globalSettings.CourantNumber = 0.9;
+	statement.globalSettings.CourantNumber = 1;
 
-	statement.globalSettings.numberOfSnaps = 20;
+	statement.globalSettings.numberOfSnaps = 100;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
@@ -213,7 +211,15 @@ Task parseTask3d() {
 	statement.initialCondition.quantities.push_back(pressure);
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
+	statement.vtkSnapshotter.quantitiesToSnap = {
+			PhysicalQuantities::T::PRESSURE,
+			PhysicalQuantities::T::Sxx,
+			PhysicalQuantities::T::Sxy,
+			PhysicalQuantities::T::Sxz,
+			PhysicalQuantities::T::Syy,
+			PhysicalQuantities::T::Syz,
+			PhysicalQuantities::T::Szz
+	};
 
 	task.statements.push_back(statement);
 	return task;

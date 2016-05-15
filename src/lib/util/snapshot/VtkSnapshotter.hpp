@@ -152,9 +152,7 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	mesh = dynamic_cast<const TMesh*>(_mesh);
 	assert_true(mesh);
 	
-	// TODO - in this approach, we create a structure of size of the whole mesh,
-	// and then write it, allocate size of mesh at every time step is not a good idea
-	// @see http://www.vtk.org/Wiki/VTK/Tutorials/SmartPointers
+	// note: we allocate a structure of size of the whole mesh at every time step!
 	vtkGrid = VTK_TYPES::NewGrid();
 	VtkUtils::writeGeometry(*mesh, vtkGrid);
 

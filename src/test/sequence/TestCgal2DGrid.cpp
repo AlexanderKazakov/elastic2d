@@ -243,7 +243,6 @@ TEST(Cgal2DGrid, miscellaneous) {
 		Task::Cgal2DGrid::Body({ {0, 0}, {0, 1}, {1, 1}, {1, 0} }, { })
 	};
 	Cgal2DGrid grid(task);
-	VtkUtils::dumpGridToVtk(grid);
 	ASSERT_EQ(21, grid.sizeOfAllNodes());
 	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
 	
