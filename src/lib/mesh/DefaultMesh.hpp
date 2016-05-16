@@ -10,7 +10,7 @@ template<typename TMesh> class DefaultSolver;
 template<typename TModel, typename TGrid, typename TMaterial> class GridCharacteristicMethod;
 template<typename TModel, typename TGrid, typename TMaterial> struct DataBus;
 template<typename TModel, typename TGrid, typename TMaterial> struct MeshMover;
-template<typename TModel, typename TGrid, typename TMaterial> struct OldBorderConditions;
+template<typename TModel, typename TGrid, typename TMaterial> struct SpecialBorderConditions;
 
 /**
  * Mesh that implement the approach when all nodal data are stored
@@ -205,7 +205,8 @@ private:
 	friend class GridCharacteristicMethod<Model, Grid, Material>;
 	friend class DataBus<Model, Grid, Material>;
 	friend class MeshMover<Model, Grid, Material>;
-	friend class OldBorderConditions<Model, Grid, Material>;
+	template<typename ModelType, typename GridType, typename MaterialType> 
+			friend class SpecialBorderConditions;
 };
 
 

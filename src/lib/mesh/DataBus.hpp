@@ -12,9 +12,9 @@ namespace gcm {
  */
 template<typename TModel, typename TGrid, typename TMaterial> struct DataBus;
 
-template<typename TModel, typename TMaterial>
-struct DataBus<TModel, CubicGrid, TMaterial> {
-	typedef DefaultMesh<TModel, CubicGrid, TMaterial> Mesh;
+template<typename TModel, typename TMaterial, int Dimensionality>
+struct DataBus<TModel, CubicGrid<Dimensionality>, TMaterial> {
+	typedef DefaultMesh<TModel, CubicGrid<Dimensionality>, TMaterial> Mesh;
 
 	static void exchangeNodesWithNeighbors(Mesh* mesh) {
 		if (Mpi::ForceSequence() || Mpi::Size() == 1) { return; }
@@ -41,9 +41,9 @@ struct DataBus<TModel, Cgal2DGrid, TMaterial> {
 
 
 
-template<typename TModel, typename TMaterial>
+template<typename TModel, typename TMaterial, int Dimensionality>
 template<typename Smth>
-void DataBus<TModel, CubicGrid, TMaterial>::
+void DataBus<TModel, CubicGrid<Dimensionality>, TMaterial>::
 exchangeSomethingWithNeighbors(Mesh* mesh, std::vector<Smth>& vec) {
 
 	int bufferSize = mesh->borderSize * mesh->indexMaker(0);

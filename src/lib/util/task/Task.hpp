@@ -5,7 +5,6 @@
 #include <memory>
 #include <vector>
 
-#include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
 #include <lib/util/Enum.hpp>
 #include <lib/util/Area.hpp>
@@ -29,10 +28,10 @@ struct Statement {
 	std::string id; ///< name of statement
 
 	struct GlobalSettings {
-		real CourantNumber = 0.0; ///< number from Courant–Friedrichs–Lewy condition
+		real CourantNumber = 0; ///< number from Courant–Friedrichs–Lewy condition
 		int numberOfSnaps = 0;
 		int stepsPerSnap = 1;
-		real requiredTime = 0.0;  ///< optional, required time if (numberOfSnaps <= 0)
+		real requiredTime = 0;  ///< optional, required time if (numberOfSnaps <= 0)
 	} globalSettings;
 
 	struct MaterialCondition {
@@ -91,8 +90,8 @@ struct Statement {
 	std::vector<BorderCondition> borderConditions;
 
 	struct Fracture {
-		int direction;
-		real coordinate;
+		int direction; ///< crossing axis
+		int index; ///< index at crossing axis
 		std::shared_ptr<Area> area;
 		std::map<PhysicalQuantities::T, TimeDependency> values;
 	};
@@ -118,6 +117,13 @@ struct Statement {
 
 /**
  * Struct to initialize the program.
+ * 
+ * Note: However almost classes initialized by sending to them (const Task& task),
+ * they must use for initialization only its own components of Task,
+ * because other components may not be initialized.
+ * For example, some special snapshotter for CubicGrid must not use task.cubicGrid,
+ * because from cubicGrid.lenghts, cubicGrid.h, cubicGrid.sizes only two 
+ * can be initialized at time.
  */
 struct Task {
 
@@ -134,12 +140,10 @@ struct Task {
 	} globalSettings;
 
 	struct CubicGrid {
-		int dimensionality = 0;     ///< spatial dimensionality of the grid 
-		///< (model can have different)
-		Real3 lengths = {0, 0, 0};  ///< lengthes of cube in each direction
-		Real3 h = {0, 0, 0};        ///< spatial steps in each direction
-		Int3 sizes = {0, 0, 0};     ///< number of nodes along each direction
-		Real3 startR = {0, 0, 0};   ///< global coordinates of the first real node
+		std::vector<real> lengths;  ///< lengthes of cube in each direction
+		std::vector<real> h;        ///< spatial steps in each direction
+		std::vector<int>  sizes;    ///< number of nodes along each direction
+		std::vector<real> startR;   ///< global coordinates of the first real node
 		int borderSize = 0;         ///< number of virtual border nodes for one border point
 	} cubicGrid;
 
@@ -155,8 +159,7 @@ struct Task {
 			Border outer;               ///< outer border of the body
 			std::vector<Border> inner;  ///< borders of the inner cavities
 		};
-		std::vector<Body> bodies; ///< list of bodies contained in the grid
-		
+		std::vector<Body> bodies; ///< list of bodies contained in the grid		
 	} cgal2DGrid;
 
 	/// list of statements to calculate on the same geometry

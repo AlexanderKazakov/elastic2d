@@ -20,14 +20,9 @@ public:
 	const std::string FOLDER_NAME = std::string("1dseismo");
 
 protected:
-	virtual void initializeImpl(const Task& task) override {
-		direction = DIMENSIONALITY - 1;
-		indexOfDetectingSide = task.cubicGrid.sizes(direction) - 1;
-	}
 
 	virtual void beforeStatementImpl(const Statement& statement) override {
-		assert_eq(statement.detector.quantities.size(), 1);         // more than one still
-			                                                    // unsupported
+		assert_eq(statement.detector.quantities.size(), 1); // more than one still unsupported
 		quantityToWrite = statement.detector.quantities[0];
 		detectionArea = statement.detector.area;
 		seismo.clear();
@@ -36,6 +31,10 @@ protected:
 	virtual void snapshotImpl(const AbstractGrid* mesh_, const int) override {
 		const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
 		assert_true(mesh);
+		
+		int direction = DIMENSIONALITY - 1;
+		int indexOfDetectingSide = mesh->sizes(direction) - 1;
+		
 		for (auto it = mesh->slice(direction, indexOfDetectingSide);
 		     it != it.end(); ++it) {
 			auto coords = mesh->coords(it);
@@ -63,8 +62,6 @@ private:
 	std::vector<real> valuesInArea;
 
 	std::shared_ptr<Area> detectionArea;
-	int direction = 0;
-	int indexOfDetectingSide = 0;
 
 	PhysicalQuantities::T quantityToWrite;
 

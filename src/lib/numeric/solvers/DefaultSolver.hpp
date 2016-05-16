@@ -2,8 +2,8 @@
 #define LIBGCM_DEFAULTSOLVER_HPP
 
 #include <lib/numeric/solvers/Solver.hpp>
-#include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
-#include <lib/numeric/border_conditions/BorderConditions.hpp>
+#include <lib/numeric/gcm/grid_characteristic_methods.hpp>
+#include <lib/numeric/special_border_conditions/SpecialBorderConditions.hpp>
 #include <lib/util/Logging.hpp>
 #include <lib/util/task/Task.hpp>
 #include <lib/mesh/grid/AbstractGrid.hpp>
@@ -27,7 +27,7 @@ public:
 	typedef typename Model::Corrector                       Corrector;
 	typedef typename Model::InternalOde                     InternalOde;
 
-	typedef OldBorderConditions<Model, Grid, Material>      Border;
+	typedef SpecialBorderConditions<Model, Grid, Material>  SpecialBorder;
 	typedef DataBus<Model, Grid, Material>                  DATA_BUS;
 	typedef MeshMover<Model, Grid, Material>                MESH_MOVER;
 	typedef GridCharacteristicMethod<Model, Grid, Material> GcmMethod;
@@ -52,7 +52,7 @@ protected:
 	GcmMethod gridCharacteristicMethod;
 	Corrector* corrector = nullptr;
 	InternalOde* internalOde = nullptr;
-	Border* borderConditions = nullptr;
+	SpecialBorder* specialBorder = nullptr;
 
 	Mesh* mesh = nullptr;
 
@@ -69,13 +69,13 @@ template<class TMesh>
 DefaultSolver<TMesh>::
 DefaultSolver(const Task& task) : Solver(task) {
 	mesh = new Mesh(task);
-	borderConditions = new Border(task);
+	specialBorder = new SpecialBorder();
 }
 
 
 template<class TMesh>
 DefaultSolver<TMesh>::~DefaultSolver() {
-	delete borderConditions;
+	delete specialBorder;
 	delete mesh;
 }
 
@@ -88,7 +88,7 @@ beforeStatement(const Statement& statement) {
 	corrector = new Corrector(statement);
 	internalOde = new InternalOde(statement);
 
-	borderConditions->beforeStatement(statement);
+	specialBorder->beforeStatement(statement);
 	mesh->beforeStatement(statement);
 }
 
@@ -121,10 +121,10 @@ stage(const int s, const real timeStep) {
 	LOG_DEBUG("Start stage " << s << " ... ");
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	
-	borderConditions->applyBorderBeforeStage(mesh, timeStep, s);
+	specialBorder->applyBorderBeforeStage(mesh, timeStep, s);
 	gridCharacteristicMethod.stage(s, timeStep, *mesh);
 			// now actual PDE values is in pdeVariablesNew
-	borderConditions->applyBorderAfterStage(mesh, timeStep, s);
+	specialBorder->applyBorderAfterStage(mesh, timeStep, s);
 	
 	 // return actual PDE values back to pdeVariables
 	std::swap(mesh->pdeVariables, mesh->pdeVariablesNew);

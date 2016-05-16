@@ -13,13 +13,12 @@ TEST(Engine, runStatementForTest) {
 	task.gridId = Grids::T::CUBIC;
 
 	Statement statement;
-	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.borderSize = 5;
 	statement.globalSettings.CourantNumber = 4.5;
 	statement.materialConditions.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-	task.cubicGrid.sizes = {20, 40, 1};
-	task.cubicGrid.lengths = {7, 3, 1};
+	task.cubicGrid.sizes = {20, 40};
+	task.cubicGrid.lengths = {7, 3};
 	statement.globalSettings.numberOfSnaps = 9;
 	statement.globalSettings.requiredTime = 100.0;
 
@@ -35,13 +34,13 @@ TEST(Engine, runStatementForTest) {
 
 	task.statements.push_back(statement);
 
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > engine(task);
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > engine(task);
 	engine.beforeStatementForTest(statement);
 
-	auto sWave = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, 3, 0});
+	auto sWave = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes.at(0) / 2, 3});
 	engine.runStatementForTest();
 	ASSERT_EQ(sWave,
-	          engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes(0) / 2, 22, 0}));
+	          engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes.at(0) / 2, 22}));
 }
 
 
@@ -56,7 +55,6 @@ TEST(Engine, TwoLayersDifferentRho) {
 
 		Statement statement;
 		task.cubicGrid.borderSize = 3;
-		task.cubicGrid.dimensionality = 2;
 		statement.globalSettings.CourantNumber = 1.5;
 
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
@@ -71,8 +69,8 @@ TEST(Engine, TwoLayersDifferentRho) {
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		statement.materialConditions.materials.push_back(newMaterial);
 
-		task.cubicGrid.sizes = {50, 100, 1};
-		task.cubicGrid.lengths = {2, 1, 1};
+		task.cubicGrid.sizes = {50, 100};
+		task.cubicGrid.lengths = {2, 1};
 		statement.globalSettings.numberOfSnaps = 0;
 		statement.globalSettings.requiredTime = 0.24;
 
@@ -88,22 +86,22 @@ TEST(Engine, TwoLayersDifferentRho) {
 
 		task.statements.push_back(statement);
 
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > engine(
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > engine(
 		        task);
 		engine.beforeStatementForTest(statement);
 
-		int leftNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.25);
+		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
 		auto init = engine.getSolverForTest()->getMesh()->pdeVars(
-				{task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
+				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
 
 		engine.runStatementForTest();
 
 //		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
 		auto reflect = engine.getSolverForTest()->getMesh()->pdeVars(
-				{task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
+				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
 				
 //		auto transfer = engine.getSolverForTest()->getMesh()->pdeVars(
-//				{task.cubicGrid.sizes(0) / 2, rightNodeIndex, 0});
+//				{task.cubicGrid.sizes(0) / 2, rightNodeIndex});
 
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0);                                 // acoustic impedance
@@ -140,7 +138,6 @@ TEST(Engine, TwoLayersDifferentE) {
 
 		Statement statement;
 		task.cubicGrid.borderSize = 3;
-		task.cubicGrid.dimensionality = 2;
 		statement.globalSettings.CourantNumber = 1.5;
 
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
@@ -155,8 +152,8 @@ TEST(Engine, TwoLayersDifferentE) {
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		statement.materialConditions.materials.push_back(newMaterial);
 
-		task.cubicGrid.sizes = {50, 100, 1};
-		task.cubicGrid.lengths = {2, 1, 1};
+		task.cubicGrid.sizes = {50, 100};
+		task.cubicGrid.lengths = {2, 1};
 
 		statement.globalSettings.numberOfSnaps = 0;
 		statement.globalSettings.requiredTime = 0.24;
@@ -173,20 +170,20 @@ TEST(Engine, TwoLayersDifferentE) {
 
 		task.statements.push_back(statement);
 
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > engine(task);
+		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > engine(task);
 		engine.beforeStatementForTest(statement);
 
-		int leftNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.25);
+		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
 		auto init = engine.getSolverForTest()->getMesh()->pdeVars(
-				{task.cubicGrid.sizes( 0) / 2, leftNodeIndex, 0});
+				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
 
 		engine.runStatementForTest();
 
 //		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
 		auto reflect = engine.getSolverForTest()->getMesh()->pdeVars(
-				{task.cubicGrid.sizes(0) / 2, leftNodeIndex, 0});
+				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
 //		auto transfer = engine.getSolverForTest()->getMesh()->pdeVars(
-//		{task.cubicGrid.sizes(0) / 2, rightNodeIndex, 0});
+//		{task.cubicGrid.sizes(0) / 2, rightNodeIndex});
 
 		real E0 = mu0 * (3 * lambda0 + 2 * mu0) / (lambda0 + mu0); // Young's modulus
 		real Z0 = sqrt(E0 * rho0);                                 // acoustic impedance

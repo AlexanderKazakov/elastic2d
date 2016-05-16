@@ -1,19 +1,11 @@
 #include <lib/util/snapshot/Binary2DSeismograph.hpp>
 #include <lib/rheology/models/Model.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
+#include <lib/mesh/DefaultMesh.hpp>
 
 #include "lib/numeric/solvers/Solver.hpp"
 
 using namespace gcm;
-
-template<class TMesh>
-void Binary2DSeismograph<TMesh>::
-initializeImpl(const Task& task) {
-	assert_eq(task.cubicGrid.dimensionality, 2);
-	sizeY = (size_t) task.cubicGrid.sizes(1);
-	hY = task.cubicGrid.h(1);
-	surface.resize(sizeY + 1); // plus one for auxiliary gnuplot data
-}
 
 
 template<class TMesh>
@@ -23,7 +15,6 @@ beforeStatementImpl(const Statement& statement) {
 	valuesGetter = PdeVariables::QUANTITIES.at(quantityToWrite).Get;
 	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
 	                                        (-1, FILE_EXTENSION, FOLDER_NAME));
-	writeHeadOfTable();
 }
 
 
@@ -39,10 +30,18 @@ void Binary2DSeismograph<TMesh>::
 snapshotImpl(const AbstractGrid* mesh_, const int) {
 	const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
 	assert_true(mesh);
-	assert_eq(mesh->sizes(1), sizeY); // TODO slice iterator
+	
+	static bool firstCall = true;
+	if (firstCall) {
+		firstCall = false;
+		surface.resize((size_t)mesh->sizes(1) + 1); // plus one for auxiliary data
+		writeHeadOfTable(mesh);
+	}
+	
+	assert_eq(mesh->sizes(1), surface.size() - 1);
 	surface[0] = (precision) Clock::Time();
-	for (size_t y = 0; y < sizeY; y++) {
-		surface[y + 1] = (precision) valuesGetter(mesh->pde(Int3({0, (int)y, 0})));
+	for (size_t y = 0; y < surface.size() - 1; y++) {
+		surface[y + 1] = (precision) valuesGetter(mesh->pde({0, (int)y}));
 	}
 	FileUtils::writeStdVectorToBinaryFileStream(fileStream, surface);
 }
@@ -50,14 +49,14 @@ snapshotImpl(const AbstractGrid* mesh_, const int) {
 
 template<class TMesh>
 void Binary2DSeismograph<TMesh>::
-writeHeadOfTable() {
-	surface[0] = (precision) sizeY;
-	for (size_t y = 0; y < sizeY; y++) {
-		surface[y + 1] = (precision) (y * hY);
+writeHeadOfTable(const TMesh* mesh) {
+	surface[0] = (precision) surface.size() - 1;
+	for (size_t y = 0; y < surface.size() - 1; y++) {
+		surface[y + 1] = (precision) (mesh->coords({0, (int)y})(1));
 	}
 	FileUtils::writeStdVectorToBinaryFileStream(fileStream, surface);
 }
 
 
-template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> >;
-template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid, OrthotropicMaterial> >;
+template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> >;
+template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid<2>, OrthotropicMaterial> >;

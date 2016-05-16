@@ -101,7 +101,7 @@ struct Grids {
 	/** Type */
 	enum class T {
 		CUBIC,
-		CGAL2D,
+		CGAL,
 
 		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};

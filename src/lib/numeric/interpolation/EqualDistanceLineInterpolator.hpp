@@ -1,7 +1,6 @@
 #ifndef LIBGCM_EQUALDISTANCELINEINTERPOLATOR_HPP
 #define LIBGCM_EQUALDISTANCELINEINTERPOLATOR_HPP
 
-#include <vector>
 #include <lib/linal/linal.hpp>
 #include <lib/util/Types.hpp>
 

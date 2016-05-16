@@ -31,7 +31,6 @@ public:
 		if (task.statements.size() > 1) {
 			writeStatementToFileName = true;
 		}
-		initializeImpl(task);
 	}
 
 	void beforeStatement(const Statement& statement) {
@@ -50,7 +49,6 @@ public:
 	virtual ~Snapshotter() { }
 
 protected:
-	virtual void initializeImpl(const Task&) { }
 	virtual void beforeStatementImpl(const Statement&) { }
 	virtual void snapshotImpl(const AbstractGrid* grid, const int step) = 0;
 
@@ -67,8 +65,7 @@ protected:
 		std::string statement = writeStatementToFileName ?
 		                        STATEMENT + statementId : "";
 
-		return SNAPSHOTS + SLASH + folder + SLASH + core + statement + snap + DOT +
-		       fileExtension;
+		return SNAPSHOTS + SLASH + folder + SLASH + core + statement + snap + DOT + fileExtension;
 	}
 
 private:

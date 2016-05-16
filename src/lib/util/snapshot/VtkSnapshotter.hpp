@@ -23,7 +23,15 @@ template<> struct VtkTypesBase<Cgal2DGrid> {
 	typedef vtkUnstructuredGrid          GridType;
 	typedef vtkXMLUnstructuredGridWriter WriterType;
 };
-template<> struct VtkTypesBase<CubicGrid> {
+template<> struct VtkTypesBase<CubicGrid<1>> {
+	typedef vtkStructuredGrid          GridType;
+	typedef vtkXMLStructuredGridWriter WriterType;
+};
+template<> struct VtkTypesBase<CubicGrid<2>> {
+	typedef vtkStructuredGrid          GridType;
+	typedef vtkXMLStructuredGridWriter WriterType;
+};
+template<> struct VtkTypesBase<CubicGrid<3>> {
 	typedef vtkStructuredGrid          GridType;
 	typedef vtkXMLStructuredGridWriter WriterType;
 };
@@ -55,9 +63,13 @@ public:
 /**
  * Write cubic grid geometry to vtk
  */
+template<int D>
 static void 
-writeGeometry(const CubicGrid& gcmGrid, vtkSmartPointer<vtkStructuredGrid> vtkGrid) {
-	auto sizes = gcmGrid.sizes;
+writeGeometry(const CubicGrid<D>& gcmGrid, vtkSmartPointer<vtkStructuredGrid> vtkGrid) {
+	Int3 sizes = Int3::Ones();
+	for (int i = 0; i < D; i++) {
+		sizes(i) = gcmGrid.sizes(i);
+	}
 	vtkGrid->SetDimensions(sizes(0), sizes(1), sizes(2));
 
 	auto points = vtkSmartPointer<vtkPoints>::New();

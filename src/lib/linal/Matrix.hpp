@@ -1,7 +1,7 @@
 #ifndef LIBGCM_LINAL_MATRIX_HPP
 #define LIBGCM_LINAL_MATRIX_HPP
 
-#include <initializer_list>
+#include <vector>
 #include <iostream>
 #include <cmath>
 
@@ -35,6 +35,11 @@ struct DefaultContainer {
 		std::copy(list.begin(), list.end(), values);
 	}
 	
+	DefaultContainer(const std::vector<TElement>& list) {
+		assert_eq(TSize, list.size());
+		std::copy(list.begin(), list.end(), values);
+	}
+	
 	template<typename TElement2>
 	DefaultContainer(const DefaultContainer<TSize, TElement2>& orig) {
 		for (int i = 0; i < TSize; i++) {
@@ -62,6 +67,10 @@ struct DefaultContainer {
 	template<typename TElement2>
 	DefaultContainer& operator=(DefaultContainer<TSize, TElement2>&& orig) {
 		return (*this) = DefaultContainer(orig);
+	}
+	
+	void copyFrom(const DefaultContainer& origin) {
+		(*this) = origin;
 	}
 	
 	/// @}

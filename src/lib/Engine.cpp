@@ -19,9 +19,6 @@ Engine(const Task& task_) :
 	Mpi::initialize(task.globalSettings.forceSequence);
 
 	assert_gt(task.statements.size(), 0);
-	if (task.gridId == Grids::T::CUBIC) { // TODO this is shit
-		CubicGrid::preprocessTask(task.cubicGrid);
-	}
 
 	auto factory = Factory::create(task);
 	solver = factory->createSolver(task);

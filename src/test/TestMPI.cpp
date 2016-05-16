@@ -94,15 +94,13 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	task.gridId = Grids::T::CUBIC;
 
 	Statement statement;
-	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.sizes(0) = 20;
-	task.cubicGrid.sizes(1) = 10;
-	task.cubicGrid.lengths = {2, 1, 1};
+	task.cubicGrid.sizes = {20, 10};
+	task.cubicGrid.lengths = {2, 1};
 
 	statement.globalSettings.CourantNumber = 1.8;
-	statement.materialConditions.defaultMaterial = std::make_shared<IsotropicMaterial>(4, 2,
-	                                                                                   0.5);
+	statement.materialConditions.defaultMaterial = 
+			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	statement.globalSettings.numberOfSnaps = 5;
 
 	Statement::InitialCondition::Quantity pressure;
@@ -115,27 +113,29 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 
 	// calculate in sequence
 	task.globalSettings.forceSequence = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > sequenceEngine(
-	        task);
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> >
+			sequenceEngine(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.globalSettings.forceSequence = false;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > mpiEngine(task);
+	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> >
+			mpiEngine(task);
 	mpiEngine.run();
 
 	// check that parallel result is equal to sequence result
 	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
 	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
 
-	int numberOfNodesAlongXPerOneCore = (int) std::round((real) task.cubicGrid.sizes(
-	                                                             0) / Mpi::Size());
+	int numberOfNodesAlongXPerOneCore = 
+			(int) std::round((real) task.cubicGrid.sizes.at(0) / Mpi::Size());
 	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {
-			ASSERT_EQ(mpiMesh->pde({x, y, 0}),
-			          sequenceMesh->pde({x + startX, y, 0})) <<
-			"x = " << x << " global x = " << x + startX << " y = " << y << std::endl;
+			ASSERT_EQ(mpiMesh->pde({x, y}), sequenceMesh->pde({x + startX, y})) 
+					<< "x = " << x << " global x = " << x + startX << " y = " << y
+					<< "\nMPI:\n" << mpiMesh->pde({x, y}) 
+					<< "\nsequence:\n" << sequenceMesh->pde({x + startX, y});
 		}
 	}
 }

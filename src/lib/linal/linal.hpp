@@ -2,12 +2,15 @@
 #define LIBGCM_LINAL_HPP
 
 #include <lib/linal/Matrix.hpp>
+
 #include <lib/linal/operators.hpp>
 #include <lib/linal/determinants.hpp>
 #include <lib/linal/linearSystems.hpp>
 #include <lib/linal/basis.hpp>
 #include <lib/linal/functions.hpp>
 #include <lib/linal/geometry.hpp>
+
+#include <lib/linal/Multiindex.hpp>
 
 #include <lib/linal/special/RotationMatrix.hpp>
 

@@ -51,7 +51,7 @@ const std::map<Materials::T, std::string> Materials::NAME = {
 
 const std::map<Grids::T, std::string> Grids::NAME = {
 		{Grids::T::CUBIC,    "cubic"},
-		{Grids::T::CGAL2D,   "cgal2d"}
+		{Grids::T::CGAL,     "cgal"}
 };
 
 

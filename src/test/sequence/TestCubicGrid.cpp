@@ -11,15 +11,13 @@ TEST(CubicGrid, initialize) {
 	Task task;
 	Statement statement;
 	task.cubicGrid.borderSize = 3;
-	task.cubicGrid.dimensionality = 2;
-	task.cubicGrid.sizes = {7, 9, 1};
-	task.cubicGrid.lengths = {20, 8, 1};
+	task.cubicGrid.sizes = {7, 9};
+	task.cubicGrid.lengths = {20, 8};
 	statement.materialConditions.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	task.statements.push_back(statement);
 
-	CubicGrid::preprocessTask(task.cubicGrid);
-	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid, IsotropicMaterial> > grid(task);
+	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > grid(task);
 	grid.beforeStatementForTest(statement);
 	
 	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
@@ -27,12 +25,10 @@ TEST(CubicGrid, initialize) {
 	ASSERT_NEAR(grid.getMaximalEigenvalue(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(grid.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);
 	
-	for (int x = 0; x < task.cubicGrid.sizes(0); x++) {
-		for (int y = 0; y < task.cubicGrid.sizes(1); y++) {
-			for (int z = 0; z < task.cubicGrid.sizes(2); z++) {
-				for (int i = 0; i < 5; i++) {
-					ASSERT_EQ(grid.pde({x, y, z}) (i), 0.0);
-				}
+	for (int x = 0; x < task.cubicGrid.sizes.at(0); x++) {
+		for (int y = 0; y < task.cubicGrid.sizes.at(1); y++) {
+			for (int i = 0; i < 5; i++) {
+				ASSERT_EQ(grid.pde({x, y})(i), 0.0);
 			}
 		}
 	}
@@ -42,14 +38,12 @@ TEST(CubicGrid, initialize) {
 TEST(CubicGrid, PartIterator) {
 	Task task;
 
-	task.cubicGrid.dimensionality = 3;
 	task.cubicGrid.borderSize = 2;
 	int X = 5, Y = 7, Z = 6;
 	task.cubicGrid.sizes = {X, Y, Z};
 	task.cubicGrid.lengths = {20, 8, 1};
 
-	CubicGrid::preprocessTask(task.cubicGrid);
-	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid, IsotropicMaterial> > grid(task);
+	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid<3>, IsotropicMaterial> > grid(task);
 
 	int counter = 0;
 	for (auto it = grid.slice((int)DIRECTION::Z, 3); it != it.end(); ++it) {
@@ -64,7 +58,7 @@ TEST(CubicGrid, PartIterator) {
 	ASSERT_EQ(linal::directProduct(max - min), counter);
 	auto partIter = grid.box({0, 0, 0}, grid.sizes);
 	for (auto it : grid) {
-		ASSERT_EQ(it, *partIter);
+		ASSERT_EQ(it, partIter);
 		++partIter;
 	}
 	for (int a = 1; a <= grid.borderSize; a++) {

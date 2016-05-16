@@ -56,7 +56,7 @@ Task parseTaskCgal2d() {
 
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
-	task.gridId = Grids::T::CGAL2D;
+	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
 	task.cgal2DGrid.spatialStep = 0.25;
@@ -149,7 +149,6 @@ Task parseTask2d() {
 	task.snapshottersId = {Snapshotters::T::VTK};
 
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.lengths = {4, 2, 1};
 	task.cubicGrid.sizes = {100, 50, 1};
 
@@ -188,7 +187,6 @@ Task parseTask3d() {
 	task.snapshottersId = {Snapshotters::T::VTK};
 
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.dimensionality = 3;
 	task.cubicGrid.lengths = {4, 2, 1};
 	task.cubicGrid.sizes = {200, 100, 50};
 
@@ -240,7 +238,6 @@ Task parseTaskSeismo() {
 	task.globalSettings.forceSequence = true;
 
 	task.cubicGrid.borderSize = 3;
-	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.lengths = {1, 1, 1};
 	task.cubicGrid.sizes = {50, 50, 1};
 
@@ -295,7 +292,6 @@ Task parseTaskCagi2d() {
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK, Snapshotters::T::DETECTOR};
 
-	task.cubicGrid.dimensionality = 2;
 	task.cubicGrid.borderSize = 2;
 	task.globalSettings.forceSequence = true;
 
@@ -336,7 +332,7 @@ Task parseTaskCagi2d() {
 
 	Statement::Fracture fracture;
 	fracture.direction = 1;
-	fracture.coordinate = Y / 2;
+	fracture.index = task.cubicGrid.sizes.at(1) / 2;
 	fracture.area = std::make_shared<SphereArea>(Y / 2, Real3({X / 2, Y / 2, 0}));
 	fracture.values = {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
@@ -395,7 +391,6 @@ Task parseTaskCagi3d() {
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK, Snapshotters::T::DETECTOR};
 
-	task.cubicGrid.dimensionality = 3;
 	task.cubicGrid.borderSize = 2;
 	task.globalSettings.forceSequence = true;
 
@@ -411,8 +406,7 @@ Task parseTaskCagi3d() {
 	real lambda = 3e+10;
 	real mu = 2e+10;
 	statement.materialConditions.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda,
-	                                            mu);
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.globalSettings.CourantNumber = 1.0;
 	statement.globalSettings.numberOfSnaps = 251 / 2;
 	statement.globalSettings.stepsPerSnap = 1;
@@ -439,7 +433,7 @@ Task parseTaskCagi3d() {
 
 	Statement::Fracture fracture;
 	fracture.direction = 2;
-	fracture.coordinate = Z / 2;
+	fracture.index = task.cubicGrid.sizes.at(2) / 2;
 	fracture.area = std::make_shared<SphereArea>(Z / 2, Real3({X / 2, Y / 2, Z / 2}));
 	fracture.values = {
 		{PhysicalQuantities::T::Szz, [] (real) {return 0; }},
