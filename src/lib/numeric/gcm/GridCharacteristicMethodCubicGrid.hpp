@@ -58,16 +58,14 @@ public: // TODO - private (rewrite test)
 	                               const Iterator& it, const PdeVector& dx) const {
 		Matrix ans;
 		std::vector<PdeVector> src( (size_t) (mesh.borderSize + 1) );
-		PdeVector res;
 		Iterator shift = Iterator::Zeros();
 		for (int k = 0; k < PdeVector::M; k++) {
 			shift(s) = (dx(k) > 0) ? 1 : -1;
 			for (int i = 0; i < src.size(); i++) {
 				src[(size_t)i] = mesh.pde(it + shift * i);
 			}
-			EqualDistanceLineInterpolator<PdeVector>::minMaxInterpolate(
-					res, src, fabs(dx(k)) / mesh.h(s));
-			ans.setColumn(k, res);
+			ans.setColumn(k, EqualDistanceLineInterpolator<PdeVector>::
+					minMaxInterpolate(src, fabs(dx(k)) / mesh.h(s)));
 		}
 		return ans;
 	}

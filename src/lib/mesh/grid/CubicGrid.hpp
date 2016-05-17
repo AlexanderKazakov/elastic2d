@@ -116,6 +116,9 @@ public:
 		return ans;
 	}
 
+	static int numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
+		return (int) std::round((real) task.sizes.at(0) / Mpi::Size());
+	}
 
 private:
 	/** functions for constructor */
@@ -124,7 +127,6 @@ private:
 	IntD calculateIndexMaker() const;
 	RealD calculateH(const Task::CubicGrid& task) const;
 	RealD calculateStartR(const Task::CubicGrid& task) const;
-	static int numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task);
 	///@}
 
 	USE_AND_INIT_LOGGER("gcm.CubicGrid")
@@ -244,13 +246,6 @@ calculateStartR(const Task::CubicGrid &task) const {
 	_startR(0) += Mpi::Rank() * numberOfNodesAlongXPerOneCore(task) * h(0);
 
 	return _startR;
-}
-
-
-template<int Dimensionality>
-int CubicGrid<Dimensionality>::
-numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
-	return (int) std::round((real) task.sizes.at(0) / Mpi::Size());
 }
 
 

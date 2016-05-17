@@ -10,33 +10,36 @@ template<class TVector>
 class EqualDistanceLineInterpolator {
 public:
 	/**
-	 * Interpolation with minmax limiter.
-	 * @param res value to interpolate
+	 * Interpolation with minmax limiter
 	 * @param src known values at equal distances, @warning it will be overwritten(!)
-	 * @param q relative distance between first source point and point to interpolate.
+	 * @param q relative distance between first source point and point to interpolate
+	 * @return interpolated value
 	 */
-	static void minMaxInterpolate(TVector& res, std::vector<TVector>& src, const real& q) {
+	static TVector minMaxInterpolate(std::vector<TVector>& src, const real& q) {
 		/// where is the point to interpolate
-		unsigned long k = (unsigned long) q;
-		/// check that we perform interpolation, not extrapolation
+		size_t k = (size_t) q;
+		/// check that perform interpolation, not extrapolation
 		assert_le(k, src.size() - 1);
 		assert_ge(q, 0);
+		
 		/// yield values for limiter
 		TVector maximum, minimum;
 		for (int i = 0; i < TVector::M; i++) {
 			maximum(i) = fmax(src[k](i), src[k + 1](i));
 			minimum(i) = fmin(src[k](i), src[k + 1](i));
 		}
-		/// interpolate
-		interpolate(res, src, q);
+		
+		TVector ans = interpolate(src, q);
+		
 		/// minmax limiter
 		for (int i = 0; i < TVector::M; i++) {
-			if (res(i) > maximum(i)) {
-				res(i) = maximum(i);
-			} else if (res(i) < minimum(i)) {
-				res(i) = minimum(i);
+			if (ans(i) > maximum(i)) {
+				ans(i) = maximum(i);
+			} else if (ans(i) < minimum(i)) {
+				ans(i) = minimum(i);
 			}
 		}
+		return ans;
 	}
 
 	/**
@@ -50,21 +53,21 @@ public:
 	 * @param src known values at equal distances, @warning it will be overwritten(!)
 	 * @param q relative distance between first source point and point to interpolate.
 	 */
-	static void interpolate(TVector& res, std::vector<TVector>& src, const real& q) {
+	static TVector interpolate(std::vector<TVector>& src, const real& q) {
 		/// Newton interpolation
-		res = src[0];
+		TVector ans = src[0];
 		const int p = (int)src.size() - 1; ///< order of interpolation
 		for (int i = 1; i <= p; i++) {
 			for (int j = 0; j < p - i + 1; j++) {
-				// TODO - make all this linal operations faster, replace std::vector
-				src[(unsigned long)j] =
+				src[(size_t)j] =
 				        /* recurrent finite differences */
-				        (src[(unsigned long)j + 1] - src[(unsigned long)j]) *
+				        (src[(size_t)j + 1] - src[(size_t)j]) *
 				        /* coordinate and factorial */
 				        ((q - i + 1) / i);
 			}
-			res += src[0];
+			ans += src[0];
 		}
+		return ans;
 	}
 
 };

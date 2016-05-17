@@ -113,9 +113,7 @@ public:
 	 */
 	static const int BAD_MESH = 4;
 	/**
-	 * Bad condfig exception code.
-	 *
-	 * FIXME Does it really need to be here? There is no configs for libgcm anymore.
+	 * Bad config exception code.
 	 */
 	static const int BAD_CONFIG = 5;
 	/**

@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
 	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
 	else if (taskId == "cubic"     ) { task = parseTask3d();     }
-	else if (taskId == "inverse"   ) { task = parseTaskCagi2d(); }
+	else if (taskId == "inverse"   ) { task = parseTaskCagi3d(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;
@@ -238,8 +238,8 @@ Task parseTaskSeismo() {
 	task.globalSettings.forceSequence = true;
 
 	task.cubicGrid.borderSize = 3;
-	task.cubicGrid.lengths = {1, 1, 1};
-	task.cubicGrid.sizes = {50, 50, 1};
+	task.cubicGrid.lengths = {1, 1};
+	task.cubicGrid.sizes = {50, 50};
 
 	Statement statement;
 	statement.vtkSnapshotter.enableSnapshotting = true;
@@ -270,7 +270,7 @@ Task parseTaskSeismo() {
 	Statement::CubicGridBorderCondition borderCondition;
 	// y right free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-	                               (Real3({-10, 0.99, -10}), Real3({10, 10, 10}));
+			(Real3({-10, 0.99, -10}), Real3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
@@ -290,32 +290,33 @@ Task parseTaskCagi2d() {
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
-	task.snapshottersId = {Snapshotters::T::VTK, Snapshotters::T::DETECTOR};
+	task.snapshottersId = {/*Snapshotters::T::VTK,*/ Snapshotters::T::DETECTOR};
 
 	task.cubicGrid.borderSize = 2;
 	task.globalSettings.forceSequence = true;
 
+	int debugDecrease = 3;
+
 	real X = 0.016, Y = 0.004;
 	real sensorSize = 0.003;
 	real sourceSize = 0.003;
-	task.cubicGrid.lengths = {X, Y, 1};
-	task.cubicGrid.sizes = {151 / 1, 101 / 1, 1};
+	task.cubicGrid.lengths = {X, Y};
+	task.cubicGrid.sizes = {151 / debugDecrease, 101 / debugDecrease};
 
 	Statement statement;
 	real rho = 1e+3;
 	real lambda = 3e+10;
 	real mu = 2e+10;
 	statement.materialConditions.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda,
-	                                            mu);
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.globalSettings.CourantNumber = 1.0;
-	statement.globalSettings.numberOfSnaps = 251 / 1;
+	statement.globalSettings.numberOfSnaps = 251 / debugDecrease;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::CubicGridBorderCondition borderCondition;
 	// y bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-	                               (Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
+			(Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
@@ -323,7 +324,7 @@ Task parseTaskCagi2d() {
 	statement.cubicGridBorderConditions.push_back(borderCondition);
 	// y up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-	                               (Real3({-10, Y - 1e-5, -10}), Real3({10, 10, 10}));
+			(Real3({-10, Y - 1e-5, -10}), Real3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Sxy, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syy, [] (real) {return 0; }}
@@ -355,8 +356,7 @@ Task parseTaskCagi2d() {
 		real endSrcPosition = initSrcPosition + sourceSize;
 		// y up sensor
 		auto srcArea = std::make_shared<AxisAlignedBoxArea>
-		                       (Real3({initSrcPosition, Y - 1e-5, -10}),
-		                       Real3({endSrcPosition, 10, 10}));
+				(Real3({initSrcPosition, Y - 1e-5, -10}), Real3({endSrcPosition, 10, 10}));
 		real frequency = 10e+6, T = 1.0 / frequency;
 		real A = -1e+6;
 		borderCondition.area = srcArea;
@@ -367,15 +367,14 @@ Task parseTaskCagi2d() {
 		if (statement.cubicGridBorderConditions.size() == 3) {statement.cubicGridBorderConditions.pop_back(); }
 		statement.cubicGridBorderConditions.push_back(borderCondition);
 		auto sensorArea = std::make_shared<AxisAlignedBoxArea>
-		                          (Real3({initSensorPosition, Y - 1e-5, -10}),
-		                          Real3({endSensorPosition, 10, 10}));
+				(Real3({initSensorPosition, Y - 1e-5, -10}), Real3({endSensorPosition, 10, 10}));
 		statement.detector.area = sensorArea;
 
 		statement.id = StringUtils::toString(i, 4);
 		if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) {
-			if (i == 3) {
+//			if (i == 3) {
 				task.statements.push_back(statement);
-			}
+//			}
 		}
 		counter++;
 	}
@@ -389,17 +388,18 @@ Task parseTaskCagi3d() {
 	task.modelId = Models::T::ELASTIC3D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
-	task.snapshottersId = {Snapshotters::T::VTK, Snapshotters::T::DETECTOR};
+	task.snapshottersId = {/*Snapshotters::T::VTK,*/ Snapshotters::T::DETECTOR};
 
 	task.cubicGrid.borderSize = 2;
 	task.globalSettings.forceSequence = true;
 
+	int debugDecrease = 3;
 	real X = 0.016, Y = 0.016, Z = 0.004;
 	real sensorSizeX = 0.003;
 	real sourceSizeX = 0.003;
 	real commonSizeY = 0.006;
 	task.cubicGrid.lengths = {X, Y, Z};
-	task.cubicGrid.sizes = {151 / 2, 151 / 2, 101 / 2};
+	task.cubicGrid.sizes = {151 / debugDecrease, 151 / debugDecrease, 101 / debugDecrease};
 
 	Statement statement;
 	real rho = 1e+3;
@@ -408,13 +408,13 @@ Task parseTaskCagi3d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	statement.globalSettings.CourantNumber = 1.0;
-	statement.globalSettings.numberOfSnaps = 251 / 2;
+	statement.globalSettings.numberOfSnaps = 251 / debugDecrease;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::CubicGridBorderCondition borderCondition;
 	// z bottom free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-	                               (Real3({-10, -10, -10}), Real3({10, 10, 1e-5}));
+			(Real3({-10, -10, -10}), Real3({10, 10, 1e-5}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syz, [] (real) {return 0; }},
@@ -423,7 +423,7 @@ Task parseTaskCagi3d() {
 	statement.cubicGridBorderConditions.push_back(borderCondition);
 	// z up free border
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-	                               (Real3({-10, -10, Z - 1e-5}), Real3({10, 10, 10}));
+			(Real3({-10, -10, Z - 1e-5}), Real3({10, 10, 10}));
 	borderCondition.values = {
 		{PhysicalQuantities::T::Szz, [] (real) {return 0; }},
 		{PhysicalQuantities::T::Syz, [] (real) {return 0; }},
@@ -489,7 +489,7 @@ Task parseTaskCagi3d() {
 
 			statement.id = StringUtils::toString(j, 2) + StringUtils::toString(i, 2);
 			if (counter % MPI::COMM_WORLD.Get_size() == MPI::COMM_WORLD.Get_rank()) {
-				if (i == 5 && j == 5) {
+				if (i == 5 /*&& j == 5*/) {
 					task.statements.push_back(statement);
 				}
 			}

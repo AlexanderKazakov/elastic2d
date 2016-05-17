@@ -127,8 +127,7 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
 	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
 
-	int numberOfNodesAlongXPerOneCore = 
-			(int) std::round((real) task.cubicGrid.sizes.at(0) / Mpi::Size());
+	int numberOfNodesAlongXPerOneCore = CubicGrid<2>::numberOfNodesAlongXPerOneCore(task.cubicGrid);
 	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {

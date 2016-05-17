@@ -87,11 +87,6 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 		statement.initialCondition.waves.push_back(wave);
 		
-		statement.vtkSnapshotter.enableSnapshotting = true;
-		VtkSnapshotter<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>>
-				snapshotter;
-		snapshotter.beforeStatement(statement); // TODO replace
-		
 		task.statements.push_back(statement);
 	
 		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>>
@@ -102,7 +97,6 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 		auto pWave = solver.getMesh()->pde({0, 2});
 	
 		for (int i = 0; i < 7; i++) {
-			snapshotter.snapshot(solver.getMesh(), i);
 			for (int y = 0; y < task.cubicGrid.sizes.at(1); y++) {
 				for (int x = 0; x < task.cubicGrid.sizes.at(0); x++) {
 					auto value = solver.getMesh()->pde({x, y});

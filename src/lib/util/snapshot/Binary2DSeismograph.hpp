@@ -28,6 +28,7 @@ private:
 	USE_AND_INIT_LOGGER("gcm.Binary2DSeismograph")
 	std::vector<precision> surface; // values storage on current time step to write
 	Getter valuesGetter;
+	bool firstCallInTheStatement;
 
 	std::ofstream fileStream;
 

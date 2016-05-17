@@ -15,6 +15,7 @@ beforeStatementImpl(const Statement& statement) {
 	valuesGetter = PdeVariables::QUANTITIES.at(quantityToWrite).Get;
 	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
 	                                        (-1, FILE_EXTENSION, FOLDER_NAME));
+	firstCallInTheStatement = true;
 }
 
 
@@ -31,9 +32,8 @@ snapshotImpl(const AbstractGrid* mesh_, const int) {
 	const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
 	assert_true(mesh);
 	
-	static bool firstCall = true;
-	if (firstCall) {
-		firstCall = false;
+	if (firstCallInTheStatement) {
+		firstCallInTheStatement = false;
 		surface.resize((size_t)mesh->sizes(1) + 1); // plus one for auxiliary data
 		writeHeadOfTable(mesh);
 	}

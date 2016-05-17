@@ -52,7 +52,7 @@ inline Real2 perpendicularClockwise(const Real2& v) {
  * (v, 0, 0) is returned
  */
 inline Real3 perpendicularClockwise(const Real3& v) {
-	if (v(0) == 0 && v(1) == 0) { // FIXME - should EQUALITY_TOLERANCE be here?
+	if (v(0) == 0 && v(1) == 0) {
 		return {v(2), 0, 0};
 	}
 	return {v(1), -v(0), 0};
