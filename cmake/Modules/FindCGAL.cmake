@@ -86,7 +86,6 @@ endif()
 if (DOLFIN_SKIP_BUILD_TESTS)
   set(CGAL_TEST_RUNS TRUE)
 elseif (CGAL_INCLUDE_DIRS AND CGAL_LIBRARIES)
-
   # Set flags for building test program
   set(CMAKE_REQUIRED_INCLUDES ${CGAL_INCLUDE_DIRS})
   set(CMAKE_REQUIRED_LIBRARIES ${CGAL_LIBRARIES})
@@ -95,7 +94,6 @@ elseif (CGAL_INCLUDE_DIRS AND CGAL_LIBRARIES)
   # Add all previusly found Boost libraries - CGAL doesn't appear to supply
   # all necessary Boost libs (test with Boost 1.50 + CGAL 4.0.2)
   set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${Boost_LIBRARIES})
-
   # Build and run test program
   include(CheckCXXSourceRuns)
   check_cxx_source_runs("

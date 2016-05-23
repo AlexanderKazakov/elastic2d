@@ -1,6 +1,6 @@
 #include <lib/numeric/special_border_conditions/SpecialBorderConditions.hpp>
 #include <lib/rheology/models/Model.hpp>
-#include <lib/numeric/gcm/grid_characteristic_methods.hpp>
+#include <lib/numeric/gcm/GridCharacteristicMethodCubicGrid.hpp>
 
 using namespace gcm;
 
@@ -134,11 +134,11 @@ handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh, const real timeStep,
 template class SpecialBorderConditions<Elastic1DModel, CubicGrid<1>, IsotropicMaterial>;
 template class SpecialBorderConditions<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>;
 template class SpecialBorderConditions<Elastic3DModel, CubicGrid<3>, IsotropicMaterial>;
-template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, IsotropicMaterial>;
+//template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, IsotropicMaterial>;
 
 template class SpecialBorderConditions<Elastic2DModel, CubicGrid<2>, OrthotropicMaterial>;
 template class SpecialBorderConditions<Elastic3DModel, CubicGrid<3>, OrthotropicMaterial>;
-template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, OrthotropicMaterial>;
+//template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, OrthotropicMaterial>;
 
 
 

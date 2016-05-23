@@ -1,6 +1,7 @@
 #ifndef LIBGCM_LINAL_MATRIX_HPP
 #define LIBGCM_LINAL_MATRIX_HPP
 
+
 #include <vector>
 #include <iostream>
 #include <cmath>

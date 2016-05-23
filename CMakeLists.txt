@@ -81,6 +81,10 @@ file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
 
+option(PRECOMPILED_HEADERS "PRECOMPILED_HEADERS" OFF)
+IF(PRECOMPILED_HEADERS)
+ENDIF()
+
 # libgcm
 add_library(gcm SHARED ${LIB_SOURCES})
 
@@ -93,7 +97,7 @@ add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
 target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tmp
-add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestInterpolator.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
+add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestCgal3DGrid.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
 target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests on mpi

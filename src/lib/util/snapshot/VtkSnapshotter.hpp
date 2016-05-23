@@ -1,9 +1,10 @@
 #ifndef LIBGCM_VTKSNAPSHOTTER_HPP
 #define LIBGCM_VTKSNAPSHOTTER_HPP
 
+#include <lib/mesh/grid/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/Cgal3DGrid.hpp>
 #include <lib/util/snapshot/Snapshotter.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
-#include <lib/mesh/grid/Cgal2DGrid.hpp>
 
 #include <vtkSmartPointer.h>
 #include <vtkPointData.h>
@@ -13,6 +14,7 @@
 #include <vtkXMLStructuredGridWriter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkTriangle.h>
+#include <vtkTetra.h>
 
 
 namespace gcm {
@@ -22,26 +24,36 @@ template<typename TGrid> struct VtkTypesBase;
 template<> struct VtkTypesBase<Cgal2DGrid> {
 	typedef vtkUnstructuredGrid          GridType;
 	typedef vtkXMLUnstructuredGridWriter WriterType;
+	typedef vtkTriangle                  VtkCellType;
+};
+template<> struct VtkTypesBase<Cgal3DGrid> {
+	typedef vtkUnstructuredGrid          GridType;
+	typedef vtkXMLUnstructuredGridWriter WriterType;
+	typedef vtkTetra                     VtkCellType;
 };
 template<> struct VtkTypesBase<CubicGrid<1>> {
-	typedef vtkStructuredGrid          GridType;
-	typedef vtkXMLStructuredGridWriter WriterType;
+	typedef vtkStructuredGrid            GridType;
+	typedef vtkXMLStructuredGridWriter   WriterType;
+	typedef void                         VtkCellType;
 };
 template<> struct VtkTypesBase<CubicGrid<2>> {
-	typedef vtkStructuredGrid          GridType;
-	typedef vtkXMLStructuredGridWriter WriterType;
+	typedef vtkStructuredGrid            GridType;
+	typedef vtkXMLStructuredGridWriter   WriterType;
+	typedef vtkPixel                     VtkCellType;
 };
 template<> struct VtkTypesBase<CubicGrid<3>> {
-	typedef vtkStructuredGrid          GridType;
-	typedef vtkXMLStructuredGridWriter WriterType;
+	typedef vtkStructuredGrid            GridType;
+	typedef vtkXMLStructuredGridWriter   WriterType;
+	typedef vtkVoxel                     VtkCellType;
 };
 
 
 template<typename TGrid>
 struct VtkTypes : public VtkTypesBase<TGrid> {
-	typedef VtkTypesBase<TGrid>       Base;
-	typedef typename Base::GridType   GridType;
-	typedef typename Base::WriterType WriterType;
+	typedef VtkTypesBase<TGrid>        Base;
+	typedef typename Base::GridType    GridType;
+	typedef typename Base::WriterType  WriterType;
+	typedef typename Base::VtkCellType VtkCellType;
 	
 	static vtkSmartPointer<GridType> NewGrid() {
 		return vtkSmartPointer<GridType>::New();
@@ -49,6 +61,10 @@ struct VtkTypes : public VtkTypesBase<TGrid> {
 
 	static vtkSmartPointer<WriterType> NewWriter() {
 		return vtkSmartPointer<WriterType>::New();
+	}
+	
+	static vtkSmartPointer<VtkCellType> NewCell() {
+		return vtkSmartPointer<VtkCellType>::New();
 	}
 	
 	static std::string FileExtension() {
@@ -72,41 +88,29 @@ writeGeometry(const CubicGrid<D>& gcmGrid, vtkSmartPointer<vtkStructuredGrid> vt
 	}
 	vtkGrid->SetDimensions(sizes(0), sizes(1), sizes(2));
 
-	auto points = vtkSmartPointer<vtkPoints>::New();
-	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
-	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
-		auto coords = gcmGrid.coords(it);
-		real point[3] = {coords(0), coords(1), coords(2)};
-		points->InsertNextPoint(point);
-	}
-	vtkGrid->SetPoints(points);
+	writePoints(gcmGrid, vtkGrid);
 }
+
 
 /**
  * Write CGAL 2D grid geometry to vtk
  */
 static void 
 writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
-	auto points = vtkSmartPointer<vtkPoints>::New();
-	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
-	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
-		auto coords = gcmGrid.coords(it);
-		real point[3] = {coords(0), coords(1), coords(2)};
-		points->InsertNextPoint(point);
-	}
-	vtkGrid->SetPoints(points);
-
-	auto triangle = vtkSmartPointer<vtkTriangle>::New();
-	for (auto it = gcmGrid.cellBegin(); it != gcmGrid.cellEnd(); ++it) {
-		auto verticesIndices = gcmGrid.getVerticesOfCell(it);
-		int i = 0;
-		for (const auto& vI : verticesIndices) {
-			triangle->GetPointIds()->SetId(i, (vtkIdType)vI);
-			i++;
-		}
-		vtkGrid->InsertNextCell(triangle->GetCellType(), triangle->GetPointIds());
-	}
+	writePoints(gcmGrid, vtkGrid);
+	writeCells(gcmGrid, vtkGrid);
 }
+
+
+/**
+ * Write CGAL 3D grid geometry to vtk
+ */
+static void 
+writeGeometry(const Cgal3DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+	writePoints(gcmGrid, vtkGrid);
+	writeCells(gcmGrid, vtkGrid);
+}
+
 
 /**
  * Write vtk grid to vtk file with vtk writer
@@ -125,6 +129,7 @@ writeToFile(vtkSmartPointer<VtkGridType> vtkGrid,
 	vtkWriter->Write();
 }
 
+
 /**
  * Write geometry of the given grid to vtk file
  */
@@ -135,6 +140,37 @@ static void dumpGridToVtk(const GridType& grid, const std::string name = "grid")
 	auto vtkGrid = VTK_TYPES::NewGrid();
 	writeGeometry(grid, vtkGrid);
 	writeToFile(vtkGrid, VTK_TYPES::NewWriter(), name + "." + VTK_TYPES::FileExtension());
+}
+
+
+private:
+
+template<typename TGcmGrid, typename TVtkGrid>
+static void writePoints(const TGcmGrid& gcmGrid, vtkSmartPointer<TVtkGrid> vtkGrid) {
+	/// write nodes of the grid
+	auto points = vtkSmartPointer<vtkPoints>::New();
+	points->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
+	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
+		auto coords = gcmGrid.coords(it);
+		real point[3] = {coords(0), coords(1), coords(2)};
+		points->InsertNextPoint(point);
+	}
+	vtkGrid->SetPoints(points);
+}
+
+template<typename TGrid>
+static void writeCells(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+	/// write cells of the unstructured grid
+	auto cell = VtkTypes<TGrid>::NewCell();
+	for (auto it = gcmGrid.cellBegin(); it != gcmGrid.cellEnd(); ++it) {
+		auto verticesIndices = gcmGrid.getVerticesOfCell(it);
+		int i = 0;
+		for (const auto& vI : verticesIndices) {
+			cell->GetPointIds()->SetId(i, (vtkIdType)vI);
+			i++;
+		}
+		vtkGrid->InsertNextCell(cell->GetCellType(), cell->GetPointIds());
+	}
 }
 
 };

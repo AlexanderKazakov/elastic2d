@@ -40,12 +40,14 @@ public:
 		}
 	};
 	
+	
 	typedef union {
 		unsigned char c = 0;
 		struct {
 			bool border;
 		};
 	} Flags;
+
 
 	UnstructuredGrid(const Task& task) : AbstractGrid(task) { }
 	virtual ~UnstructuredGrid() { }

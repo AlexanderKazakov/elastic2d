@@ -37,7 +37,7 @@ struct Element {
 	bool operator==(const Element& other) const {
 		if (this->valid != other.valid) {
 			return false;
-		}
+		} // TODO - else if not valid return true?
 		/// points order does matter
 		for (int i = 0; i < N; i++) {
 			if (this->p[i] != other.p[i]) {
@@ -70,7 +70,10 @@ struct Element {
 	
 };
 
+
 template<typename Point> using Triangle = Element<Point, 3>;
+template<typename Point> using Tetrahedron = Element<Point, 4>;
+
 
 }
 

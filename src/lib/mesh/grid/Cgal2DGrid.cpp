@@ -1,5 +1,10 @@
 #include <lib/mesh/grid/Cgal2DGrid.hpp>
 
+#include <CGAL/Delaunay_mesh_size_criteria_2.h>
+#include <CGAL/Polygon_2.h>
+#include <CGAL/Delaunay_mesher_2.h>
+
+
 using namespace gcm;
 
 

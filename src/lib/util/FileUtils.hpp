@@ -1,6 +1,7 @@
 #ifndef LIBGCM_FILEUTILS_HPP
 #define LIBGCM_FILEUTILS_HPP
 
+
 #include <fstream>
 #include <vector>
 
@@ -51,6 +52,18 @@ public:
 	static void closeFileStream(std::ofstream& fileStream) {
 		assert_true(fileStream.good());
 		fileStream.close();
+	}
+	
+	template<typename PlaceToWriteInput>
+	static void readFromTextFile(const std::string& fileName,
+			PlaceToWriteInput& placeToWriteInput) {
+		
+		std::ifstream inputFileStream(fileName);
+		assert_true(inputFileStream.is_open());
+		
+		inputFileStream >> placeToWriteInput;
+		assert_true(inputFileStream.good());
+		inputFileStream.close();
 	}
 
 };

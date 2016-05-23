@@ -1,6 +1,7 @@
 #ifndef LIBGCM_TASK_HPP
 #define LIBGCM_TASK_HPP
 
+
 #include <map>
 #include <memory>
 #include <vector>
@@ -161,6 +162,14 @@ struct Task {
 		};
 		std::vector<Body> bodies; ///< list of bodies contained in the grid		
 	} cgal2DGrid;
+	
+	struct Cgal3DGrid {
+		bool movable = false; ///< deformable(true) or immutable(false) grid
+		real spatialStep = 0; ///< effective spatial step
+		
+		std::string polyhedronFileName; ///< file with initial polyhedron to
+				///< construct the grid from
+	} cgal3DGrid;
 
 	/// list of statements to calculate on the same geometry
 	std::vector<Statement> statements;

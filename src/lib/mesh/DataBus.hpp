@@ -3,7 +3,6 @@
 
 
 #include <lib/mesh/grid/CubicGrid.hpp>
-#include <lib/mesh/grid/Cgal2DGrid.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
 
 namespace gcm {
@@ -31,6 +30,8 @@ struct DataBus<TModel, CubicGrid<Dimensionality>, TMaterial> {
 
 };
 
+
+class Cgal2DGrid;
 template<typename TModel, typename TMaterial>
 struct DataBus<TModel, Cgal2DGrid, TMaterial> {
 	typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial> Mesh;

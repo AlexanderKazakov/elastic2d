@@ -49,7 +49,9 @@ struct GcmMatrices {
 
 	};
 
-	GcmMatrix m[D];
+	GcmMatrix m[D]; // FIXME - replace ..->m[s] with ..(s)
+	const GcmMatrix& operator()(const int s) const { return m[s]; }
+	      GcmMatrix& operator()(const int s)       { return m[s]; }
 
 	/** @return maximal in modulus eigenvalue of matrices from all directions */
 	real getMaximalEigenvalue() const {

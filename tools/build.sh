@@ -5,7 +5,8 @@ usage() { echo "Usage: $0
     [-d] (to compile in Debug mode)
     [-r] (to compile in Release mode)
     [-o] (enable additional optimization)
-    [-v] (show make output)"
+    [-v] (show make output)
+    [-p] (DOES NOT WORK generate precompiled headers with current compiler flags)"
     1>&2; exit 1; }
 
 
@@ -15,7 +16,7 @@ rm -f snaps/*
 cmake_line="cmake .."
 build_type="RelWithDebInfo"
 
-while getopts ":cdrov" option; do
+while getopts ":cdrovp" option; do
     case "${option}" in
         c)
             rm -rf build CMakeCache.txt CMakeFiles/ cmake_install.cmake
@@ -32,6 +33,9 @@ while getopts ":cdrov" option; do
             ;;
         v)
             cmake_line="$cmake_line -DVERBOSE_MAKE=ON"
+            ;;
+        p)
+            cmake_line="$cmake_line -DPRECOMPILED_HEADERS=ON"
             ;;
         *)
             usage

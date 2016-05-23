@@ -1,17 +1,15 @@
 #ifndef LIBGCM_CGAL2DGRID_HPP
 #define LIBGCM_CGAL2DGRID_HPP
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Constrained_Delaunay_triangulation_2.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/Delaunay_mesher_2.h>
-#include <CGAL/Delaunay_mesh_face_base_2.h>
-#include <CGAL/Delaunay_mesh_size_criteria_2.h>
-#include <CGAL/Polygon_2.h>
-//#include <CGAL/Polygon_2_algorithms.h>
+#include <lib/mesh/grid/CGALHeaders.hpp>
 
 #include <lib/mesh/grid/UnstructuredGrid.hpp>
-#include <lib/linal/linal.hpp>
+
+namespace CGAL {
+	template <class Traits_P, class Container_P> class Polygon_2;
+	template <class CDT> class Delaunay_mesh_size_criteria_2;
+	template <typename Tr, typename Crit> class Delaunay_mesher_2;
+}
 
 namespace gcm {
 /**
@@ -20,7 +18,6 @@ namespace gcm {
 class Cgal2DGrid : public UnstructuredGrid {
 public:
 	typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-	typedef CGAL::Polygon_2<K>                                  Polygon;
 	typedef CGAL::Triangulation_vertex_base_with_info_2
 	                                                <size_t, K> Vb;
 	typedef CGAL::Delaunay_mesh_face_base_2<K>                  Fb;
@@ -33,6 +30,7 @@ public:
 	typedef CDT::Geom_traits::Vector_2                          CgalVector2;
 	typedef CDT::Triangle                                       CgalTriangle2;
 	typedef CDT::Point                                          CgalPoint2;
+	typedef CGAL::Polygon_2<K, std::vector<CgalPoint2>>         Polygon;
 	typedef CDT::Finite_faces_iterator                          FiniteFacesIterator;
 	typedef CDT::Finite_vertices_iterator                       FiniteVerticesIterator;
 	typedef CDT::Line_face_circulator                           LineFaceCirculator;

@@ -1,8 +1,8 @@
 #ifndef LIBGCM_GRIDCHARACTERISTICMETHODCGAL2DGRID_HPP
 #define LIBGCM_GRIDCHARACTERISTICMETHODCGAL2DGRID_HPP
 
-#include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 #include <lib/mesh/grid/Cgal2DGrid.hpp>
+#include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 
 
 namespace gcm {
