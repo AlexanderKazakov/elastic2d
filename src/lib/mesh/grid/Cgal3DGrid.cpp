@@ -105,7 +105,6 @@ triangulate(const Task::Cgal3DGrid& task) {
 	typedef typename C3t3::Subdomain_index                                SubdomainIndex;
 	typedef typename MeshingTriangulation::Vertex                         MeshingVertex;
 	typedef typename MeshingTriangulation::Cell                           MeshingCell;
-	typedef typename MeshingTriangulation::Cell_handle                    MeshingCellHandle;
 	// Meshing criteria
 	typedef CGAL::Mesh_criteria_3<MeshingTriangulation>                   MeshingCriteria;
 

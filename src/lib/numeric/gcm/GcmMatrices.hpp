@@ -49,7 +49,7 @@ struct GcmMatrices {
 
 	};
 
-	GcmMatrix m[D]; // FIXME - replace ..->m[s] with ..(s)
+	GcmMatrix m[D];
 	const GcmMatrix& operator()(const int s) const { return m[s]; }
 	      GcmMatrix& operator()(const int s)       { return m[s]; }
 

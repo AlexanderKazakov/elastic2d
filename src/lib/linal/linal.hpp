@@ -19,6 +19,7 @@ namespace gcm {
 typedef linal::Real1 Real1;
 typedef linal::Real2 Real2;
 typedef linal::Real3 Real3;
+typedef linal::Real4 Real4;
 
 typedef linal::Int1  Int1;
 typedef linal::Int2  Int2;

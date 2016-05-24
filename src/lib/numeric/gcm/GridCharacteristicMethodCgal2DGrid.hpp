@@ -20,6 +20,8 @@ public:
 	typedef typename Mesh::PdeVector                PdeVector;
 	typedef typename Mesh::Iterator                 Iterator;
 	typedef typename Mesh::BORDER_CONDITION         BORDER_CONDITION;
+	typedef typename Mesh::Cell                     Cell;
+	
 	typedef linal::VECTOR<2, PdeVector>             PdeGradient;
 	typedef linal::SYMMETRIC_MATRIX<2, PdeVector>   PdeHessian;
 	
@@ -104,17 +106,13 @@ private:
 			
 			// point to interpolate respectively to point by given iterator
 			Real2 shift({(s == 0) * dx(k), (s == 1) * dx(k)});
-			auto t = mesh.findOwnerTriangle(it, shift);
-			auto u = PdeVector::Zeros();
+			Cell t = mesh.findOwnerCell(it, shift);
+			PdeVector u = PdeVector::Zeros();
 			
 			if (t.valid) {
 			// characteristic hits into body
 			// second order interpolate inner value in triangle on current time layer
-				u = TriangleInterpolator<PdeVector>::interpolate(
-					mesh.coords2d(t.p[0]), mesh.pde(t.p[0]), gradients[mesh.getIndex(t.p[0])],
-					mesh.coords2d(t.p[1]), mesh.pde(t.p[1]), gradients[mesh.getIndex(t.p[1])],
-					mesh.coords2d(t.p[2]), mesh.pde(t.p[2]), gradients[mesh.getIndex(t.p[2])],
-					mesh.coords2d(it) + shift);
+				u = interpolateInSpace(mesh, mesh.coords2d(it) + shift, t);
 					
 			} else {
 			// characteristic hits out of body
@@ -173,6 +171,16 @@ private:
 		
 		const auto alpha = linal::solveLinearSystem(B * outerU1, b - B * mesh.pdeNew(it));
 		mesh._pdeNew(it) = mesh.pdeNew(it) + outerU1 * alpha;
+	}
+	
+	
+	/** Interpolate PdeVector from space on current time layer */
+	PdeVector interpolateInSpace(const Mesh& mesh, const Real2& query, const Cell& t) const {
+		return TriangleInterpolator<PdeVector>::interpolate(
+				mesh.coords2d(t(0)), mesh.pde(t(0)), gradients[mesh.getIndex(t(0))],
+				mesh.coords2d(t(1)), mesh.pde(t(1)), gradients[mesh.getIndex(t(1))],
+				mesh.coords2d(t(2)), mesh.pde(t(2)), gradients[mesh.getIndex(t(2))],
+				query);
 	}
 	
 	

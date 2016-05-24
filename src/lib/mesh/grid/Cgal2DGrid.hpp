@@ -1,7 +1,11 @@
 #ifndef LIBGCM_CGAL2DGRID_HPP
 #define LIBGCM_CGAL2DGRID_HPP
 
-#include <lib/mesh/grid/CGALHeaders.hpp>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Delaunay_mesh_face_base_2.h>
+
 
 #include <lib/mesh/grid/UnstructuredGrid.hpp>
 
@@ -35,7 +39,7 @@ public:
 	typedef CDT::Finite_vertices_iterator                       FiniteVerticesIterator;
 	typedef CDT::Line_face_circulator                           LineFaceCirculator;
 
-	typedef elements::Triangle<Iterator>                        Triangle;
+	typedef elements::Triangle<Iterator>                        Cell;
 	
 	/// @name Iterators 
 	///@{
@@ -152,18 +156,18 @@ public:
 	 * from specified point (it) by line walk from it to (it+shift).
 	 * If the line goes out of the body, returned triangle.valid == false, 
 	 * triangle points are not set.
-	 * @note for convex bodies result is the same with locateOwnerTriangle
+	 * @note for convex bodies result is the same with locateOwnerCell
 	 */
-	Triangle findOwnerTriangle(const Iterator& it, const Real2& shift) const;
+	Cell findOwnerCell(const Iterator& it, const Real2& shift) const;
 	
 	/**
 	 * Find triangle that contains point on specified distance (shift) 
 	 * from specified point (it) by triangulation.locate function. 
 	 * If found face is not "in_domain", returned triangle.valid == false, 
 	 * triangle points are not set.
-	 * @note for convex bodies result is the same with findOwnerTriangle
+	 * @note for convex bodies result is the same with findOwnerCell
 	 */
-	Triangle locateOwnerTriangle(const Iterator& it, const Real2& shift) const;
+	Cell locateOwnerCell(const Iterator& it, const Real2& shift) const;
 	
 	/**
 	 * Starting from specified point along the line in specified direction,
@@ -241,8 +245,8 @@ private:
 		       linal::perpendicularClockwise(borderVector));
 	}
 	
-	Triangle createTriangle(const FaceHandle fh) const {
-		Triangle ans;
+	Cell createTriangle(const FaceHandle fh) const {
+		Cell ans;
 		ans.valid = false;
 		
 		if (fh == NULL) { return ans; }
@@ -250,7 +254,7 @@ private:
 		if (fh->is_in_domain()) {
 			ans.valid = true;
 			for (int i = 0; i < 3; i++) {
-				ans.p[i] = getIterator(fh->vertex(i));
+				ans(i) = getIterator(fh->vertex(i));
 			}
 		}
 		

@@ -1,5 +1,3 @@
-#include <lib/mesh/grid/CGALHeaders.hpp> /// precompiled headers
-
 #include <lib/Engine.hpp>
 #include <lib/AbstractFactory.hpp>
 #include <lib/numeric/solvers/Solver.hpp>

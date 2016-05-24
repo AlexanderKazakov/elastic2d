@@ -1,7 +1,10 @@
 #ifndef LIBGCM_CGAL3DGRID_HPP
 #define LIBGCM_CGAL3DGRID_HPP
 
-#include <lib/mesh/grid/CGALHeaders.hpp>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_3.h>
+#include <CGAL/Triangulation_cell_base_with_info_3.h>
+#include <CGAL/Delaunay_triangulation_3.h>
 
 #include <lib/mesh/grid/UnstructuredGrid.hpp>
 
@@ -237,7 +240,7 @@ private:
 		if (isInDomain(ch)) {
 			ans.valid = true;
 			for (int i = 0; i < 4; i++) {
-				ans.p[i] = getIterator(ch->vertex(i));
+				ans(i) = getIterator(ch->vertex(i));
 			}
 		}
 		

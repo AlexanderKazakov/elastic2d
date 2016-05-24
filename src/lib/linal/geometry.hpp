@@ -64,14 +64,30 @@ inline Real3 perpendicularClockwise(const Real3& v) {
  * The order is {lambda_a, lambda_b, lambda_c}
  */
 inline Real3 barycentricCoordinates(const Real2& a, const Real2& b, const Real2& c,
-                                    const Real2& q) {
-					
+                                    const Real2& q) {					
 	/// @see https://en.wikipedia.org/wiki/Barycentric_coordinate_system 
-	linal::Matrix22 T = {a(0) - c(0), b(0) - c(0),
-						 a(1) - c(1), b(1) - c(1)};
-	Real2 lambda = linal::solveLinearSystem(T, q - c);
+	Matrix22 T = {a(0) - c(0), b(0) - c(0),
+	              a(1) - c(1), b(1) - c(1)};
+	Real2 lambda = solveLinearSystem(T, q - c);
 	
 	return {lambda(0), lambda(1), 1 - lambda(0) - lambda(1)};
+}
+
+
+/**
+ * Computes barycentric coordinates of point q in tetrahedron {a, b, c, d}
+ * The order is {lambda_a, lambda_b, lambda_c, lambda_d}
+ */
+inline Real4 barycentricCoordinates(
+		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
+		const Real3& q) {					
+	/// @see https://en.wikipedia.org/wiki/Barycentric_coordinate_system 
+	Matrix33 T = {a(0) - d(0), b(0) - d(0), c(0) - d(0), 
+	              a(1) - d(1), b(1) - d(1), c(1) - d(1),
+	              a(2) - d(2), b(2) - d(2), c(2) - d(2),};
+	Real3 lambda = solveLinearSystem(T, q - d);
+	
+	return {lambda(0), lambda(1), lambda(2), 1 - lambda(0) - lambda(1) - lambda(2)};
 }
 
 

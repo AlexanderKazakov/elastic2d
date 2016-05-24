@@ -30,17 +30,18 @@ struct Element {
 			std::function<Point(const OtherPointType&)> transformFunc) {
 		this->valid = other.valid;
 		for (int i = 0; i < N; i++) {
-			this->p[i] = transformFunc(other.p[i]);
+			this->p[i] = transformFunc(other(i));
 		}
 	}
 	
+	const Point& operator()(const int i) const { return p[i]; }
+	      Point& operator()(const int i)       { return p[i]; }
+	
 	bool operator==(const Element& other) const {
-		if (this->valid != other.valid) {
-			return false;
-		} // TODO - else if not valid return true?
+		assert_true(this->valid && other.valid);
 		/// points order does matter
 		for (int i = 0; i < N; i++) {
-			if (this->p[i] != other.p[i]) {
+			if (this->p[i] != other(i)) {
 				return false;
 			}
 		}
@@ -58,7 +59,7 @@ struct Element {
 		
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
-				if (this->p[i] == other.p[j]) {
+				if (this->p[i] == other(j)) {
 					ans.insert(this->p[i]);
 					break;
 				}
@@ -87,11 +88,13 @@ inline std::ostream& operator<<(std::ostream& os,
 		const gcm::elements::Element<Point, TN>& element) {
 
 	os << "Element valid : " << element.valid << std::endl;
-	for (int j = 0; j < TN; j++) {
-		os << element.p[j] << "\t";
+	if (element.valid) {
+		os << "Points: " << std::endl;
+		for (int j = 0; j < TN; j++) {
+			os << element(j) << "\t";
+		}
+		os << std::endl;
 	}
-	os << std::endl;
-
 	return os;
 }
 

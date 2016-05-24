@@ -342,6 +342,7 @@ typedef Matrix<3, 3> Matrix33;
 typedef Vector<1> Real1;
 typedef Vector<2> Real2;
 typedef Vector<3> Real3;
+typedef Vector<4> Real4;
 
 typedef VectorInt<1> Int1;
 typedef VectorInt<2> Int2;

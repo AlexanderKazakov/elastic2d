@@ -126,7 +126,7 @@ TEST(EqualDistanceLineInterpolator, Exceptions) {
 }
 
 
-TEST(TriangleInterpolator, linear2D) {
+TEST(TriangleInterpolator, linear) {
 	auto f = [](Real2 x) { return 5*x(0) + 8*x(1) - 2; };
 	
 	Utils::seedRand();
@@ -146,7 +146,7 @@ TEST(TriangleInterpolator, linear2D) {
 }
 
 
-TEST(TriangleInterpolator, quadratic2D) {
+TEST(TriangleInterpolator, quadratic) {
 	auto f = [](Real2 x) {
 		return 8*x(0)*x(0) + 10*x(0)*x(1) - 15*x(1)*x(1) + 5*x(0) + 8*x(1) - 2;
 	};
@@ -179,6 +179,71 @@ TEST(TriangleInterpolator, interpolateInOwner) {
 			{1, 0}, 1,
 			{1, 1}, 1e+100,
 		    {0.2, 0.2}));
+}
+
+
+TEST(TetrahedronInterpolator, linear) {
+	auto f = [](Real3 x) { return 5*x(0) + 8*x(1) - 4*x(2) - 2; };
+	
+	Utils::seedRand();
+	for (int i = 0; i < 1000; i++) {
+		Real3 a = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 d = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		
+		ASSERT_NEAR(f(q), 
+		            TetrahedronInterpolator<real>::interpolate(a, f(a),
+		                                                       b, f(b),
+		                                                       c, f(c),
+		                                                       d, f(d),
+		                                                       q),
+		            EQUALITY_TOLERANCE * fabs(f(q)));
+	}
+}
+
+
+TEST(TetrahedronInterpolator, quadratic) {
+	auto f = [](Real3 x) {
+		return  8*x(0)*x(0) + 10*x(0)*x(1) - 9*x(0)*x(2) -
+		       15*x(1)*x(1) + 6*x(1)*x(2) - 7*x(2)*x(2) + 
+		        5*x(0) + 8*x(1) - 7*x(2) - 2;
+	};
+	auto g = [](Real3 x) { // = Df / D(x, y)
+		return linal::VECTOR<3, real>({ 16*x(0) + 10*x(1) - 9*x(2) + 5,
+		                               -30*x(1) + 10*x(0) + 6*x(2) + 8,
+		                               -14*x(2) + 6*x(1)  - 9*x(0) - 7});
+	};
+		
+	Utils::seedRand();
+	for (int i = 0; i < 1000; i++) {
+		Real3 a = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 d = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		Real3 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		
+		ASSERT_NEAR(f(q), 
+		            TetrahedronInterpolator<real>::interpolate(a, f(a), g(a),
+		                                                       b, f(b), g(b),
+		                                                       c, f(c), g(c),
+		                                                       d, f(d), g(d),
+		                                                       q),
+		            EQUALITY_TOLERANCE * fabs(f(q)));
+	}
+}
+
+
+TEST(TetrahedronInterpolator, interpolateInOwner) {
+	ASSERT_EQ(1, TetrahedronInterpolator<real>::interpolateInOwner(
+			{0, 0, 0}, 1,
+			{0, 1, 0}, 1,
+			{1, 0, 0}, 1,
+			{0, 0, 1}, 1,
+			{0, 1, 1}, 1e+100,
+			{1, 0, 1}, 1e+100,
+		    {0.1, 0.1, 0.1}));
 }
 
 

@@ -948,20 +948,15 @@ TEST(Linal, barycentric2D) {
 	Real2 b = {1, 0};
 	Real2 c = {0, 1};
 	
-	ASSERT_EQ(Real3({1, 0, 0}),
-	          linal::barycentricCoordinates(a, b, c, a));
-	ASSERT_EQ(Real3({0, 1, 0}),
-	          linal::barycentricCoordinates(a, b, c, b));
-	ASSERT_EQ(Real3({0, 0, 1}),
-	          linal::barycentricCoordinates(a, b, c, c));
+	ASSERT_EQ(Real3({1, 0, 0}), barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 1, 0}), barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}), barycentricCoordinates(a, b, c, c));
 
-	ASSERT_EQ(Real3({0, 0.5, 0.5}),
-	          linal::barycentricCoordinates(a, b, c, (b+c)/2.0));
+	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b+c)/2.0));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
-	          linal::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+	          barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
 
-	// affine invariance
-	
+	// affine invariance	
 	Matrix22 S = {3, 5,
 	             -2, 10};
 	Real2 shift = {5, -6};
@@ -970,17 +965,48 @@ TEST(Linal, barycentric2D) {
 	b = S * b + shift;
 	c = S * c + shift;
 	
-	ASSERT_EQ(Real3({1, 0, 0}),
-	          linal::barycentricCoordinates(a, b, c, a));
-	ASSERT_EQ(Real3({0, 1, 0}),
-	          linal::barycentricCoordinates(a, b, c, b));
-	ASSERT_EQ(Real3({0, 0, 1}),
-	          linal::barycentricCoordinates(a, b, c, c));
+	ASSERT_EQ(Real3({1, 0, 0}), barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 1, 0}), barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}), barycentricCoordinates(a, b, c, c));
 
-	ASSERT_EQ(Real3({0, 0.5, 0.5}),
-	          linal::barycentricCoordinates(a, b, c, (b+c)/2.0));
+	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b+c)/2.0));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
-	          linal::barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+	          barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+}
+
+
+TEST(Linal, barycentric3D) {
+	Real3 a = {0, 0, 0};
+	Real3 b = {1, 0, 0};
+	Real3 c = {0, 1, 0};
+	Real3 d = {0, 0, 1};
+	
+	ASSERT_EQ(Real4({1, 0, 0, 0}), barycentricCoordinates(a, b, c, d, a));
+	ASSERT_EQ(Real4({0, 1, 0, 0}), barycentricCoordinates(a, b, c, d, b));
+	ASSERT_EQ(Real4({0, 0, 1, 0}), barycentricCoordinates(a, b, c, d, c));
+	ASSERT_EQ(Real4({0, 0, 0, 1}), barycentricCoordinates(a, b, c, d, d));
+
+	ASSERT_EQ(Real4({0, 0.5, 0.5, 0}), barycentricCoordinates(a, b, c, d, (b+c)/2.0));
+	ASSERT_EQ(Real4({0.25, 0.25, 0.25, 0.25}), barycentricCoordinates(a, b, c, d, (a+b+c+d)/4));
+
+	// affine invariance
+	Matrix33 S = {3, 5, 2,
+	             -2, 10, 0,
+	              1, 0, -6};
+	Real3 shift = {5, -6, 1};
+	
+	a = S * a + shift;
+	b = S * b + shift;
+	c = S * c + shift;
+	d = S * d + shift;
+	
+	ASSERT_EQ(Real4({1, 0, 0, 0}), barycentricCoordinates(a, b, c, d, a));
+	ASSERT_EQ(Real4({0, 1, 0, 0}), barycentricCoordinates(a, b, c, d, b));
+	ASSERT_EQ(Real4({0, 0, 1, 0}), barycentricCoordinates(a, b, c, d, c));
+	ASSERT_EQ(Real4({0, 0, 0, 1}), barycentricCoordinates(a, b, c, d, d));
+
+	ASSERT_EQ(Real4({0, 0.5, 0.5, 0}), barycentricCoordinates(a, b, c, d, (b+c)/2.0));
+	ASSERT_EQ(Real4({0.25, 0.25, 0.25, 0.25}), barycentricCoordinates(a, b, c, d, (a+b+c+d)/4));
 }
 
 

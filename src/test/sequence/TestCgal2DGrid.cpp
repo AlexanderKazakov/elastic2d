@@ -33,14 +33,14 @@ TEST(Cgal2DGrid, ownerTriangleVsBarycentric) {
 			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
 				auto checkInnerTriangle = [&](int& counter) {
-					auto triangleF = grid.findOwnerTriangle(it, shift);
-					auto triangleL = grid.locateOwnerTriangle(it, shift);
+					auto triangleF = grid.findOwnerCell(it, shift);
+					auto triangleL = grid.locateOwnerCell(it, shift);
 					
 					if (triangleF.valid) {
 						auto lambda = linal::barycentricCoordinates(
-								grid.coords2d(triangleF.p[0]), 
-								grid.coords2d(triangleF.p[1]), 
-								grid.coords2d(triangleF.p[2]), 
+								grid.coords2d(triangleF(0)), 
+								grid.coords2d(triangleF(1)), 
+								grid.coords2d(triangleF(2)), 
 								grid.coords2d(it) + shift);
 						for (int i = 0; i < 3; i++) {
 							ASSERT_TRUE(lambda(i) > -EQUALITY_TOLERANCE) << lambda(i);
@@ -50,9 +50,9 @@ TEST(Cgal2DGrid, ownerTriangleVsBarycentric) {
 					
 					if (triangleL.valid) {
 						auto lambda = linal::barycentricCoordinates(
-								grid.coords2d(triangleL.p[0]), 
-								grid.coords2d(triangleL.p[1]), 
-								grid.coords2d(triangleL.p[2]), 
+								grid.coords2d(triangleL(0)), 
+								grid.coords2d(triangleL(1)), 
+								grid.coords2d(triangleL(2)), 
 								grid.coords2d(it) + shift);
 						for (int i = 0; i < 3; i++) {
 							ASSERT_TRUE(lambda(i) > -EQUALITY_TOLERANCE) << lambda(i);
@@ -100,8 +100,8 @@ TEST(Cgal2DGrid, locateVsFindOwnerTriangle) {
 			
 				Real2 shift;
 				auto checkTriangles = [&]() {
-					auto triangleF = grid.findOwnerTriangle(it, shift);
-					auto triangleL = grid.locateOwnerTriangle(it, shift);
+					auto triangleF = grid.findOwnerCell(it, shift);
+					auto triangleL = grid.locateOwnerCell(it, shift);
 					
 					if (triangleF.valid && triangleL.valid) {
 					// both are inner
@@ -117,10 +117,10 @@ TEST(Cgal2DGrid, locateVsFindOwnerTriangle) {
 						ASSERT_TRUE(correct)
 							<< "it = " << grid.coords2d(it)
 							<< "query = " << grid.coords2d(it) + shift
-							<< "find: " << grid.coords2d(triangleF.p[0]) 
-								<< grid.coords2d(triangleF.p[1]) << grid.coords2d(triangleF.p[2])
-							<< "locate: " << grid.coords2d(triangleL.p[0])
-								<< grid.coords2d(triangleL.p[1]) << grid.coords2d(triangleL.p[2])
+							<< "find: " << grid.coords2d(triangleF(0)) 
+								<< grid.coords2d(triangleF(1)) << grid.coords2d(triangleF(2))
+							<< "locate: " << grid.coords2d(triangleL(0))
+								<< grid.coords2d(triangleL(1)) << grid.coords2d(triangleL(2))
 							<< std::endl;
 					
 					} else {
@@ -129,8 +129,8 @@ TEST(Cgal2DGrid, locateVsFindOwnerTriangle) {
 							<< "F: " << triangleF.valid << " L: " << triangleL.valid << "\n"
 							<< "it = " << grid.getIndex(it) << grid.coords2d(it) 
 							<< "query = " << grid.coords2d(it) + shift
-							<< "locate: " << grid.coords2d(triangleL.p[0])
-							<< grid.coords2d(triangleL.p[1]) << grid.coords2d(triangleL.p[2])
+							<< "locate: " << grid.coords2d(triangleL(0))
+							<< grid.coords2d(triangleL(1)) << grid.coords2d(triangleL(2))
 							<< std::endl;;
 					}
 					
@@ -150,7 +150,7 @@ TEST(Cgal2DGrid, locateVsFindOwnerTriangle) {
 }
 
 
-TEST(Cgal2DGrid, findOwnerTriangleTwoBodies) {
+TEST(Cgal2DGrid, findOwnerCellTwoBodies) {
 	Task task;
 	real h = 5;
 	task.cgal2DGrid.spatialStep = h;
@@ -180,8 +180,8 @@ TEST(Cgal2DGrid, findOwnerTriangleTwoBodies) {
 			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
 				auto checkTriangles = [&]() {
-					auto triangle1 = oneBody.findOwnerTriangle(it1, shift);
-					auto triangle2 = twoBodies.findOwnerTriangle(it2, shift);
+					auto triangle1 = oneBody.findOwnerCell(it1, shift);
+					auto triangle2 = twoBodies.findOwnerCell(it2, shift);
 					
 					if (triangle1.valid && triangle2.valid) {
 					// both are inner

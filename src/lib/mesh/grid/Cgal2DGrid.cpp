@@ -52,8 +52,8 @@ findNeighborVertices(const Iterator& it) const {
 }
 
 
-Cgal2DGrid::Triangle Cgal2DGrid::
-findOwnerTriangle(const Iterator& it, const Real2& shift) const {
+Cgal2DGrid::Cell Cgal2DGrid::
+findOwnerCell(const Iterator& it, const Real2& shift) const {
 	if (shift == Real2({0, 0})) {
 		auto startFace = vertexHandles[getIndex(it)]->incident_faces();
 		while (!startFace->is_in_domain()) { ++startFace; }
@@ -70,8 +70,8 @@ findOwnerTriangle(const Iterator& it, const Real2& shift) const {
 }
 
 
-Cgal2DGrid::Triangle Cgal2DGrid::
-locateOwnerTriangle(const Iterator& it, const Real2& shift) const {
+Cgal2DGrid::Cell Cgal2DGrid::
+locateOwnerCell(const Iterator& it, const Real2& shift) const {
 	VertexHandle beginVertex = vertexHandles[getIndex(it)];
 	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
 	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
