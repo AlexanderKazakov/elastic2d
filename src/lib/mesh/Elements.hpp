@@ -22,6 +22,7 @@ struct Element {
 	
 	Element(std::initializer_list<Point> list) {
 		assert_eq(list.size(), N);
+		valid = true;
 		std::copy(list.begin(), list.end(), p);
 	}
 	
@@ -29,8 +30,10 @@ struct Element {
 	Element(const Element<OtherPointType, N>& other,
 			std::function<Point(const OtherPointType&)> transformFunc) {
 		this->valid = other.valid;
-		for (int i = 0; i < N; i++) {
-			this->p[i] = transformFunc(other(i));
+		if (this->valid) {
+			for (int i = 0; i < N; i++) {
+				this->p[i] = transformFunc(other(i));
+			}
 		}
 	}
 	

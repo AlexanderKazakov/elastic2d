@@ -6,11 +6,13 @@
 #include <lib/util/task/MaterialsCondition.hpp>
 
 namespace gcm {
-template<typename TMesh> class DefaultSolver;
-template<typename TModel, typename TGrid, typename TMaterial> class GridCharacteristicMethod;
-template<typename TModel, typename TGrid, typename TMaterial> struct DataBus;
-template<typename TModel, typename TGrid, typename TMaterial> struct MeshMover;
-template<typename TModel, typename TGrid, typename TMaterial> struct SpecialBorderConditions;
+
+template<typename> class DefaultSolver;
+template<typename, typename, typename> class GridCharacteristicMethod;
+template<typename, typename, int>      class GridCharacteristicMethodCgalGrid;
+template<typename, typename, typename> struct DataBus;
+template<typename, typename, typename> struct MeshMover;
+template<typename, typename, typename> struct SpecialBorderConditions;
 
 /**
  * Mesh that implement the approach when all nodal data are stored
@@ -42,8 +44,10 @@ public:
 	typedef std::shared_ptr<Material>           MaterialPtr;
 	typedef std::shared_ptr<const Material>     ConstMaterialPtr;
 
-	// Dimensionality of rheology model, the grid can have different
-	static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
+	/// Dimensionality of rheology model, the grid can have different
+	static const int DIMENSIONALITY = Model::DIMENSIONALITY;
+	/// Dimensionality of the grid, rheology model can have different
+	static const int GRID_DIMENSIONALITY = Grid::DIMENSIONALITY;
 
 	struct Node { // TODO - node is some sort of handle, this 
 		// functionality can be moved to iterator
@@ -68,7 +72,7 @@ public:
 		template<typename TNodePtr>
 		void copyFrom(TNodePtr origin) {
 			_pde() = origin->pde();
-			_ode() = origin->ode();         // TODO!!! if ode is not present??
+			_ode() = origin->ode();         // TODO !!! if ode is not present??
 			_matrices() = origin->_matrices();
 			_material() = origin->_material();
 		}
@@ -203,8 +207,10 @@ private:
 
 	friend class DefaultSolver<DefaultMesh>;
 	friend class GridCharacteristicMethod<Model, Grid, Material>;
+	friend class GridCharacteristicMethodCgalGrid<Model, Material, GRID_DIMENSIONALITY>;
 	friend class DataBus<Model, Grid, Material>;
 	friend class MeshMover<Model, Grid, Material>;
+	
 	template<typename ModelType, typename GridType, typename MaterialType> 
 			friend class SpecialBorderConditions;
 };

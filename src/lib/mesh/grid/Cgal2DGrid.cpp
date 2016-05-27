@@ -61,7 +61,7 @@ findOwnerCell(const Iterator& it, const Real2& shift) const {
 	}
 	
 	LineWalker lineWalker(this, it, shift);
-	CgalPoint2 query = cgalPoint2(coords2d(it) + shift);	
+	CgalPoint2 query = cgalPoint2(coordsD(it) + shift);	
 	while (lineWalker.isValid() &&
 	       triangulation.triangle(lineWalker.faceHandle()).has_on_unbounded_side(query)) {
 		lineWalker.next();
@@ -128,7 +128,7 @@ findBorderFlexion(Iterator first, Iterator second) const {
 	};
 	
 	Iterator third = findThird();
-	while (linal::isDegenerate(coords2d(first), coords2d(second), coords2d(third))) {
+	while (linal::isDegenerate(coordsD(first), coordsD(second), coordsD(third))) {
 		first = second;
 		second = third;
 		third = findThird();
@@ -141,7 +141,7 @@ findBorderFlexion(Iterator first, Iterator second) const {
 Cgal2DGrid::Iterator Cgal2DGrid::
 findVertexByCoordinates(const Real2& coordinates) const {
 	for (const auto& it : *this) {
-		if (coords2d(it) == coordinates) {
+		if (coordsD(it) == coordinates) {
 			return it;
 		}
 	}

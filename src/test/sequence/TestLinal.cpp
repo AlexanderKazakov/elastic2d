@@ -943,6 +943,16 @@ TEST(Linal, linesIntersection) {
 }
 
 
+TEST(Linal, lineWithFlatIntersection) {
+	ASSERT_EQ(Real3({0, 0, 0}), lineWithFlatIntersection(
+			{1, 0, 0}, {0, 1, 0}, {0, 0, 0}, {1, 1, 1}, {2, 2, 2}));
+	ASSERT_EQ(Real3({1, 1, 1}), lineWithFlatIntersection(
+			{3, 0, 0}, {0, 3, 0}, {0, 0, 3}, {-1, -1, -1}, {5, 5, 5}));
+	ASSERT_EQ(Real3({8, 2, 3}), lineWithFlatIntersection(
+			{8, 2, 3}, {4, 5, 6}, {9, 8, 7}, {8, 2, 3}, {2, 2, 2}));
+}
+
+
 TEST(Linal, barycentric2D) {
 	Real2 a = {0, 0};
 	Real2 b = {1, 0};
@@ -1067,20 +1077,30 @@ TEST(Linal, positionRelativeToAngle) {
 
 
 TEST(Linal, area) {
-	ASSERT_EQ(0, linal::area({0, 0}, {0, 1}, {0, 2}));
-	ASSERT_EQ(0, linal::area({0, 0}, {1, 1}, {2, 2}));
-	ASSERT_EQ(2, linal::area({0, 0}, {0, 2}, {2, 0}));
-	ASSERT_EQ(2, linal::area({0, 0}, {-2, 0}, {0, 2}));
+	ASSERT_EQ(0, area({0, 0}, {0, 1}, {0, 2}));
+	ASSERT_EQ(0, area({0, 0}, {1, 1}, {2, 2}));
+	ASSERT_EQ(2, area({0, 0}, {0, 2}, {2, 0}));
+	ASSERT_EQ(2, area({0, 0}, {-2, 0}, {0, 2}));
 }
 
 
 TEST(Linal, center) {
-	ASSERT_EQ(Real2({0, 1}), linal::center({Real2({0, 0}), Real2({0, 1}), Real2({0, 2})}));
-	ASSERT_EQ(Real2({0, 2}), linal::center({Real2({0, 2})}));
-	ASSERT_EQ(Real3({1, 1, 1}), linal::center({Real3({0, 0, 0}), Real3({2, 2, 2}),
+	ASSERT_EQ(Real2({0, 1}), center({Real2({0, 0}), Real2({0, 1}), Real2({0, 2})}));
+	ASSERT_EQ(Real2({0, 2}), center({Real2({0, 2})}));
+	ASSERT_EQ(Real3({1, 1, 1}), center({Real3({0, 0, 0}), Real3({2, 2, 2}),
 			Real3({0, 2, 2}), Real3({2, 0, 0})}));
 	
-	ASSERT_THROW(linal::center(std::initializer_list<real>()), Exception);
+	ASSERT_THROW(center(std::initializer_list<real>()), Exception);
+}
+
+
+TEST(Linal, oppositeFaceNormal) {
+	ASSERT_EQ(Real3({1, 0, 0}), oppositeFaceNormal(
+			{-1, 0, 0}, {0, 0, 0}, {0, 1, 0}, {0, 0, 1}));
+	ASSERT_EQ(Real3({-1, 0, 0}), oppositeFaceNormal(
+			{1, 0, 0}, {0, 0, 0}, {0, 1, 0}, {0, 0, 1}));
+	ASSERT_EQ(normalize(Real3({1, 1, 1})), oppositeFaceNormal(
+			{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}));
 }
 
 

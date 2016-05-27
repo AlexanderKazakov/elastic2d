@@ -41,6 +41,8 @@ public:
 
 	typedef elements::Triangle<Iterator>                        Cell;
 	
+	static const int DIMENSIONALITY = 2;
+	
 	/// @name Iterators 
 	///@{
 
@@ -101,7 +103,7 @@ public:
 	}
 
 	/** Read-only access to real coordinates */
-	Real2 coords2d(const Iterator& it) const {
+	Real2 coordsD(const Iterator& it) const {
 		return real2(vertexHandles[getIndex(it)]->point());
 	}
 	
@@ -271,15 +273,15 @@ private:
 	
 		/** Create line walker from point it in direction determined by shift */
 		LineWalker(const Cgal2DGrid* grid_, const Iterator& it, const Real2& shift) :
-				grid(grid_), p(grid->coords2d(it)), q(p + shift) {
+				grid(grid_), p(grid->coordsD(it)), q(p + shift) {
 			assert_true(p != q);
 
 			alongBorder = false;
 			if (grid->isBorder(it)) {
 				auto borderNeighbors = grid->findBorderNeighbors(it);
 				alongBorder = 
-						linal::isDegenerate(p, q, grid->coords2d(borderNeighbors.first)) ||
-						linal::isDegenerate(p, q, grid->coords2d(borderNeighbors.second));		
+						linal::isDegenerate(p, q, grid->coordsD(borderNeighbors.first)) ||
+						linal::isDegenerate(p, q, grid->coordsD(borderNeighbors.second));		
 			}
 			
 			// find not empty LineFaceCirculator		

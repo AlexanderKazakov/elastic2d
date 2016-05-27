@@ -6,11 +6,11 @@ usage() { echo "Usage: $0
     [-r] (to compile in Release mode)
     [-o] (enable additional optimization)
     [-v] (show make output)
-    [-p] (DOES NOT WORK generate precompiled headers with current compiler flags)"
+    [-p] (parallel make into several processes)"
     1>&2; exit 1; }
 
 
-np=`cat /proc/cpuinfo | grep processor | wc -l`
+np=1
 
 rm -f snaps/*
 cmake_line="cmake .."
@@ -35,7 +35,7 @@ while getopts ":cdrovp" option; do
             cmake_line="$cmake_line -DVERBOSE_MAKE=ON"
             ;;
         p)
-            cmake_line="$cmake_line -DPRECOMPILED_HEADERS=ON"
+            np=`cat /proc/cpuinfo | grep processor | wc -l`
             ;;
         *)
             usage

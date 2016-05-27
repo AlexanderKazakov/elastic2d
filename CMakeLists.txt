@@ -78,31 +78,31 @@ include_directories("${CMAKE_CURRENT_LIST_DIR}/src/" "${CMAKE_CURRENT_BINARY_DIR
 FILE(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp")
 file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/*.cpp")
 file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
+file(GLOB_RECURSE LIBCGAL3DMESH_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/libcgal3dmesher/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
 
-option(PRECOMPILED_HEADERS "PRECOMPILED_HEADERS" OFF)
-IF(PRECOMPILED_HEADERS)
-ENDIF()
+#libcgal3dmesher
+add_library(cgal3dmesher SHARED ${LIBCGAL3DMESH_SOURCES})
 
 # libgcm
 add_library(gcm SHARED ${LIB_SOURCES})
 
 # gcm_exe
 add_executable(gcm_exe ${GCM_EXE_SOURCES} ${HEADERS})
-target_link_libraries(gcm_exe gcm ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
+target_link_libraries(gcm_exe gcm cgal3dmesher ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
-target_link_libraries(gcm_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
+target_link_libraries(gcm_tests gcm cgal3dmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tmp
 add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestCgal3DGrid.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
-target_link_libraries(tmp gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
+target_link_libraries(tmp gcm cgal3dmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests on mpi
 add_executable(gcm_mpi_tests ${TEST_MPI_FILE})
-target_link_libraries(gcm_mpi_tests gcm ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
+target_link_libraries(gcm_mpi_tests gcm cgal3dmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 install(
     TARGETS gcm gcm_exe

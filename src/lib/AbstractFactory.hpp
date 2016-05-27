@@ -96,14 +96,14 @@ struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
 
 	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) const override {
 		switch (snapshotterId) {
-		case Snapshotters::T::VTK:
-			return SnapshotterFactory<VtkSnapshotter, TMesh, TModel, TGrid, TMaterial>().create();
-		case Snapshotters::T::BIN2DSEISM:
-			return SnapshotterFactory<Binary2DSeismograph, TMesh, TModel, TGrid, TMaterial>().create();
-		case Snapshotters::T::DETECTOR:
-			return SnapshotterFactory<Detector, TMesh, TModel, TGrid, TMaterial>().create();
-		default:
-			THROW_UNSUPPORTED("Unknown type of snapshotter");
+			case Snapshotters::T::VTK:
+				return SnapshotterFactory<VtkSnapshotter, TMesh, TModel, TGrid, TMaterial>().create();
+			case Snapshotters::T::BIN2DSEISM:
+				return SnapshotterFactory<Binary2DSeismograph, TMesh, TModel, TGrid, TMaterial>().create();
+			case Snapshotters::T::DETECTOR:
+				return SnapshotterFactory<Detector, TMesh, TModel, TGrid, TMaterial>().create();
+			default:
+				THROW_UNSUPPORTED("Unknown type of snapshotter");
 		}
 	}
 
@@ -134,17 +134,17 @@ template<typename TModel, typename TMaterial>
 struct GridFactory : public VirtualGridFactory {
 	virtual VirtualMeshFactory* create(Grids::T gridId) const override {
 		switch (gridId) {
-		case Grids::T::CUBIC:
-			return new MeshFactory<TModel, CubicGrid<TModel::DIMENSIONALITY>, TMaterial>();
+			case Grids::T::CUBIC:
+				return new MeshFactory<TModel, CubicGrid<TModel::DIMENSIONALITY>, TMaterial>();
 
 		case Grids::T::CGAL:
 			switch (TModel::DIMENSIONALITY) {
-			case 2:
-				return create<TModel::DIMENSIONALITY == 2, Cgal2DGrid>();
-			case 3:
-//				return create<TModel::DIMENSIONALITY == 3, Cgal3DGrid>();
-			default:
-				THROW_INVALID_ARG("CGAL grids has dimensions 2 or 3 only");
+				case 2:
+					return create<TModel::DIMENSIONALITY == 2, Cgal2DGrid>();
+				case 3:
+					return create<TModel::DIMENSIONALITY == 3, Cgal3DGrid>();
+				default:
+					THROW_INVALID_ARG("CGAL grids has dimensions 2 or 3 only");
 			}
 
 		default:
@@ -174,14 +174,14 @@ template<typename TMaterial>
 struct ModelFactory : public VirtualModelFactory {
 	virtual VirtualGridFactory* create(Models::T modelId) const override {
 		switch (modelId) {
-		case Models::T::ELASTIC1D:
-			return new GridFactory<Elastic1DModel, TMaterial>();
-		case Models::T::ELASTIC2D:
-			return new GridFactory<Elastic2DModel, TMaterial>();
-		case Models::T::ELASTIC3D:
-			return new GridFactory<Elastic3DModel, TMaterial>();
-		default:
-			THROW_INVALID_ARG("The type of rheology model is unknown or unsuitable for specified type of material");
+			case Models::T::ELASTIC1D:
+				return new GridFactory<Elastic1DModel, TMaterial>();
+			case Models::T::ELASTIC2D:
+				return new GridFactory<Elastic2DModel, TMaterial>();
+			case Models::T::ELASTIC3D:
+				return new GridFactory<Elastic3DModel, TMaterial>();
+			default:
+				THROW_INVALID_ARG("The type of rheology model is unknown or unsuitable for specified type of material");
 		}
 	}
 };
@@ -189,12 +189,12 @@ template<>
 struct ModelFactory<OrthotropicMaterial> : public VirtualModelFactory {
 	virtual VirtualGridFactory* create(Models::T modelId) const override {
 		switch (modelId) {
-		case Models::T::ELASTIC2D:
-			return new GridFactory<Elastic2DModel, OrthotropicMaterial>();
-		case Models::T::ELASTIC3D:
-			return new GridFactory<Elastic3DModel, OrthotropicMaterial>();
-		default:
-			THROW_INVALID_ARG("The type of rheology model is unknown or unsuitable for specified type of material");
+			case Models::T::ELASTIC2D:
+				return new GridFactory<Elastic2DModel, OrthotropicMaterial>();
+			case Models::T::ELASTIC3D:
+				return new GridFactory<Elastic3DModel, OrthotropicMaterial>();
+			default:
+				THROW_INVALID_ARG("The type of rheology model is unknown or unsuitable for specified type of material");
 		}
 	}
 };
@@ -206,12 +206,12 @@ struct ModelFactory<OrthotropicMaterial> : public VirtualModelFactory {
 struct MaterialFactory {
 	VirtualModelFactory* create(Materials::T materialId) const {
 		switch (materialId) {
-		case Materials::T::ISOTROPIC:
-			return new ModelFactory<IsotropicMaterial>();
-		case Materials::T::ORTHOTROPIC:
-			return new ModelFactory<OrthotropicMaterial>();
-		default:
-			THROW_UNSUPPORTED("Unknown type of material");
+			case Materials::T::ISOTROPIC:
+				return new ModelFactory<IsotropicMaterial>();
+			case Materials::T::ORTHOTROPIC:
+				return new ModelFactory<OrthotropicMaterial>();
+			default:
+				THROW_UNSUPPORTED("Unknown type of material");
 		}
 	}
 };

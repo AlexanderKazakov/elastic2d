@@ -93,7 +93,7 @@ inline Real4 barycentricCoordinates(
 
 /**
  * Find intersection of two lines (a1, a2) and (b1, b2).
- * Lines are infinite. Lines must not be collinear.
+ * Lines are infinite. Degenerate cases are not handled.
  */
 inline Real2 linesIntersection(const Real2 a1, const Real2 a2,
                                const Real2 b1, const Real2 b2) {
@@ -104,11 +104,34 @@ inline Real2 linesIntersection(const Real2 a1, const Real2 a2,
 	
 	Matrix22 A = {tau1(0), -tau2(0),
 	              tau1(1), -tau2(1)};
-	Real2 b = {(b1 - a1)(0),
-	           (b1 - a1)(1)};
+	Real2 b = b1 - a1;
 	Real2 t = solveLinearSystem(A, b);
 	
 	return a1 + t(0) * tau1;
+}
+
+
+/**
+ * Find intersection of the flat specified by points f1, f2, f3
+ * and the line specified by points l1, l2.
+ * Line and flat are infinite. Degenerate cases are not handled.
+ */
+inline Real3 lineWithFlatIntersection(const Real3 f1, const Real3 f2, const Real3 f3,
+		const Real3 l1, const Real3 l2) {
+	/// if use line representation \f$ \vec{r} = \vec{l1} + k * \vec{tau} \f$,
+	/// flat representation \f$ \vec{r} = \vec{f1} + m * \vec{p} + n * \vec{q} \f$,
+	/// we can write SLE on parameters k, m, n
+	Real3 tau = l2 - l1;
+	Real3 p = f2 - f1;
+	Real3 q = f3 - f1;
+	
+	Matrix33 A = {tau(0), -p(0), -q(0),
+	              tau(1), -p(1), -q(1),
+	              tau(2), -p(2), -q(2)};
+	Real3 b = f1 - l1;
+	Real3 params = solveLinearSystem(A, b);
+	
+	return l1 + params(0) * tau;
 }
 
 
@@ -201,6 +224,18 @@ T center(const std::initializer_list<T>& points) {
 		summ += p;
 	}
 	return summ / points.size();
+}
+
+
+/**
+ * Given with tetrahedron {opposite, a, b, c}, 
+ * returns outer normal of tetrahedron's face {a, b, c}
+ */
+inline Real3 oppositeFaceNormal(const Real3& opposite, 
+		const Real3& a, const Real3& b, const Real3& c) {
+
+	Real3 ans = normalize(crossProduct(a - b, c - b));
+	return (dotProduct(ans, a - opposite) > 0) ? ans : -ans;
 }
 
 

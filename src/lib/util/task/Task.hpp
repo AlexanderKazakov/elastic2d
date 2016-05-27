@@ -165,10 +165,13 @@ struct Task {
 	
 	struct Cgal3DGrid {
 		bool movable = false; ///< deformable(true) or immutable(false) grid
-		real spatialStep = 0; ///< effective spatial step
 		
+		/// @name Mesher properties @{
+		real spatialStep = 0; ///< effective spatial step
+		bool detectSharpEdges = false; ///< use true for figures with sharp edges
 		std::string polyhedronFileName; ///< file with initial polyhedron to
 				///< construct the grid from
+		/// @}
 	} cgal3DGrid;
 
 	/// list of statements to calculate on the same geometry

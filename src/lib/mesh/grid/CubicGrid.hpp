@@ -189,20 +189,20 @@ calculateIndexMaker() const {
 
 	IntD _indexMaker = IntD::Zeros();
 	switch (DIMENSIONALITY) {
-	case 1:
-		_indexMaker(0) = 1;
-		break;
-	case 2:
-		_indexMaker(0) = 2 * borderSize + sizes(1);
-		_indexMaker(1) = 1;
-		break;
-	case 3:
-		_indexMaker(0) = (2 * borderSize + sizes(1)) * (2 * borderSize + sizes(2));
-		_indexMaker(1) =  2 * borderSize + sizes(2);
-		_indexMaker(2) =  1;
-		break;
-	default:
-		THROW_INVALID_ARG("Invalid DIMENSIONALITY");
+		case 1:
+			_indexMaker(0) = 1;
+			break;
+		case 2:
+			_indexMaker(0) = 2 * borderSize + sizes(1);
+			_indexMaker(1) = 1;
+			break;
+		case 3:
+			_indexMaker(0) = (2 * borderSize + sizes(1)) * (2 * borderSize + sizes(2));
+			_indexMaker(1) =  2 * borderSize + sizes(2);
+			_indexMaker(2) =  1;
+			break;
+		default:
+			THROW_INVALID_ARG("Invalid DIMENSIONALITY");
 	}
 
 	return _indexMaker;

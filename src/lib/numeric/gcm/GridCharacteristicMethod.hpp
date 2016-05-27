@@ -20,7 +20,7 @@ localGcmStep(const TMatrix& U1, const TMatrix& U, const TMatrix& values)
 
 
 /**
- * Grid-characteristic method
+ * Grid-characteristic method general declaration
  */
 template<typename TModel, typename TGrid, typename TMaterial>
 class GridCharacteristicMethod;

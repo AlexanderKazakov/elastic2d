@@ -10,6 +10,7 @@ const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 using namespace gcm;
 
 Task parseTaskCgal2d();
+Task parseTaskCgal3d();
 Task parseTask2d();
 Task parseTask3d();
 Task parseTaskSeismo();
@@ -26,6 +27,7 @@ int main(int argc, char** argv) {
 	
 	Task task;
 	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
+	else if (taskId == "cgal3d"    ) { task = parseTaskCgal3d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
 	else if (taskId == "cubic"     ) { task = parseTask3d();     }
 	else if (taskId == "inverse"   ) { task = parseTaskCagi3d(); }
@@ -48,6 +50,59 @@ int main(int argc, char** argv) {
 
 	MPI_Finalize();
 	return 0;
+}
+
+
+Task parseTaskCgal3d() {
+	Task task;
+
+	task.modelId = Models::T::ELASTIC3D;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CGAL;
+	task.snapshottersId = {Snapshotters::T::VTK};
+
+	task.cgal3DGrid.spatialStep = 0.1;
+	task.cgal3DGrid.detectSharpEdges = true;
+	task.cgal3DGrid.polyhedronFileName = "meshes/tetrahedron.off";
+//	task.cgal3DGrid.spatialStep = 0.05;
+//	task.cgal3DGrid.polyhedronFileName = "meshes/elephant.off";
+	
+	Statement statement;
+	real rho = 4;
+	real lambda = 2;
+	real mu = 1;
+	statement.materialConditions.defaultMaterial =
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+
+	statement.globalSettings.CourantNumber = 0.5;
+
+	statement.globalSettings.numberOfSnaps = 50;
+	statement.globalSettings.stepsPerSnap = 1;
+
+	Statement::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+	pressure.value = 0.5;
+	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
+	statement.initialCondition.quantities.push_back(pressure);
+
+	Statement::BorderCondition borderConditionAll;
+	borderConditionAll.area = std::make_shared<InfiniteArea>();
+	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionAll.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; },
+		[] (real) { return 0; }
+	};
+	
+	statement.borderConditions = {borderConditionAll};
+
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {
+		PhysicalQuantities::T::PRESSURE,
+	};
+
+	task.statements.push_back(statement);
+	return task;
 }
 
 

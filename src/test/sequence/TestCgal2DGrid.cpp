@@ -38,10 +38,10 @@ TEST(Cgal2DGrid, ownerTriangleVsBarycentric) {
 					
 					if (triangleF.valid) {
 						auto lambda = linal::barycentricCoordinates(
-								grid.coords2d(triangleF(0)), 
-								grid.coords2d(triangleF(1)), 
-								grid.coords2d(triangleF(2)), 
-								grid.coords2d(it) + shift);
+								grid.coordsD(triangleF(0)), 
+								grid.coordsD(triangleF(1)), 
+								grid.coordsD(triangleF(2)), 
+								grid.coordsD(it) + shift);
 						for (int i = 0; i < 3; i++) {
 							ASSERT_TRUE(lambda(i) > -EQUALITY_TOLERANCE) << lambda(i);
 						}
@@ -50,10 +50,10 @@ TEST(Cgal2DGrid, ownerTriangleVsBarycentric) {
 					
 					if (triangleL.valid) {
 						auto lambda = linal::barycentricCoordinates(
-								grid.coords2d(triangleL(0)), 
-								grid.coords2d(triangleL(1)), 
-								grid.coords2d(triangleL(2)), 
-								grid.coords2d(it) + shift);
+								grid.coordsD(triangleL(0)), 
+								grid.coordsD(triangleL(1)), 
+								grid.coordsD(triangleL(2)), 
+								grid.coordsD(it) + shift);
 						for (int i = 0; i < 3; i++) {
 							ASSERT_TRUE(lambda(i) > -EQUALITY_TOLERANCE) << lambda(i);
 						}
@@ -108,29 +108,29 @@ TEST(Cgal2DGrid, locateVsFindOwnerTriangle) {
 						auto common = triangleF.equalPoints(triangleL);
 						bool correct = common.size() == 3;
 						if (common.size() == 2) {
-							Real2 a = grid.coords2d(*common.begin());
-							Real2 q = grid.coords2d(it) + shift;
-							Real2 c = grid.coords2d(*common.rbegin());
+							Real2 a = grid.coordsD(*common.begin());
+							Real2 q = grid.coordsD(it) + shift;
+							Real2 c = grid.coordsD(*common.rbegin());
 							correct = linal::isDegenerate(a, q, c) && 
 									  linal::dotProduct(a - q, c - q) < 0;
 						}
 						ASSERT_TRUE(correct)
-							<< "it = " << grid.coords2d(it)
-							<< "query = " << grid.coords2d(it) + shift
-							<< "find: " << grid.coords2d(triangleF(0)) 
-								<< grid.coords2d(triangleF(1)) << grid.coords2d(triangleF(2))
-							<< "locate: " << grid.coords2d(triangleL(0))
-								<< grid.coords2d(triangleL(1)) << grid.coords2d(triangleL(2))
+							<< "it = " << grid.coordsD(it)
+							<< "query = " << grid.coordsD(it) + shift
+							<< "find: " << grid.coordsD(triangleF(0)) 
+								<< grid.coordsD(triangleF(1)) << grid.coordsD(triangleF(2))
+							<< "locate: " << grid.coordsD(triangleL(0))
+								<< grid.coordsD(triangleL(1)) << grid.coordsD(triangleL(2))
 							<< std::endl;
 					
 					} else {
 					// both are outer
 						ASSERT_TRUE(!triangleF.valid && !triangleL.valid) 
 							<< "F: " << triangleF.valid << " L: " << triangleL.valid << "\n"
-							<< "it = " << grid.getIndex(it) << grid.coords2d(it) 
-							<< "query = " << grid.coords2d(it) + shift
-							<< "locate: " << grid.coords2d(triangleL(0))
-							<< grid.coords2d(triangleL(1)) << grid.coords2d(triangleL(2))
+							<< "it = " << grid.getIndex(it) << grid.coordsD(it) 
+							<< "query = " << grid.coordsD(it) + shift
+							<< "locate: " << grid.coordsD(triangleL(0))
+							<< grid.coordsD(triangleL(1)) << grid.coordsD(triangleL(2))
 							<< std::endl;;
 					}
 					
@@ -175,7 +175,7 @@ TEST(Cgal2DGrid, findOwnerCellTwoBodies) {
 	for (int multiplier = 1; multiplier < 10; multiplier++) {
 		real step = h / 3 * multiplier;
 		for (auto& it1 : oneBody) {
-			auto it2 = twoBodies.findVertexByCoordinates(oneBody.coords2d(it1));
+			auto it2 = twoBodies.findVertexByCoordinates(oneBody.coordsD(it1));
 			
 			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
@@ -188,26 +188,26 @@ TEST(Cgal2DGrid, findOwnerCellTwoBodies) {
 						elements::Triangle<Real2> t1(triangle1, 
 								std::function<Real2(const Cgal2DGrid::Iterator&)>(
 										[&](const Cgal2DGrid::Iterator& iterator) {
-											return oneBody.coords2d(iterator); 
+											return oneBody.coordsD(iterator); 
 										}));
 						elements::Triangle<Real2> t2(triangle2, 
 								std::function<Real2(const Cgal2DGrid::Iterator&)>(
 										[&](const Cgal2DGrid::Iterator& iterator) {
-											return twoBodies.coords2d(iterator); 
+											return twoBodies.coordsD(iterator); 
 										}));
 
 						auto common = t1.equalPoints(t2);
 						bool correct = common.size() == 3;
 						if (common.size() == 2) {
 							Real2 a = *common.begin();
-							Real2 q = oneBody.coords2d(it1) + shift;
+							Real2 q = oneBody.coordsD(it1) + shift;
 							Real2 c = *common.rbegin();
 							correct = linal::isDegenerate(a, q, c) && 
 									  linal::dotProduct(a - q, c - q) < 0;
 						}
 						ASSERT_TRUE(correct)
-							<< "it = " << oneBody.coords2d(it1)
-							<< "query = " << oneBody.coords2d(it1) + shift
+							<< "it = " << oneBody.coordsD(it1)
+							<< "query = " << oneBody.coordsD(it1) + shift
 							<< "one: " << t1 << "two: " << t2
 							<< std::endl;
 					
@@ -215,8 +215,8 @@ TEST(Cgal2DGrid, findOwnerCellTwoBodies) {
 					// both are outer
 						ASSERT_TRUE(!triangle1.valid && !triangle2.valid)
 							<< "one: " << triangle1.valid << " two: " << triangle2.valid << "\n"
-							<< "it1 = " << oneBody.getIndex(it1) << oneBody.coords2d(it1) 
-							<< "query = " << oneBody.coords2d(it1) + shift
+							<< "it1 = " << oneBody.getIndex(it1) << oneBody.coordsD(it1) 
+							<< "query = " << oneBody.coordsD(it1) + shift
 							<< std::endl;
 					}
 					
@@ -251,32 +251,32 @@ TEST(Cgal2DGrid, miscellaneous) {
 	
 	for (auto borderIt = grid.borderBegin();
 	          borderIt != grid.borderEnd(); ++borderIt) {
-		if (grid.coords2d(*borderIt) == Real2({0, 0})) {
+		if (grid.coordsD(*borderIt) == Real2({0, 0})) {
 			ASSERT_TRUE(linal::approximatelyEqual(
 					linal::normalize(Real2({-1, -1})), grid.normal(*borderIt)));
 					
-		} else if (grid.coords2d(*borderIt) == Real2({0, 1})) {
+		} else if (grid.coordsD(*borderIt) == Real2({0, 1})) {
 			ASSERT_TRUE(linal::approximatelyEqual(
 					linal::normalize(Real2({-1, 1})), grid.normal(*borderIt)));
 					
-		} else if (grid.coords2d(*borderIt) == Real2({1, 1})) {
+		} else if (grid.coordsD(*borderIt) == Real2({1, 1})) {
 			ASSERT_TRUE(linal::approximatelyEqual(
 					linal::normalize(Real2({1, 1})), grid.normal(*borderIt)));
 					
-		} else if (grid.coords2d(*borderIt) == Real2({1, 0})) {
+		} else if (grid.coordsD(*borderIt) == Real2({1, 0})) {
 			ASSERT_TRUE(linal::approximatelyEqual(
 					linal::normalize(Real2({1, -1})), grid.normal(*borderIt)));
 					
-		} else if (grid.coords2d(*borderIt)(0) == 0) {
+		} else if (grid.coordsD(*borderIt)(0) == 0) {
 			ASSERT_EQ(Real2({-1, 0}), grid.normal(*borderIt));
 					
-		} else if (grid.coords2d(*borderIt)(0) == 1) {
+		} else if (grid.coordsD(*borderIt)(0) == 1) {
 			ASSERT_EQ(Real2({1, 0}), grid.normal(*borderIt));
 					
-		} else if (grid.coords2d(*borderIt)(1) == 0) {
+		} else if (grid.coordsD(*borderIt)(1) == 0) {
 			ASSERT_EQ(Real2({0, -1}), grid.normal(*borderIt));
 					
-		} else if (grid.coords2d(*borderIt)(1) == 1) {
+		} else if (grid.coordsD(*borderIt)(1) == 1) {
 			ASSERT_EQ(Real2({0, 1}), grid.normal(*borderIt));
 					
 		} else {

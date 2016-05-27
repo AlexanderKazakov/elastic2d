@@ -10,6 +10,7 @@
 namespace gcm {
 class FileUtils {
 public:
+
 	static void openBinaryFileStream(std::ofstream& fileStream,
 	                                 const std::string& fileName) {
 		fileStream.open(fileName, std::ios::binary);
@@ -17,12 +18,14 @@ public:
 		fileStream.clear();
 	}
 
+
 	static void openTextFileStream(std::ofstream& fileStream,
 	                               const std::string& fileName) {
 		fileStream.open(fileName, std::ios::out);
 		assert_true(fileStream.is_open());
 		fileStream.clear();
 	}
+
 
 	template<typename T>
 	static void writeStdVectorToTextFileStream(std::ofstream& fileStream,
@@ -32,11 +35,13 @@ public:
 		}
 	}
 
+
 	template<typename T>
 	static void writeStdVectorToBinaryFileStream(std::ofstream& fileStream,
 	                                             const std::vector<T>& vec) {
 		writeArrayToBinaryFileStream(fileStream, &(vec[0]), vec.size());
 	}
+
 
 	template<typename T>
 	static void writeArrayToBinaryFileStream(std::ofstream& fileStream,
@@ -49,11 +54,7 @@ public:
 		assert_eq(bufferSize, currentNumberOfBytes - previousNumberOfBytes);
 	}
 
-	static void closeFileStream(std::ofstream& fileStream) {
-		assert_true(fileStream.good());
-		fileStream.close();
-	}
-	
+
 	template<typename PlaceToWriteInput>
 	static void readFromTextFile(const std::string& fileName,
 			PlaceToWriteInput& placeToWriteInput) {
@@ -62,10 +63,21 @@ public:
 		assert_true(inputFileStream.is_open());
 		
 		inputFileStream >> placeToWriteInput;
-		assert_true(inputFileStream.good());
-		inputFileStream.close();
+		closeFileStream(inputFileStream);
 	}
 
+
+	static void closeFileStream(std::ifstream& fileStream) {
+		assert_true(fileStream.good());
+		fileStream.close();
+	}
+	
+	
+	static void closeFileStream(std::ofstream& fileStream) {
+		assert_true(fileStream.good());
+		fileStream.close();
+	}
+	
 };
 
 

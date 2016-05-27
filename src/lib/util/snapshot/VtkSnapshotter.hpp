@@ -99,6 +99,7 @@ static void
 writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
 	writePoints(gcmGrid, vtkGrid);
 	writeCells(gcmGrid, vtkGrid);
+	writeBorderNormals(gcmGrid, vtkGrid);
 }
 
 
@@ -109,6 +110,7 @@ static void
 writeGeometry(const Cgal3DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
 	writePoints(gcmGrid, vtkGrid);
 	writeCells(gcmGrid, vtkGrid);
+	writeBorderNormals(gcmGrid, vtkGrid);
 }
 
 
@@ -172,6 +174,26 @@ static void writeCells(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid
 		vtkGrid->InsertNextCell(cell->GetCellType(), cell->GetPointIds());
 	}
 }
+
+template<typename TGrid>
+static void writeBorderNormals(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+	auto vtkArr = vtkSmartPointer<vtkFloatArray>::New();
+	vtkArr->SetNumberOfComponents(3);
+	vtkArr->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
+	vtkArr->SetName("border_normal");
+	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
+		float vtkNormal[3] = {0, 0, 0};
+		if (gcmGrid.isBorder(it)) {
+			auto normal = gcmGrid.normal(it);
+			for (int i = 0; i < normal.SIZE; i++) {
+				vtkNormal[i] = (float) normal(i);
+			}
+		}
+		vtkArr->InsertNextTuple(vtkNormal);
+	}
+	vtkGrid->GetPointData()->AddArray(vtkArr);
+}
+
 
 };
 

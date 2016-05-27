@@ -8,7 +8,7 @@
 namespace gcm {
 
 /**
- * Grid-characteristic method specialization for cubic grids
+ * Grid-characteristic method specialization for meshes based on CubicGrid
  */
 template<typename TModel, typename TMaterial, int Dimensionality>
 class GridCharacteristicMethod<TModel, CubicGrid<Dimensionality>, TMaterial> {

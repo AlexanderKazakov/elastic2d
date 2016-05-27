@@ -10,6 +10,8 @@
 
 
 namespace gcm {
+class Cgal3DMesher;
+
 /**
  * 3D movable unstructured tetrahedron grid by CGAL library
  */
@@ -34,7 +36,11 @@ public:
 	typedef elements::Tetrahedron<Iterator>                        Cell;
 	typedef elements::Triangle<Iterator>                           Face;
 	
+	/// Space dimensionality
 	static const int DIMENSIONALITY = 3;
+	/// An *estimation* of maximal possible number of vertices connected 
+	/// with some inner vertex (it can be more in a very rare cases)
+	static const int MAX_NUMBER_OF_NEIGHBOR_VERTICES = 20; // FIXME
 	
 	
 	/// @name Iterators 
@@ -72,9 +78,9 @@ public:
 		bool operator()(const FiniteCellsIterator& it) const {
 			return !grid->isInDomain(it);
 		}
-		RealCellTester(const Cgal3DGrid * const grid_) : grid(grid_) { }
+		RealCellTester(const Cgal3DGrid* const grid_) : grid(grid_) { }
 	private:
-		const Cgal3DGrid * const grid;	
+		const Cgal3DGrid* const grid;	
 	};
 	
 	typedef CGAL::Filter_iterator<FiniteCellsIterator, RealCellTester> CellIterator;
@@ -98,16 +104,19 @@ public:
 
 	/** Read-only access to real coordinates */
 	Real3 coords(const Iterator& it) const {
-		return real3(vertexHandles[getIndex(it)]->point());
+		return coordsD(it);
+	}
+	
+	/** Read-only access to real coordinates */
+	Real3 coordsD(const Iterator& it) const {
+		return real3(vertexHandle(it)->point());
 	}
 	
 	/** Border normal in specified point */
-	Real3 normal(const Iterator& it) const {
-		return normal(findBorderNeighbors(it));
-	}
+	Real3 normal(const Iterator& it) const;
 	
 	/** All vertices connected with specified vertex */
-	std::vector<Iterator> findNeighborVertices(const Iterator& it) const;
+	std::set<Iterator> findNeighborVertices(const Iterator& it) const;
 
 	/**
 	 * @param it begin() <= iterator < end()
@@ -135,7 +144,7 @@ public:
 	}
 	
 	bool isInDomain(const CellHandle c) const {
-		return cellInfo(c) != 0;
+		return ( !triangulation.is_infinite(c) ) && (cellInfo(c) != 0);
 	}
 	
 	bool isBorder(const Iterator& it) const {
@@ -176,20 +185,21 @@ public:
 	/**
 	 * Starting from specified point along the line in specified direction,
 	 * find the nearest border face crossed by the line.
+	 * @note length of shift must be enough to reach crossing border
 	 * @note cases when go from border node outside the body aren't handled
-	 * @return crossed border face as the triple of its border points
+	 * @return crossed border face
 	 */
 	Face findCrossingBorder(
-			const Iterator& start, const Real3& direction) const;
+			const Iterator& start, const Real3& shift) const;
 	
 	/**
-	 * @return list of border vertices incident to given border vertex;
-	 * the order of border vertices is so that outer body normal = TODO
-	 * @see normal
+	 * @return set of border vertices incident to given vertex
 	 */
-	std::vector<Iterator> findBorderNeighbors(const Iterator& it) const;
-	
-	/** Find vertex with specified coordinates. Throw Exception if there isn't such. */
+	std::set<Iterator> findBorderNeighbors(const Iterator& it) const;
+		
+	/** 
+	 * Find vertex with specified coordinates. Throw Exception if there isn't such.
+	 */
 	Iterator findVertexByCoordinates(const Real3& coordinates) const;
 
 
@@ -207,7 +217,7 @@ protected:
 	/** Move specified point on specified distance */
 	void move(const Iterator& it, const Real3& d) {
 		assert_true(movable);
-		auto& point = vertexHandles[getIndex(it)]->point();
+		auto& point = vertexHandle(it)->point();
 		point = point + cgalVector3(d);
 	}
 
@@ -215,22 +225,21 @@ protected:
 private:
 	/** Functions for building the triangulation */
 	///@{
-	void triangulate(const Task::Cgal3DGrid& task);
 	void markInnersAndBorders();
 	///@}
 
-	/// Auxilliary functions for handling numerical methods queries 
-	/// @{
-	CellHandle findCrossedCell(const VertexHandle start, const Real3& direction) const;
+	/// Auxilliary functions
+	///@{
 	
-	Face findCrossingBorder(const VertexHandle& v, const CellHandle& f, const Real3& direction) const;
-	
-	std::vector<VertexHandle> commonVertices(const CellHandle& a, const CellHandle& b) const;
-
-	Real3 normal(const std::vector<Iterator>& /*borderNeighbors*/) const {
-		THROW_UNSUPPORTED("TODO");
+	VertexHandle vertexHandle(const Iterator it) const {
+		return vertexHandles[getIndex(it)];
 	}
 	
+	CellHandle findCrossedCell(const VertexHandle start, const Real3& direction) const;
+	
+	std::vector<VertexHandle> commonVertices(const CellHandle& a, const CellHandle& b,
+			std::vector<VertexHandle>* aHasOnly = nullptr) const;
+
 	Cell createTetrahedron(const CellHandle ch) const {
 		Cell ans;
 		ans.valid = false;
@@ -246,7 +255,81 @@ private:
 		
 		return ans;
 	}
-	/// @}
+	///@}
+
+
+	/**
+	 * Struct to go along the line cell-by-cell between two points. 
+	 */
+	struct LineWalker {
+		/** Create line walker from coords(it) to coords(it) + shift */
+		LineWalker(const Cgal3DGrid* const grid_, const Iterator& it, const Real3& shift_) :
+				grid(grid_), start(grid->coords(it)), shift(shift_) {
+			
+			CellHandle firstCell = grid->findCrossedCell(grid->vertexHandle(it), shift);
+			cellsAlongLine.push_back(firstCell);
+			if (grid->isInDomain(firstCell)) {
+				CellHandle secondCell = grid->triangulation.locate(
+						cgalPoint3(start + shift), firstCell);
+				if (firstCell != secondCell) {
+					cellsAlongLine.push_back(secondCell);
+					findCells(0, cellsAlongLine.begin(), 0, 1);
+				}
+			}
+			currentCellIter = cellsAlongLine.begin();
+		}
+		
+		void next() {
+			++currentCellIter;
+		}
+		
+		CellHandle cell() const {
+			assert_true(currentCellIter != cellsAlongLine.end());
+			return correctBorderYieldCase(*currentCellIter);
+		}
+		
+	private:
+		const Cgal3DGrid* const grid;
+		const Real3 start; ///< start point on the line
+		const Real3 shift; ///< vector from start to finish point
+		std::list<CellHandle> cellsAlongLine; ///< all cells intersected 
+				///< by the segment of the line from start to start + shift
+		
+		typedef std::list<CellHandle>::iterator CellIterator;
+		CellIterator currentCellIter;
+		
+		void findCells(const int iterationCounter, const CellIterator first, 
+				const real firstPosition, const real secondPosition) {
+			
+			const CellIterator second = std::next(first);
+			if ( (*first)->has_neighbor(*second) ) { return; }
+			if (iterationCounter > 20) {
+				assert_false(grid->isInDomain(*second));
+				return; // this is some border case TODO - degenerate case is not handled
+			}
+			
+			real middlePosition = (firstPosition + secondPosition) / 2;
+			const CellHandle middleCell = grid->triangulation.locate(
+					cgalPoint3(start + shift * middlePosition), *first);
+			
+			if (middleCell == *first) {
+				findCells(iterationCounter + 1, first, middlePosition, secondPosition);
+			} else if (middleCell == *second) {
+				findCells(iterationCounter + 1, first, firstPosition, middlePosition);
+			} else {
+				CellIterator middle = cellsAlongLine.insert(second, middleCell);
+				findCells(0, first, firstPosition, middlePosition);
+				findCells(0, middle, middlePosition, secondPosition);
+			}
+		}
+		
+		CellHandle correctBorderYieldCase(const CellHandle c) const {
+			return c; // TODO ?
+		}
+		
+		USE_AND_INIT_LOGGER("Cgal3DGridLineWalker")
+	};
+	
 
 	void printCell(const CellHandle& f, const std::string& name = "") const;
  
@@ -262,6 +345,7 @@ private:
 		return CgalVector3(p(0), p(1), p(2));
 	}
 
+	friend class Cgal3DMesher;
 	USE_AND_INIT_LOGGER("gcm.Cgal3DGrid")
 };
 

@@ -35,11 +35,14 @@ class Cgal2DGrid;
 template<typename TModel, typename TMaterial>
 struct DataBus<TModel, Cgal2DGrid, TMaterial> {
 	typedef DefaultMesh<TModel, Cgal2DGrid, TMaterial> Mesh;
-
 	static void exchangeNodesWithNeighbors(Mesh*) { }
-
 };
-
+class Cgal3DGrid;
+template<typename TModel, typename TMaterial>
+struct DataBus<TModel, Cgal3DGrid, TMaterial> {
+	typedef DefaultMesh<TModel, Cgal3DGrid, TMaterial> Mesh;
+	static void exchangeNodesWithNeighbors(Mesh*) { }
+};
 
 
 template<typename TModel, typename TMaterial, int Dimensionality>

@@ -55,6 +55,16 @@ public:
 	static real randomReal(const real min, const real max) {
 		return ((max - min) * rand()) / RAND_MAX + min;
 	}
+	
+	
+	/**
+	 * Check is the container has the value
+	 */
+	template<typename TContainer, typename TValue>
+	static bool has(const TContainer& container, const TValue& value) {
+		return std::find(container.begin(), container.end(), value) != container.end();
+	}
+	
 
 };
 

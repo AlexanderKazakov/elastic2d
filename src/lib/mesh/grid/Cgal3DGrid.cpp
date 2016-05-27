@@ -1,15 +1,5 @@
 #include <lib/mesh/grid/Cgal3DGrid.hpp>
-#include <lib/util/FileUtils.hpp>
-
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/Mesh_triangulation_3.h>
-#include <CGAL/Mesh_complex_3_in_triangulation_3.h>
-#include <CGAL/Mesh_criteria_3.h>
-#include <CGAL/Polyhedral_mesh_domain_3.h>
-#include <CGAL/make_mesh_3.h>
-#include <CGAL/refine_mesh_3.h>
-#include <CGAL/IO/Polyhedron_iostream.h>
-
+#include </home/alex/work/gcm/src/libcgal3dmesher/Cgal3DMesher.hpp>
 
 using namespace gcm;
 
@@ -20,7 +10,12 @@ Cgal3DGrid(const Task& task) :
 	effectiveSpatialStep(task.cgal3DGrid.spatialStep), 
 	movable(task.cgal3DGrid.movable) {
 
-	triangulate(task.cgal3DGrid);
+	LOG_DEBUG("Call Cgal3DMesher");
+	cgal_3d_mesher::Cgal3DMesher::triangulate(
+			task.cgal3DGrid.spatialStep, task.cgal3DGrid.detectSharpEdges,
+			task.cgal3DGrid.polyhedronFileName, triangulation);
+	LOG_DEBUG("Number of vertices after meshing: " << triangulation.number_of_vertices());
+	LOG_DEBUG("Number of cells after meshing: " << triangulation.number_of_cells());
 	
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
@@ -35,30 +30,87 @@ Cgal3DGrid(const Task& task) :
 }
 
 
-std::vector<Cgal3DGrid::Iterator> Cgal3DGrid::
-findNeighborVertices(const Iterator& it) const {	
-
-	std::vector<VertexHandle> neighborVertices;
-	triangulation.finite_adjacent_vertices(vertexHandles[getIndex(it)],
-			std::back_inserter(neighborVertices));
-
-	std::vector<Iterator> ans;
-	for (const auto vertex : neighborVertices) {
-		ans.push_back(getIterator(vertex));
+Real3 Cgal3DGrid::
+normal(const Iterator& it) const {
+	assert_true(isBorder(it));
+	VertexHandle v = vertexHandle(it);
+	
+	std::vector<CellHandle> incidentCells;
+	triangulation.incident_cells(v, std::back_inserter(incidentCells));
+	
+	std::vector<Real3> facesNormals;
+	for (const auto innerCell : incidentCells) {
+		if ( !isInDomain(innerCell)) {
+		// over all incident inner cells
+			continue;
+		}
+		
+		for (int i = 0; i < 4; i++) {
+			CellHandle outerCell = innerCell->neighbor(i);
+			if ( isInDomain(outerCell) ) {
+			// over all cell's outer neighbors ..
+				continue;
+			}
+			
+			std::vector<VertexHandle> innerVertexOfInnerCell;
+			std::vector<VertexHandle> borderVerticesOfInnerCell = commonVertices(
+					innerCell, outerCell, &innerVertexOfInnerCell);
+			assert_eq(innerVertexOfInnerCell.size(), 1); // FIXME replace
+			assert_eq(borderVerticesOfInnerCell.size(), 3); // FIXME replace
+			if ( !Utils::has(borderVerticesOfInnerCell, v) ) {
+			// .. which also have our vertex
+				continue;
+			}
+			
+			// add normal of the border face of the inner cell
+			facesNormals.push_back(linal::oppositeFaceNormal(
+					real3(innerVertexOfInnerCell[0]->point()),
+					real3(borderVerticesOfInnerCell[0]->point()),
+					real3(borderVerticesOfInnerCell[1]->point()),
+					real3(borderVerticesOfInnerCell[2]->point())));
+		}
 	}
+	
+	if (facesNormals.empty()) std::cout << coords(it);
+	return linal::normalize(std::accumulate(
+			facesNormals.begin(), facesNormals.end(), Real3::Zeros()));
+}
+
+
+std::set<Cgal3DGrid::Iterator> Cgal3DGrid::
+findNeighborVertices(const Iterator& it) const {	
+	std::vector<CellHandle> incidentCells;
+	triangulation.finite_incident_cells(
+			vertexHandle(it), std::back_inserter(incidentCells));
+	
+	std::set<Iterator> ans;
+	for (const auto cell : incidentCells) {
+		if (isInDomain(cell)) {
+			for (int i = 0; i < 4; i++) {
+				ans.insert(getIterator(cell->vertex(i)));
+			}
+		}
+	}
+	ans.erase(it);
 	return ans;
 }
 
 
 Cgal3DGrid::Cell Cgal3DGrid::
-findOwnerCell(const Iterator& /*it*/, const Real3& /*shift*/) const {
-	THROW_UNSUPPORTED("TODO");
+findOwnerCell(const Iterator& it, const Real3& shift) const {
+	LineWalker lineWalker(this, it, shift);
+	CgalPoint3 query = cgalPoint3(coords(it) + shift);
+	while (isInDomain(lineWalker.cell()) &&
+	       triangulation.tetrahedron(lineWalker.cell()).has_on_unbounded_side(query)) {
+		lineWalker.next();
+	}
+	return createTetrahedron(lineWalker.cell());
 }
 
 
 Cgal3DGrid::Cell Cgal3DGrid::
 locateOwnerCell(const Iterator& it, const Real3& shift) const {
-	VertexHandle beginVertex = vertexHandles[getIndex(it)];
+	VertexHandle beginVertex = vertexHandle(it);
 	CgalPoint3 query = beginVertex->point() + cgalVector3(shift);
 	CellHandle ownerCell = triangulation.locate(query, beginVertex->cell());
 	return createTetrahedron(ownerCell);
@@ -66,18 +118,36 @@ locateOwnerCell(const Iterator& it, const Real3& shift) const {
 
 
 Cgal3DGrid::Face Cgal3DGrid::
-findCrossingBorder(const Iterator& start, const Real3& direction) const {
-	VertexHandle v = vertexHandles[getIndex(start)];
-	CellHandle startCell = findCrossedCell(v, direction);
-	return findCrossingBorder(v, startCell, direction);
+findCrossingBorder(const Iterator& start, const Real3& shift) const {
+	LineWalker lineWalker(this, start, shift);
+	CellHandle current = lineWalker.cell();
+	if ( !isInDomain(current) ) { return Face(); }
+	
+	lineWalker.next();
+	CellHandle next = lineWalker.cell();
+	while (isInDomain(next)) {
+		current = next;
+		lineWalker.next();
+		next = lineWalker.cell();
+	}
+	
+	auto face = commonVertices(current, next);
+	assert_eq(face.size(), 3);
+	return Face({getIterator(face[0]), getIterator(face[1]), getIterator(face[2])});
 }
 
 
-std::vector<Cgal3DGrid::Iterator> Cgal3DGrid::
+std::set<Cgal3DGrid::Iterator> Cgal3DGrid::
 findBorderNeighbors(const Iterator& it) const {
-	/// only for border nodes
-	assert_true(isBorder(it));	
-	THROW_UNSUPPORTED("TODO");
+	std::set<Iterator> ans = findNeighborVertices(it);
+    for (auto neighbor  = ans.begin(); neighbor != ans.end(); ) {
+		if ( !isBorder(*  neighbor) ) {
+			neighbor = ans.erase(neighbor);
+		} else {
+			++neighbor;
+		}
+	}
+	return ans;
 }
 
 
@@ -92,71 +162,6 @@ findVertexByCoordinates(const Real3& coordinates) const {
 }
 
 
-void Cgal3DGrid::
-triangulate(const Task::Cgal3DGrid& task) {
-
-	// Types connected with meshing
-	// Initial mesh "domain" - from what CGAL builds the triangulation
-	typedef CGAL::Polyhedron_3<K>                                         Polyhedron;
-	typedef CGAL::Polyhedral_mesh_domain_3<Polyhedron, K>                 PolyhedralMeshDomain;
-	// Triangulation used by mesher
-	typedef CGAL::Mesh_triangulation_3<PolyhedralMeshDomain>::type        MeshingTriangulation;
-	typedef CGAL::Mesh_complex_3_in_triangulation_3<MeshingTriangulation> C3t3;
-	typedef typename C3t3::Subdomain_index                                SubdomainIndex;
-	typedef typename MeshingTriangulation::Vertex                         MeshingVertex;
-	typedef typename MeshingTriangulation::Cell                           MeshingCell;
-	// Meshing criteria
-	typedef CGAL::Mesh_criteria_3<MeshingTriangulation>                   MeshingCriteria;
-
-	Polyhedron polyhedron;
-	FileUtils::readFromTextFile(task.polyhedronFileName, polyhedron);
-	assert_true(polyhedron.is_valid());
-	
-	// Create initial mesh domain
-	PolyhedralMeshDomain domain(polyhedron);
-	
-	MeshingCriteria meshingCriteria(
-			CGAL::parameters::facet_angle=25,
-			CGAL::parameters::cell_radius_edge_ratio=3,
-			CGAL::parameters::facet_size=task.spatialStep,
-			CGAL::parameters::facet_distance=task.spatialStep / 4,
-			CGAL::parameters::cell_size=task.spatialStep);
-
-	LOG_DEBUG("Meshing the triangulation...");
-	C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, meshingCriteria,
-			CGAL::parameters::no_perturb(), CGAL::parameters::no_exude());
-	MeshingTriangulation mt = c3t3.triangulation();
-	assert_true(mt.is_valid());
-	
-	// load triangulation from mesher
-	// converter structures for CGAL copy_tds function
-	struct VertexConverter {
-		VertexT operator()(const MeshingVertex& src) const {
-			return VertexT(src.point());
-		}
-		void operator()(const MeshingVertex&, VertexT&) const { }
-	} vertexConverter;
-	struct CellConverter {
-		CellT operator()(const MeshingCell& orig) const {
-			CellT cellT;
-			bool cellIsInComplex = !(orig.subdomain_index() == SubdomainIndex());
-			cellT.info() = cellIsInComplex ? 1 : 0;
-			return cellT;
-		}
-		void operator()(const MeshingCell&, CellT&) const { }
-	} cellConverter;
-	
-	// try to repeat Triangulation_3 copy constructor as much as possible
-	triangulation.set_lock_data_structure(mt.get_lock_data_structure());
-	triangulation.set_infinite_vertex(triangulation.tds().copy_tds(mt.tds(),
-			mt.infinite_vertex(), vertexConverter, cellConverter));
-	
-	assert_true(triangulation.is_valid());
-	LOG_DEBUG("Number of vertices after meshing: " << triangulation.number_of_vertices());
-	LOG_DEBUG("Number of cells after meshing: " << triangulation.number_of_cells());
-}
-
-
 void Cgal3DGrid::markInnersAndBorders() {
 	/// insert indices of border vertices into borderIndices
 	/// and indices of inner vertices into innerIndices
@@ -167,14 +172,18 @@ void Cgal3DGrid::markInnersAndBorders() {
 	          v != triangulation.finite_vertices_end(); ++v) {
 
 		bool isBorderNode = false;
+		bool atLeastOneCellIsInDomain = false;
 		std::vector<CellHandle> incidentCells;
 		triangulation.incident_cells(v, std::back_inserter(incidentCells));
 		for (const auto cell : incidentCells) {
-			if ( !isInDomain(cell) ) {
+			if (isInDomain(cell)) {
+				atLeastOneCellIsInDomain = true;
+			} else {
 				isBorderNode = true;
-				break;
 			}
 		}
+		
+		assert_true(atLeastOneCellIsInDomain);
 		
 		if (isBorderNode) {
 			borderIndices.insert(getIndex(getIterator(v)));
@@ -192,47 +201,41 @@ void Cgal3DGrid::markInnersAndBorders() {
 
 Cgal3DGrid::CellHandle Cgal3DGrid::
 findCrossedCell(const VertexHandle start, const Real3& direction) const {
-	/// Choose among incident cells of the given point that one which is
-	/// crossed by the line from that point in specified direction.
+/// Choose among incident cells of the given point that one 
+/// which is crossed by the line from that point in specified direction.
 
-	std::vector<CellHandle> finiteIncidentCells;
-	triangulation.finite_incident_cells(start, std::back_inserter(finiteIncidentCells));
-	for (int n = 1; n < 20; n++) {
-		CgalPoint3 q = start->point() + cgalVector3(direction / pow(2, n));
-		for (const auto cell : finiteIncidentCells) {
-			if (!triangulation.tetrahedron(cell).has_on_unbounded_side(q)) {
-				return cell;
-			}
+	CellHandle ans;
+	for (int n = 3; n < 20; n++) {
+		CgalPoint3 q_n = start->point() + cgalVector3(direction / pow(2, n));
+		ans = triangulation.locate(q_n, start->cell());
+		if (ans->has_vertex(start)) {
+			return ans;
 		}
 	}
-	THROW_BAD_MESH("Exceed number of iterations in findCrossedCell");
-}
-
-
-std::vector<Cgal3DGrid::VertexHandle> Cgal3DGrid::
-commonVertices(const CellHandle& a, const CellHandle& b) const {
-	/// return common vertices of given cells
-	std::vector<VertexHandle> ans;
-	for (int i = 0; i < 4; i++) {
-		VertexHandle candidate = a->vertex(i);
-		if (b->has_vertex(candidate)) {
-			ans.push_back(candidate);
-		}
-	}
+	assert_true(triangulation.is_infinite(ans));
 	return ans;
 }
 
 
-Cgal3DGrid::Face Cgal3DGrid::
-findCrossingBorder(const VertexHandle& /*v*/, const CellHandle& /*f*/,
-		const Real3& /*direction*/) const {
-	/// given a start point and direction, go along this line until
-	/// intersection with border;
-	/// @note cell is incident for given vertex,
-	/// given line must go across given cell
-	/// @return found border as pair of its vertices
+std::vector<Cgal3DGrid::VertexHandle> Cgal3DGrid::
+commonVertices(const CellHandle& a, const CellHandle& b, 
+		std::vector<VertexHandle>* aHasOnly) const {
+/// return common vertices of given cells
+/// fill in aHasOnly with vertices which only a has
+
+	std::vector<VertexHandle> common;
+	for (int i = 0; i < 4; i++) {
+		VertexHandle v = a->vertex(i);
+		if (b->has_vertex(v)) {
+			common.push_back(v);
+		} else {
+			if (aHasOnly != nullptr) {
+				aHasOnly->push_back(v);
+			}
+		}
+	}
 	
-	THROW_UNSUPPORTED("TODO");
+	return common;
 }
 
 
