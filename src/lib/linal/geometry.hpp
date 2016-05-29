@@ -75,6 +75,24 @@ inline Real3 barycentricCoordinates(const Real2& a, const Real2& b, const Real2&
 
 
 /**
+ * Computes barycentric coordinates of point q in triangle {a, b, c} in R^3
+ * The order is {lambda_a, lambda_b, lambda_c}
+ * For correctness of the result point q must lie in the flat {a, b, c}
+ */
+inline Real3 barycentricCoordinates(const Real3& a, const Real3& b, const Real3& c,
+                                    const Real3& q) {
+	/// if q in the flat {a, b, c}, one of the lines of A is linearly dependent
+	Matrix<4, 3> T = {   1,    1,    1,
+	                  a(0), b(0), c(0), 
+	                  a(1), b(1), c(1),
+	                  a(2), b(2), c(2) };
+	Real4 f = {1, q(0), q(1), q(2)};
+	
+	return linearLeastSquares(T, f);
+}
+
+
+/**
  * Computes barycentric coordinates of point q in tetrahedron {a, b, c, d}
  * The order is {lambda_a, lambda_b, lambda_c, lambda_d}
  */
@@ -145,6 +163,28 @@ inline bool isDegenerate(const Real2 a, const Real2 b, const Real2 c) {
 }
 
 
+/**
+ * Is tetrahedron on given points degenerate
+ */
+inline bool isDegenerate(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+	Real3 l = a - b;
+	Real3 m = c - b;
+	Real3 n = d - b;
+	return determinant(l(0), l(1), l(2), m(0), m(1), m(2), n(0), n(1), n(2)) == 0;
+}
+
+
+/**
+ * Is triangle on given points degenerate
+ */
+inline bool isDegenerate(const Real3 a, const Real3 b, const Real3 c) {
+	Real3 l = a - b;
+	Real3 m = c - b;
+	real lm = dotProduct(l, m);
+	return lm * lm == dotProduct(l, l) * dotProduct(m, m);
+}
+
+
 /** 
  * Is a orthogonal to b 
  */
@@ -209,9 +249,29 @@ inline POSITION positionRelativeToAngle(
 }
 
 
-/** @return area of triangle on points a, b, c */
-inline real area(const Real2& a, const Real2& b, const Real2& c) {
-	return fabs(crossProduct(a - b, c - b)) / 2;
+/** 
+ * @return oriented area of triangle {a, b, c};
+ * Orientation is positive, if crossProduct(b - a, c - a) > 0.
+ * In other words, if {a, b, c} is counterclockwise sequence 
+ * looking from top of Z-axis.
+ */
+inline real orientedArea(const Real2 a, const Real2 b, const Real2 c) {
+	return crossProduct(b - a, c - a) / 2;
+}
+
+
+/** 
+ * @return oriented volume of tetrahedron {a, b, c, d};
+ * Orientation is positive, if dotProduct(d - a, crossProduct(b - a, c - a)) > 0.
+ * In other words, if {a, b, c} is counterclockwise sequence looking from d.
+ */
+inline real orientedVolume(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+	Real3 ba = b - a;
+	Real3 ca = c - a;
+	Real3 da = d - a;
+	return determinant( Matrix33({ba(0), ba(1), ba(2),
+	                              ca(0), ca(1), ca(2),
+	                              da(0), da(1), da(2)}) ) / 6;
 }
 
 

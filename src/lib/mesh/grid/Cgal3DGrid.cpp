@@ -100,8 +100,9 @@ Cgal3DGrid::Cell Cgal3DGrid::
 findOwnerCell(const Iterator& it, const Real3& shift) const {
 	LineWalker lineWalker(this, it, shift);
 	CgalPoint3 query = cgalPoint3(coords(it) + shift);
-	while (isInDomain(lineWalker.cell()) &&
-	       triangulation.tetrahedron(lineWalker.cell()).has_on_unbounded_side(query)) {
+	
+	while ( isInDomain(lineWalker.cell()) && 
+	       !contains(lineWalker.cell(), query) ) {
 		lineWalker.next();
 	}
 	return createTetrahedron(lineWalker.cell());
@@ -111,9 +112,10 @@ findOwnerCell(const Iterator& it, const Real3& shift) const {
 Cgal3DGrid::Cell Cgal3DGrid::
 locateOwnerCell(const Iterator& it, const Real3& shift) const {
 	VertexHandle beginVertex = vertexHandle(it);
+	CellHandle beginCell = locateOwnerCell(
+					beginVertex->point(), beginVertex->cell());
 	CgalPoint3 query = beginVertex->point() + cgalVector3(shift);
-	CellHandle ownerCell = triangulation.locate(query, beginVertex->cell());
-	return createTetrahedron(ownerCell);
+	return createTetrahedron(locateOwnerCell(query, beginCell));
 }
 
 
@@ -141,7 +143,7 @@ std::set<Cgal3DGrid::Iterator> Cgal3DGrid::
 findBorderNeighbors(const Iterator& it) const {
 	std::set<Iterator> ans = findNeighborVertices(it);
     for (auto neighbor  = ans.begin(); neighbor != ans.end(); ) {
-		if ( !isBorder(*  neighbor) ) {
+		if ( !isBorder(*neighbor) ) {
 			neighbor = ans.erase(neighbor);
 		} else {
 			++neighbor;
@@ -163,8 +165,8 @@ findVertexByCoordinates(const Real3& coordinates) const {
 
 
 void Cgal3DGrid::markInnersAndBorders() {
-	/// insert indices of border vertices into borderIndices
-	/// and indices of inner vertices into innerIndices
+/// insert indices of border vertices into borderIndices
+/// and indices of inner vertices into innerIndices
 	borderIndices.clear();
 	innerIndices.clear();
 	
@@ -199,22 +201,28 @@ void Cgal3DGrid::markInnersAndBorders() {
 }
 
 
-Cgal3DGrid::CellHandle Cgal3DGrid::
-findCrossedCell(const VertexHandle start, const Real3& direction) const {
-/// Choose among incident cells of the given point that one 
-/// which is crossed by the line from that point in specified direction.
+//Cgal3DGrid::CellHandle Cgal3DGrid::
+//findCrossedCell(const VertexHandle start, Real3 direction) const {
+///// Choose among incident cells of the given point that one 
+///// which is crossed by the line from that point in specified direction.
 
-	CellHandle ans;
-	for (int n = 3; n < 20; n++) {
-		CgalPoint3 q_n = start->point() + cgalVector3(direction / pow(2, n));
-		ans = triangulation.locate(q_n, start->cell());
-		if (ans->has_vertex(start)) {
-			return ans;
-		}
-	}
-	assert_true(triangulation.is_infinite(ans));
-	return ans;
-}
+//	if (direction == Real3::Zeros()) { 
+//		return locateOwnerCell(start->point(), start->cell());
+//	}
+	
+//	CellHandle ans;
+//	direction = linal::normalize(direction) * getMinimalSpatialStep();
+//	for (int n = 3; n < 10; n++) {
+//		CgalPoint3 q_n = start->point() + cgalVector3(direction / pow(2, n));
+//		ans = locateOwnerCell(q_n, start->cell());
+//		if (ans->has_vertex(start)) {
+//			return ans;
+//		}
+//	}
+	
+//	assert_true(triangulation.is_infinite(ans));
+//	return ans;
+//}
 
 
 std::vector<Cgal3DGrid::VertexHandle> Cgal3DGrid::
@@ -236,6 +244,60 @@ commonVertices(const CellHandle& a, const CellHandle& b,
 	}
 	
 	return common;
+}
+
+
+Cgal3DGrid::CellHandle Cgal3DGrid::
+locateOwnerCell(const CgalPoint3& query, const CellHandle startCell) const {
+	/// locate containing cell with triangulation.locate function
+	typedef Triangulation::Locate_type LocateType;
+	LocateType locateType;
+	int li, lj;
+	CellHandle c = triangulation.locate(query, locateType, li, lj, startCell);
+	
+	if (isInDomain(c)) { return c; }
+	
+	/// correct border yield cases
+	for (int i = 1; i < 3; i++) {
+		for (auto candidate : cellsAround(c, i)) {
+			if (contains(candidate, query)) {
+				return candidate;
+			}
+		}
+	}
+	
+	return c;
+}
+
+
+std::set<Cgal3DGrid::CellHandle> Cgal3DGrid::
+cellsAround(const CellHandle cell, const int depth) const {
+/// return all "in_domain" cells around the given cell
+/// @param depth "number of layers"
+	std::set<CellHandle> ans;
+	ans.insert(cell);
+	
+	for (int depthCounter = 0; depthCounter < depth; depthCounter++) {
+		std::set<CellHandle> tmp;
+		
+		for (auto c : ans) {
+			for (int i = 0; i < 4; i++) {
+				std::list<CellHandle> incidentToVertex;
+				triangulation.finite_incident_cells(
+						c->vertex(i), std::back_inserter(incidentToVertex));
+				for (auto candidate : incidentToVertex) {
+					if (isInDomain(candidate)) {
+						tmp.insert(candidate);
+					}
+				}
+			}
+		}
+		
+		ans = tmp;
+	}
+	
+	ans.erase(cell);
+	return ans;
 }
 
 

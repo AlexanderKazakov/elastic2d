@@ -10,7 +10,6 @@
 
 
 namespace gcm {
-class Cgal3DMesher;
 
 /**
  * 3D movable unstructured tetrahedron grid by CGAL library
@@ -175,7 +174,8 @@ public:
 	
 	/**
 	 * Find tetrahedron that contains point on specified distance (shift) 
-	 * from specified point (it) by triangulation.locate function. 
+	 * from specified point (it) by triangulation.locate function with 
+	 * correction of border "out of domain" cases.
 	 * If found face is not "in_domain", returned tetrahedron.valid == false, 
 	 * tetrahedron points are not set.
 	 * @note for convex bodies result is the same with findOwnerCell
@@ -186,7 +186,6 @@ public:
 	 * Starting from specified point along the line in specified direction,
 	 * find the nearest border face crossed by the line.
 	 * @note length of shift must be enough to reach crossing border
-	 * @note cases when go from border node outside the body aren't handled
 	 * @return crossed border face
 	 */
 	Face findCrossingBorder(
@@ -215,10 +214,10 @@ protected:
 	///@}
 
 	/** Move specified point on specified distance */
-	void move(const Iterator& it, const Real3& d) {
+	void move(const Iterator& it, const Real3& distance) {
 		assert_true(movable);
 		auto& point = vertexHandle(it)->point();
-		point = point + cgalVector3(d);
+		point = point + cgalVector3(distance);
 	}
 
 	
@@ -235,10 +234,28 @@ private:
 		return vertexHandles[getIndex(it)];
 	}
 	
-	CellHandle findCrossedCell(const VertexHandle start, const Real3& direction) const;
+//	CellHandle findCrossedCell(const VertexHandle start, Real3 direction) const;
 	
 	std::vector<VertexHandle> commonVertices(const CellHandle& a, const CellHandle& b,
 			std::vector<VertexHandle>* aHasOnly = nullptr) const;
+	
+	CellHandle locateOwnerCell(const CgalPoint3& query, const CellHandle startCell) const;
+	
+	std::set<CellHandle> cellsAround(const CellHandle cell, const int depth = 1) const;
+	
+	bool contains(const CellHandle cell, const CgalPoint3& point) const {
+	/// is tetrahedron with small layer around contains the point 
+		Real3 a = real3(cell->vertex(0)->point());
+		Real3 b = real3(cell->vertex(1)->point());
+		Real3 c = real3(cell->vertex(2)->point());
+		Real3 d = real3(cell->vertex(3)->point());
+		Real3 q = real3(point);
+		Real4 lambda = linal::barycentricCoordinates(a, b, c, d, q);
+		return (lambda(0) > -EQUALITY_TOLERANCE) &&
+		       (lambda(1) > -EQUALITY_TOLERANCE) &&
+		       (lambda(2) > -EQUALITY_TOLERANCE) &&
+		       (lambda(3) > -EQUALITY_TOLERANCE);
+	}
 
 	Cell createTetrahedron(const CellHandle ch) const {
 		Cell ans;
@@ -266,16 +283,18 @@ private:
 		LineWalker(const Cgal3DGrid* const grid_, const Iterator& it, const Real3& shift_) :
 				grid(grid_), start(grid->coords(it)), shift(shift_) {
 			
-			CellHandle firstCell = grid->findCrossedCell(grid->vertexHandle(it), shift);
+			CellHandle firstCell = grid->locateOwnerCell(
+					cgalPoint3(start), grid->vertexHandle(it)->cell());
 			cellsAlongLine.push_back(firstCell);
 			if (grid->isInDomain(firstCell)) {
-				CellHandle secondCell = grid->triangulation.locate(
+				CellHandle secondCell = grid->locateOwnerCell(
 						cgalPoint3(start + shift), firstCell);
 				if (firstCell != secondCell) {
 					cellsAlongLine.push_back(secondCell);
 					findCells(0, cellsAlongLine.begin(), 0, 1);
 				}
 			}
+			removeAllAfterFirstOuter();
 			currentCellIter = cellsAlongLine.begin();
 		}
 		
@@ -285,7 +304,7 @@ private:
 		
 		CellHandle cell() const {
 			assert_true(currentCellIter != cellsAlongLine.end());
-			return correctBorderYieldCase(*currentCellIter);
+			return *currentCellIter;
 		}
 		
 	private:
@@ -302,14 +321,16 @@ private:
 				const real firstPosition, const real secondPosition) {
 			
 			const CellIterator second = std::next(first);
+			if ( !grid->isInDomain(*first) ) { return; }
 			if ( (*first)->has_neighbor(*second) ) { return; }
-			if (iterationCounter > 20) {
-				assert_false(grid->isInDomain(*second));
-				return; // this is some border case TODO - degenerate case is not handled
+			if (iterationCounter > 5) {
+				assert_true( !grid->isInDomain(*second) ||
+				             !grid->commonVertices(*first, *second).empty() );
+				return; // this is some border or degenerate case
 			}
 			
 			real middlePosition = (firstPosition + secondPosition) / 2;
-			const CellHandle middleCell = grid->triangulation.locate(
+			const CellHandle middleCell = grid->locateOwnerCell(
 					cgalPoint3(start + shift * middlePosition), *first);
 			
 			if (middleCell == *first) {
@@ -323,11 +344,17 @@ private:
 			}
 		}
 		
-		CellHandle correctBorderYieldCase(const CellHandle c) const {
-			return c; // TODO ?
+		void removeAllAfterFirstOuter() {
+			currentCellIter = cellsAlongLine.begin();
+			while (currentCellIter != cellsAlongLine.end() &&
+			       grid->isInDomain(cell())) {
+				next();
+			}
+			if (currentCellIter != cellsAlongLine.end()) {
+				cellsAlongLine.erase(std::next(currentCellIter), cellsAlongLine.end());
+			}
 		}
 		
-		USE_AND_INIT_LOGGER("Cgal3DGridLineWalker")
 	};
 	
 
@@ -345,7 +372,6 @@ private:
 		return CgalVector3(p(0), p(1), p(2));
 	}
 
-	friend class Cgal3DMesher;
 	USE_AND_INIT_LOGGER("gcm.Cgal3DGrid")
 };
 

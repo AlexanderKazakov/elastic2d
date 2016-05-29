@@ -143,7 +143,7 @@ private:
 				if (isBorder && linal::dotProduct(mesh.normal(it), shift) > 0) {
 				// this is a really border case
 				// add outer invariant for border corrector
-					outerInvariants.push_back(k);
+//					outerInvariants.push_back(k);
 					u = PdeVector::Zeros();
 					
 				} else {
@@ -151,11 +151,11 @@ private:
 				// however it is not the border case
 					if (!isBorder) {
 					// it is from inner node 
-						u = interpolateInSpaceTime(mesh, it, shift);
+//						u = interpolateInSpaceTime(mesh, it, shift);
 						
 					} else {
 					// it is from border node that is "inner" on that stage
-						u = whenInnerBorderIsOuter(mesh, it, shift);
+//						u = whenInnerBorderIsOuter(mesh, it, shift);
 						
 					}
 				}

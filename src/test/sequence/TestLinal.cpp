@@ -964,7 +964,7 @@ TEST(Linal, barycentric2D) {
 
 	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b+c)/2.0));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
-	          barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+			barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
 
 	// affine invariance	
 	Matrix22 S = {3, 5,
@@ -981,7 +981,21 @@ TEST(Linal, barycentric2D) {
 
 	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b+c)/2.0));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
-	          barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+			barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+}
+
+
+TEST(Linal, barycentricTriangleIn3D) {
+	Real3 a = {0, 0, 1};
+	Real3 b = {1, 0, 0};
+	Real3 c = {0, 1, 0};
+	
+	ASSERT_EQ(Real3({0, 1, 0}), barycentricCoordinates(a, b, c, b));
+	ASSERT_EQ(Real3({0, 0, 1}), barycentricCoordinates(a, b, c, c));
+	ASSERT_EQ(Real3({1, 0, 0}), barycentricCoordinates(a, b, c, a));
+	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b + c) / 2.0));
+	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
+			barycentricCoordinates(a, b, c, (a + b + c) / 3.0)));
 }
 
 
@@ -1035,6 +1049,14 @@ TEST(Linal, isDegenerate) {
 	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({1, 1})));
 	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({1, 0}), Real2({0, 1})));
 	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7})));
+	
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2})));
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2})));
+	ASSERT_FALSE(isDegenerate(Real3({0, 5, 0}), Real3({0, 0, 1}), Real3({0, 0, 2})));
+	
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3})));
+	ASSERT_TRUE (isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 1})));
+	ASSERT_FALSE(isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 5})));
 }
 
 
@@ -1076,11 +1098,19 @@ TEST(Linal, positionRelativeToAngle) {
 }
 
 
-TEST(Linal, area) {
-	ASSERT_EQ(0, area({0, 0}, {0, 1}, {0, 2}));
-	ASSERT_EQ(0, area({0, 0}, {1, 1}, {2, 2}));
-	ASSERT_EQ(2, area({0, 0}, {0, 2}, {2, 0}));
-	ASSERT_EQ(2, area({0, 0}, {-2, 0}, {0, 2}));
+TEST(Linal, orientedArea) {
+	ASSERT_EQ( 0, orientedArea({0, 0}, {0, 1}, {0, 2}));
+	ASSERT_EQ( 0, orientedArea({0, 0}, {1, 1}, {2, 2}));
+	ASSERT_EQ(-2, orientedArea({0, 0}, {0, 2}, {2, 0}));
+	ASSERT_EQ( 2, orientedArea({0, 0}, {2, 0}, {0, 2}));
+}
+
+
+TEST(Linal, orientedVolume) {
+	ASSERT_EQ( 0, orientedVolume({0, 0, 0}, {0, 1, 0}, {0, 2, 0}, {1, 2, 0}));
+	ASSERT_EQ( 1.0 / 6, orientedVolume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}));
+	ASSERT_EQ(-1.0 / 6, orientedVolume({0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {0, 0, 1}));
+	ASSERT_EQ(-1.0 / 6, orientedVolume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0,-1}));
 }
 
 

@@ -113,6 +113,8 @@ TEST(Cgal2DGrid, locateVsFindOwnerTriangle) {
 							Real2 c = grid.coordsD(*common.rbegin());
 							correct = linal::isDegenerate(a, q, c) && 
 									  linal::dotProduct(a - q, c - q) < 0;
+						} else if (common.size() == 1) {
+							correct = (shift == Real2::Zeros());
 						}
 						ASSERT_TRUE(correct)
 							<< "it = " << grid.coordsD(it)

@@ -61,7 +61,7 @@ Task parseTaskCgal3d() {
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal3DGrid.spatialStep = 0.1;
+	task.cgal3DGrid.spatialStep = 0.2;
 	task.cgal3DGrid.detectSharpEdges = true;
 	task.cgal3DGrid.polyhedronFileName = "meshes/tetrahedron.off";
 //	task.cgal3DGrid.spatialStep = 0.05;
