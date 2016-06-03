@@ -1,5 +1,7 @@
 #include <lib/mesh/grid/Cgal3DGrid.hpp>
-#include </home/alex/work/gcm/src/libcgal3dmesher/Cgal3DMesher.hpp>
+#include <lib/mesh/grid/Cgal3DLineWalker.hpp>
+
+#include </home/alex/work/gcm/src/libcgal3dmesher/Cgal3DMesher.hpp> // FIXME
 
 using namespace gcm;
 
@@ -98,39 +100,38 @@ findNeighborVertices(const Iterator& it) const {
 
 Cgal3DGrid::Cell Cgal3DGrid::
 findOwnerCell(const Iterator& it, const Real3& shift) const {
-	LineWalker lineWalker(this, it, shift);
-	CgalPoint3 query = cgalPoint3(coords(it) + shift);
+	Cgal3DLineWalker lineWalker(this, it, shift);
+	Real3 query = coords(it) + shift;
 	
-	while ( isInDomain(lineWalker.cell()) && 
-	       !contains(lineWalker.cell(), query) ) {
-		lineWalker.next();
+	CellHandle cell = lineWalker.cell();
+	while ( (cell != NULL) && isInDomain(cell) && !contains(cell, query) ) {
+		cell = lineWalker.next();
 	}
-	return createTetrahedron(lineWalker.cell());
+	
+	return createTetrahedron(cell);
 }
 
 
 Cgal3DGrid::Cell Cgal3DGrid::
 locateOwnerCell(const Iterator& it, const Real3& shift) const {
 	VertexHandle beginVertex = vertexHandle(it);
-	CellHandle beginCell = locateOwnerCell(
-					beginVertex->point(), beginVertex->cell());
 	CgalPoint3 query = beginVertex->point() + cgalVector3(shift);
-	return createTetrahedron(locateOwnerCell(query, beginCell));
+	CellHandle c = triangulation.locate(query, beginVertex->cell());
+	// TODO - correct border yield case
+	return createTetrahedron(c);
 }
 
 
 Cgal3DGrid::Face Cgal3DGrid::
 findCrossingBorder(const Iterator& start, const Real3& shift) const {
-	LineWalker lineWalker(this, start, shift);
+	Cgal3DLineWalker lineWalker(this, start, shift);
 	CellHandle current = lineWalker.cell();
-	if ( !isInDomain(current) ) { return Face(); }
+	if ( (current == NULL) || ( !isInDomain(current) ) ) { return Face(); }
 	
-	lineWalker.next();
-	CellHandle next = lineWalker.cell();
-	while (isInDomain(next)) {
+	CellHandle next = lineWalker.next();
+	while ( isInDomain(next) ) {
 		current = next;
-		lineWalker.next();
-		next = lineWalker.cell();
+		next = lineWalker.next();
 	}
 	
 	auto face = commonVertices(current, next);
@@ -201,30 +202,6 @@ void Cgal3DGrid::markInnersAndBorders() {
 }
 
 
-//Cgal3DGrid::CellHandle Cgal3DGrid::
-//findCrossedCell(const VertexHandle start, Real3 direction) const {
-///// Choose among incident cells of the given point that one 
-///// which is crossed by the line from that point in specified direction.
-
-//	if (direction == Real3::Zeros()) { 
-//		return locateOwnerCell(start->point(), start->cell());
-//	}
-	
-//	CellHandle ans;
-//	direction = linal::normalize(direction) * getMinimalSpatialStep();
-//	for (int n = 3; n < 10; n++) {
-//		CgalPoint3 q_n = start->point() + cgalVector3(direction / pow(2, n));
-//		ans = locateOwnerCell(q_n, start->cell());
-//		if (ans->has_vertex(start)) {
-//			return ans;
-//		}
-//	}
-	
-//	assert_true(triangulation.is_infinite(ans));
-//	return ans;
-//}
-
-
 std::vector<Cgal3DGrid::VertexHandle> Cgal3DGrid::
 commonVertices(const CellHandle& a, const CellHandle& b, 
 		std::vector<VertexHandle>* aHasOnly) const {
@@ -244,29 +221,6 @@ commonVertices(const CellHandle& a, const CellHandle& b,
 	}
 	
 	return common;
-}
-
-
-Cgal3DGrid::CellHandle Cgal3DGrid::
-locateOwnerCell(const CgalPoint3& query, const CellHandle startCell) const {
-	/// locate containing cell with triangulation.locate function
-	typedef Triangulation::Locate_type LocateType;
-	LocateType locateType;
-	int li, lj;
-	CellHandle c = triangulation.locate(query, locateType, li, lj, startCell);
-	
-	if (isInDomain(c)) { return c; }
-	
-	/// correct border yield cases
-	for (int i = 1; i < 3; i++) {
-		for (auto candidate : cellsAround(c, i)) {
-			if (contains(candidate, query)) {
-				return candidate;
-			}
-		}
-	}
-	
-	return c;
 }
 
 

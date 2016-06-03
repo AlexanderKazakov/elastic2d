@@ -46,7 +46,9 @@ solveLinearSystem(const MatrixBase<1, 1,
                                    TVectorElement,
                                    NonSymmetric, TVectorContainer>& b) {
 	
-	assert_ne(A(0, 0), zeros(A(0, 0)));
+	if (A(0, 0) == zeros(A(0, 0))) {
+		THROW_INVALID_ARG("SLE determinant is zero");
+	}
 	return {b(0) / A(0, 0)};
 }
 
@@ -70,7 +72,9 @@ solveLinearSystem(const MatrixBase<2, 2,
                                    NonSymmetric, TVectorContainer>& b) {
 
 	auto det = determinant(A);
-	assert_ne(det, zeros(det));
+	if (det == zeros(det)) {
+		THROW_INVALID_ARG("SLE determinant is zero");
+	}
 	
 	auto det1 = determinant(b(0), A(0, 1),
 	                        b(1), A(1, 1));
@@ -101,7 +105,9 @@ solveLinearSystem(const MatrixBase<3, 3,
                                    NonSymmetric, TVectorContainer>& b) {
 
 	auto det = determinant(A);
-	assert_ne(det, zeros(det));
+	if (det == zeros(det)) {
+		THROW_INVALID_ARG("SLE determinant is zero");
+	}
 	
 	auto det1 = determinant(b(0), A(0, 1), A(0, 2),
 	                        b(1), A(1, 1), A(1, 2),

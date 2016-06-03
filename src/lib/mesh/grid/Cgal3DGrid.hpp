@@ -10,6 +10,7 @@
 
 
 namespace gcm {
+class Cgal3DLineWalker;
 
 /**
  * 3D movable unstructured tetrahedron grid by CGAL library
@@ -234,22 +235,19 @@ private:
 		return vertexHandles[getIndex(it)];
 	}
 	
-//	CellHandle findCrossedCell(const VertexHandle start, Real3 direction) const;
-	
 	std::vector<VertexHandle> commonVertices(const CellHandle& a, const CellHandle& b,
 			std::vector<VertexHandle>* aHasOnly = nullptr) const;
 	
-	CellHandle locateOwnerCell(const CgalPoint3& query, const CellHandle startCell) const;
+	CellHandle correctBorderYieldCase(const CellHandle c) const;
 	
 	std::set<CellHandle> cellsAround(const CellHandle cell, const int depth = 1) const;
 	
-	bool contains(const CellHandle cell, const CgalPoint3& point) const {
+	bool contains(const CellHandle cell, const Real3& q) const {
 	/// is tetrahedron with small layer around contains the point 
 		Real3 a = real3(cell->vertex(0)->point());
 		Real3 b = real3(cell->vertex(1)->point());
 		Real3 c = real3(cell->vertex(2)->point());
 		Real3 d = real3(cell->vertex(3)->point());
-		Real3 q = real3(point);
 		Real4 lambda = linal::barycentricCoordinates(a, b, c, d, q);
 		return (lambda(0) > -EQUALITY_TOLERANCE) &&
 		       (lambda(1) > -EQUALITY_TOLERANCE) &&
@@ -274,90 +272,6 @@ private:
 	}
 	///@}
 
-
-	/**
-	 * Struct to go along the line cell-by-cell between two points. 
-	 */
-	struct LineWalker {
-		/** Create line walker from coords(it) to coords(it) + shift */
-		LineWalker(const Cgal3DGrid* const grid_, const Iterator& it, const Real3& shift_) :
-				grid(grid_), start(grid->coords(it)), shift(shift_) {
-			
-			CellHandle firstCell = grid->locateOwnerCell(
-					cgalPoint3(start), grid->vertexHandle(it)->cell());
-			cellsAlongLine.push_back(firstCell);
-			if (grid->isInDomain(firstCell)) {
-				CellHandle secondCell = grid->locateOwnerCell(
-						cgalPoint3(start + shift), firstCell);
-				if (firstCell != secondCell) {
-					cellsAlongLine.push_back(secondCell);
-					findCells(0, cellsAlongLine.begin(), 0, 1);
-				}
-			}
-			removeAllAfterFirstOuter();
-			currentCellIter = cellsAlongLine.begin();
-		}
-		
-		void next() {
-			++currentCellIter;
-		}
-		
-		CellHandle cell() const {
-			assert_true(currentCellIter != cellsAlongLine.end());
-			return *currentCellIter;
-		}
-		
-	private:
-		const Cgal3DGrid* const grid;
-		const Real3 start; ///< start point on the line
-		const Real3 shift; ///< vector from start to finish point
-		std::list<CellHandle> cellsAlongLine; ///< all cells intersected 
-				///< by the segment of the line from start to start + shift
-		
-		typedef std::list<CellHandle>::iterator CellIterator;
-		CellIterator currentCellIter;
-		
-		void findCells(const int iterationCounter, const CellIterator first, 
-				const real firstPosition, const real secondPosition) {
-			
-			const CellIterator second = std::next(first);
-			if ( !grid->isInDomain(*first) ) { return; }
-			if ( (*first)->has_neighbor(*second) ) { return; }
-			if (iterationCounter > 5) {
-				assert_true( !grid->isInDomain(*second) ||
-				             !grid->commonVertices(*first, *second).empty() );
-				return; // this is some border or degenerate case
-			}
-			
-			real middlePosition = (firstPosition + secondPosition) / 2;
-			const CellHandle middleCell = grid->locateOwnerCell(
-					cgalPoint3(start + shift * middlePosition), *first);
-			
-			if (middleCell == *first) {
-				findCells(iterationCounter + 1, first, middlePosition, secondPosition);
-			} else if (middleCell == *second) {
-				findCells(iterationCounter + 1, first, firstPosition, middlePosition);
-			} else {
-				CellIterator middle = cellsAlongLine.insert(second, middleCell);
-				findCells(0, first, firstPosition, middlePosition);
-				findCells(0, middle, middlePosition, secondPosition);
-			}
-		}
-		
-		void removeAllAfterFirstOuter() {
-			currentCellIter = cellsAlongLine.begin();
-			while (currentCellIter != cellsAlongLine.end() &&
-			       grid->isInDomain(cell())) {
-				next();
-			}
-			if (currentCellIter != cellsAlongLine.end()) {
-				cellsAlongLine.erase(std::next(currentCellIter), cellsAlongLine.end());
-			}
-		}
-		
-	};
-	
-
 	void printCell(const CellHandle& f, const std::string& name = "") const;
  
 	static CgalPoint3 cgalPoint3(const Real3& p) {
@@ -373,6 +287,8 @@ private:
 	}
 
 	USE_AND_INIT_LOGGER("gcm.Cgal3DGrid")
+	
+	friend class Cgal3DLineWalker;
 };
 
 
