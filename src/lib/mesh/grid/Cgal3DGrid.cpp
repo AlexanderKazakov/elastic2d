@@ -117,7 +117,6 @@ locateOwnerCell(const Iterator& it, const Real3& shift) const {
 	VertexHandle beginVertex = vertexHandle(it);
 	CgalPoint3 query = beginVertex->point() + cgalVector3(shift);
 	CellHandle c = triangulation.locate(query, beginVertex->cell());
-	// TODO - correct border yield case
 	return createTetrahedron(c);
 }
 

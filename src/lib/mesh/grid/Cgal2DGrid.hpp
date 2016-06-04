@@ -41,7 +41,11 @@ public:
 
 	typedef elements::Triangle<Iterator>                        Cell;
 	
+	/// Space dimensionality
 	static const int DIMENSIONALITY = 2;
+	/// An *estimation* of maximal possible number of vertices connected 
+	/// with some inner vertex (it can be more in a very rare cases)
+	static const int MAX_NUMBER_OF_NEIGHBOR_VERTICES = 8;
 	
 	/// @name Iterators 
 	///@{

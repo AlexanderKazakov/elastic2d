@@ -154,7 +154,12 @@ inline Real3 lineWithFlatIntersection(const Real3 f1, const Real3 f2, const Real
 
 
 /**
- * Is triangle on given points degenerate
+ * Is triangle on given points degenerate.
+ * 
+ * TODO - this comparison with zero is non-stable shit.
+ * However, comparison with EQUALITY_TOLERANCE is double shit.
+ * As a variant - replace all functions that test such cases
+ * and move decisions to user code, specific for concrete problems.
  */
 inline bool isDegenerate(const Real2 a, const Real2 b, const Real2 c) {
 	Real2 l = a - b;
@@ -186,6 +191,32 @@ inline bool isDegenerate(const Real3 a, const Real3 b, const Real3 c) {
 
 
 /** 
+ * @return oriented area of triangle {a, b, c};
+ * Orientation is positive, if crossProduct(b - a, c - a) > 0.
+ * In other words, if {a, b, c} is counterclockwise sequence 
+ * looking from top of Z-axis.
+ */
+inline real orientedArea(const Real2 a, const Real2 b, const Real2 c) {
+	return crossProduct(b - a, c - a) / 2;
+}
+
+
+/** 
+ * @return oriented volume of tetrahedron {a, b, c, d};
+ * Orientation is positive, if dotProduct(d - a, crossProduct(b - a, c - a)) > 0.
+ * In other words, if {a, b, c} is counterclockwise sequence looking from d.
+ */
+inline real orientedVolume(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+	Real3 ba = b - a;
+	Real3 ca = c - a;
+	Real3 da = d - a;
+	return determinant( Matrix33({ba(0), ba(1), ba(2),
+	                              ca(0), ca(1), ca(2),
+	                              da(0), da(1), da(2)}) ) / 6;
+}
+
+
+/** 
  * Is a orthogonal to b 
  */
 template<int TM>
@@ -212,7 +243,7 @@ bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
 inline POSITION positionRelativeToAngle(
 		const Real2& a, const Real2& b, const Real2& c, const Real2& q) {
 
-	if (isDegenerate(a, b, c)) {
+	if (fabs(orientedArea(a, b, c)) < EQUALITY_TOLERANCE) {
 		assert_lt(dotProduct(a - b, c - b), 0); // 180 degrees angle
 		
 		if (isDegenerate(a, b, q)) {
@@ -246,32 +277,6 @@ inline POSITION positionRelativeToAngle(
 			
 		}
 	}
-}
-
-
-/** 
- * @return oriented area of triangle {a, b, c};
- * Orientation is positive, if crossProduct(b - a, c - a) > 0.
- * In other words, if {a, b, c} is counterclockwise sequence 
- * looking from top of Z-axis.
- */
-inline real orientedArea(const Real2 a, const Real2 b, const Real2 c) {
-	return crossProduct(b - a, c - a) / 2;
-}
-
-
-/** 
- * @return oriented volume of tetrahedron {a, b, c, d};
- * Orientation is positive, if dotProduct(d - a, crossProduct(b - a, c - a)) > 0.
- * In other words, if {a, b, c} is counterclockwise sequence looking from d.
- */
-inline real orientedVolume(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
-	Real3 ba = b - a;
-	Real3 ca = c - a;
-	Real3 da = d - a;
-	return determinant( Matrix33({ba(0), ba(1), ba(2),
-	                              ca(0), ca(1), ca(2),
-	                              da(0), da(1), da(2)}) ) / 6;
 }
 
 

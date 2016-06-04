@@ -18,14 +18,18 @@ public:
 	typedef typename Mesh::Matrix                Matrix;
 	typedef typename Mesh::PdeVector             PdeVector;
 	typedef typename Mesh::Iterator              Iterator;
-
+	typedef linal::Vector<Dimensionality>        RealD;
+	
 	/**
 	 * Do grid-characteristic stage of splitting method
-	 * @param s direction aka stage
+	 * @param s stage (here is equal to direction 0 == X, 1 == Y, 2 == Z)
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
+	 * @param direction (RealD) unused because for cubic grids only directions 
+	 * collinear with coordinate axes are available
 	 */
-	void stage(const int s, const real& timeStep, Mesh& mesh) const {
+	void stage(const int s, const real& timeStep, Mesh& mesh, 
+	           const RealD /*direction*/ = RealD::Zeros()) const {
 		for (auto it : mesh) {
 			mesh._pdeNew(it) = localGcmStep(
 					mesh.matrices(it)->m[s].U1,

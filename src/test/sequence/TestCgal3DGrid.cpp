@@ -87,8 +87,7 @@ inline void checkOwnerCellVsBarycentric(const Cgal3DGrid* grid, const real step,
 
 TEST(Cgal3DGrid, ownerTetrahedronVsBarycentric) {
 	Task task;
-	real h = 0.1;
-	task.cgal3DGrid.spatialStep = h;
+	task.cgal3DGrid.spatialStep = 0.2;
 	task.cgal3DGrid.detectSharpEdges = true;
 	
 	task.cgal3DGrid.polyhedronFileName = "meshes/tetrahedron.off";
@@ -97,19 +96,38 @@ TEST(Cgal3DGrid, ownerTetrahedronVsBarycentric) {
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
 //		std::cout << "tetr: multiplier == " << multiplier << std::endl;
 		int cntFind = 0, cntLocate = 0;
-		checkOwnerCellVsBarycentric(&tetrGrid, h / 3 * multiplier, cntFind, cntLocate);
+		checkOwnerCellVsBarycentric(&tetrGrid, 
+				task.cgal3DGrid.spatialStep / 3 * multiplier, cntFind, cntLocate);
 		ASSERT_EQ(cntLocate, cntFind)
 				<< "Find: " << cntFind << " Locate: " << cntLocate;
 	}
 	
+	task.cgal3DGrid.spatialStep = 0.1;
 	task.cgal3DGrid.polyhedronFileName = "meshes/cube.off";
 	Cgal3DGrid cubeGrid(task);
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
 //		std::cout << "cube: multiplier == " << multiplier << std::endl;
 		int cntFind = 0, cntLocate = 0;
-		checkOwnerCellVsBarycentric(&cubeGrid, h / 3 * multiplier, cntFind, cntLocate);
+		checkOwnerCellVsBarycentric(&cubeGrid,
+				task.cgal3DGrid.spatialStep / 3 * multiplier, cntFind, cntLocate);
 		ASSERT_EQ(cntLocate, cntFind)
 				<< "Find: " << cntFind << " Locate: " << cntLocate;
+	}
+	
+	task.cgal3DGrid.spatialStep = 0.2;
+	task.cgal3DGrid.polyhedronFileName = "meshes/icosahedron.off";
+	task.cgal3DGrid.detectSharpEdges = false;
+	Cgal3DGrid icosGrid(task);
+	VtkUtils::dumpGridToVtk(icosGrid);
+	for (int multiplier = 1; multiplier < 30; multiplier++) {
+//		std::cout << "icosahedron: multiplier == " << multiplier << std::endl;
+		int cntFind = 0, cntLocate = 0;
+		checkOwnerCellVsBarycentric(&icosGrid,
+				task.cgal3DGrid.spatialStep / 3 * multiplier, cntFind, cntLocate);
+		if (multiplier > 1) {
+			ASSERT_GT(cntLocate, cntFind) // non-convex case - find less than locate
+					<< "Find: " << cntFind << " Locate: " << cntLocate << std::endl;
+		}
 	}
 }
 

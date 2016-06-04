@@ -3,7 +3,6 @@
 
 #include <lib/mesh/grid/Cgal2DGrid.hpp>
 #include <lib/mesh/grid/Cgal3DGrid.hpp> 
-// FIXME forward decl?
 #include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 
 
@@ -13,16 +12,10 @@ template<int Dimensionality> struct CgalGrid;
 
 template<> struct CgalGrid<2> { 
 	typedef Cgal2DGrid type;
-	/// number of neighbor vertices in 2D CGAL grid is unlikely to be more
-	/// than 8 (no any guaranty, just estimation)
-	static const int MAX_NUMBER_OF_VERTEX_NEIGHBORS = 8;
 };
 
 template<> struct CgalGrid<3> {
 	typedef Cgal3DGrid type;
-	/// number of neighbor vertices in 3D CGAL grid is unlikely to be more
-	/// than FIXME (no any guaranty, just estimation)
-	static const int MAX_NUMBER_OF_VERTEX_NEIGHBORS = 20;
 };
 
 
@@ -50,16 +43,18 @@ public:
 	static const int PDE_SIZE = Model::PDE_SIZE;
 	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterU1Matrix;
 	
-	static const int MAX_NUMBER_OF_VERTEX_NEIGHBORS = 
-			CgalGrid<Dimensionality>::MAX_NUMBER_OF_VERTEX_NEIGHBORS;
-
+	static const int MAX_NUMBER_OF_NEIGHBOR_VERTICES = 
+			Grid::MAX_NUMBER_OF_NEIGHBOR_VERTICES;
+	
 	/**
 	 * Do grid-characteristic stage of splitting method
-	 * @param s direction aka stage
+	 * @param s number of stage (GcmMatrix number)
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
+	 * @param direction direction of line to perform stage along
 	 */
-	void stage(const int s, const real& timeStep, Mesh& mesh) {
+	void stage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
+		assert_eq(linal::length(direction), 1);
 		
 		/// calculate spatial derivatives of all mesh pde values ones before stage
 		/// in order to use them multiple times while stage calculation 
@@ -71,10 +66,10 @@ public:
 			mesh._pdeNew(*borderIter) = localGcmStep(
 					mesh.matrices(*borderIter)->m[s].U1,
 					mesh.matrices(*borderIter)->m[s].U,
-					interpolateValuesAround(mesh, s, *borderIter,
+					interpolateValuesAround(mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh), true));
 			
-			borderCorrector(mesh, s, *borderIter);
+			borderCorrector(mesh, s, direction, *borderIter);
 		}
 		
 		/// calculate inner nodes
@@ -83,7 +78,7 @@ public:
 			mesh._pdeNew(*innerIter) = localGcmStep(
 					mesh.matrices(*innerIter)->m[s].U1,
 					mesh.matrices(*innerIter)->m[s].U,
-					interpolateValuesAround(mesh, s, *innerIter,
+					interpolateValuesAround(mesh, direction, *innerIter,
 							crossingPoints(*innerIter, s, timeStep, mesh), false));	
 		}
 		
@@ -93,7 +88,7 @@ public:
 private:
 	/** Points where characteristics from next time layer cross current time layer */
 	PdeVector crossingPoints(const Iterator& it, const int s,
-	                         const real& timeStep, const Mesh& mesh) const {
+	                         const real timeStep, const Mesh& mesh) const {
 		return -timeStep * linal::diag(mesh.matrices(it)->m[s].L);
 	}
 	
@@ -103,17 +98,17 @@ private:
 	 * Interpolated value for k-th point in vector dx are
 	 * stored in k-th column of returned Matrix.
 	 * If specified point appears to be out of body
-	 * AND it's really border case, matrix column is set to zeros
+	 * AND it is really border case, matrix column is set to zeros
 	 * and outerInvariants is added with the index.
 	 * @param mesh mesh to perform interpolation on
-	 * @param s direction
+	 * @param direction direction of line to find values along
 	 * @param it index-iterator of node
 	 * @param dx Vector of distances from reference node on which
 	 * values should be interpolated
 	 * @param isBorder is given node border or not
 	 * @return Matrix with interpolated nodal values in columns
 	 */
-	Matrix interpolateValuesAround(const Mesh& mesh, const int s,
+	Matrix interpolateValuesAround(const Mesh& mesh, const RealD direction,
 	                               const Iterator& it, const PdeVector& dx,
 	                               const bool isBorder) {
 	    outerInvariants.clear();
@@ -128,8 +123,7 @@ private:
 			}
 			
 			// point to interpolate respectively to point by given iterator
-			RealD shift = RealD::Zeros();
-			shift(s) = dx(k);
+			RealD shift = direction * dx(k);
 			Cell t = mesh.findOwnerCell(it, shift);
 			PdeVector u = PdeVector::Zeros();
 			
@@ -140,10 +134,12 @@ private:
 					
 			} else {
 			// characteristic hits out of body
-				if (isBorder && linal::dotProduct(mesh.normal(it), shift) > 0) {
+				if (isBorder && 
+				    linal::dotProduct(mesh.normal(it), 
+				                      linal::normalize(shift)) > cos(M_PI / 4)) {
 				// this is a really border case
 				// add outer invariant for border corrector
-//					outerInvariants.push_back(k);
+					outerInvariants.push_back(k);
 					u = PdeVector::Zeros();
 					
 				} else {
@@ -151,11 +147,11 @@ private:
 				// however it is not the border case
 					if (!isBorder) {
 					// it is from inner node 
-//						u = interpolateInSpaceTime(mesh, it, shift);
+						u = interpolateInSpaceTime(mesh, it, shift);
 						
 					} else {
 					// it is from border node that is "inner" on that stage
-//						u = whenInnerBorderIsOuter(mesh, it, shift);
+						u = whenInnerBorderIsOuter(mesh, it, shift);
 						
 					}
 				}
@@ -172,7 +168,9 @@ private:
 	 * Apply border conditions according to Chelnokov's PhD thesis, page 42.
 	 * Here used outerInvariants, written at interpolateValuesAround before.
 	 */
-	void borderCorrector(Mesh& mesh, const int s, const Iterator& it) {
+	void borderCorrector(Mesh& mesh, const int s, const RealD /*direction*/,
+			const Iterator& it) {
+		
 		if (outerInvariants.size() == 0) { return; }
 		
 		if (outerInvariants.size() != OUTER_NUMBER) {
@@ -185,8 +183,8 @@ private:
 		if (borderCondition == nullptr) { return; } // non-reflection
 		
 		const RealD normal = mesh.normal(it);
-		auto B = borderCondition->B(normal);
-		auto b = borderCondition->b(normal);
+		const auto B = borderCondition->B(normal);
+		const auto b = borderCondition->b(normal);
 		OuterU1Matrix outerU1;	
 		for (int i = 0; i < OUTER_NUMBER; i++) {
 			outerU1.setColumn(
@@ -351,11 +349,11 @@ private:
 		gradients.resize(mesh.sizeOfAllNodes());
 
 		// SLE matrix
-		linal::Matrix<MAX_NUMBER_OF_VERTEX_NEIGHBORS, Dimensionality> A;
+		linal::Matrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES, Dimensionality> A;
 		// SLE right part
-		linal::VECTOR<MAX_NUMBER_OF_VERTEX_NEIGHBORS, PdeVector> b;
+		linal::VECTOR<MAX_NUMBER_OF_NEIGHBOR_VERTICES, PdeVector> b;
 		// weight matrix for linear least squares method
-		linal::DiagonalMatrix<MAX_NUMBER_OF_VERTEX_NEIGHBORS> W;
+		linal::DiagonalMatrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES> W;
 		
 		for (const auto v : mesh) {
 			linal::clear(A); linal::clear(b); linal::clear(W);
@@ -371,7 +369,7 @@ private:
 				W(i) = linal::length(d);
 				b(i) = mesh.pde(neighbor) - mesh.pde(v);
 				
-				i++; if (i == MAX_NUMBER_OF_VERTEX_NEIGHBORS) { break; }
+				i++; if (i == MAX_NUMBER_OF_NEIGHBOR_VERTICES) { break; }
 			}
 			
 			gradients[mesh.getIndex(v)] = linal::linearLeastSquares(A, b, W);
@@ -388,11 +386,11 @@ private:
 		assert_eq(hessians.size(), gradients.size());
 
 		// SLE matrix
-		linal::Matrix<MAX_NUMBER_OF_VERTEX_NEIGHBORS, Dimensionality> A;
+		linal::Matrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES, Dimensionality> A;
 		// SLE right part
-		linal::VECTOR<MAX_NUMBER_OF_VERTEX_NEIGHBORS, PdeGradient> b;
+		linal::VECTOR<MAX_NUMBER_OF_NEIGHBOR_VERTICES, PdeGradient> b;
 		// weight matrix for linear least squares method
-		linal::DiagonalMatrix<MAX_NUMBER_OF_VERTEX_NEIGHBORS> W;
+		linal::DiagonalMatrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES> W;
 
 		for (const auto v : mesh) {
 			linal::clear(A); linal::clear(b); linal::clear(W);
@@ -408,7 +406,7 @@ private:
 				W(i) = linal::length(d);
 				b(i) = gradients[mesh.getIndex(neighbor)] - gradients[mesh.getIndex(v)];
 				
-				i++; if (i == MAX_NUMBER_OF_VERTEX_NEIGHBORS) { break; }
+				i++; if (i == MAX_NUMBER_OF_NEIGHBOR_VERTICES) { break; }
 			}
 			
 			auto H = linal::linearLeastSquares(A, b, W); // gradient of gradient
@@ -417,7 +415,6 @@ private:
 		}
 	}
 	
-		
 	/// List of outer Riemann invariants used in borderCorrector.
 	/// Invariants are specified by their indices in matrix L.
 	std::vector<int> outerInvariants;

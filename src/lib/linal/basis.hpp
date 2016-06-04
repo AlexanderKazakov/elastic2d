@@ -3,6 +3,7 @@
 
 #include <lib/linal/functions.hpp>
 #include <lib/linal/geometry.hpp>
+#include <lib/linal/special/RotationMatrix.hpp>
 
 namespace gcm {
 namespace linal {
@@ -56,6 +57,32 @@ inline Matrix33 createLocalBasis(const Real3& n) {
 	return Matrix33({tau_1(0), tau_2(0), n(0),
 	                 tau_1(1), tau_2(1), n(1),
 	                 tau_1(2), tau_2(2), n(2)});
+}
+ ///@}
+
+/// @name Random basis creation
+ /// @{
+inline Matrix11 randomBasis(const Matrix11&) {
+	return Matrix11({Utils::randomReal(-1, 1) > 0 ? 1.0 : -1.0});
+}
+
+inline Matrix22 randomBasis(const Matrix22&) {
+	real phi = Utils::randomReal(-M_PI, M_PI);
+	return createLocalBasis(normalize(Real2({cos(phi), sin(phi)})));
+}
+
+inline Matrix33 randomBasis(const Matrix33&) {
+	real phi = Utils::randomReal(-M_PI, M_PI);
+	real teta = Utils::randomReal(-M_PI, M_PI);
+	real khi = Utils::randomReal(-M_PI, M_PI);
+	
+	Matrix33 ans = getZRotationMatrix(khi) * 
+			getYRotationMatrix(teta) * getXRotationMatrix(phi);
+	
+	for (int i = 0; i < 3; i++) {
+		ans.setColumn(i, normalize(ans.getColumn(i)));
+	}
+	return ans;
 }
  ///@}
 

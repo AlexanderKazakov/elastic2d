@@ -31,6 +31,9 @@ public:
 	typedef DataBus<Model, Grid, Material>                  DATA_BUS;
 	typedef MeshMover<Model, Grid, Material>                MESH_MOVER;
 	typedef GridCharacteristicMethod<Model, Grid, Material> GcmMethod;
+	
+	static const int GRID_DIMENSIONALITY = Mesh::GRID_DIMENSIONALITY;
+	typedef linal::Matrix<GRID_DIMENSIONALITY, GRID_DIMENSIONALITY> BasisMatrix;
 
 	DefaultSolver(const Task& task);
 	virtual ~DefaultSolver();
@@ -47,8 +50,10 @@ public:
 	virtual real calculateTimeStep() const override;
 
 protected:
-	real CourantNumber = 0.0; ///< number from Courant–Friedrichs–Lewy condition
-
+	real CourantNumber = 0; ///< number from Courant–Friedrichs–Lewy condition
+	BasisMatrix calcBasis;  ///< along this lines stages performed (for 
+			///< unstructured grids only)
+			
 	GcmMethod gridCharacteristicMethod;
 	Corrector* corrector = nullptr;
 	InternalOde* internalOde = nullptr;
@@ -70,6 +75,9 @@ DefaultSolver<TMesh>::
 DefaultSolver(const Task& task) : Solver(task) {
 	mesh = new Mesh(task);
 	specialBorder = new SpecialBorder();
+	
+	calcBasis = linal::identity(calcBasis); //linal::randomBasis(calcBasis);
+	LOG_DEBUG("Calculation basis:" << calcBasis);
 }
 
 
@@ -122,11 +130,11 @@ stage(const int s, const real timeStep) {
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	
 	specialBorder->applyBorderBeforeStage(mesh, timeStep, s);
-	gridCharacteristicMethod.stage(s, timeStep, *mesh);
-			// now actual PDE values is in pdeVariablesNew
+	gridCharacteristicMethod.stage(s, timeStep, *mesh, calcBasis.getColumn(s));
+			//< now actual PDE values is in pdeVariablesNew
 	specialBorder->applyBorderAfterStage(mesh, timeStep, s);
 	
-	 // return actual PDE values back to pdeVariables
+	// return actual PDE values back to pdeVariables
 	std::swap(mesh->pdeVariables, mesh->pdeVariablesNew);
 }
 

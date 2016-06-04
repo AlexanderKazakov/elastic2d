@@ -100,6 +100,7 @@ writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vt
 	writePoints(gcmGrid, vtkGrid);
 	writeCells(gcmGrid, vtkGrid);
 	writeBorderNormals(gcmGrid, vtkGrid);
+	writeNodesIndices(gcmGrid, vtkGrid);
 }
 
 
@@ -111,6 +112,7 @@ writeGeometry(const Cgal3DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vt
 	writePoints(gcmGrid, vtkGrid);
 	writeCells(gcmGrid, vtkGrid);
 	writeBorderNormals(gcmGrid, vtkGrid);
+	writeNodesIndices(gcmGrid, vtkGrid);
 }
 
 
@@ -176,7 +178,8 @@ static void writeCells(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid
 }
 
 template<typename TGrid>
-static void writeBorderNormals(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+static void writeBorderNormals(
+		const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
 	auto vtkArr = vtkSmartPointer<vtkFloatArray>::New();
 	vtkArr->SetNumberOfComponents(3);
 	vtkArr->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
@@ -190,6 +193,20 @@ static void writeBorderNormals(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstruct
 			}
 		}
 		vtkArr->InsertNextTuple(vtkNormal);
+	}
+	vtkGrid->GetPointData()->AddArray(vtkArr);
+}
+
+
+template<typename TGrid>
+static void writeNodesIndices(
+		const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+	auto vtkArr = vtkSmartPointer<vtkFloatArray>::New();
+	vtkArr->SetNumberOfComponents(1);
+	vtkArr->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
+	vtkArr->SetName("index_of_node");
+	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
+		vtkArr->InsertNextValue((float)(it.iter));
 	}
 	vtkGrid->GetPointData()->AddArray(vtkArr);
 }

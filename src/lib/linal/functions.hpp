@@ -363,6 +363,21 @@ bool approximatelyEqual(
 }
 
 
+/** 
+ * @return random matrix (all values are uniformly distributed from min to max)
+ */
+template<typename TMatrix>
+TMatrix
+random(const real min = 0, const real max = 1) {
+	TMatrix result;
+	for (int i = 0; i < TMatrix::M; i++) {
+		for (int j = 0; j < TMatrix::N; j++) {
+			result(i, j) = Utils::randomReal(min, max);
+		}
+	}
+	return result;
+}
+
 
 }
 }

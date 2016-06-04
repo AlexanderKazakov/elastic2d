@@ -61,11 +61,11 @@ Task parseTaskCgal3d() {
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal3DGrid.spatialStep = 0.2;
-	task.cgal3DGrid.detectSharpEdges = true;
-	task.cgal3DGrid.polyhedronFileName = "meshes/tetrahedron.off";
-//	task.cgal3DGrid.spatialStep = 0.05;
-//	task.cgal3DGrid.polyhedronFileName = "meshes/elephant.off";
+	task.cgal3DGrid.spatialStep = 0.1;
+	task.cgal3DGrid.polyhedronFileName = "meshes/icosahedron.off";
+//	task.cgal3DGrid.detectSharpEdges = true;
+//	task.cgal3DGrid.spatialStep = 0.1;
+//	task.cgal3DGrid.polyhedronFileName = "meshes/cube.off";
 	
 	Statement statement;
 	real rho = 4;
@@ -76,13 +76,14 @@ Task parseTaskCgal3d() {
 
 	statement.globalSettings.CourantNumber = 0.5;
 
-	statement.globalSettings.numberOfSnaps = 50;
+	statement.globalSettings.numberOfSnaps = 80;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 0.5;
 	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
+//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
 	statement.initialCondition.quantities.push_back(pressure);
 
 	Statement::BorderCondition borderConditionAll;
