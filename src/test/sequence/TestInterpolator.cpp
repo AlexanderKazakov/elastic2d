@@ -134,14 +134,17 @@ TEST(TriangleInterpolator, linear) {
 		Real2 a = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real2 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real2 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
-		Real2 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		
+		Real3 l = linal::random<Real3>(0, 1); l /= (l(0) + l(1) + l(2));
+		Real2 q = l(0) * a + l(1) * b + l(2) * c;
 		
 		ASSERT_NEAR(f(q), 
-		            TriangleInterpolator<real>::interpolate(a, f(a),
-		                                                    b, f(b),
-		                                                    c, f(c),
-		                                                    q),
+		            TriangleInterpolator<real>::interpolate(
+							a, f(a), b, f(b), c, f(c), q),
 		            EQUALITY_TOLERANCE * fabs(f(q)));
+
+		ASSERT_THROW(TriangleInterpolator<real>::interpolate(
+				a, f(a), b, f(b), c, f(c), (-2*a + b + 2*c)), Exception);
 	}
 }
 
@@ -160,14 +163,17 @@ TEST(TriangleInterpolator, quadratic) {
 		Real2 a = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real2 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real2 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
-		Real2 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		
+		Real3 l = linal::random<Real3>(0, 1); l /= (l(0) + l(1) + l(2));
+		Real2 q = l(0) * a + l(1) * b + l(2) * c;
 		
 		ASSERT_NEAR(f(q), 
-		            TriangleInterpolator<real>::interpolate(a, f(a), g(a),
-		                                                    b, f(b), g(b),
-		                                                    c, f(c), g(c),
-		                                                    q),
+		            TriangleInterpolator<real>::interpolate(
+							a, f(a), g(a), b, f(b), g(b), c, f(c), g(c), q),
 		            EQUALITY_TOLERANCE * fabs(f(q)));
+		
+		ASSERT_THROW(TriangleInterpolator<real>::interpolate(
+				a, f(a), g(a), b, f(b), g(b), c, f(c), g(c), (3*a - b - c)), Exception);
 	}
 }
 
@@ -191,7 +197,9 @@ TEST(TetrahedronInterpolator, linear) {
 		Real3 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real3 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real3 d = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
-		Real3 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		
+		Real4 l = linal::random<Real4>(0, 1); l /= (l(0) + l(1) + l(2) + l(3));
+		Real3 q = l(0) * a + l(1) * b + l(2) * c + l(3) * d;
 		
 		ASSERT_NEAR(f(q), 
 		            TetrahedronInterpolator<real>::interpolate(a, f(a),
@@ -200,6 +208,10 @@ TEST(TetrahedronInterpolator, linear) {
 		                                                       d, f(d),
 		                                                       q),
 		            EQUALITY_TOLERANCE * fabs(f(q)));
+		
+		ASSERT_THROW(TetrahedronInterpolator<real>::interpolate(
+				a, f(a), b, f(b), c, f(c), d, f(d), (2*a + b - c - d)), Exception);
+
 	}
 }
 
@@ -222,7 +234,9 @@ TEST(TetrahedronInterpolator, quadratic) {
 		Real3 b = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real3 c = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
 		Real3 d = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
-		Real3 q = {Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6), Utils::randomReal(-1e+6, 1e+6)};
+		
+		Real4 l = linal::random<Real4>(0, 1); l /= (l(0) + l(1) + l(2) + l(3));
+		Real3 q = l(0) * a + l(1) * b + l(2) * c + l(3) * d;
 		
 		ASSERT_NEAR(f(q), 
 		            TetrahedronInterpolator<real>::interpolate(a, f(a), g(a),
@@ -231,6 +245,9 @@ TEST(TetrahedronInterpolator, quadratic) {
 		                                                       d, f(d), g(d),
 		                                                       q),
 		            EQUALITY_TOLERANCE * fabs(f(q)));
+
+		ASSERT_THROW(TetrahedronInterpolator<real>::interpolate(
+				a, f(a), g(a), b, f(b), g(b), c, f(c), g(c), d, f(d), g(d), (a - b - c + 2*d)), Exception);
 	}
 }
 

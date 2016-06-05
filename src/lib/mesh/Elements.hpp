@@ -16,24 +16,22 @@ struct Element {
 
 	static const int N = TN; ///< number of points
 	Point p[N];              ///< points
-	bool valid = false;      ///< indicates that points are set
+	int n = 0;               ///< number of set points, 0 <= n <= N
 	
 	Element() = default;
 	
 	Element(std::initializer_list<Point> list) {
-		assert_eq(list.size(), N);
-		valid = true;
+		assert_le(list.size(), N);
+		n = (int)(list.size());
 		std::copy(list.begin(), list.end(), p);
 	}
 	
 	template<typename OtherPointType>
 	Element(const Element<OtherPointType, N>& other,
 			std::function<Point(const OtherPointType&)> transformFunc) {
-		this->valid = other.valid;
-		if (this->valid) {
-			for (int i = 0; i < N; i++) {
-				this->p[i] = transformFunc(other(i));
-			}
+		this->n = other.n;
+		for (int i = 0; i < n; i++) {
+			this->p[i] = transformFunc(other(i));
 		}
 	}
 	
@@ -41,9 +39,11 @@ struct Element {
 	      Point& operator()(const int i)       { return p[i]; }
 	
 	bool operator==(const Element& other) const {
-		assert_true(this->valid && other.valid);
+		if (this->n != other.n) {
+			return false;
+		}
 		/// points order does matter
-		for (int i = 0; i < N; i++) {
+		for (int i = 0; i < n; i++) {
 			if (this->p[i] != other(i)) {
 				return false;
 			}
@@ -55,13 +55,16 @@ struct Element {
 		return !( (*this) == other );
 	}
 	
-	/** Return all points owned by both elements */
+	/** 
+	 * Return all points owned by both elements.
+	 * Elements must have equal number of set points.
+	 */
 	std::set<Point> equalPoints(const Element& other) {
-		assert_true(this->valid && other.valid);
+		assert_eq(this->n, other.n);
 		std::set<Point> ans;
 		
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
 				if (this->p[i] == other(j)) {
 					ans.insert(this->p[i]);
 					break;
@@ -90,10 +93,10 @@ template<typename Point, int TN>
 inline std::ostream& operator<<(std::ostream& os, 
 		const gcm::elements::Element<Point, TN>& element) {
 
-	os << "Element valid : " << element.valid << std::endl;
-	if (element.valid) {
+	os << "Number of set points (n) : " << element.n << std::endl;
+	if (element.n > 0) {
 		os << "Points: " << std::endl;
-		for (int j = 0; j < TN; j++) {
+		for (int j = 0; j < element.n; j++) {
 			os << element(j) << "\t";
 		}
 		os << std::endl;

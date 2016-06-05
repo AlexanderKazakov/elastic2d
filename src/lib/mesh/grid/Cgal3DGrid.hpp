@@ -167,30 +167,26 @@ public:
 	/**
 	 * Find tetrahedron that contains point on specified distance (shift) 
 	 * from specified point (it) by line walk from it to (it+shift).
-	 * If the line goes out of the body, returned tetrahedron.valid == false, 
-	 * tetrahedron points are not set.
-	 * @note for convex bodies result is the same with locateOwnerCell
+	 * In some bad degenerate cases cell.n == 0 and points are not set.
+	 * If the line goes out of the body immediately (from border in outer 
+	 * direction), cell.n == 0 and points are not set.
+	 * If the line goes through the body, but go out before reaching
+	 * the target point, returned cell.n == 3, and only 3 points are set
+	 * - they are three border vertices - the face crossed by the line.
+	 * If the line goes through the body, and reach the target point,
+	 * returned cell.n == 4, and all 4 points are set.
+	 * @note for convex bodies and (n == 4) result is the same with locateOwnerCell
 	 */
 	Cell findOwnerCell(const Iterator& it, const Real3& shift) const;
 	
 	/**
-	 * Find tetrahedron that contains point on specified distance (shift) 
-	 * from specified point (it) by triangulation.locate function with 
-	 * correction of border "out of domain" cases.
-	 * If found face is not "in_domain", returned tetrahedron.valid == false, 
-	 * tetrahedron points are not set.
-	 * @note for convex bodies result is the same with findOwnerCell
+	 * Locate tetrahedron that contains point on specified distance (shift) 
+	 * from specified point (it) by triangulation.locate function. 
+	 * If found cell is not "in_domain" (out of body), returned cell.n == 0, 
+	 * and points are not set. Else n == 4 and all 4 points are set.
+	 * @note for convex bodies and (n == 4) result is the same with findOwnerCell
 	 */
 	Cell locateOwnerCell(const Iterator& it, const Real3& shift) const;
-	
-	/**
-	 * Starting from specified point along the line in specified direction,
-	 * find the nearest border face crossed by the line.
-	 * @note length of shift must be enough to reach crossing border
-	 * @return crossed border face
-	 */
-	Face findCrossingBorder(
-			const Iterator& start, const Real3& shift) const;
 	
 	/**
 	 * @return set of border vertices incident to given vertex
@@ -238,10 +234,6 @@ private:
 	std::vector<VertexHandle> commonVertices(const CellHandle& a, const CellHandle& b,
 			std::vector<VertexHandle>* aHasOnly = nullptr) const;
 	
-	CellHandle correctBorderYieldCase(const CellHandle c) const;
-	
-	std::set<CellHandle> cellsAround(const CellHandle cell, const int depth = 1) const;
-	
 	bool contains(const CellHandle cell, const Real3& q) const {
 	/// is tetrahedron with small layer around contains the point 
 		Real3 a = real3(cell->vertex(0)->point());
@@ -255,16 +247,27 @@ private:
 		       (lambda(3) > -EQUALITY_TOLERANCE);
 	}
 
-	Cell createTetrahedron(const CellHandle ch) const {
+	Cell createCell(const CellHandle current, const CellHandle previous) const {
+	/// create Cell used as answer to numerical method queries about point location
 		Cell ans;
-		ans.valid = false;
+		ans.n = 0;
+		if (current == NULL) {
+			assert_true(previous == NULL);
+			return ans;
+		}
 		
-		if (ch == NULL) { return ans; }
-		
-		if (isInDomain(ch)) {
-			ans.valid = true;
+		if (isInDomain(current)) {
+			assert_true(isInDomain(previous));
+			ans.n = 4;
 			for (int i = 0; i < 4; i++) {
-				ans(i) = getIterator(ch->vertex(i));
+				ans(i) = getIterator(current->vertex(i));
+			}
+		} else if (isInDomain(previous)) {
+			ans.n = 3;
+			auto cv = commonVertices(current, previous);
+			assert_eq(cv.size(), 3);
+			for (int i = 0; i < 3; i++) {
+				ans(i) = getIterator(cv[(size_t)i]);
 			}
 		}
 		

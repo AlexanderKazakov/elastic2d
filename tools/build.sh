@@ -6,7 +6,8 @@ usage() { echo "Usage: $0
     [-r] (to compile in Release mode)
     [-o] (enable additional optimization)
     [-v] (show make output)
-    [-p] (parallel make into several processes)"
+    [-p] (parallel make into several processes)
+    [-t task] (make only specified task)"
     1>&2; exit 1; }
 
 
@@ -15,8 +16,9 @@ np=1
 rm -f snaps/*
 cmake_line="cmake .."
 build_type="RelWithDebInfo"
+make_task="all"
 
-while getopts ":cdrovp" option; do
+while getopts ":cdrovpt:" option; do
     case "${option}" in
         c)
             rm -rf build CMakeCache.txt CMakeFiles/ cmake_install.cmake
@@ -37,6 +39,9 @@ while getopts ":cdrovp" option; do
         p)
             np=`cat /proc/cpuinfo | grep processor | wc -l`
             ;;
+        t)
+            make_task=$OPTARG
+            ;;
         *)
             usage
             ;;
@@ -47,5 +52,6 @@ cmake_line="$cmake_line -DCMAKE_BUILD_TYPE=$build_type"
 
 cd build
 eval $cmake_line
-make -j$np
+make $make_task -j$np
 cd ..
+

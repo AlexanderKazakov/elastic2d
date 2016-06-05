@@ -54,7 +54,7 @@ inline void checkOwnerCellVsBarycentric(const Cgal3DGrid* grid, const real step,
 			tetrF = grid->findOwnerCell(it, shift);
 			tetrL = grid->locateOwnerCell(it, shift);
 			
-			if (tetrF.valid) {
+			if (tetrF.n == 4) {
 				Real4 lambda = linal::barycentricCoordinates(
 						grid->coords(tetrF(0)), 
 						grid->coords(tetrF(1)), 
@@ -65,9 +65,25 @@ inline void checkOwnerCellVsBarycentric(const Cgal3DGrid* grid, const real step,
 					ASSERT_TRUE(lambda(i) > -EQUALITY_TOLERANCE) << lambda(i);
 				}
 				cntFind++;
+			
+			} else if (tetrF.n == 3) {
+				Real3 cross = linal::lineWithFlatIntersection(
+						grid->coords(tetrF(0)), 
+						grid->coords(tetrF(1)), 
+						grid->coords(tetrF(2)),
+						grid->coords(it),
+						grid->coords(it) + shift);
+				Real3 lambda = linal::barycentricCoordinates(
+						grid->coords(tetrF(0)), 
+						grid->coords(tetrF(1)), 
+						grid->coords(tetrF(2)), 
+						cross);
+				for (int i = 0; i < 3; i++) {
+					ASSERT_TRUE(lambda(i) > -EQUALITY_TOLERANCE) << lambda(i);
+				}
 			}
 			
-			if (tetrL.valid) {
+			if (tetrL.n == 4) {
 				Real4 lambda = linal::barycentricCoordinates(
 						grid->coords(tetrL(0)), 
 						grid->coords(tetrL(1)), 

@@ -160,30 +160,26 @@ public:
 	/**
 	 * Find triangle that contains point on specified distance (shift) 
 	 * from specified point (it) by line walk from it to (it+shift).
-	 * If the line goes out of the body, returned triangle.valid == false, 
-	 * triangle points are not set.
-	 * @note for convex bodies result is the same with locateOwnerCell
+	 * In some bad degenerate cases cell.n == 0 and points are not set.
+	 * If the line goes out of the body immediately (from border in outer 
+	 * direction), cell.n == 0 and points are not set.
+	 * If the line goes through the body, but go out before reaching
+	 * the target point, returned cell.n == 2, and only 2 points are set
+	 * - they are two border vertices - the edge crossed by the line.
+	 * If the line goes through the body, and reach the target point,
+	 * returned cell.n == 3, and 3 points are set.
+	 * @note for convex bodies and (n == 3) result is the same with locateOwnerCell
 	 */
 	Cell findOwnerCell(const Iterator& it, const Real2& shift) const;
 	
 	/**
-	 * Find triangle that contains point on specified distance (shift) 
+	 * Locate triangle that contains point on specified distance (shift) 
 	 * from specified point (it) by triangulation.locate function. 
-	 * If found face is not "in_domain", returned triangle.valid == false, 
-	 * triangle points are not set.
-	 * @note for convex bodies result is the same with findOwnerCell
+	 * If found face is not "in_domain" (out of body), returned cell.n == 0, 
+	 * and points are not set. Else n == 3 and all 3 points are set.
+	 * @note for convex bodies and (n == 3) result is the same with findOwnerCell
 	 */
 	Cell locateOwnerCell(const Iterator& it, const Real2& shift) const;
-	
-	/**
-	 * Starting from specified point along the line in specified direction,
-	 * find the nearest border edge crossed by the line.
-	 * Border edge represented by the pair of its vertices.
-	 * @note cases when go from border node outside the body aren't handled
-	 * @return crossed border edge as the pair of its border points
-	 */
-	std::pair<Iterator, Iterator> findCrossingBorder(
-			const Iterator& start, const Real2& direction) const;
 	
 	/**
 	 * @return pair of border vertices {v1, v2} incident to given border vertex;
@@ -191,14 +187,7 @@ public:
 	 * @see normal
 	 */
 	std::pair<Iterator, Iterator> findBorderNeighbors(const Iterator& it) const;
-	
-	/**
-	 * Given with two neighbor border points, go along the border from first to 
-	 * second and so on while the border is straight line collinear to (second - first)
-	 * @return the point where the border bends from the line
-	 */
-	Iterator findBorderFlexion(Iterator first, Iterator second) const;
-	
+		
 	/** Find vertex with specified coordinates. Throw Exception if there isn't such. */
 	Iterator findVertexByCoordinates(const Real2& coordinates) const;
 
@@ -233,12 +222,7 @@ private:
 	///@}
 
 	/// Auxilliary functions for handling numerical methods queries 
-	/// @{
-	FaceHandle findCrossedFace(const VertexHandle start, const Real2& direction) const;
-	
-	std::pair<Iterator, Iterator> findCrossingBorder(
-			const VertexHandle& v, const FaceHandle& f, const Real2& direction) const;
-	
+	/// @{	
 	std::vector<VertexHandle> commonVertices(const FaceHandle& a, const FaceHandle& b) const;
 
 	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
@@ -251,17 +235,47 @@ private:
 		       linal::perpendicularClockwise(borderVector));
 	}
 	
-	Cell createTriangle(const FaceHandle fh) const {
+	bool contains(const FaceHandle face, const Real2& q) const {
+	/// is triangle with small layer around contains the point 
+		Real2 a = real2(face->vertex(0)->point());
+		Real2 b = real2(face->vertex(1)->point());
+		Real2 c = real2(face->vertex(2)->point());
+		Real3 lambda = linal::barycentricCoordinates(a, b, c, q);
+		return (lambda(0) > -EQUALITY_TOLERANCE) &&
+		       (lambda(1) > -EQUALITY_TOLERANCE) &&
+		       (lambda(2) > -EQUALITY_TOLERANCE);
+	}
+	
+	Cell createCell(const FaceHandle current, const FaceHandle previous) const {
+	/// create Cell used as answer to numerical method queries about point location
 		Cell ans;
-		ans.valid = false;
+		ans.n = 0;
+		if (current == NULL) {
+		// not found
+			assert_true(previous == NULL);
+			return ans;
+		}
 		
-		if (fh == NULL) { return ans; }
-		
-		if (fh->is_in_domain()) {
-			ans.valid = true;
+		if (current->is_in_domain()) {
+			// return found cell
+			assert_true(previous->is_in_domain());
+			ans.n = 3;
 			for (int i = 0; i < 3; i++) {
-				ans(i) = getIterator(fh->vertex(i));
+				ans(i) = getIterator(current->vertex(i));
 			}
+			
+		} else if (previous->is_in_domain()) {
+			auto cv = commonVertices(current, previous);
+			if (cv.size() == 2) {
+			// common border edge
+				ans.n = 2;
+				for (int i = 0; i < 2; i++) {
+					ans(i) = getIterator(cv[(size_t)i]);
+				}
+				
+			}
+			
+			// we don't handle degenerate cases (like cv.size() == 1)
 		}
 		
 		return ans;
@@ -284,8 +298,10 @@ private:
 			if (grid->isBorder(it)) {
 				auto borderNeighbors = grid->findBorderNeighbors(it);
 				alongBorder = 
-						linal::isDegenerate(p, q, grid->coordsD(borderNeighbors.first)) ||
-						linal::isDegenerate(p, q, grid->coordsD(borderNeighbors.second));		
+						fabs(linal::orientedArea(p, q, grid->coordsD(
+								borderNeighbors.first))) < EQUALITY_TOLERANCE ||
+						fabs(linal::orientedArea(p, q, grid->coordsD(
+								borderNeighbors.second))) < EQUALITY_TOLERANCE;	
 			}
 			
 			// find not empty LineFaceCirculator		
@@ -319,12 +335,13 @@ private:
 			}
 		}
 		
-		/** Go to the next face */
-		void next() {
+		/** Go to the next face and return it */
+		FaceHandle next() {
 			if (plusPlus) { ++lfc; }
 			else          { --lfc; }
 			currentFace = lfc;
 			correctBorderYieldCase();
+			return faceHandle();
 		}
 		
 		FaceHandle faceHandle() const {
@@ -362,8 +379,10 @@ private:
 					     linal::crossProduct(q - p, neighborCenter - p) < 0 ) {
 					// on the different sides of the line
 						auto common = grid->commonVertices(currentFace, neighbor);
-						if (linal::isDegenerate(p, q, real2(common.at(0)->point())) &&
-						    linal::isDegenerate(p, q, real2(common.at(1)->point()))) {
+						if (fabs(linal::orientedArea(
+									p, q, real2(common.at(0)->point()))) < EQUALITY_TOLERANCE &&
+						    fabs(linal::orientedArea(
+						    		p, q, real2(common.at(1)->point()))) < EQUALITY_TOLERANCE) {
 						// their common vertices lie on the line
 							currentFace = neighbor;
 							break;

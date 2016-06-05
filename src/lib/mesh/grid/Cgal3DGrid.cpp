@@ -57,8 +57,6 @@ normal(const Iterator& it) const {
 			std::vector<VertexHandle> innerVertexOfInnerCell;
 			std::vector<VertexHandle> borderVerticesOfInnerCell = commonVertices(
 					innerCell, outerCell, &innerVertexOfInnerCell);
-			assert_eq(innerVertexOfInnerCell.size(), 1); // FIXME replace
-			assert_eq(borderVerticesOfInnerCell.size(), 3); // FIXME replace
 			if ( !Utils::has(borderVerticesOfInnerCell, v) ) {
 			// .. which also have our vertex
 				continue;
@@ -103,12 +101,15 @@ findOwnerCell(const Iterator& it, const Real3& shift) const {
 	Cgal3DLineWalker lineWalker(this, it, shift);
 	Real3 query = coords(it) + shift;
 	
-	CellHandle cell = lineWalker.cell();
-	while ( (cell != NULL) && isInDomain(cell) && !contains(cell, query) ) {
-		cell = lineWalker.next();
+	CellHandle currentCell = lineWalker.cell();
+	CellHandle previousCell = currentCell;
+	while ( ( currentCell != NULL ) && isInDomain(currentCell) && 
+	          !contains(currentCell, query) ) {
+		previousCell = currentCell;
+		currentCell = lineWalker.next();
 	}
 	
-	return createTetrahedron(cell);
+	return createCell(currentCell, previousCell);
 }
 
 
@@ -117,25 +118,7 @@ locateOwnerCell(const Iterator& it, const Real3& shift) const {
 	VertexHandle beginVertex = vertexHandle(it);
 	CgalPoint3 query = beginVertex->point() + cgalVector3(shift);
 	CellHandle c = triangulation.locate(query, beginVertex->cell());
-	return createTetrahedron(c);
-}
-
-
-Cgal3DGrid::Face Cgal3DGrid::
-findCrossingBorder(const Iterator& start, const Real3& shift) const {
-	Cgal3DLineWalker lineWalker(this, start, shift);
-	CellHandle current = lineWalker.cell();
-	if ( (current == NULL) || ( !isInDomain(current) ) ) { return Face(); }
-	
-	CellHandle next = lineWalker.next();
-	while ( isInDomain(next) ) {
-		current = next;
-		next = lineWalker.next();
-	}
-	
-	auto face = commonVertices(current, next);
-	assert_eq(face.size(), 3);
-	return Face({getIterator(face[0]), getIterator(face[1]), getIterator(face[2])});
+	return createCell(c, c);
 }
 
 
@@ -220,37 +203,6 @@ commonVertices(const CellHandle& a, const CellHandle& b,
 	}
 	
 	return common;
-}
-
-
-std::set<Cgal3DGrid::CellHandle> Cgal3DGrid::
-cellsAround(const CellHandle cell, const int depth) const {
-/// return all "in_domain" cells around the given cell
-/// @param depth "number of layers"
-	std::set<CellHandle> ans;
-	ans.insert(cell);
-	
-	for (int depthCounter = 0; depthCounter < depth; depthCounter++) {
-		std::set<CellHandle> tmp;
-		
-		for (auto c : ans) {
-			for (int i = 0; i < 4; i++) {
-				std::list<CellHandle> incidentToVertex;
-				triangulation.finite_incident_cells(
-						c->vertex(i), std::back_inserter(incidentToVertex));
-				for (auto candidate : incidentToVertex) {
-					if (isInDomain(candidate)) {
-						tmp.insert(candidate);
-					}
-				}
-			}
-		}
-		
-		ans = tmp;
-	}
-	
-	ans.erase(cell);
-	return ans;
 }
 
 

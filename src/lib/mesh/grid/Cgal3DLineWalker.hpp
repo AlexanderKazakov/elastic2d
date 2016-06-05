@@ -6,7 +6,12 @@
 
 namespace gcm {
 
-/** Struct to go along the line cell-by-cell through Cgal3DGrid */
+/** 
+ * Struct to go along the line cell-by-cell through Cgal3DGrid.
+ * Implement line walk in triangulation strategy.
+ * Yield cases seem to be impossible to handle accurately, so for some cases
+ * like queries along borders infinite loops and line missing possible.
+ */
 class Cgal3DLineWalker {
 	typedef Cgal3DGrid::Iterator      Iterator;
 	typedef Cgal3DGrid::VertexHandle  VertexHandle;

@@ -9,7 +9,6 @@ namespace gcm {
 /**
  * Responsible for mesh motion
  */
-// TODO - template spec is not needed, just func overload 
 template<typename TModel, typename TGrid, typename TMaterial>
 struct MeshMover {
 	typedef DefaultMesh<TModel, TGrid, TMaterial> Mesh;

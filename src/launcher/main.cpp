@@ -124,7 +124,7 @@ Task parseTaskCgal2d() {
 	task.cgal2DGrid.bodies = {
 		Task::Cgal2DGrid::Body(outer, 
 				{{{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}}, {{1, 1}, {1, 2}, {2, 2}, {2, 1}}}),
-		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
+//		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 
 	Statement statement;

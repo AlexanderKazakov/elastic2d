@@ -49,8 +49,7 @@ public:
 	/// Dimensionality of the grid, rheology model can have different
 	static const int GRID_DIMENSIONALITY = Grid::DIMENSIONALITY;
 
-	struct Node { // TODO - node is some sort of handle, this 
-		// functionality can be moved to iterator
+	struct Node {
 		Node(const Iterator& iterator, DefaultMesh* const mesh_) :
 			it(iterator), mesh(mesh_) { }
 

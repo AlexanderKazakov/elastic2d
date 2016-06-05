@@ -57,16 +57,19 @@ findOwnerCell(const Iterator& it, const Real2& shift) const {
 	if (shift == Real2({0, 0})) {
 		auto startFace = vertexHandles[getIndex(it)]->incident_faces();
 		while (!startFace->is_in_domain()) { ++startFace; }
-		return createTriangle(startFace);
+		return createCell(startFace, startFace);
 	}
 	
 	LineWalker lineWalker(this, it, shift);
-	CgalPoint2 query = cgalPoint2(coordsD(it) + shift);	
-	while (lineWalker.isValid() &&
-	       triangulation.triangle(lineWalker.faceHandle()).has_on_unbounded_side(query)) {
-		lineWalker.next();
+	Real2 query = coordsD(it) + shift;
+	FaceHandle previousFace = lineWalker.faceHandle();
+	FaceHandle currentFace = previousFace;
+	while (lineWalker.isValid() && !contains(currentFace, query)) {		
+		previousFace = currentFace;
+		currentFace = lineWalker.next();
 	}
-	return createTriangle(lineWalker.faceHandle());
+	
+	return createCell(currentFace, previousFace);
 }
 
 
@@ -75,15 +78,7 @@ locateOwnerCell(const Iterator& it, const Real2& shift) const {
 	VertexHandle beginVertex = vertexHandles[getIndex(it)];
 	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
 	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
-	return createTriangle(ownerFace);
-}
-
-
-std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
-findCrossingBorder(const Iterator& start, const Real2& direction) const {
-	VertexHandle v = vertexHandles[getIndex(start)];
-	FaceHandle startFace = findCrossedFace(v, direction);
-	return findCrossingBorder(v, startFace, direction);
+	return createCell(ownerFace, ownerFace);
 }
 
 
@@ -115,26 +110,6 @@ findBorderNeighbors(const Iterator& it) const {
 	assert_true(secondFace->has_vertex(secondBorderNeighbour));
 	
 	return {getIterator(secondBorderNeighbour), getIterator(firstBorderNeighbour)};
-}
-
-
-Cgal2DGrid::Iterator Cgal2DGrid::
-findBorderFlexion(Iterator first, Iterator second) const {
-	
-	auto findThird = [&]() {
-		auto neighbors = findBorderNeighbors(second);
-		return (first != neighbors.first) ? neighbors.first
-		                                  : neighbors.second;
-	};
-	
-	Iterator third = findThird();
-	while (linal::isDegenerate(coordsD(first), coordsD(second), coordsD(third))) {
-		first = second;
-		second = third;
-		third = findThird();
-	}
-	
-	return second;
 }
 
 
@@ -273,36 +248,6 @@ void Cgal2DGrid::markInnersAndBorders() {
 }
 
 
-Cgal2DGrid::FaceHandle Cgal2DGrid::
-findCrossedFace(const VertexHandle start, const Real2& direction) const {
-	/// Choose among incident faces of the given point that one which is
-	/// crossed by the line from that point in specified direction.
-
-	auto faceCirculatorBegin = triangulation.incident_faces(start);
-	while (triangulation.is_infinite(faceCirculatorBegin)) { ++faceCirculatorBegin; }
-	int n = 1; // iteration number
-	FaceHandle ans = NULL;
-	while (ans == NULL) {
-		auto faceCirculator = faceCirculatorBegin;
-		do {
-			CgalPoint2 q = start->point() + cgalVector2(direction / pow(2, n));
-			if (!triangulation.triangle(faceCirculator).has_on_unbounded_side(q)) {
-				ans = faceCirculator;
-				break;
-			}
-			do { ++faceCirculator; } while (triangulation.is_infinite(faceCirculator));
-		} while (faceCirculator != faceCirculatorBegin);
-		
-		++n; 
-		if (n > 20) {
-			THROW_BAD_MESH("Exceed number of iterations in findCrossedFace");
-		}
-	}
-	
-	return ans;	
-}
-
-
 std::vector<Cgal2DGrid::VertexHandle> Cgal2DGrid::
 commonVertices(const FaceHandle& a, const FaceHandle& b) const {
 	/// return common vertices of given faces
@@ -314,44 +259,6 @@ commonVertices(const FaceHandle& a, const FaceHandle& b) const {
 		}
 	}
 	return ans;
-}
-
-
-std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
-findCrossingBorder(const VertexHandle& v, const FaceHandle& f,
-		const Real2& direction) const {
-	/// given a start point and direction, go along this line until
-	/// intersection with border;
-	/// @note face is incident for given vertex,
-	/// given line must go across given face
-	/// @return found border as pair of its vertices
-	
-	assert_true(f->is_in_domain());
-	
-	auto lineWalker = triangulation.line_walk(
-			v->point(), v->point() + cgalVector2(direction), f);
-	while (lineWalker->is_in_domain()) {
-	// go along the line until come out of the body
-		++lineWalker;
-	}
-	
-	FaceHandle outerFace = lineWalker;
-	FaceHandle innerFace = --lineWalker;
-	
-	Iterator first;
-	Iterator second;
-	int neighborIndex = -1;
-	if (innerFace->has_neighbor(outerFace, neighborIndex)) {
-	// line is crossing common edge
-		first = getIterator(innerFace->vertex(innerFace->cw(neighborIndex)));
-		second = getIterator(innerFace->vertex(innerFace->ccw(neighborIndex)));
-	} else {
-	// line hits exact to unique common vertex
-		first = getIterator(commonVertices(outerFace, innerFace).at(0));
-		second = findBorderNeighbors(first).first;
-	}
-	
-	return {first, second};
 }
 
 
