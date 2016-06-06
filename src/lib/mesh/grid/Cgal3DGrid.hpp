@@ -55,13 +55,13 @@ public:
 	
 	/** Iteration over all border nodes */
 	///@{
-	typedef typename std::set<size_t>::const_iterator BorderIterator;
+	typedef typename std::vector<size_t>::const_iterator BorderIterator;
 	BorderIterator borderBegin() const { return borderIndices.begin(); }
 	BorderIterator borderEnd() const { return borderIndices.end(); }
 	///@}
 	/** Iteration over all inner nodes */
 	///@{
-	typedef typename std::set<size_t>::const_iterator InnerIterator;
+	typedef typename std::vector<size_t>::const_iterator InnerIterator;
 	InnerIterator innerBegin() const { return innerIndices.begin(); }
 	InnerIterator innerEnd() const { return innerIndices.end(); }
 	///@}
@@ -148,7 +148,15 @@ public:
 	}
 	
 	bool isBorder(const Iterator& it) const {
-		return borderIndices.find(getIndex(it)) != borderIndices.end();
+		VertexHandle vh = vertexHandle(it);
+		std::list<CellHandle> incidentCells;
+		triangulation.incident_cells(vh, std::back_inserter(incidentCells));
+		for (const auto cell : incidentCells) {
+			if (!isInDomain(cell)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	size_t sizeOfRealNodes() const {
@@ -204,8 +212,8 @@ protected:
 	///@{
 	Triangulation triangulation;             ///< CGAL triangulation data structure
 	std::vector<VertexHandle> vertexHandles; ///< CGAL-"pointers" to each grid vertex
-	std::set<size_t> borderIndices;          ///< indices of border vertices in vertexHandles
-	std::set<size_t> innerIndices;           ///< indices of inner vertices in vertexHandles
+	std::vector<size_t> borderIndices;       ///< indices of border vertices in vertexHandles
+	std::vector<size_t> innerIndices;        ///< indices of inner vertices in vertexHandles
 	real effectiveSpatialStep = 0;           ///< used in triangulation criteria and Courant condition
 	bool movable = false;                    ///< deformable(true) or immutable(false) grid
 	///@}

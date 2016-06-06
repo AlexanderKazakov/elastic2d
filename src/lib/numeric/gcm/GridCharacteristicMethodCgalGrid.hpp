@@ -60,8 +60,9 @@ public:
 		DIFFERENTIATION::estimateGradient(mesh, gradients);
 		
 		/// calculate border nodes
-		for (auto borderIter =  mesh.borderBegin(); 
-		          borderIter != mesh.borderEnd(); ++borderIter) {
+//		#pragma omp parallel for
+		for (auto borderIter = mesh.borderBegin(); 
+		          borderIter < mesh.borderEnd(); ++borderIter) {
 			mesh._pdeNew(*borderIter) = localGcmStep(
 					mesh.matrices(*borderIter)->m[s].U1,
 					mesh.matrices(*borderIter)->m[s].U,
@@ -72,8 +73,9 @@ public:
 		}
 		
 		/// calculate inner nodes
-		for (auto innerIter =  mesh.innerBegin(); 
-		          innerIter != mesh.innerEnd(); ++innerIter) {
+		#pragma omp parallel for
+		for (auto innerIter = mesh.innerBegin(); 
+		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(*innerIter) = localGcmStep(
 					mesh.matrices(*innerIter)->m[s].U1,
 					mesh.matrices(*innerIter)->m[s].U,

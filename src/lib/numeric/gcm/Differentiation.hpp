@@ -34,32 +34,31 @@ public:
 			std::vector<PdeGradient>& gradients) {
 			
 		gradients.resize(mesh.sizeOfAllNodes());
-
-		// SLE matrix
-		linal::Matrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES, DIMENSIONALITY> A;
-		// SLE right part
-		linal::VECTOR<MAX_NUMBER_OF_NEIGHBOR_VERTICES, PdeVector> b;
-		// weight matrix for linear least squares method
-		linal::DiagonalMatrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES> W;
 		
-		for (const auto v : mesh) {
-			linal::clear(A); linal::clear(b); linal::clear(W);
+		#pragma omp parallel for
+		for (size_t it = 0; it < mesh.sizeOfRealNodes(); ++it) {
+			// SLE matrix
+			auto A = linal::Matrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES, DIMENSIONALITY>::Zeros();
+			// SLE right part
+			auto b = linal::VECTOR<MAX_NUMBER_OF_NEIGHBOR_VERTICES, PdeVector>::Zeros();
+			// weight matrix for linear least squares method
+			auto W = linal::DiagonalMatrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES>::Zeros();
 			
 			/// estimate gradient from its definition:
 			/// \f$  (\nabla f, \vec{a} - \vec{b}) = f(a) - f(b),  \f$ 
 			/// applying it to each neighbor of the vertex
-			const auto neighbors = mesh.findNeighborVertices(v);
+			const auto neighbors = mesh.findNeighborVertices(it);
 			int i = 0;
 			for (const auto neighbor : neighbors) {
-				RealD d = mesh.coordsD(neighbor) - mesh.coordsD(v);
+				RealD d = mesh.coordsD(neighbor) - mesh.coordsD(it);
 				A.setRow(i, d);
 				W(i) = linal::length(d);
-				b(i) = mesh.pde(neighbor) - mesh.pde(v);
+				b(i) = mesh.pde(neighbor) - mesh.pde(it);
 				
 				i++; if (i == MAX_NUMBER_OF_NEIGHBOR_VERTICES) { break; }
 			}
 			
-			gradients[mesh.getIndex(v)] = linal::linearLeastSquares(A, b, W);
+			gradients[mesh.getIndex(it)] = linal::linearLeastSquares(A, b, W);
 		}
 	}
 	

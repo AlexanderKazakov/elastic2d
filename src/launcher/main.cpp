@@ -64,7 +64,6 @@ Task parseTaskCgal3d() {
 	task.cgal3DGrid.spatialStep = 0.1;
 	task.cgal3DGrid.polyhedronFileName = "meshes/icosahedron.off";
 //	task.cgal3DGrid.detectSharpEdges = true;
-//	task.cgal3DGrid.spatialStep = 0.1;
 //	task.cgal3DGrid.polyhedronFileName = "meshes/cube.off";
 	
 	Statement statement;
@@ -76,7 +75,7 @@ Task parseTaskCgal3d() {
 
 	statement.globalSettings.CourantNumber = 0.5;
 
-	statement.globalSettings.numberOfSnaps = 80;
+	statement.globalSettings.numberOfSnaps = 70;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
@@ -95,7 +94,29 @@ Task parseTaskCgal3d() {
 		[] (real) { return 0; }
 	};
 	
-	statement.borderConditions = {borderConditionAll};
+	Statement::BorderCondition borderConditionLeft;
+	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-10, -10, -10}), Real3({0.01, 10, 10}));
+	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionLeft.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; },
+		[] (real t) { return (t < 0.5) ? -1 : 0; }
+	};
+	
+	Statement::BorderCondition borderConditionRight;
+	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({0.99, -10, -10}), Real3({10, 10, 10}));
+	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
+	borderConditionRight.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; },
+		[] (real) { return 0; }
+	};
+	
+	statement.borderConditions = {borderConditionAll,
+	                              /*borderConditionLeft,
+	                              borderConditionRight*/};
 
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

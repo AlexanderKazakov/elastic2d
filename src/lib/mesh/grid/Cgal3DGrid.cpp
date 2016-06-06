@@ -71,7 +71,7 @@ normal(const Iterator& it) const {
 		}
 	}
 	
-	if (facesNormals.empty()) std::cout << coords(it);
+	assert_false(facesNormals.empty()); // it is possible when grid is too coarse
 	return linal::normalize(std::accumulate(
 			facesNormals.begin(), facesNormals.end(), Real3::Zeros()));
 }
@@ -153,29 +153,12 @@ void Cgal3DGrid::markInnersAndBorders() {
 	borderIndices.clear();
 	innerIndices.clear();
 	
-	for (auto v  = triangulation.finite_vertices_begin();
-	          v != triangulation.finite_vertices_end(); ++v) {
-
-		bool isBorderNode = false;
-		bool atLeastOneCellIsInDomain = false;
-		std::vector<CellHandle> incidentCells;
-		triangulation.incident_cells(v, std::back_inserter(incidentCells));
-		for (const auto cell : incidentCells) {
-			if (isInDomain(cell)) {
-				atLeastOneCellIsInDomain = true;
-			} else {
-				isBorderNode = true;
-			}
-		}
-		
-		assert_true(atLeastOneCellIsInDomain);
-		
-		if (isBorderNode) {
-			borderIndices.insert(getIndex(getIterator(v)));
+	for (const auto it : *this) {
+		if (isBorder(it)) {
+			borderIndices.push_back(getIndex(it));
 		} else {
-			innerIndices.insert(getIndex(getIterator(v)));
+			innerIndices.push_back(getIndex(it));
 		}
-		
 	}
 	
 	assert_eq(borderIndices.size() + innerIndices.size(), sizeOfAllNodes());

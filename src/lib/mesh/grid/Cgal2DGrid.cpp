@@ -220,26 +220,12 @@ void Cgal2DGrid::markInnersAndBorders() {
 	borderIndices.clear();
 	innerIndices.clear();
 	
-	for (auto v  = triangulation.finite_vertices_begin();
-	          v != triangulation.finite_vertices_end(); ++v) {
-
-		bool isBorderNode = false;
-		auto beginFace = triangulation.incident_faces(v);
-		auto faceCirculator = beginFace;
-		do {
-			if ( !faceCirculator->is_in_domain() ) {
-				isBorderNode = true;
-				break;
-			}
-			++faceCirculator;
-		} while (faceCirculator != beginFace);
-		
-		if (isBorderNode) {
-			borderIndices.insert(getIndex(getIterator(v)));
+	for (const auto it : *this) {
+		if (isBorder(it)) {
+			borderIndices.push_back(getIndex(it));
 		} else {
-			innerIndices.insert(getIndex(getIterator(v)));
+			innerIndices.push_back(getIndex(it));
 		}
-		
 	}
 	
 	assert_eq(borderIndices.size() + innerIndices.size(), sizeOfAllNodes());
