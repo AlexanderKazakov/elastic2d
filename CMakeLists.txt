@@ -38,10 +38,9 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # This is for gtest too
 find_package (Threads REQUIRED)
 # CGAL library
+set(CGAL_FIND_VERSION "4.8")
 find_package(CGAL REQUIRED)
 include_directories(${CGAL_INCLUDE_DIRS})
-# MPFI library
-find_package(MPFI REQUIRED)
 # VTK library
 find_package(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
@@ -49,6 +48,8 @@ if(VTK_MAJOR_VERSION EQUAL 5)
     set(CONFIG_VTK_5 1)
 elseif (VTK_MAJOR_VERSION EQUAL 6)
     set(CONFIG_VTK_6 1)
+elseif (VTK_MAJOR_VERSION EQUAL 7)
+    set(CONFIG_VTK_7 1)
 else()
     message(FATAL_ERROR "Unsupported VTK version found: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
 endif()
