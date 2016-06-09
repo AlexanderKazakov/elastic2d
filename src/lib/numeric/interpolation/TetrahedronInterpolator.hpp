@@ -78,11 +78,13 @@ public:
 		Real4 lambda;
 		
 		#define TRY_TETRAHEDRON(a, b, d, e) \
+		if (linal::volume(c##a, c##b, c##d, c##e) != 0) { \
 			lambda = linal::barycentricCoordinates(c##a, c##b, c##d, c##e, q); \
 			if (isInterpolation(lambda)) { \
 				return lambda(0) * v##a + lambda(1) * v##b + \
 				       lambda(2) * v##d + lambda(3) * v##e; \
-			}
+			} \
+		}
 		
 		TRY_TETRAHEDRON(0, 1, 2, 3)
 		TRY_TETRAHEDRON(0, 1, 2, 4)
@@ -107,7 +109,7 @@ public:
 		
 		#undef TRY_TETRAHEDRON
 		
-		THROW_INVALID_ARG("Containing tetrahedron is not found");
+		return linal::zeros(TValue());
 }
 	
 };

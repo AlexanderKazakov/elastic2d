@@ -154,6 +154,92 @@ linearLeastSquares(
 }
 
 
+/** 
+ * Solve SLE \f$   \matrix{A} * \vec{x} = \vec{0}   \f$ 
+ * with 3x3 non-symmetric degenerate matrix with rank 1 or 2.
+ * I.e, if rank == 2, numberOfSolutions == 1,
+ *      if rank == 1, numberOfSolutions == 2.
+ * Size of returned std::vector is equal to numberOfSolutions.
+ * The method is stable to numerical inexactness.
+ */
+template<typename TMatrixElement,
+         template<int, typename> class TMatrixContainer>
+std::vector<MatrixBase<3, 1,
+            TMatrixElement,
+            NonSymmetric, TMatrixContainer>>
+solveDegenerateLinearSystem(const MatrixBase<3, 3,
+                            TMatrixElement,
+                            NonSymmetric, TMatrixContainer>& A,
+                            const int numberOfSolutions) {
+	
+	typedef MatrixBase<3, 1,
+            TMatrixElement,
+            NonSymmetric, TMatrixContainer> Answer;
+
+	switch (numberOfSolutions) {
+	case 1: // rank(A) == 2
+	{
+		int I = 0, J = 1, P = 0, Q = 1;
+		// find the most determined matrix minor
+		TMatrixElement det = 0;
+		for(int i = 0; i < 2; i++)
+		for(int j = i+1; j < 3; j++) {
+			for(int p = 0; p < 2; p++)
+			for(int q = p+1; q < 3; q++) {
+			
+				if (std::fabs(A(p, i)*A(q, j) - A(q, i)*A(p, j)) > std::fabs(det)) {
+					det = A(p, i)*A(q, j) - A(q, i)*A(p, j);
+					I = i; J = j; P = p; Q = q;
+				}
+				
+			}
+		}
+		
+		int U = Utils::other012(I, J); //< no I and no J
+		
+		Answer x;
+		x(U) = 1;
+		x(I) = (-A(P, U)*A(Q, J) + A(Q, U)*A(P, J)) / det;
+		x(J) = (-A(P, I)*A(Q, U) + A(Q, I)*A(P, U)) / det;
+		
+		return {x};
+	}
+	
+	case 2: // rank(A) == 1
+	{
+		int I = 0, J = 0;
+		// find the most determined matrix minor
+		TMatrixElement det = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (std::fabs(det) < std::fabs(A(i, j))) {
+					det = A(i, j);
+					I = i; J = j;
+				}
+			}
+		}
+		
+		int p, q;
+		// p and q = no J
+		if      (J == 0) { p = 1; q = 2; }
+		else if (J == 1) { p = 0; q = 2; }
+		else             { p = 0; q = 1; }
+		
+		Answer x, y;
+		x(p) = y(q) = 1;
+		x(q) = y(p) = 0;
+		x(J) = -A(I, p) / det;
+		y(J) = -A(I, q) / det;
+		
+		return {x, y};
+	}
+	
+	default:
+		THROW_INVALID_ARG("Invalid number of linearly independent solutions required");
+	}
+}
+
+
 }
 }
 

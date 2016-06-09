@@ -1,7 +1,7 @@
 #include <lib/mesh/grid/Cgal3DGrid.hpp>
 #include <lib/mesh/grid/Cgal3DLineWalker.hpp>
 
-#include </home/alex/work/gcm/src/libcgal3dmesher/Cgal3DMesher.hpp> // FIXME
+#include <libcgal3dmesher/Cgal3DMesher.hpp>
 
 using namespace gcm;
 

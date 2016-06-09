@@ -46,6 +46,13 @@ struct GcmMatrices {
 			}
 			return ans;
 		}
+		
+		void clear() {
+			linal::clear(A);
+			linal::clear(L);
+			linal::clear(U1);
+			linal::clear(U);
+		}
 
 	};
 
@@ -63,16 +70,22 @@ struct GcmMatrices {
 	}
 
 	/** @throw gcm::Exception */
-	void checkDecomposition() const {
+	void checkDecomposition(const real eps = EQUALITY_TOLERANCE) const {
 		for (int s = 0; s < D; s++) {
 			// traces
-			assert_near(linal::trace(m[s].A), linal::trace(m[s].L), EQUALITY_TOLERANCE);
+			assert_near(linal::trace(m[s].A), linal::trace(m[s].L), eps);
 			// eigenvectors
-			assert_true(linal::approximatelyEqual(m[s].A * m[s].U1, m[s].U1 * m[s].L, EQUALITY_TOLERANCE));
+			assert_true(linal::approximatelyEqual(m[s].A * m[s].U1, m[s].U1 * m[s].L, eps*1000));
 			// eigenraws
-			assert_true(linal::approximatelyEqual(m[s].U * m[s].A, m[s].L * m[s].U, EQUALITY_TOLERANCE*1000));
+			assert_true(linal::approximatelyEqual(m[s].U * m[s].A, m[s].L * m[s].U, eps*1000));
 			// inverse matrices
-			assert_true(linal::approximatelyEqual(m[s].U * m[s].U1, Matrix::Identity(), EQUALITY_TOLERANCE*100));
+			assert_true(linal::approximatelyEqual(m[s].U * m[s].U1, Matrix::Identity(), eps*100));
+		}
+	}
+	
+	void clear() {
+		for (int s = 0; s < D; s++) {
+			m[s].clear();
 		}
 	}
 

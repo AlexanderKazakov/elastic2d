@@ -13,7 +13,6 @@ struct OrthotropicMaterial : public AbstractMaterial {
 
 	union {
 		real c[9];         ///< elastic coefficients
-		/* *INDENT-OFF* */
 			struct {
 				real c11, c12, c13,
 				          c22, c23,
@@ -22,21 +21,43 @@ struct OrthotropicMaterial : public AbstractMaterial {
 				                         c55,
 				                              c66;
 			};
-		        /* *INDENT-ON* */
 	};
+	
+	real yieldStrength = 0;            ///< plasticity parameters
+	real continualDamageParameter = 0; ///< parameter in continual damage equation
 
-	real yieldStrength = 0;            // plasticity parameters
-	real continualDamageParameter = 0; // parameter in continual damage equation
+	/// basis of elastic constants (main axes of material)
+	/// is rotated relative to global basis by this angles
+	Real3 anglesOfRotation = Real3::Zeros();
 
 	OrthotropicMaterial(const OrthotropicMaterial& other) = default;
 	OrthotropicMaterial(const IsotropicMaterial& isotropic);
 	OrthotropicMaterial(const real rho_ = 0, std::initializer_list<real> =
 	                    {0, 0, 0, 0, 0, 0, 0, 0, 0},
 	                    const real yieldStrength_ = 0,
-	                    const real continualDamageParameter_ = 0);
-
+	                    const real continualDamageParameter_ = 0,
+	                    const Real3 phi = Real3::Zeros());
+	
+	/** Return matrix of elastic coefficients in main axes of material */
+	ElasticMatrix getElasticMatrix() const {
+		auto ans = ElasticMatrix::Zeros();
+		
+		ans(0, 0) = c11; ans(0, 1) = c12; ans(0, 2) = c13;
+		                 ans(1, 1) = c22; ans(1, 2) = c23;
+		                                  ans(2, 2) = c33;
+		
+		ans(3, 3) = c44; ans(4, 4) = c55; ans(5, 5) = c66;
+		
+		return ans;
+	}
+	
+	/** Return matrix of elastic coefficients in global coordinate system */
+	ElasticMatrix getRotatedElasticMatrix() const {
+		return rotate(getElasticMatrix(), anglesOfRotation);
+	}
+	
 	/** For testing purposes */
-	static OrthotropicMaterial generateRandomMaterial();
+	static OrthotropicMaterial generateRandomMaterial(const bool rotate = false);
 
 };
 }

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <memory>
+#include <cmath>
 
 TEST(Demo, sizes) {
 	struct Empty { };
@@ -48,9 +49,12 @@ TEST(Demo, sizes) {
 		      int bbbbbbbbbbbbbbbbbbbbbbbbbbbbb);
 
 	};
-
+	
 	/*
-	   std::cout << "sizeof(A) = " << sizeof(A) << std::endl; // 24
+		std::cout << sizeof(long double) << std::endl;
+		std::cout << sizeof(double) << std::endl;
+
+		std::cout << "sizeof(A) = " << sizeof(A) << std::endl; // 24
 	   std::cout << "sizeof(B) = " << sizeof(B) << std::endl; // 16
 
 	   std::cout << "sizeof(A[1000000]) = " << sizeof(A[1000000]) << std::endl; // 24000000

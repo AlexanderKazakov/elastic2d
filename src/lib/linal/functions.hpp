@@ -4,8 +4,6 @@
 #include <limits>
 
 #include <lib/util/Utils.hpp>
-#include <lib/util/GslUtils.hpp>
-
 #include <lib/linal/Matrix.hpp>
 
 namespace gcm {
@@ -31,18 +29,6 @@ transpose(const MatrixBase<TM, TN, TElement, NonSymmetric, TContainer>& m) {
 
 
 /**
- * Invert usual matrix
- */
-template<int TM, int TN, 
-         typename TElement,
-         template<int, typename> class TContainer>
-MatrixBase<TN, TM, TElement, NonSymmetric, TContainer>
-invert(const MatrixBase<TM, TN, TElement, NonSymmetric, TContainer>& m) {
-	return GslUtils::invert(m);
-}
-
-
-/**
  * Transpose symmetric matrix
  */
 template<int TM, int TN, 
@@ -51,18 +37,6 @@ template<int TM, int TN,
 MatrixBase<TN, TM, TElement, Symmetric, TContainer>
 transpose(const MatrixBase<TM, TN, TElement, Symmetric, TContainer>& m) {
 	return m;
-}
-
-
-/**
- * Invert symmetric matrix
- */
-template<int TM, int TN, 
-         typename TElement,
-         template<int, typename> class TContainer>
-MatrixBase<TN, TM, TElement, Symmetric, TContainer>
-invert(const MatrixBase<TM, TN, TElement, Symmetric, TContainer>& m) {
-	return GslUtils::invertSymmetric(m);
 }
 
 

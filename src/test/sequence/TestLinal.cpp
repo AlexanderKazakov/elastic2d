@@ -1,4 +1,5 @@
 #include <lib/linal/linal.hpp>
+#include <lib/util/GslUtils.hpp>
 
 #include <gtest/gtest.h>
 #include <cmath>
@@ -360,54 +361,6 @@ TEST(Linal, MatrixTransposeInplace) {
 	ASSERT_EQ(m1(1, 1), 4.0);
 
 	m1.transposeInplace();
-
-	ASSERT_EQ(m1, m2);
-}
-
-
-TEST(Linal, MatrixInvert) {
-	Matrix22 m1({1.0, 2.0,
-	             1.0, 4.0});
-
-	Matrix22 r({2.0, -1.0,
-	            -0.5, 0.5});
-
-	Matrix<2, 2> i({1.0, 0.0,
-	                0.0, 1.0});
-
-
-	auto m2 = invert(m1);
-
-	ASSERT_EQ(m2, r);
-
-	auto m3 = invert(m2);
-
-	ASSERT_EQ(m1, m3);
-
-	ASSERT_EQ(m1 * m2, i);
-}
-
-
-TEST(Linal, MatrixInvertInplace) {
-	Matrix22 m1({1.0, 2.0,
-	             1.0, 4.0});
-
-	auto m2 = m1;
-
-	Matrix22 r({2.0, -1.0,
-	            -0.5, 0.5});
-
-	Matrix<2, 2> i({1.0, 0.0,
-	                0.0, 1.0});
-
-
-	m1.invertInplace();
-
-	ASSERT_EQ(m1, r);
-
-	ASSERT_EQ(m1 * m2, i);
-
-	m1.invertInplace();
 
 	ASSERT_EQ(m1, m2);
 }
@@ -866,8 +819,8 @@ TEST(Linal, cross_verification) {
 		ASSERT_EQ(transpose(A) * B, transposeMultiply(A, B));
 		ASSERT_NEAR(determinant(B) * determinant(A), 
 		            determinant(C), EQUALITY_TOLERANCE  * fabs(determinant(C)));
-		auto C1 = invert(C);
-		ASSERT_TRUE(approximatelyEqual(invert(B) * invert(A), C1));
+		auto C1 = GslUtils::invert(C);
+		ASSERT_TRUE(approximatelyEqual(GslUtils::invert(B) * GslUtils::invert(A), C1));
 		ASSERT_TRUE(approximatelyEqual(identity(C), C * C1, 1000 * EQUALITY_TOLERANCE));
 		ASSERT_TRUE(approximatelyEqual(identity(C), C1 * C, 1000 * EQUALITY_TOLERANCE));
 		ASSERT_EQ(A * D1, A * D);
@@ -1101,16 +1054,23 @@ TEST(Linal, positionRelativeToAngle) {
 TEST(Linal, orientedArea) {
 	ASSERT_EQ( 0, orientedArea({0, 0}, {0, 1}, {0, 2}));
 	ASSERT_EQ( 0, orientedArea({0, 0}, {1, 1}, {2, 2}));
+	ASSERT_EQ( 0, area({0, 0}, {1, 1}, {2, 2}));
 	ASSERT_EQ(-2, orientedArea({0, 0}, {0, 2}, {2, 0}));
+	ASSERT_EQ( 2, area({0, 0}, {0, 2}, {2, 0}));
 	ASSERT_EQ( 2, orientedArea({0, 0}, {2, 0}, {0, 2}));
+	ASSERT_EQ( 2, area({0, 0}, {2, 0}, {0, 2}));
 }
 
 
 TEST(Linal, orientedVolume) {
 	ASSERT_EQ( 0, orientedVolume({0, 0, 0}, {0, 1, 0}, {0, 2, 0}, {1, 2, 0}));
+	ASSERT_EQ( 0, volume({0, 0, 0}, {0, 1, 0}, {0, 2, 0}, {1, 2, 0}));
 	ASSERT_EQ( 1.0 / 6, orientedVolume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}));
+	ASSERT_EQ( 1.0 / 6, volume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}));
 	ASSERT_EQ(-1.0 / 6, orientedVolume({0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {0, 0, 1}));
+	ASSERT_EQ( 1.0 / 6, volume({0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {0, 0, 1}));
 	ASSERT_EQ(-1.0 / 6, orientedVolume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0,-1}));
+	ASSERT_EQ( 1.0 / 6, volume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0,-1}));
 }
 
 
@@ -1132,6 +1092,35 @@ TEST(Linal, oppositeFaceNormal) {
 	ASSERT_EQ(normalize(Real3({1, 1, 1})), oppositeFaceNormal(
 			{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}));
 }
+
+
+TEST(Linal, solveDegenerateLinearSystem) {
+	ASSERT_EQ(Real3({0, 0, 1}), 
+			solveDegenerateLinearSystem(Matrix33({1, 2, 0,
+	                                              0, 0, 0,
+	                                              1, 3, 0}), 1).at(0));
+	ASSERT_EQ(Real3({0, 1, 0}), 
+			solveDegenerateLinearSystem(Matrix33({1, 0, 0,
+	                                              0, 0, 0,
+	                                              0, 0, 0}), 2).at(0));
+	ASSERT_EQ(Real3({0, 0, 1}), 
+			solveDegenerateLinearSystem(Matrix33({1, 0, 0,
+	                                              0, 0, 0,
+	                                              0, 0, 0}), 2).at(1));
+	ASSERT_EQ(Real3({1, -13.0 / 14, 4.0 / 14}), 
+			solveDegenerateLinearSystem(Matrix33({ 1,    2,    3,
+	                                               5,    6,    2,
+	                                               1,    2,    3}), 1).at(0));
+	ASSERT_EQ(Real3({-0.5, 1, 0}), 
+			solveDegenerateLinearSystem(Matrix33({ 2,     1,    1,
+	                                               2,     1,    1,
+	                                               2,     1,    1,}), 2).at(0));
+	ASSERT_EQ(Real3({-0.5, 0, 1}), 
+			solveDegenerateLinearSystem(Matrix33({ 2,     1,    1,
+	                                               2,     1,    1,
+	                                               2,     1,    1,}), 2).at(1));
+}
+
 
 
 

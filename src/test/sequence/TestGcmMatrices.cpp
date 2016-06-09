@@ -7,6 +7,7 @@ using namespace gcm;
 
 template<class Case>
 class TestGcmMatrices : public testing::Test {
+protected:
 
 typedef typename Case::Model         Model;
 typedef typename Case::Material      Material;
@@ -27,64 +28,121 @@ void testTraces(const GCM_MATRICES& matrix) {
 	}
 }
 
-void testLeftEigenVectors(const GCM_MATRICES& matrix) {
+void testLeftEigenVectors(const GCM_MATRICES& matrix, 
+		const real eps = EQUALITY_TOLERANCE, const bool relative = false) {
 	for (int s = 0; s < DIMENSIONALITY; s++) {
 		auto AU1 = matrix.m[s].A * matrix.m[s].U1;
 		auto U1L = matrix.m[s].U1 * matrix.m[s].L;
 		for (int i = 0; i < M; i++) {
 			for (int j = 0; j < M; j++) {
-				ASSERT_NEAR(AU1(i, j), U1L(i, j),
-				            EQUALITY_TOLERANCE) << "(" << s << ") U1 = " <<
-				matrix.m[s].U1;
+				real scale = fabs(AU1(i, j)) + fabs(U1L(i, j));
+				real bound = (relative && (scale > eps)) ?	
+						eps * scale : eps;
+				
+				ASSERT_NEAR(AU1(i, j), U1L(i, j), bound) << "(" << s << ") U1 = " << matrix.m[s].U1;
 			}
 		}
 	}
 }
 
-void testRightEigenVectors(const GCM_MATRICES& matrix) {
+void testRightEigenVectors(const GCM_MATRICES& matrix, 
+		const real eps = EQUALITY_TOLERANCE, const bool relative = false) {
 	for (int s = 0; s < DIMENSIONALITY; s++) {
 		auto UA = matrix.m[s].U * matrix.m[s].A;
 		auto LU = matrix.m[s].L * matrix.m[s].U;
 		for (int i = 0; i < M; i++) {
 			for (int j = 0; j < M; j++) {
-				ASSERT_NEAR(UA(i, j), LU(i, j),
-				            EQUALITY_TOLERANCE) << "(" << s << ") U = " << matrix.m[s].U;
+				real scale = fabs(UA(i, j)) + fabs(LU(i, j));
+				real bound = (relative && (scale > eps)) ?	
+						eps * scale : eps;
+				ASSERT_NEAR(UA(i, j), LU(i, j), bound) << "(" << s << ") U = " << matrix.m[s].U;
 			}
 		}
 	}
 }
 
-void testInverseMatrix(const GCM_MATRICES& matrix) {
+void testInverseMatrix(const GCM_MATRICES& matrix, const real eps = EQUALITY_TOLERANCE) {
 	for (int s = 0; s < DIMENSIONALITY; s++) {
 		auto UU1 = matrix.m[s].U * matrix.m[s].U1;
 		for (int i = 0; i < M; i++) {
 			for (int j = 0; j < M; j++) {
-				ASSERT_NEAR(UU1(i, j), (i == j), EQUALITY_TOLERANCE) << "(" << s << ") UU1 = " << UU1;
+				ASSERT_NEAR(UU1(i, j), (i == j), eps) << "(" << s << ") UU1 = " << UU1;
 			}
 		}
 	}
 }
 
-/** Check that order of values in node and matrices and order of indices in WAVE_COLUMNS is
-  concerted */
+/** 
+ * Check that order of values in node and matrices 
+ * and order of indices in WAVE_COLUMNS is concerted 
+ */
 void testValuesOrdersConcerted(const GCM_MATRICES& matrix);
 
-protected:
-	void testDiagonalization() {
-		Utils::seedRand();
-		for (int i = 0; i < NUMBER_OF_TEST_ITERATIONS; i++) {
-			auto material = std::make_shared<Material>(Material::generateRandomMaterial());
-			auto matrix = std::shared_ptr<GCM_MATRICES>(new GCM_MATRICES());
-			Model::constructGcmMatrices(matrix, material);
+void testDiagonalization() {
+	Utils::seedRand();
+	for (int i = 0; i < NUMBER_OF_TEST_ITERATIONS; i++) {
+		auto material = std::make_shared<Material>(Material::generateRandomMaterial());
+		auto matrix = std::shared_ptr<GCM_MATRICES>(new GCM_MATRICES());
+		Model::constructGcmMatrices(matrix, material);
 
-			testTraces(*matrix);
-			testLeftEigenVectors(*matrix);
-			testRightEigenVectors(*matrix);
-			testInverseMatrix(*matrix);
-			testValuesOrdersConcerted(*matrix);
-		}
+		testTraces(*matrix);
+		testLeftEigenVectors(*matrix);
+		testRightEigenVectors(*matrix);
+		testInverseMatrix(*matrix);
+		testValuesOrdersConcerted(*matrix);
+	}
+}
+};
+
+
+template<class Case>
+class TestGcmMatricesRotated : public TestGcmMatrices<Case> {
+protected:
+typedef TestGcmMatrices<Case>        Base;
+typedef typename Base::Model         Model;
+typedef typename Base::Material      Material;
+typedef typename Base::GCM_MATRICES  GCM_MATRICES;
+typedef typename Base::PdeVector     PdeVector;
+
+static const int DIMENSIONALITY = Base::DIMENSIONALITY;
+static const int M = Base::M;
+
+static const int NUMBER_OF_TEST_ITERATIONS = Base::NUMBER_OF_TEST_ITERATIONS;
+
+	void testConcreteMaterial(const Real3 phi) {
+		auto matrix = std::shared_ptr<GCM_MATRICES>(new GCM_MATRICES());
+		auto material = std::shared_ptr<OrthotropicMaterial>(
+				new OrthotropicMaterial(1.6, 
+						{163944.8, 3767.9, 3767.9,
+								   8875.6, 2899.1,
+										   8875.6,
+												   4282.6, 4282.6, 4282.6},
+						 0, 0, phi));
+		
+		Model::constructGcmMatrices(matrix, material);
+
+		this->testTraces(*matrix);
+		this->testLeftEigenVectors(*matrix, 0.01, true);
+		this->testRightEigenVectors(*matrix, 0.01, true);
+		this->testInverseMatrix(*matrix, 0.02);
 	}
 
+	void testDiagonalizationRotated() {
+		Utils::seedRand();
+		for (int i = 0; i < NUMBER_OF_TEST_ITERATIONS; i++) {
+			testConcreteMaterial({Utils::randomReal(-2*M_PI, 2*M_PI), 0, 0});
+			testConcreteMaterial({0, Utils::randomReal(-2*M_PI, 2*M_PI), 0});
+			testConcreteMaterial({0, 0, Utils::randomReal(-2*M_PI, 2*M_PI)});
+			// TODO - make test for arbitrary material;
+			// TODO - theese ones are failed like UA = 2 when LU == 0
+//			testConcreteMaterial({Utils::randomReal(-2*M_PI, 2*M_PI), 
+//			                      Utils::randomReal(-2*M_PI, 2*M_PI), 0});
+//			testConcreteMaterial({Utils::randomReal(-2*M_PI, 2*M_PI), 0, 
+//			                      Utils::randomReal(-2*M_PI, 2*M_PI)   });
+//			testConcreteMaterial({0, Utils::randomReal(-2*M_PI, 2*M_PI), 
+//			                      Utils::randomReal(-2*M_PI, 2*M_PI)   });
+		}
+	}
 };
 
 
@@ -100,12 +158,18 @@ struct Wrap {
 #if GTEST_HAS_TYPED_TEST_P
 using testing::Types;
 TYPED_TEST_CASE_P(TestGcmMatrices);
+TYPED_TEST_CASE_P(TestGcmMatricesRotated);
 
 TYPED_TEST_P(TestGcmMatrices, Diagonalization) {
 	this->testDiagonalization();
 }
 
+TYPED_TEST_P(TestGcmMatricesRotated, Diagonalization) {
+	this->testDiagonalizationRotated();
+}
+
 REGISTER_TYPED_TEST_CASE_P(TestGcmMatrices, Diagonalization);
+REGISTER_TYPED_TEST_CASE_P(TestGcmMatricesRotated, Diagonalization);
 
 typedef Types<
         Wrap<Elastic1DModel, IsotropicMaterial>,
@@ -116,7 +180,14 @@ typedef Types<
         Wrap<SuperDuperModel, OrthotropicMaterial>
         > AllImplementations;
 
+typedef Types<
+        Wrap<Elastic3DModel, OrthotropicMaterial>,
+        Wrap<SuperDuperModel, OrthotropicMaterial>
+        > RotatedImplementations;
+
 INSTANTIATE_TYPED_TEST_CASE_P(AllGcmMatrices, TestGcmMatrices, AllImplementations);
+INSTANTIATE_TYPED_TEST_CASE_P(RotatedGcmMatrices, TestGcmMatricesRotated, RotatedImplementations);
+
 #endif // GTEST_HAS_TYPED_TEST_P
 
 
@@ -292,5 +363,38 @@ testValuesOrdersConcerted(const GCM_MATRICES& matrix) {
 	ASSERT_GT(s2BackwardZ(1) /* Vy */ * s2BackwardZ(7) /* Syz */, 0); // shear wave
 	ASSERT_LT(matrix.m[2].L(indexBackwardS2), 0);
 }
+
+
+TEST(Material, rotate_orthotropic_material) {
+	Utils::seedRand();
+	for (int i = 0; i < 100; i++) {
+		auto material = std::make_shared<OrthotropicMaterial>(
+				OrthotropicMaterial::generateRandomMaterial());
+
+		material->anglesOfRotation = {2*M_PI, M_PI, -M_PI};
+		ASSERT_TRUE(linal::approximatelyEqual(material->getElasticMatrix(),
+				material->getRotatedElasticMatrix(), 1e+5 * EQUALITY_TOLERANCE))
+						<< "initial:" << material->getElasticMatrix() 
+						<< "rotated:" << material->getRotatedElasticMatrix();
+		
+		auto C = material->getElasticMatrix(), initC = C;
+		for (int n = 1; n < 16; n++) {
+			for (int p = 0; p < n; p++) {
+				Real3 phi = Real3::Zeros(); phi(i % 3) = 2 * M_PI / n;
+				C = OrthotropicMaterial::rotate(C, phi);
+			}
+			ASSERT_TRUE(linal::approximatelyEqual(material->getElasticMatrix(),
+					material->getRotatedElasticMatrix(), 1e+5 * EQUALITY_TOLERANCE))
+							<< "initial:" << initC << "rotated:" << C;
+			C = initC;
+		}
+	}
+}
+
+
+
+
+
+
 
 

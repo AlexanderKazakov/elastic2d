@@ -201,6 +201,12 @@ inline real orientedArea(const Real2 a, const Real2 b, const Real2 c) {
 }
 
 
+/** @return area of triangle {a, b, c} */
+inline real area(const Real2 a, const Real2 b, const Real2 c) {
+	return fabs(orientedArea(a, b, c));
+}
+
+
 /** 
  * @return oriented volume of tetrahedron {a, b, c, d};
  * Orientation is positive, if dotProduct(d - a, crossProduct(b - a, c - a)) > 0.
@@ -213,6 +219,12 @@ inline real orientedVolume(const Real3 a, const Real3 b, const Real3 c, const Re
 	return determinant( Matrix33({ba(0), ba(1), ba(2),
 	                              ca(0), ca(1), ca(2),
 	                              da(0), da(1), da(2)}) ) / 6;
+}
+
+
+/** @return volume of tetrahedron {a, b, c, d} */
+inline real volume(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+	return fabs(orientedVolume(a, b, c, d));
 }
 
 

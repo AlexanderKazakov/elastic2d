@@ -5,6 +5,8 @@
 #include <lib/Engine.hpp>
 #include <lib/util/Area.hpp>
 
+#include <launcher/diploma_tasks.cpp>
+
 const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 
 using namespace gcm;
@@ -31,6 +33,8 @@ int main(int argc, char** argv) {
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
 	else if (taskId == "cubic"     ) { task = parseTask3d();     }
 	else if (taskId == "inverse"   ) { task = parseTaskCagi3d(); }
+	else if (taskId == "layers"    ) { task = parseTaskLayers(); }
+	else if (taskId == "cgalani"   ) { task = parseTaskCgalAnisotropy(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;

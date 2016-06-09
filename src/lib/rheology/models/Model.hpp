@@ -110,6 +110,61 @@ public:
 	                                 std::shared_ptr<const OrthotropicMaterial> material,
 	                                 const Args& ...);
 
+private:
+	template<typename ... Args>
+	static void constructRotated(GcmMatricesPtr m,
+	                             std::shared_ptr<const OrthotropicMaterial> material,
+	                             const Args& ...);
+	
+	template<typename ... Args>
+	static void constructNotRotated(GcmMatricesPtr m,
+	                                std::shared_ptr<const OrthotropicMaterial> material,
+	                                const Args& ...);
+
+	static linal::VECTOR<3, long double> constructEigenvaluesPolynomial(
+			ConstGcmMatricesPtr m, const int s);
+	
+	static std::vector<linal::VECTOR<9, long double>> findEigenvectors(
+		const long double l, const linal::Matrix<9, 9>& A,
+		const int stage, const int numberOfVectorsToSearch);
+	
+	static std::vector<linal::VECTOR<9, long double>> findEigenstrings(
+		const long double l, const linal::Matrix<9, 9>& A,
+		const int stage, const int numberOfStringsToSearch);
+	
+	static void getColumnsWithRho(const int stage, int& i, int& j, int& k) {
+	/// indices of columns which contains (- 1 / rho) in increasing order
+		switch (stage) {
+		case 0 :
+			i = 3; j = 4; k = 5;
+			break;
+		case 1 :
+			i = 4; j = 6; k = 7;
+			break;
+		case 2 :
+			i = 5; j = 7; k = 8;
+			break;
+		default:
+			THROW_INVALID_ARG("Invalid stage number");
+		}
+	}
+	
+	static void getZeroColumns(const int stage, int& i, int& j, int& k) {
+	/// indices of columns with all zeros in increasing order
+		switch (stage) {
+		case 0 :
+			i = 6; j = 7; k = 8;
+			break;
+		case 1 :
+			i = 3; j = 5; k = 8;
+			break;
+		case 2 :
+			i = 3; j = 4; k = 6;
+			break;
+		default:
+			THROW_INVALID_ARG("Invalid stage number");
+		}
+	}
 };
 
 
@@ -408,158 +463,14 @@ constructGcmMatrices(GcmMatricesPtr m, std::shared_ptr<const IsotropicMaterial> 
 template<typename ... Args>
 void Elastic3DModel::
 constructGcmMatrices(GcmMatricesPtr m, std::shared_ptr<const OrthotropicMaterial> material,
-                     const Args& ...) {
-#define COPY_FROM_MATERIAL(var) const real var = material->var
-	COPY_FROM_MATERIAL(rho);
-	COPY_FROM_MATERIAL(c11);
-	COPY_FROM_MATERIAL(c12);
-	COPY_FROM_MATERIAL(c13);
-	COPY_FROM_MATERIAL(c22);
-	COPY_FROM_MATERIAL(c23);
-	COPY_FROM_MATERIAL(c33);
-	COPY_FROM_MATERIAL(c44);
-	COPY_FROM_MATERIAL(c55);
-	COPY_FROM_MATERIAL(c66);
-#undef COPY_FROM_MATERIAL
+                     const Args& ... args) {
 
-	m->m[0].A = {
-		0, 0, 0, -1.0 / rho, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,
-		-c11, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, -c66, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, -c55, 0, 0, 0, 0, 0, 0,
-		-c12, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0,
-		-c13, 0, 0, 0, 0, 0, 0, 0, 0
-	};
-
-	m->m[0].L =
-	{
-		-sqrt(c66 / rho), sqrt(c66 / rho), -sqrt(c55 / rho), sqrt(c55 / rho),
-		-sqrt(c11 / rho), sqrt(c11 / rho), 0,
-		0, 0
-	};
-
-	m->m[0].U = {
-		0, 1.0, 0, 0, 1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-		0, 1.0, 0, 0, -1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-		0, 0, 1.0, 0, 0, 1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-		0, 0, 1.0, 0, 0, -1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-		1.0, 0, 0, 1.0 / (sqrt(c11) * sqrt(rho)), 0, 0, 0, 0, 0,
-		1.0, 0, 0, -1.0 / (sqrt(c11) * sqrt(rho)), 0, 0, 0, 0, 0,
-		0, 0, 0, -c12 / c11, 0, 0, 1.0, 0, 0.0,
-		0, 0, 0, 0, 0, 0, 0, 1.0, 0,
-		0, 0, 0, -(1.0 * c13) / c11, 0, 0, 0, 0, 1.0
-	};
-
-	m->m[0].U1 = {
-		0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-		0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0.5 * sqrt(c11) * sqrt(rho), -0.5 * sqrt(c11) * sqrt(rho), 0, 0, 0,
-		0.5 * sqrt(c66) * sqrt(rho), -0.5 * sqrt(c66) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0.5 * sqrt(c55) * sqrt(rho), -0.5 * sqrt(c55) * sqrt(rho), 0, 0, 0, 0, 0,
-		0, 0, 0, 0, (0.5 * c12 * sqrt(rho)) / sqrt(c11),
-		-(0.5 * c12 * sqrt(rho)) / sqrt(c11), 1, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 1, 0,
-		0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c11),
-		-(0.5 * c13 * sqrt(rho)) / sqrt(c11), 0, 0, 1
-	};
-
-
-	m->m[1].A = {
-		0, 0, 0, 0, -1.0 / rho, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, -1.0 / rho, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, -1.0 / rho, 0,
-		0, -c12, 0, 0, 0, 0, 0, 0, 0,
-		-c66, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, -c22, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, -c44, 0, 0, 0, 0, 0, 0,
-		0, -c23, 0, 0, 0, 0, 0, 0, 0
-	};
-
-	m->m[1].L =
-	{
-		-sqrt(c66 / rho), sqrt(c66 / rho), -sqrt(c44 / rho), sqrt(c44 / rho),
-		-sqrt(c22 / rho), sqrt(c22 / rho), 0,
-		0, 0
-	};
-
-	m->m[1].U = {
-		1.0, 0, 0, 0, 1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-		1.0, 0, 0, 0, -1.0 / (sqrt(c66) * sqrt(rho)), 0, 0, 0, 0,
-		0, 0, 1.0, 0, 0, 0, 0, 1.0 / (sqrt(c44) * sqrt(rho)), 0,
-		0, 0, 1.0, 0, 0, 0, 0, -1.0 / (sqrt(c44) * sqrt(rho)), 0,
-		0, 1.0, 0, 0, 0, 0, 1.0 / (sqrt(c22) * sqrt(rho)), 0, 0,
-		0, 1.0, 0, 0, 0, 0, -1.0 / (sqrt(c22) * sqrt(rho)), 0, 0,
-		0, 0, 0, 1.0, 0, 0, -c12 / c22, 0, 0.0,
-		0, 0, 0, 0, 0, 1.0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, -(1.0 * c23) / c22, 0, 1.0
-	};
-
-	m->m[1].U1 = {
-		0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-		0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, (0.5 * c12) / sqrt(c22 / rho),
-		-(0.5 * c12) / sqrt(c22 / rho), 1, 0, 0,
-		0.5 * sqrt(c66) * sqrt(rho), -0.5 * sqrt(c66) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 1, 0,
-		0, 0, 0, 0, 0.5 * sqrt(c22) * sqrt(rho), -0.5 * sqrt(c22) * sqrt(rho), 0, 0, 0,
-		0, 0, 0.5 * sqrt(c44) * sqrt(rho), -0.5 * sqrt(c44) * sqrt(rho), 0, 0, 0, 0, 0,
-		0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c22),
-		-(0.5 * c23 * sqrt(rho)) / sqrt(c22), 0, 0, 1
-	};
-
-
-	m->m[2].A = {
-		0, 0, 0, 0, 0, -1.0 / rho, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, -1.0 / rho, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, -1.0 / rho,
-		0, 0, -c13, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0,
-		-c55, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, -c23, 0, 0, 0, 0, 0, 0,
-		0, -c44, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, -c33, 0, 0, 0, 0, 0, 0
-	};
-
-	m->m[2].L =
-	{
-		-sqrt(c55 / rho), sqrt(c55 / rho), -sqrt(c44 / rho), sqrt(c44 / rho),
-		-sqrt(c33 / rho), sqrt(c33 / rho), 0,
-		0, 0
-	};
-
-	m->m[2].U = {
-		1.0, 0, 0, 0, 0, 1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-		1.0, 0, 0, 0, 0, -1.0 / (sqrt(c55) * sqrt(rho)), 0, 0, 0,
-		0, 1.0, 0, 0, 0, 0, 0, 1.0 / (sqrt(c44) * sqrt(rho)), 0,
-		0, 1.0, 0, 0, 0, 0, 0, -1.0 / (sqrt(c44) * sqrt(rho)), 0,
-		0, 0, 1.0, 0, 0, 0, 0, 0, 1.0 / (sqrt(c33) * sqrt(rho)),
-		0, 0, 1.0, 0, 0, 0, 0, 0, -1.0 / (sqrt(c33) * sqrt(rho)),
-		0, 0, 0, 1.0, 0, 0, 0, 0, -(1.0 * c13) / c33,
-		0, 0, 0, 0, 1.0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 1.0, 0, -(1.0 * c23) / c33
-	};
-
-	m->m[2].U1 = {
-		0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
-		0, 0, 0, 0, (0.5 * c13 * sqrt(rho)) / sqrt(c33),
-		-(0.5 * c13 * sqrt(rho)) / sqrt(c33), 1, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 1, 0,
-		0.5 * sqrt(c55) * sqrt(rho), -0.5 * sqrt(c55) * sqrt(rho), 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, (0.5 * c23 * sqrt(rho)) / sqrt(c33),
-		-(0.5 * c23 * sqrt(rho)) / sqrt(c33), 0, 0, 1,
-		0, 0, 0.5 * sqrt(c44) * sqrt(rho), -0.5 * sqrt(c44) * sqrt(rho), 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0.5 * sqrt(c33) * sqrt(rho), -0.5 * sqrt(c33) * sqrt(rho), 0, 0, 0
-	};
-
-	m->checkDecomposition();
+	if (material->anglesOfRotation == Real3::Zeros()) {
+		constructNotRotated(m, material, args...);
+		m->checkDecomposition();
+	} else {
+		constructRotated(m, material, args...);
+	}
 }
 
 
