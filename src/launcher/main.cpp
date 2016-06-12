@@ -140,15 +140,15 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.25;
+	task.cgal2DGrid.spatialStep = 0.05;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 2}
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {-2, 0}
 	};
 	task.cgal2DGrid.bodies = {
-		Task::Cgal2DGrid::Body(outer, 
-				{{{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}}, {{1, 1}, {1, 2}, {2, 2}, {2, 1}}}),
+		Task::Cgal2DGrid::Body(outer,
+				{/*{{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}}, {{1, 1}, {1, 2}, {2, 2}, {2, 1}}*/}),
 //		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 

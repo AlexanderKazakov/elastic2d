@@ -40,8 +40,6 @@ find_package (Threads REQUIRED)
 # CGAL library
 find_package(CGAL REQUIRED)
 include_directories(${CGAL_INCLUDE_DIRS})
-# MPFI library
-find_package(MPFI REQUIRED)
 # VTK library
 find_package(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
