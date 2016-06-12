@@ -138,12 +138,17 @@ private:
 				u = interpolateInSpaceTime(mesh, it, shift, t); //< TODO - if node is border,
 						//< the base of interpolation can be not calculated yet
 			
+			} else if (t.n == t.N - 2) {
+			// characteristic hits out of body going throughout corner of border face
+				u = interpolateInSpaceTime1D(mesh, it, shift, t); //< TODO - if node is border,
+						//< the base of interpolation can be not calculated yet
+			
 			} else {
 			// now, almost all inner (except degenerate) 
 			// and part of border cases are calculated	
 				if (isBorder && // we don't handle degenerate cases
 						linal::dotProduct(mesh.normal(it), 
-								linal::normalize(shift)) > cos(M_PI / 4)) {
+								linal::normalize(shift)) > 0/*cos(M_PI / 4)*/) {
 				// this is really border case
 				// add outer invariant for border corrector
 					outerInvariants.push_back(k);
@@ -153,7 +158,7 @@ private:
 				// this is some degenerate inner case or incompatible border case
 				// it can not be calculated as border, because it would be 
 				// numerically unstable (smth like incompatible border conditions)
-					u = mesh.pde(it);
+					//u = mesh.pde(it);
 					LOG_DEBUG("Bad case at " << mesh.coordsD(it) << std::endl
 							<< "shift: " << shift << std::endl);
 					
@@ -283,6 +288,37 @@ private:
 				 1 - linal::length(rc - r0) / linal::length(shift)});
 	}
 	
+	
+	/** 
+	 * Handle the case when characteristic goes inside the body and then cross 
+	 * border exactly through the border vertex. It's possible for 2D case.
+	 * It's possible either for border and inner nodes.
+	 * @note border nodes must be already calculated
+	 */
+	PdeVector interpolateInSpaceTime1D(const Mesh& mesh, 
+			const Iterator& it, const Real2& shift, const Cell& borderVertex) const {
+		/// 2D case
+		/// first order interpolate in the line formed by crossed point
+		/// at current and next time layers (line in space-time)
+
+		auto bv = borderVertex(0);
+		Real2 rv = mesh.coordsD(bv);
+		Real2 r0 = mesh.coordsD(it);
+		real w = linal::length(rv - r0) / linal::length(shift);
+		return mesh.pde(bv) * w + mesh.pdeNew(it) * (1 - w);
+	}
+	
+	
+	/** 
+	 * Handle the case when characteristic goes inside the body and then cross 
+	 * border exactly through the border vertex. It's possible for 2D case.
+	 * It's possible either for border and inner nodes.
+	 * @note border nodes must be already calculated
+	 */
+	PdeVector interpolateInSpaceTime1D(const Mesh& /*mesh*/, 
+			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/) const {
+		return PdeVector::Zeros(); // FIXME
+	}
 	
 	
 	/// List of outer Riemann invariants used in borderCorrector.

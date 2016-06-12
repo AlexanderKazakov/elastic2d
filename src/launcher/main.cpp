@@ -28,11 +28,11 @@ int main(int argc, char** argv) {
 	getopt_wrapper(argc, argv, taskId);
 	
 	Task task;
-	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
+	if      (taskId == "cgal2d"    ) { task = parseTaskTriangles(); }
 	else if (taskId == "cgal3d"    ) { task = parseTaskCgal3d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
 	else if (taskId == "cubic"     ) { task = parseTask3d();     }
-	else if (taskId == "inverse"   ) { task = parseTaskCagi3d(); }
+	else if (taskId == "inverse"   ) { task = parse3D(); }
 	else if (taskId == "layers"    ) { task = parseTaskLayers(); }
 	else if (taskId == "cgalani"   ) { task = parseTaskCgalAnisotropy(); }
 	else {
@@ -371,7 +371,10 @@ Task parseTaskCagi2d() {
 	task.modelId = Models::T::ELASTIC2D;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
-	task.snapshottersId = {/*Snapshotters::T::VTK,*/ Snapshotters::T::DETECTOR};
+	task.snapshottersId = {
+			Snapshotters::T::VTK, 
+			Snapshotters::T::DETECTOR
+	};
 
 	task.cubicGrid.borderSize = 2;
 	task.globalSettings.forceSequence = true;

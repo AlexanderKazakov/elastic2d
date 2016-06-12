@@ -26,3 +26,4 @@ libgcm.so
 CMakeLists.txt.user
 *.autosave
 tools/doxygen/doc/*
+*~

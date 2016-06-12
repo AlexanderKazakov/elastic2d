@@ -137,6 +137,7 @@ struct Snapshotters {
 		VTK,
 		BIN2DSEISM,
 		DETECTOR,
+		SLICESNAP,
 
 		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};

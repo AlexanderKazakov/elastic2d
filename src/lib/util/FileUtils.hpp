@@ -10,6 +10,17 @@
 namespace gcm {
 class FileUtils {
 public:
+// FIXME clean this file as well as snapshotters
+
+	template<typename T>
+	static void writeStdVectorsToTextFile(const std::string fileName,
+			const std::vector<std::vector<T>>& vecs) {
+		std::ofstream fileStream;
+		openTextFileStream(fileStream, fileName);
+		writeStdVectorsToTextFileStream(fileStream, vecs);
+		closeFileStream(fileStream);
+	}
+	
 
 	static void openBinaryFileStream(std::ofstream& fileStream,
 	                                 const std::string& fileName) {
@@ -32,6 +43,23 @@ public:
 	                                           const std::vector<T>& vec) {
 		for (const auto& it : vec) {
 			fileStream << it << std::endl;
+		}
+	}
+	
+	
+	template<typename T>
+	static void writeStdVectorsToTextFileStream(std::ofstream& fileStream,
+			const std::vector<std::vector<T>>& vecs) {
+		assert_false(vecs.empty());
+		size_t s = vecs[0].size();
+		for (const auto& v : vecs) {
+			assert_eq(s, v.size());
+		}
+		for (size_t i = 0; i < s; i++) {
+			for (const auto& v : vecs) {
+				fileStream << v[i] << "\t";
+			}
+			fileStream << std::endl;
 		}
 	}
 
