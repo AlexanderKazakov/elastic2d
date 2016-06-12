@@ -1,0 +1,44 @@
+reset
+set term pngcairo enhanced
+set grid
+unset key
+
+set xlabel "z"
+
+
+list = system('ls zaxis')
+
+fracX = 6*0.004/11
+
+set arrow from fracX,-50000 to fracX, 40000 nohead
+set yrange [-50000:40000]
+do for [file in list] {
+    set ylabel "Szz"
+    set output sprintf('zaxis/Szz%s.png', file)
+    plot sprintf('zaxis/%s', file) using 1:3 with lines
+}
+
+unset arrow
+set arrow from fracX,-500 to fracX, 200 nohead
+set yrange [-500:200]
+do for [file in list] {
+    set ylabel "Vz"
+    set output sprintf('zaxis/Vz%s.png', file)
+    plot sprintf('zaxis/%s', file) using 1:2 with lines
+}
+
+unset arrow
+
+
+list2 = system('ls detector')
+
+set xlabel "t"
+set ylabel "Vz"
+
+set yrange [-140:100]
+
+do for [file in list2] {
+    set output sprintf('detector/%s.png', file)
+    plot sprintf('detector/%s', file) using 0:1 with lines
+}
+

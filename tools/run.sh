@@ -27,9 +27,9 @@ while getopts ":n:t:p" o; do
     esac
 done
 
-rm -rf snapshots/vtk
+rm -rf snapshots/vtk snapshots/detector snapshots/zaxis
 rm -f *.log
-mkdir -p snapshots/vtk
+mkdir -p snapshots/vtk snapshots/detector snapshots/zaxis
 echo "Start ./build/gcm_exe with $np processes ..."
 mpirun -np $np ./build/gcm_exe --task ${task}
 

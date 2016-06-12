@@ -1,0 +1,81 @@
+reset
+set term pngcairo enhanced
+set grid
+unset key
+
+set xlabel "N"
+set ylabel "t"
+
+#omp-speedup
+
+set xrange [1:]
+set yrange [0:]
+set title "b"
+set output "omp-time-without-snaps.png"
+plot "omp-n-snaps.txt" using 1:2 w p, \
+"omp-n-snaps.txt" using 1:3 w p, \
+"omp-n-snaps.txt" using 1:4 w p, \
+"omp-n-snaps.txt" using 1:($4+$2+$3)/3 w l
+
+
+set ylabel "S"
+set xrange [1:]
+set yrange [1:]
+stats "omp-n-snaps.txt" using 2
+set title "d"
+set output "omp-speedup-without-snaps.png"
+plot "omp-n-snaps.txt" using 1:(3*(STATS_max-50)/($4+$2+$3-150)) w l
+
+
+set ylabel "t"
+set xrange [1:]
+set yrange [0:]
+set title "a"
+set output "omp-time-with-snaps.png"
+plot "omp-w-snaps.txt" using 1:2 w p, \
+"omp-w-snaps.txt" using 1:3 w p, \
+"omp-w-snaps.txt" using 1:4 w p, \
+"omp-w-snaps.txt" using 1:($4+$2+$3)/3 w l
+
+set ylabel "S"
+set xrange [1:]
+set yrange [1:]
+stats "omp-w-snaps.txt" using 2
+set title "c"
+set output "omp-speedup-with-snaps.png"
+plot "omp-w-snaps.txt" using 1:(3*(STATS_max-50)/($4+$2+$3-150)) w l
+
+
+# mpi speedup
+
+set ylabel "t"
+set xrange [1:]
+set yrange [0:]
+set title "a"
+set output "mpi-time-with-snaps.png"
+plot "mpi-w-snaps.txt" using 1:2 w p, \
+"mpi-w-snaps.txt" using 1:3 w p, \
+"mpi-w-snaps.txt" using 1:($2+$3)/2 w l
+
+set title "b"
+set output "mpi-time-without-snaps.png"
+plot "mpi-n-snaps.txt" using 1:2 w p, \
+"mpi-n-snaps.txt" using 1:3 w p, \
+"mpi-n-snaps.txt" using 1:($2+$3)/2 w l
+
+
+set xrange [1:]
+set yrange [1:]
+
+set ylabel "S"
+
+stats "mpi-n-snaps.txt" using 2
+set title "d"
+set output "mpi-speedup-without-snaps.png"
+plot "mpi-n-snaps.txt" using 1:(2*STATS_max/($2+$3)) w l
+
+stats "mpi-w-snaps.txt" using 2
+set title "c"
+set output "mpi-speedup-with-snaps.png"
+plot "mpi-w-snaps.txt" using 1:(2*STATS_max/($2+$3)) w l
+

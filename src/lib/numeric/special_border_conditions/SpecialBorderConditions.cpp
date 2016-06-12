@@ -86,7 +86,7 @@ applyBorderAfterStage(Mesh* mesh, const real timeStep, const int stage) const {
 	/// handling inner surfaces
 	for (const auto& innerSurface : innerSurfaces) {
 		if (innerSurface.direction == stage) {
-			HelpMesh* helpMesh = allocateHelpMesh(mesh);
+			HelpMesh* helpMesh = allocateHelpMesh(mesh, stage);
 			auto sliceIter = mesh->slice(stage, innerSurface.index);
 			while (sliceIter != sliceIter.end()) {
 				if (innerSurface.condition.area->contains(mesh->coords(sliceIter))) {
@@ -113,7 +113,7 @@ handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh, const real timeStep,
 		helpMesh->_pde({i}) = mesh->pde(tmpIter);
 		helpMesh->_matrices({i}) = mesh->_matrices(tmpIter);
 	}
-
+	
 	// apply border conditions before stage on the helpMesh
 	HelpSpecBorderCond::handleBorderPoint(helpMesh, {0}, values, 0, false);
 

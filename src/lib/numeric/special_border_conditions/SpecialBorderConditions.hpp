@@ -70,10 +70,11 @@ struct SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial> {
 			const real timeStep, const int direction, const Iterator& iter, 
 			const Map& values, const int surfaceNormal);
 	
-	static HelpMesh* allocateHelpMesh(const Mesh* mesh) {
+	static HelpMesh* allocateHelpMesh(const Mesh* mesh, const int stage) {
 		Task helpTask;
+		helpTask.cubicGrid.forceSequence = true;
 		helpTask.cubicGrid.borderSize = mesh->borderSize;
-		helpTask.cubicGrid.h = {mesh->h(0)};
+		helpTask.cubicGrid.h = {mesh->h(stage)};
 		helpTask.cubicGrid.sizes = {mesh->borderSize};
 		
 		auto helpMesh = new HelpMesh(helpTask);

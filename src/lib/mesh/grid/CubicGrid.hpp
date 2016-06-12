@@ -167,7 +167,7 @@ calculateSizes(const Task::CubicGrid& task) const {
 		_sizes = task.sizes;
 	}
 	
-	if (Mpi::ForceSequence()) {
+	if (Mpi::ForceSequence() || task.forceSequence) {
 		return _sizes;
 	}
 
@@ -238,7 +238,7 @@ calculateStartR(const Task::CubicGrid &task) const {
 		_startR = task.startR;
 	}
 	
-	if (Mpi::ForceSequence()) {
+	if (Mpi::ForceSequence() || task.forceSequence) {
 		return _startR;
 	}
 

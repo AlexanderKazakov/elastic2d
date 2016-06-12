@@ -74,6 +74,26 @@ struct SnapshotterFactory<Detector, TMesh, TModel, TGrid, TMaterial> {
 	}
 
 };
+template<
+        template<typename, typename, typename> class TMesh,
+        typename TModel, typename TGrid, typename TMaterial
+        >
+struct SnapshotterFactory<SliceSnapshotter, TMesh, TModel, TGrid, TMaterial> {
+	Snapshotter* create() {
+		return create<std::is_same<TGrid, CubicGrid<3>>::value>();
+	}
+
+	template<bool valid_use>
+	typename std::enable_if<valid_use, Snapshotter*>::type create() {
+		return new SliceSnapshotter<TMesh<TModel, TGrid, TMaterial> >();
+	}
+
+	template<bool valid_use>
+	typename std::enable_if<!valid_use, Snapshotter*>::type create() {
+		THROW_INVALID_ARG("The type of snapshotter is not suitable for specified type of grid and rheology model");
+	}
+
+};
 
 
 /**
@@ -102,6 +122,8 @@ struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
 				return SnapshotterFactory<Binary2DSeismograph, TMesh, TModel, TGrid, TMaterial>().create();
 			case Snapshotters::T::DETECTOR:
 				return SnapshotterFactory<Detector, TMesh, TModel, TGrid, TMaterial>().create();
+			case Snapshotters::T::SLICESNAP:
+				return SnapshotterFactory<SliceSnapshotter, TMesh, TModel, TGrid, TMaterial>().create();
 			default:
 				THROW_UNSUPPORTED("Unknown type of snapshotter");
 		}

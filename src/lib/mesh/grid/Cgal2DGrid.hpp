@@ -283,9 +283,12 @@ private:
 					ans(i) = getIterator(cv[(size_t)i]);
 				}
 				
+			} else if ( !isBorder(getIterator(cv[0])) && cv.size() == 1 ) {
+				ans.n = 1;
+				ans(0) = getIterator(cv[0]);
+				
 			}
 			
-			// we don't handle degenerate cases (like cv.size() == 1)
 		}
 		
 		return ans;

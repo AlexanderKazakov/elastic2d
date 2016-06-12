@@ -146,6 +146,7 @@ struct Task {
 		std::vector<int>  sizes;    ///< number of nodes along each direction
 		std::vector<real> startR;   ///< global coordinates of the first real node
 		int borderSize = 0;         ///< number of virtual border nodes for one border point
+		bool forceSequence = false; ///< behave such as Mpi::Size() == 1
 	} cubicGrid;
 
 	struct Cgal2DGrid {

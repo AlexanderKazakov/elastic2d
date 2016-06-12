@@ -1,0 +1,28 @@
+reset
+set term pngcairo enhanced
+set grid
+unset key
+
+set xlabel "z"
+list = system('ls snapshots/zaxis')
+
+do for [file in list] {
+    set ylabel "Vz"
+    set output sprintf('snapshots/zaxis/Vz%s.png', file)
+    plot sprintf('snapshots/zaxis/%s', file) using 1:2 with lines
+
+    set ylabel "Szz"
+    set output sprintf('snapshots/zaxis/Szz%s.png', file)
+    plot sprintf('snapshots/zaxis/%s', file) using 1:3 with lines
+}
+
+
+set xlabel "t"
+set ylabel "Vz"
+list2 = system('ls snapshots/detector')
+
+do for [file in list2] {
+    set output sprintf('snapshots/detector/%s.png', file)
+    plot sprintf('snapshots/detector/%s', file) using 0:1 with lines
+}
+

@@ -46,7 +46,7 @@ public:
 		assert_true(t != NULL);
 		assert_false(grid->triangulation.is_infinite(t));
 		
-		assert_ge(orientation(u, w, v, p), 0); // p is not behind already
+//		assert_ge(orientation(u, w, v, p), 0); // p is not behind already
 		
 		t = neighborThrough(t, u, v, w);
 		VertexHandle s = otherVertex(t, u, v, w);
