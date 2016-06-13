@@ -24,30 +24,3 @@ statement 3
 statement 2
 statement 1
 
-
-statement 12
-statement 11
-statement 10
-statement 9
-statement 8
-statement 7
-statement 6
-statement 5
-statement 4
-statement 3
-statement 2
-statement 1
-
-
-statement 12
-statement 11
-statement 10
-statement 9
-statement 8
-statement 7
-statement 6
-statement 5
-statement 4
-statement 3
-statement 2
-statement 1
