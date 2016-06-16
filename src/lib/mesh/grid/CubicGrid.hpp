@@ -161,10 +161,17 @@ calculateSizes(const Task::CubicGrid& task) const {
 		assert_true(task.sizes.empty());
 		assert_eq(task.h.size(), DIMENSIONALITY);
 		assert_eq(task.lengths.size(), DIMENSIONALITY);
-		_sizes = linal::plainDivision(RealD(task.lengths), RealD(task.h)) + IntD::Ones();
+		
+		RealD taskLength;
+		taskLength.copyFrom(task.lengths);
+		RealD taskH;
+		taskH.copyFrom(task.h);
+	
+		_sizes = linal::plainDivision(taskLength, taskH) + IntD::Ones();
+	
 	} else {
 		assert_eq(task.sizes.size(), DIMENSIONALITY);
-		_sizes = task.sizes;
+		_sizes.copyFrom(task.sizes);
 	}
 	
 	if (Mpi::ForceSequence() || task.forceSequence) {
@@ -218,10 +225,17 @@ calculateH(const Task::CubicGrid& task) const {
 		assert_true(task.h.empty());
 		assert_eq(task.sizes.size(), DIMENSIONALITY);
 		assert_eq(task.lengths.size(), DIMENSIONALITY);
-		_h = linal::plainDivision(RealD(task.lengths), IntD(task.sizes) - IntD::Ones());
+		
+		RealD taskLength; 
+		taskLength.copyFrom(task.lengths);
+		IntD taskSizes; 
+		taskSizes.copyFrom(task.sizes);
+		
+		_h = linal::plainDivision(taskLength, taskSizes - IntD::Ones());
+	
 	} else {
 		assert_eq(task.h.size(), DIMENSIONALITY);
-		_h = task.h;
+		_h.copyFrom(task.h);
 	}
 	
 	return _h;
@@ -235,7 +249,7 @@ calculateStartR(const Task::CubicGrid &task) const {
 	
 	if (!task.startR.empty()) {
 		assert_eq(task.startR.size(), DIMENSIONALITY);
-		_startR = task.startR;
+		_startR.copyFrom(task.startR);
 	}
 	
 	if (Mpi::ForceSequence() || task.forceSequence) {

@@ -18,7 +18,7 @@ template<int TN,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
 MatrixBase<TN, 1,
-           decltype(TVectorElement() / TMatrixElement()),
+           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
            NonSymmetric, TVectorContainer>
 solveLinearSystem(const MatrixBase<TN, TN,
                                    TMatrixElement,
@@ -37,7 +37,7 @@ template<typename TVectorElement,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
 MatrixBase<1, 1,
-           decltype(TVectorElement() / TMatrixElement()),
+           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
            NonSymmetric, TVectorContainer>
 solveLinearSystem(const MatrixBase<1, 1,
                                    TMatrixElement,
@@ -62,7 +62,7 @@ template<typename TVectorElement,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
 MatrixBase<2, 1,
-           decltype(TVectorElement() / TMatrixElement()),
+           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
            NonSymmetric, TVectorContainer>
 solveLinearSystem(const MatrixBase<2, 2,
                                    TMatrixElement,
@@ -95,7 +95,7 @@ template<typename TVectorElement,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
 MatrixBase<3, 1,
-           decltype(TVectorElement() / TMatrixElement()),
+           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
            NonSymmetric, TVectorContainer>
 solveLinearSystem(const MatrixBase<3, 3,
                                    TMatrixElement,
@@ -141,7 +141,7 @@ template<int TM, int TN,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
 MatrixBase<TN, 1,
-           decltype(TVectorElement() / TMatrixElement()),
+           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
            NonSymmetric, TVectorContainer>
 linearLeastSquares(
 		const MatrixBase<TM, TN, TMatrixElement, NonSymmetric, TMatrixContainer>& A,

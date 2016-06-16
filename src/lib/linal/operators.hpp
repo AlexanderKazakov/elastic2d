@@ -39,12 +39,12 @@ template<int TM, int TN,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
-           decltype(TElement1() + TElement2()),
+           typename std::remove_cv<decltype(TElement1() + TElement2())>::type,
            NonSymmetric, TContainer3>
 operator+(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TN,
-	           decltype(TElement1() + TElement2()),
+	           typename std::remove_cv<decltype(TElement1() + TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
@@ -68,12 +68,12 @@ template<int TM, int TN,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
-           decltype(TElement1() - TElement2()),
+           typename std::remove_cv<decltype(TElement1() - TElement2())>::type,
            NonSymmetric, TContainer3>
 operator-(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TN,
-	           decltype(TElement1() - TElement2()),
+	           typename std::remove_cv<decltype(TElement1() - TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
@@ -100,12 +100,12 @@ template<int TM, int TN, int TK,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TK,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            NonSymmetric, TContainer3>
 operator*(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TN, TK, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TK,
-	           decltype(TElement1() * TElement2()),
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TK; j++) {
@@ -134,12 +134,12 @@ template<int TM, int TN,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            NonSymmetric, TContainer3>
 operator*(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TN, TN, TElement2, Diagonal,   TContainer2>& m2) {
 	MatrixBase<TM, TN,
-	           decltype(TElement1() * TElement2()),
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
@@ -165,12 +165,12 @@ template<int TM, int TN,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            NonSymmetric, TContainer3>
 operator*(const MatrixBase<TM, TM, TElement1, Diagonal,   TContainer1>& m1,
           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TN,
-	           decltype(TElement1() * TElement2()),
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
@@ -195,12 +195,12 @@ template<int TM,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TM,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            Diagonal, TContainer3>
 operator*(const MatrixBase<TM, TM, TElement1, Diagonal, TContainer1>& m1,
           const MatrixBase<TM, TM, TElement2, Diagonal, TContainer2>& m2) {
 	MatrixBase<TM, TM,
-	           decltype(TElement1() * TElement2()),
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
 	           Diagonal, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		result(i) = m1(i) * m2(i);
@@ -246,11 +246,18 @@ operator*(const Number x,
 template<int TM, int TN,
          typename TElement,
          template<int, int> class TSymmetry,
-         template<int, typename> class TContainer>
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer> 
+         template<int, typename> class TContainer,
+         typename Number>
+typename std::enable_if<std::is_arithmetic<Number>::value,
+	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> >::type
 operator/(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
-          const real& x) {
-	return m * (1.0 / x);
+          const Number& x) {
+	typedef MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ResultMatrixT;
+	ResultMatrixT result;
+	for (int i = 0; i < ResultMatrixT::SIZE; i++) {
+		result(i) = m(i) / x;
+	}
+	return result;
 }
 
 
@@ -265,7 +272,7 @@ template<int TM,
          typename TVectorElement,
          template<int, typename> class TVectorContainer>
 MatrixBase<TM, 1,
-           decltype(TVectorElement() / TMatrixElement()),
+           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
            NonSymmetric, TVectorContainer>
 operator/(const MatrixBase<TM,  1, TVectorElement, NonSymmetric, TVectorContainer>& b,
           const MatrixBase<TM, TM, TMatrixElement, TSymmetry,    TMatrixContainer>& A) {
@@ -344,10 +351,12 @@ operator*=(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
 template<int TM, int TN,
          typename TElement,
          template<int, int> class TSymmetry,
-         template<int, typename> class TContainer>
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&
+         template<int, typename> class TContainer,
+         typename Number>
+typename std::enable_if<std::is_arithmetic<Number>::value,
+	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> >::type&
 operator/=(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
-           const real& x) {
+           const Number& x) {
 	typedef MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ResultMatrixT;
 	for (int i = 0; i < ResultMatrixT::SIZE; i++) {
 		m(i) /= x;

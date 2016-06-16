@@ -86,12 +86,12 @@ template<int TM, int TN, int TK,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TK,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            NonSymmetric, TContainer3>
 transposeMultiply(const MatrixBase<TN, TM, TElement1, TSymmetry1, TContainer1>& m1,
                   const MatrixBase<TN, TK, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TK,
-	           decltype(TElement1() * TElement2()),
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TK; j++) {
@@ -120,13 +120,13 @@ template<int TM,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, 1,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            NonSymmetric, TContainer3>
 diagonalMultiply(const MatrixBase<TM, TM, TElement1, TSymmetry1, TContainer1>& A,
                  const MatrixBase<TM, TM, TElement2, TSymmetry2, TContainer2>& B) {
 
 	MatrixBase<TM, 1,
-               decltype(TElement1() * TElement2()),
+               typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
                NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		result(i) = A(i, 0) * B(0, i);
@@ -176,7 +176,7 @@ template<int TM,
          template<int, typename> class TContainer1,
          typename TElement2,
          template<int, typename> class TContainer2>
-decltype(TElement1() * TElement2())
+typename std::remove_cv<decltype(TElement1() * TElement2())>::type
 dotProduct(const MatrixBase<TM, 1, TElement1, NonSymmetric, TContainer1>& v1,
            const MatrixBase<TM, 1, TElement2, NonSymmetric, TContainer2>& v2) {
 	auto result = v1(0) * v2(0);
@@ -199,7 +199,7 @@ template<int TM,
          template<int, typename> class TContainerH,
          typename TElement2,
          template<int, typename> class TContainer2>
-decltype(TElement1() * TElementH() * TElement2())
+typename std::remove_cv<decltype(TElement1() * TElementH() * TElement2())>::type
 dotProduct(const MatrixBase<TM,  1, TElement1, NonSymmetric, TContainer1>& v1,
            const MatrixBase<TM, TM, TElementH,    Symmetric, TContainerH>& H,
            const MatrixBase<TM,  1, TElement2, NonSymmetric, TContainer2>& v2) {
@@ -244,13 +244,13 @@ template<int TM, int TN,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
-           decltype(TElement1() * TElement2()),
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
            NonSymmetric, TContainer3>
 plainMultiply(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
               const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	
 	MatrixBase<TM, TN,
-	           decltype(TElement1() * TElement2()),
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
@@ -275,13 +275,13 @@ template<int TM, int TN,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
-           decltype(TElement1() / TElement2()),
+           typename std::remove_cv<decltype(TElement1() / TElement2())>::type,
            NonSymmetric, TContainer3>
 plainDivision(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
               const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	
 	MatrixBase<TM, TN,
-	           decltype(TElement1() / TElement2()),
+	           typename std::remove_cv<decltype(TElement1() / TElement2())>::type,
 	           NonSymmetric, TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {

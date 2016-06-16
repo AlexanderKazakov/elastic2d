@@ -36,11 +36,6 @@ struct DefaultContainer {
 		std::copy(list.begin(), list.end(), values);
 	}
 	
-	DefaultContainer(const std::vector<TElement>& list) {
-		assert_eq(TSize, list.size());
-		std::copy(list.begin(), list.end(), values);
-	}
-	
 	template<typename TElement2>
 	DefaultContainer(const DefaultContainer<TSize, TElement2>& orig) {
 		for (int i = 0; i < TSize; i++) {
@@ -72,6 +67,11 @@ struct DefaultContainer {
 	
 	void copyFrom(const DefaultContainer& origin) {
 		(*this) = origin;
+	}
+	
+	void copyFrom(const std::vector<TElement>& vec) {
+		assert_eq(TSize, vec.size());
+		std::copy(vec.begin(), vec.end(), values);
 	}
 	
 	/// @}
