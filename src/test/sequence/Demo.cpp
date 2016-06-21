@@ -2,6 +2,9 @@
 #include <memory>
 #include <cmath>
 
+//#include <lib/rheology/materials/OrthotropicMaterial.hpp>
+//using namespace gcm;
+
 TEST(Demo, sizes) {
 	struct Empty { };
 
@@ -43,14 +46,8 @@ TEST(Demo, sizes) {
 		virtual void foo5() override { }
 		virtual int foo6() override { return 0; }
 	};
-
-	struct foo {
-		int f(int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
-		      int bbbbbbbbbbbbbbbbbbbbbbbbbbbbb);
-
-	};
 	
-	/*
+/*	
 		std::cout << sizeof(long double) << std::endl;
 		std::cout << sizeof(double) << std::endl;
 
@@ -73,3 +70,15 @@ TEST(Demo, sizes) {
 	   std::cout << "sizeof(D[1000000]) = " << sizeof(D[1000000]) << std::endl; // 24000000
 	 */
 }
+
+
+/*TEST(OrthotropicMaterial, rotate) {
+	auto material = std::make_shared<OrthotropicMaterial>(
+			OrthotropicMaterial(1, {11, 12, 13, 22, 23, 33, 44, 55, 66}));
+	
+	auto m = material->getElasticMatrix();
+	std::cout.precision(2);
+	std::cout << m << std::endl
+			<< OrthotropicMaterial::rotate(m, {M_PI / 4, M_PI / 3, M_PI / 6}) << std::endl;
+}*/
+

@@ -8,7 +8,7 @@
 
 #include <lib/util/Types.hpp>
 #include <lib/util/Assertion.hpp>
-
+#include <lib/linal/Symmetry.hpp>
 
 namespace gcm {
 namespace linal {
@@ -90,60 +90,6 @@ struct DefaultContainer {
 		
 private:
 	TElement values[TSize]; ///< the storage
-};
-
-
-/**
- * Usual non-symmetric matrix properties
- * @tparam TM number of rows
- * @tparam TN number of columns
- */
-template<int TM, int TN>
-struct NonSymmetric {
-	static const int M = TM;       ///< number of rows
-	static const int N = TN;       ///< number of columns
-	static const int SIZE = M * N; ///< size of storage in units of stored elements
-	
-	static int getIndex(const int i, const int j) {
-	/// in such indexation, values in memory placed row by row
-		return i * N + j;
-	}
-};
-
-
-/**
- * Symmetric matrix properties. TM == TN.
- * @tparam TM number of rows
- * @tparam TN number of columns
- */
-template<int TM, int TN = TM>
-struct Symmetric {
-	static const int M = TM;                 ///< number of rows
-	static const int N = TM;                 ///< number of columns
-	static const int SIZE = M * (M + 1) / 2; ///< size of storage in units of stored elements
-	
-	static int getIndex(const int i, const int j) {
-	/// in such indexation, values in memory placed row by row,
-	/// upper part only (first row - M elements, second - (M-1), etc)
-		static_assert(TM == TN, "Symmetric matrix is square");
-		return (i < j) ? i * N - ((i - 1) * i) / 2 + j - i
-		               : j * N - ((j - 1) * j) / 2 + i - j;
-	}
-};
-
-
-/**
- * Diagonal matrix properties. TM == TN.
- * @tparam TM number of rows
- * @tparam TN number of columns
- */
-template<int TM, int TN = TM>
-struct Diagonal {
-	static const int M = TM;       ///< number of rows
-	static const int N = TM;       ///< number of columns
-	static const int SIZE = M;     ///< size of storage in units of stored elements
-	
-	/// This symmetry requires partial MatrixBase specialization, so no getIndex here.
 };
 
 

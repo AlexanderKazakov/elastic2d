@@ -25,13 +25,29 @@ struct VelocitySigmaVariables : public linal::Vector<Size> {
 	typedef std::map<PhysicalQuantities::T, GETSETTER>        QuantitiesMap;
 	typedef std::map<PhysicalQuantities::T, VECTOR3GETSETTER> Vector3Map;
 
-	static const int DIMENSIONALITY = Dimensionality;	
+	static const int DIMENSIONALITY = Dimensionality;
+	typedef linal::Vector<DIMENSIONALITY>                     RealD;
+	typedef linal::SymmetricMatrix<DIMENSIONALITY>            SigmaD;
 	
 	using PdeVector::PdeVector;
 	using PdeVector::operator=;
 	
 	/** Access to velocity */
 	///@{
+	RealD getVelocity() const {
+		RealD ans;
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			ans(i) = velocity(i);
+		}
+		return ans;
+	}
+	
+	void setVelocity(const RealD& orig) {
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			velocity(i) = orig(i);
+		}
+	}
+	
 	real velocity(const int i) const {
 		assert_lt(i, DIMENSIONALITY);
 		return (*this)(i);
@@ -45,6 +61,24 @@ struct VelocitySigmaVariables : public linal::Vector<Size> {
 
 	/** Access to sigma as symmetric matrix */
 	///@{
+	SigmaD getSigma() const {
+		SigmaD ans;
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			for (int j = 0; j <= i; j++) {
+				ans(i, j) = sigma(i, j);
+			}
+		}
+		return ans;
+	}
+	
+	void setSigma(const SigmaD& orig) {
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			for (int j = 0; j <= i; j++) {
+				sigma(i, j) = orig(i, j);
+			}
+		}
+	}
+
 	real sigma(const int i, const int j) const {
 		assert_lt(i, DIMENSIONALITY);
 		assert_lt(j, DIMENSIONALITY);

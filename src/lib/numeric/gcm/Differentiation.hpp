@@ -52,7 +52,7 @@ public:
 			for (const auto neighbor : neighbors) {
 				RealD d = mesh.coordsD(neighbor) - mesh.coordsD(it);
 				A.setRow(i, d);
-				W(i) = linal::length(d);
+				W(i) = 1.0 / linal::length(d);
 				b(i) = mesh.pde(neighbor) - mesh.pde(it);
 				
 				i++; if (i == MAX_NUMBER_OF_NEIGHBOR_VERTICES) { break; }
@@ -93,7 +93,7 @@ public:
 			for (const auto neighbor : neighbors) {
 				RealD d = mesh.coordsD(neighbor) - mesh.coordsD(v);
 				A.setRow(i, d);
-				W(i) = linal::length(d);
+				W(i) = 1.0 / linal::length(d);
 				b(i) = gradients[mesh.getIndex(neighbor)] - gradients[mesh.getIndex(v)];
 				
 				i++; if (i == MAX_NUMBER_OF_NEIGHBOR_VERTICES) { break; }

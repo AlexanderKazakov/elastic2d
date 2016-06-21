@@ -25,6 +25,10 @@ operator-(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m) {
 	return result;
 }
 
+template<template<int, int> class TSymmetry1,
+         template<int, int> class TSymmetry2,
+         int N, int M>
+using Type = typename LessSymmetric<TSymmetry1, TSymmetry2>::template type<N, M>;
 
 /**
  * Computes summ of two matrices.
@@ -40,12 +44,14 @@ template<int TM, int TN,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
            typename std::remove_cv<decltype(TElement1() + TElement2())>::type,
-           NonSymmetric, TContainer3>
+           NonSymmetric,
+           TContainer3>
 operator+(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TN,
 	           typename std::remove_cv<decltype(TElement1() + TElement2())>::type,
-	           NonSymmetric, TContainer3> result;
+	           NonSymmetric,
+	           TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
 			result(i, j) = m1(i, j) + m2(i, j);

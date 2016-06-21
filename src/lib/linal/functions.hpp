@@ -353,6 +353,62 @@ random(const real min = 0, const real max = 1) {
 }
 
 
+/**
+ * Direct product of two vectors:
+ * p(i, j) = v1(i) * v2(j)
+ */
+template<int TM, int TN,
+         typename TElement1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, TN,
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
+           NonSymmetric, TContainer3>
+directProduct(const MatrixBase<TM, 1, TElement1, NonSymmetric, TContainer1>& v1,
+              const MatrixBase<TN, 1, TElement2, NonSymmetric, TContainer2>& v2) {
+	
+	MatrixBase<TM, TN,
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
+	           NonSymmetric, TContainer3> result;
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j < TN; j++) {
+			result(i, j) = v1(i) * v2(j);
+		}
+	}
+	return result;
+}
+
+
+/**
+ * Symmetrized direct product of two vectors:
+ * p(i, j) = ( v1(i) * v2(j) + v2(i) * v1(j) ) / 2
+ */
+template<int TM,
+         typename TElement1,
+         template<int, typename> class TContainer1,
+         typename TElement2,
+         template<int, typename> class TContainer2,
+         template<int, typename> class TContainer3 = DefaultContainer>
+MatrixBase<TM, TM,
+           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
+           Symmetric, TContainer3>
+symmDirectProduct(const MatrixBase<TM, 1, TElement1, NonSymmetric, TContainer1>& v1,
+                  const MatrixBase<TM, 1, TElement2, NonSymmetric, TContainer2>& v2) {
+	
+	MatrixBase<TM, TM,
+	           typename std::remove_cv<decltype(TElement1() * TElement2())>::type,
+	           Symmetric, TContainer3> result;
+	for (int i = 0; i < TM; i++) {
+		for (int j = 0; j <= i; j++) {
+			result(i, j) = ( v1(i) * v2(j) + v2(i) * v1(j) ) / 2;
+		}
+	}
+	return result;
+}
+
+
 }
 }
 
