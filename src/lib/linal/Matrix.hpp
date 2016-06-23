@@ -103,12 +103,12 @@ private:
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 struct MatrixBase :
-		TContainer<TSymmetry<TM, TN>::SIZE, TElement> {
+		TContainer<SymmProps<TSymmetry, TM, TN>::SIZE, TElement> {
 		
-	typedef TSymmetry<TM, TN> Symmetry;
+	typedef SymmProps<TSymmetry, TM, TN> Symmetry;
 	static const int  M   = Symmetry::M;
 	static const int  N   = Symmetry::N;
 	static const int SIZE = Symmetry::SIZE;
@@ -191,9 +191,9 @@ template<int TM,
          typename TElement,
          template<int, typename> class TContainer>
 struct MatrixBase<TM, TM, TElement, Diagonal, TContainer> :
-		TContainer<Diagonal<TM, TM>::SIZE, TElement> {
+		TContainer<SymmProps<Diagonal, TM, TM>::SIZE, TElement> {
 		
-	typedef Diagonal<TM, TM> Symmetry;
+	typedef SymmProps<Diagonal, TM, TM> Symmetry;
 	static const int  M   = Symmetry::M;
 	static const int  N   = Symmetry::N;
 	static const int SIZE = Symmetry::SIZE;
@@ -336,7 +336,7 @@ zeros(const TNumber&) {
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
 zeros(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&) {
@@ -379,7 +379,7 @@ ones(const TNumber&) {
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
 ones(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&) {
@@ -422,7 +422,7 @@ identity(const TNumber&) {
  */
 template<int TM,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 MatrixBase<TM, TM, TElement, TSymmetry, TContainer>
 identity(const MatrixBase<TM, TM, TElement, TSymmetry, TContainer>&) {
@@ -456,7 +456,7 @@ identity(const MatrixBase<TM, TM, TElement, Diagonal, TContainer>& m) {
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>&
 clear(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m) {
@@ -467,7 +467,7 @@ clear(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m) {
 
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 inline
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
@@ -489,7 +489,7 @@ Zeros() {
 
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 inline
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
@@ -511,7 +511,7 @@ Ones() {
 
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 inline
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
@@ -541,7 +541,7 @@ namespace std {
 
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 inline std::ostream& operator<<(std::ostream& os, 
 		const gcm::linal::MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& matrix) {

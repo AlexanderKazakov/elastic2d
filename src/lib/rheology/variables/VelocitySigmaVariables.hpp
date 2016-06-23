@@ -83,14 +83,16 @@ struct VelocitySigmaVariables : public linal::Vector<Size> {
 		assert_lt(i, DIMENSIONALITY);
 		assert_lt(j, DIMENSIONALITY);
 		return (*this)(DIMENSIONALITY + 
-		               linal::Symmetric<DIMENSIONALITY>::getIndex(i, j));
+				linal::SymmProps<linal::Symmetric,
+						DIMENSIONALITY, DIMENSIONALITY>::getIndex(i, j));
 	}
 
 	real& sigma(const int i, const int j) {
 		assert_lt(i, DIMENSIONALITY);
 		assert_lt(j, DIMENSIONALITY);
 		return (*this)(DIMENSIONALITY + 
-		               linal::Symmetric<DIMENSIONALITY>::getIndex(i, j));
+				linal::SymmProps<linal::Symmetric,
+						DIMENSIONALITY, DIMENSIONALITY>::getIndex(i, j));
 	}
 	///@}
 

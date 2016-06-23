@@ -64,20 +64,20 @@ TEST(Linal, zeroOnes) {
 
 
 TEST(Linal, getIndex) {
-	ASSERT_EQ((Symmetric<3, 3>::getIndex(0, 0)), 0);
-	ASSERT_EQ((Symmetric<3, 3>::getIndex(0, 2)), 2);
-	ASSERT_EQ((Symmetric<3, 3>::getIndex(2, 2)), 5);
-	ASSERT_EQ((Symmetric<5, 5>::getIndex(4, 3)), 13);
+	ASSERT_EQ((SymmProps<Symmetric, 3, 3>::getIndex(0, 0)), 0);
+	ASSERT_EQ((SymmProps<Symmetric, 3, 3>::getIndex(0, 2)), 2);
+	ASSERT_EQ((SymmProps<Symmetric, 3, 3>::getIndex(2, 2)), 5);
+	ASSERT_EQ((SymmProps<Symmetric, 5, 5>::getIndex(4, 3)), 13);
 
-	ASSERT_EQ((NonSymmetric<3, 3>::getIndex(0, 0)), 0);
-	ASSERT_EQ((NonSymmetric<3, 3>::getIndex(0, 2)), 2);
-	ASSERT_EQ((NonSymmetric<3, 3>::getIndex(2, 2)), 8);
-	ASSERT_EQ((NonSymmetric<5, 5>::getIndex(4, 3)), 23);
+	ASSERT_EQ((SymmProps<NonSymmetric, 3, 3>::getIndex(0, 0)), 0);
+	ASSERT_EQ((SymmProps<NonSymmetric, 3, 3>::getIndex(0, 2)), 2);
+	ASSERT_EQ((SymmProps<NonSymmetric, 3, 3>::getIndex(2, 2)), 8);
+	ASSERT_EQ((SymmProps<NonSymmetric, 5, 5>::getIndex(4, 3)), 23);
 
 	for (int i = 0; i < 10; i++) {
 		for (int j = 0; j < 10; j++) {
-			ASSERT_EQ((Symmetric<10, 10>::getIndex(i, j)),
-			          (Symmetric<10, 10>::getIndex(j, i)));
+			ASSERT_EQ((SymmProps<Symmetric, 10, 10>::getIndex(i, j)),
+			          (SymmProps<Symmetric, 10, 10>::getIndex(j, i)));
 		}
 	}
 }
@@ -176,6 +176,11 @@ TEST(Linal, MatrixAdd) {
 
 	Matrix<2, 2> m2({4.0, 3.0,
 	                 2.0, 1.0});
+	
+	SymmetricMatrix<2> s = {
+			6, 7,
+			   8,
+	};
 
 	auto m3 = m1 + m2;
 
@@ -184,6 +189,8 @@ TEST(Linal, MatrixAdd) {
 	ASSERT_EQ(m3(1, 0), 5.0);
 	ASSERT_EQ(m3(1, 1), 5.0);
 	
+	ASSERT_EQ(Matrix22({7, 9, 10, 12}), m1 + s);
+	ASSERT_EQ(2 * s, s + s);
 	
 	MatrixInt<2, 2> mi = {1, 1, 2, 2};
 	Matrix<2, 2> mr = {0.5, 1.5, 0, 2.2};
@@ -567,6 +574,25 @@ TEST(Linal, setColumn) {
 			ASSERT_EQ(matrix(i, j), j);
 		}
 	}
+}
+
+
+TEST(Linal, modifyAdd) {
+	Matrix22 a = {
+			1, 2, 
+			3, 4,
+	};
+	
+	SymmetricMatrix<2> s = {
+			1, 2,
+			   3,
+	};
+	
+	a += s;
+	ASSERT_EQ(Matrix22({2, 4, 5, 7}), a);
+	
+	a -= s;
+	ASSERT_EQ(Matrix22({1, 2, 3, 4}), a);	
 }
 
 
@@ -1122,7 +1148,32 @@ TEST(Linal, solveDegenerateLinearSystem) {
 }
 
 
+TEST(Linal, symmDirectProduct) {
+	Real3 n0 = {1, 2, 3};
+	Real3 n1 = {10, 100, 1000};
+	Real2 n2 = {10, -10};
+	
+	ASSERT_EQ(Matrix33({10, 100, 1000,
+	                    20, 200, 2000,
+	                    30, 300, 3000,}), directProduct(n0, n1));
+	
+	ASSERT_EQ((Matrix<3, 2>({10, -10, 
+	                         20, -20,
+	                         30, -30,})), directProduct(n0, n2));
+	
+	ASSERT_EQ((Matrix<2, 3>({ 10,  20,  30,
+	                         -10, -20, -30,})), directProduct(n2, n0));
 
+	ASSERT_EQ(Matrix33({10,  60,   515,
+	                    60,  200,  1150,
+	                    515, 1150, 3000 }), symmDirectProduct(n0, n1));
+	
+	ASSERT_EQ(SymmetricMatrix<3>({10,  60,   515,
+	                                   200,  1150,
+	                                         3000 }), symmDirectProduct(n0, n1));
+	
+	ASSERT_EQ(directProduct(n0, n0), symmDirectProduct(n0, n0));
+}
 
 
 

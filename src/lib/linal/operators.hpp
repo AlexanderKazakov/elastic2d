@@ -12,7 +12,7 @@ namespace linal {
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
 operator-(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m) {
@@ -25,10 +25,6 @@ operator-(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m) {
 	return result;
 }
 
-template<template<int, int> class TSymmetry1,
-         template<int, int> class TSymmetry2,
-         int N, int M>
-using Type = typename LessSymmetric<TSymmetry1, TSymmetry2>::template type<N, M>;
 
 /**
  * Computes summ of two matrices.
@@ -36,21 +32,21 @@ using Type = typename LessSymmetric<TSymmetry1, TSymmetry2>::template type<N, M>
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
            typename std::remove_cv<decltype(TElement1() + TElement2())>::type,
-           NonSymmetric,
+           typename LessSymmetric<TSymmetry1, TSymmetry2>::type,
            TContainer3>
 operator+(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TN,
 	           typename std::remove_cv<decltype(TElement1() + TElement2())>::type,
-	           NonSymmetric,
+	           typename LessSymmetric<TSymmetry1, TSymmetry2>::type,
 	           TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
@@ -67,20 +63,22 @@ operator+(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
            typename std::remove_cv<decltype(TElement1() - TElement2())>::type,
-           NonSymmetric, TContainer3>
+           typename LessSymmetric<TSymmetry1, TSymmetry2>::type,
+           TContainer3>
 operator-(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
 	MatrixBase<TM, TN,
 	           typename std::remove_cv<decltype(TElement1() - TElement2())>::type,
-	           NonSymmetric, TContainer3> result;
+	           typename LessSymmetric<TSymmetry1, TSymmetry2>::type,
+	           TContainer3> result;
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
 			result(i, j) = m1(i, j) - m2(i, j);
@@ -99,10 +97,10 @@ operator-(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
  */
 template<int TM, int TN, int TK,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TK,
@@ -134,7 +132,7 @@ operator*(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
          template<int, typename> class TContainer2,
@@ -167,7 +165,7 @@ template<int TM, int TN,
          typename TElement1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
@@ -218,7 +216,7 @@ operator*(const MatrixBase<TM, TM, TElement1, Diagonal, TContainer1>& m1,
 /** Multiplication by scalar arithmetic number (real, int, ...) */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer,
          typename Number>
 typename std::enable_if<std::is_arithmetic<Number>::value,
@@ -237,7 +235,7 @@ operator*(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
 /** Multiplication by scalar arithmetic number (real, int, ...) */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer,
          typename Number>
 typename std::enable_if<std::is_arithmetic<Number>::value,
@@ -251,7 +249,7 @@ operator*(const Number x,
 /** Scalar division by real */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer,
          typename Number>
 typename std::enable_if<std::is_arithmetic<Number>::value,
@@ -273,7 +271,7 @@ operator/(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
  */
 template<int TM,
          typename TMatrixElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TMatrixContainer,
          typename TVectorElement,
          template<int, typename> class TVectorContainer>
@@ -292,14 +290,16 @@ operator/(const MatrixBase<TM,  1, TVectorElement, NonSymmetric, TVectorContaine
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2>
-MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>&
-operator+=(      MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
-           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
+MatrixBase<TM, TN, 
+           TElement1, 
+           NonSymmetric,
+           TContainer1>&
+operator+=(      MatrixBase<TM, TN, TElement1, NonSymmetric, TContainer1>& m1,
+           const MatrixBase<TM, TN, TElement2, TSymmetry2,   TContainer2>& m2) {
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
 			m1(i, j) += m2(i, j);
@@ -314,14 +314,16 @@ operator+=(      MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2>
-MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>&
-operator-=(      MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
-           const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
+MatrixBase<TM, TN, 
+           TElement1, 
+           NonSymmetric,
+           TContainer1>&
+operator-=(      MatrixBase<TM, TN, TElement1, NonSymmetric, TContainer1>& m1,
+           const MatrixBase<TM, TN, TElement2, TSymmetry2,   TContainer2>& m2) {
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
 			m1(i, j) -= m2(i, j);
@@ -336,7 +338,7 @@ operator-=(      MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer,
          typename Number>
 typename std::enable_if<std::is_arithmetic<Number>::value,
@@ -356,7 +358,7 @@ operator*=(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
  */
 template<int TM, int TN,
          typename TElement,
-         template<int, int> class TSymmetry,
+         typename TSymmetry,
          template<int, typename> class TContainer,
          typename Number>
 typename std::enable_if<std::is_arithmetic<Number>::value,
@@ -376,10 +378,10 @@ operator/=(MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2>
 bool operator==(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
                 const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
@@ -399,10 +401,10 @@ bool operator==(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2>
 bool operator!=(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
                 const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {
@@ -415,10 +417,10 @@ bool operator!=(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2>
 bool operator<(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
                const MatrixBase<TM, TN, TElement2, TSymmetry2, TContainer2>& m2) {

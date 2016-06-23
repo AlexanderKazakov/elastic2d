@@ -79,10 +79,10 @@ invert(const MatrixBase<TM, TN, TElement, Diagonal, TContainer>& m) {
  */
 template<int TM, int TN, int TK,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TK,
@@ -113,10 +113,10 @@ transposeMultiply(const MatrixBase<TN, TM, TElement1, TSymmetry1, TContainer1>& 
  */
 template<int TM,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, 1,
@@ -237,10 +237,10 @@ TVector normalize(const TVector& v) {
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
@@ -268,10 +268,10 @@ plainMultiply(const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2,
          template<int, typename> class TContainer3 = DefaultContainer>
 MatrixBase<TM, TN,
@@ -316,10 +316,10 @@ directProduct(const TMatrix& m) {
  */
 template<int TM, int TN,
          typename TElement1,
-         template<int, int> class TSymmetry1,
+         typename TSymmetry1,
          template<int, typename> class TContainer1,
          typename TElement2,
-         template<int, int> class TSymmetry2,
+         typename TSymmetry2,
          template<int, typename> class TContainer2>
 bool approximatelyEqual(
 		const MatrixBase<TM, TN, TElement1, TSymmetry1, TContainer1>& m1,
