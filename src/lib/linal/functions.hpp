@@ -168,6 +168,24 @@ diag(const TMatrix& m) {
 
 
 /** 
+ * @return diagonal of the matrix into diagonal matrix
+ */
+template<int TM,
+         typename TElement,
+         typename TSymmetry1,
+         template<int, typename> class TContainer1,
+         template<int, typename> class TContainer2 = DefaultContainer>
+MatrixBase<TM, TM, TElement, Diagonal, TContainer2>
+Diag(const MatrixBase<TM, TM, TElement, TSymmetry1, TContainer1>& m) {
+	MatrixBase<TM, TM, TElement, Diagonal, TContainer2> ans;
+	for (int i = 0; i < TM; i++) {
+		ans(i) = m(i, i);
+	}
+	return ans;
+}
+
+
+/** 
  * @return dot (aka scalar) product of specified vectors v1, v2
  * @note equal to transpose(v1) * v2
  */
