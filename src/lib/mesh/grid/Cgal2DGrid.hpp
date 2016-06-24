@@ -256,7 +256,8 @@ private:
 		       (lambda(2) > -EQUALITY_TOLERANCE);
 	}
 	
-	Cell createCell(const FaceHandle current, const FaceHandle previous) const {
+	Cell createCell(const Iterator& it, 
+			const FaceHandle current, const FaceHandle previous) const {
 	/// create Cell used as answer to numerical method queries about point location
 		Cell ans;
 		ans.n = 0;
@@ -266,7 +267,7 @@ private:
 			return ans;
 		}
 		
-		if (current->is_in_domain()) {
+		if ( current->is_in_domain() ) {
 			// return found cell
 			assert_true(previous->is_in_domain());
 			ans.n = 3;
@@ -274,7 +275,7 @@ private:
 				ans(i) = getIterator(current->vertex(i));
 			}
 			
-		} else if (previous->is_in_domain()) {
+		} else if ( previous->is_in_domain() ) {
 			auto cv = commonVertices(current, previous);
 			if (cv.size() == 2) {
 			// common border edge
@@ -283,7 +284,7 @@ private:
 					ans(i) = getIterator(cv[(size_t)i]);
 				}
 				
-			} else if ( !isBorder(getIterator(cv[0])) && cv.size() == 1 ) {
+			} else if ( !isBorder(it) && cv.size() == 1 ) {
 				ans.n = 1;
 				ans(0) = getIterator(cv[0]);
 				

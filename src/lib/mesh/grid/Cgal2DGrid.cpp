@@ -57,7 +57,7 @@ findOwnerCell(const Iterator& it, const Real2& shift) const {
 	if (shift == Real2({0, 0})) {
 		auto startFace = vertexHandles[getIndex(it)]->incident_faces();
 		while (!startFace->is_in_domain()) { ++startFace; }
-		return createCell(startFace, startFace);
+		return createCell(it, startFace, startFace);
 	}
 	
 	LineWalker lineWalker(this, it, shift);
@@ -69,7 +69,7 @@ findOwnerCell(const Iterator& it, const Real2& shift) const {
 		currentFace = lineWalker.next();
 	}
 	
-	return createCell(currentFace, previousFace);
+	return createCell(it, currentFace, previousFace);
 }
 
 
@@ -78,7 +78,7 @@ locateOwnerCell(const Iterator& it, const Real2& shift) const {
 	VertexHandle beginVertex = vertexHandles[getIndex(it)];
 	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
 	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
-	return createCell(ownerFace, ownerFace);
+	return createCell(it, ownerFace, ownerFace);
 }
 
 

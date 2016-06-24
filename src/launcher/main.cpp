@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
 	getopt_wrapper(argc, argv, taskId);
 	
 	Task task;
-	if      (taskId == "cgal2d"    ) { task = parseTaskTriangles(); }
+	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
 	else if (taskId == "cgal3d"    ) { task = parseTaskCgal3d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
 	else if (taskId == "cubic"     ) { task = parseTask3d();     }
@@ -140,11 +140,11 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.05;
+	task.cgal2DGrid.spatialStep = 0.1;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {-2, 0}
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 1},
 	};
 	task.cgal2DGrid.bodies = {
 		Task::Cgal2DGrid::Body(outer,
