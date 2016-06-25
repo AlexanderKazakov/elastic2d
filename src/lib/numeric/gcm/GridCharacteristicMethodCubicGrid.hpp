@@ -65,7 +65,7 @@ public: // TODO - private (rewrite test)
 		Iterator shift = Iterator::Zeros();
 		for (int k = 0; k < PdeVector::M; k++) {
 			shift(s) = (dx(k) > 0) ? 1 : -1;
-			for (int i = 0; i < src.size(); i++) {
+            for (int i = 0; i < (int)src.size(); i++) {
 				src[(size_t)i] = mesh.pde(it + shift * i);
 			}
 			ans.setColumn(k, EqualDistanceLineInterpolator<PdeVector>::

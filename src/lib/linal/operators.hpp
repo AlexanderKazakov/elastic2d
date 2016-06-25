@@ -259,7 +259,7 @@ operator/(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
 	typedef MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ResultMatrixT;
 	ResultMatrixT result;
 	for (int i = 0; i < ResultMatrixT::SIZE; i++) {
-		result(i) = m(i) / x;
+        result(i) = m(i) / static_cast<TElement>(x);
 	}
 	return result;
 }

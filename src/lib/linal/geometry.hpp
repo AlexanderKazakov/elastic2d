@@ -293,14 +293,19 @@ inline POSITION positionRelativeToAngle(
 
 
 /** @return center of given list of points */
-template<typename T>
-T center(const std::initializer_list<T>& points) {
+template<int TM, int TN,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer>
+MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
+center(const std::initializer_list<
+MatrixBase<TM, TN, TElement, TSymmetry, TContainer>>& points) {
 	assert_gt(points.size(), 0);
-	T summ = zeros(T());
+	auto summ = MatrixBase<TM, TN, TElement, TSymmetry, TContainer>::Zeros();
 	for (const auto& p : points) {
 		summ += p;
 	}
-	return summ / points.size();
+    return summ / (TElement) points.size();
 }
 
 

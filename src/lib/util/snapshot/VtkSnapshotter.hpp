@@ -6,6 +6,11 @@
 #include <lib/util/snapshot/Snapshotter.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion" // disable warnings from vtk headers
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 #include <vtkSmartPointer.h>
 #include <vtkPointData.h>
 #include <vtkFloatArray.h>
@@ -15,6 +20,8 @@
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkTriangle.h>
 #include <vtkTetra.h>
+
+#pragma GCC diagnostic pop
 
 
 namespace gcm {

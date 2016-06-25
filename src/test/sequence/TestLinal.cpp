@@ -1109,8 +1109,6 @@ TEST(Linal, center) {
 	ASSERT_EQ(Real2({0, 2}), center({Real2({0, 2})}));
 	ASSERT_EQ(Real3({1, 1, 1}), center({Real3({0, 0, 0}), Real3({2, 2, 2}),
 			Real3({0, 2, 2}), Real3({2, 0, 0})}));
-	
-	ASSERT_THROW(center(std::initializer_list<real>()), Exception);
 }
 
 

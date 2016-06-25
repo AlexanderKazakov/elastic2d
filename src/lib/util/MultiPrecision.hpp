@@ -2,8 +2,8 @@
 #define LIBGCM_MULTIPRECISION_HPP
 
 #include <cmath>
-#include <mpreal.h>
 
+#include <lib/util/mpreal.h>
 #include <lib/linal/linal.hpp>
 
 namespace gcm {
@@ -12,7 +12,6 @@ namespace gcm {
  * Interface to mpfr::mpreal class. 
  * mpfr::mpreal is a cpp wrapper around gnu mpfr library.
  * @link http://www.holoborodko.com/pavel/mpfr/
- * In order to install just place header from the site to path.
  */
 class MultiPrecision : public mpfr::mpreal {
 public:

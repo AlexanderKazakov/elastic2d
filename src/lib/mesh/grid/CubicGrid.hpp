@@ -94,7 +94,7 @@ public:
 	size_t getIndex(const Iterator& it) const {
 		size_t ans = 0;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-			ans += (size_t) indexMaker(i) * (it(i) + borderSize);
+            ans += (size_t) indexMaker(i) * (size_t)(it(i) + borderSize);
 		}
 		return ans;
 	}

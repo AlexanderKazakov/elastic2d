@@ -38,7 +38,7 @@ snapshotImpl(const AbstractGrid* mesh_, const int) {
 		writeHeadOfTable(mesh);
 	}
 	
-	assert_eq(mesh->sizes(1), surface.size() - 1);
+    assert_eq(mesh->sizes(1), (int)surface.size() - 1);
 	surface[0] = (precision) Clock::Time();
 	for (size_t y = 0; y < surface.size() - 1; y++) {
 		surface[y + 1] = (precision) valuesGetter(mesh->pde({0, (int)y}));
