@@ -102,18 +102,18 @@ public:
 
 	/** Read-only access to real coordinates with auxiliary 0 at z */
 	Real3 coords(const Iterator& it) const {
-		auto point = vertexHandles[getIndex(it)]->point();
+		auto point = vertexHandle(it)->point();
 		return {point.x(), point.y(), 0};
 	}
 
 	/** Read-only access to real coordinates */
 	Real2 coordsD(const Iterator& it) const {
-		return real2(vertexHandles[getIndex(it)]->point());
+		return real2(vertexHandle(it)->point());
 	}
 	
 	/** Border normal in specified point */
 	Real2 normal(const Iterator& it) const {
-		return normal(findBorderNeighbors(it));
+		return normal(it, findBorderNeighbors(it));
 	}
 	
 	/** All vertices connected with specified vertex */
@@ -141,7 +141,7 @@ public:
 	}
 	
 	bool isBorder(const Iterator& it) const {
-		VertexHandle vh = vertexHandles[getIndex(it)];
+		VertexHandle vh = vertexHandle(it);
 		auto beginFace = triangulation.incident_faces(vh);
 		auto faceCirculator = beginFace;
 		do {
@@ -193,7 +193,8 @@ public:
 	
 	/**
 	 * @return pair of border vertices {v1, v2} incident to given border vertex;
-	 * the order of border vertices is so that outer body normal = perpendicularClockwise(v1-v2)
+	 * the order of border vertices is so that outer body normal is met
+	 * when going around given border vertex clockwise from v1 to v2
 	 * @see normal
 	 */
 	std::pair<Iterator, Iterator> findBorderNeighbors(const Iterator& it) const;
@@ -216,7 +217,7 @@ protected:
 	/** Move specified point on specified distance */
 	void move(const Iterator& it, const Real2& d) {
 		assert_true(movable);
-		auto& point = vertexHandles[getIndex(it)]->point();
+		auto& point = vertexHandle(it)->point();
 		point = point + cgalVector2(d);
 	}
 
@@ -232,17 +233,28 @@ private:
 	///@}
 
 	/// Auxilliary functions for handling numerical methods queries 
-	/// @{	
-	std::vector<VertexHandle> commonVertices(const FaceHandle& a, const FaceHandle& b) const;
+	/// @{		
+	VertexHandle vertexHandle(const Iterator& it) const {
+		return vertexHandles [getIndex(it)];
+	}
+	
+	std::vector<VertexHandle> commonVertices(const FaceHandle& a, const FaceHandle& b) const;	
 
-	Real2 normal(const std::pair<Iterator, Iterator>& borderNeighbors) const {
-		VertexHandle first  = vertexHandles[getIndex(borderNeighbors.first)];
-		VertexHandle second = vertexHandles[getIndex(borderNeighbors.second)];
+	Real2 normal(const Iterator& it,
+			const std::pair<Iterator, Iterator>& borderNeighbors) const {
+		VertexHandle v = vertexHandle(it);
+		VertexHandle first  = vertexHandle(borderNeighbors.first);
+		VertexHandle second = vertexHandle(borderNeighbors.second);
 		
-		Real2 borderVector = real2(first->point()) - real2(second->point());
+		Real2 borderVector1 = real2(first->point()) - real2(v->point());
+		Real2 borderVector2 = real2(v->point()) - real2(second->point());
 		
-		return linal::normalize(
-		       linal::perpendicularClockwise(borderVector));
+		Real2 norm1 = linal::normalize(
+		              linal::perpendicularClockwise(borderVector1));
+		Real2 norm2 = linal::normalize(
+		              linal::perpendicularClockwise(borderVector2));
+		
+		return linal::normalize(norm1 + norm2);
 	}
 	
 	bool contains(const FaceHandle face, const Real2& q) const {
@@ -276,18 +288,17 @@ private:
 			}
 			
 		} else if ( previous->is_in_domain() ) {
-			auto cv = commonVertices(current, previous);
-			if (cv.size() == 2) {
-			// common border edge
-				ans.n = 2;
-				for (int i = 0; i < 2; i++) {
+		// going through the border edge
+			std::vector<VertexHandle> cv = commonVertices(current, previous);
+			VertexHandle vertex = vertexHandle(it);
+			if ( !isBorder(it) /* from inner node */ ||
+				 /* or from border node but first going through inner area */
+			     !Utils::has(cv, vertex) ) {
+			// return border edge or single border vertex
+				ans.n = (int)cv.size();
+				for (int i = 0; i < ans.n; i++) {
 					ans(i) = getIterator(cv[(size_t)i]);
 				}
-				
-			} else if ( !isBorder(it) && cv.size() == 1 ) {
-				ans.n = 1;
-				ans(0) = getIterator(cv[0]);
-				
 			}
 			
 		}
@@ -319,7 +330,7 @@ private:
 			}
 			
 			// find not empty LineFaceCirculator		
-			VertexHandle startVertex = grid->vertexHandles[grid->getIndex(it)];
+			VertexHandle startVertex = grid->vertexHandle(it);
 			plusPlus = true;
 			lfc = grid->triangulation.line_walk(cgalPoint2(p), cgalPoint2(q),
 					startVertex->incident_faces());

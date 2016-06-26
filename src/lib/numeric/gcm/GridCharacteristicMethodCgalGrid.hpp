@@ -135,32 +135,35 @@ private:
 					
 			} else if (t.n == t.N - 1) {
 			// characteristic hits out of body going throughout border face
-				u = interpolateInSpaceTime(mesh, it, shift, t); //< TODO - if node is border,
-						//< the base of interpolation can be not calculated yet
+				if (!isBorder) { // TODO
+				// if node is border, the base of interpolation can be not calculated yet
+					u = interpolateInSpaceTime(mesh, it, shift, t);
+				}
 			
 			} else if (t.n == t.N - 2) {
 			// characteristic hits out of body going throughout corner of border face
-				u = interpolateInSpaceTime1D(mesh, it, shift, t); //< TODO - if node is border,
-						//< the base of interpolation can be not calculated yet
+				if (!isBorder) { // TODO
+				// if node is border, the base of interpolation can be not calculated yet
+					u = interpolateInSpaceTime1D(mesh, it, shift, t);
+				}
 			
 			} else {
-			// now, almost all inner (except degenerate) 
-			// and part of border cases are calculated	
-				if (isBorder && // we don't handle degenerate cases
-						linal::dotProduct(mesh.normal(it), 
-								linal::normalize(shift)) > 0/*cos(M_PI / 4)*/) {
+				assert_true(isBorder);
+			// now, all inner and part of border cases are calculated	
+				if (isBorder &&
+					linal::dotProduct(mesh.normal(it),
+							linal::normalize(shift)) > cos(M_PI / 4 + EQUALITY_TOLERANCE)) {
 				// this is really border case
 				// add outer invariant for border corrector
 					outerInvariants.push_back(k);
 					u = PdeVector::Zeros();
 				
 				} else {
-				// this is some degenerate inner case or incompatible border case
 				// it can not be calculated as border, because it would be 
 				// numerically unstable (smth like incompatible border conditions)
-					//u = mesh.pde(it);
-					LOG_DEBUG("Bad case at " << mesh.coordsD(it) << std::endl
-							<< "shift: " << shift << std::endl);
+					u = mesh.pde(it);
+//					LOG_DEBUG("Bad case at " << mesh.coordsD(it) << std::endl
+//							<< "shift: " << shift << std::endl);
 					
 				}
 			}

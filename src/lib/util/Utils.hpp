@@ -2,6 +2,7 @@
 #define LIBGCM_UTILS_HPP
 
 #include <cmath>
+#include <algorithm>
 
 #include <lib/util/Types.hpp>
 #include <lib/util/Assertion.hpp>

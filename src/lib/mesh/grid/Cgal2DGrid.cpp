@@ -32,7 +32,7 @@ Cgal2DGrid(const Task& task) :
 
 std::set<Cgal2DGrid::Iterator> Cgal2DGrid::
 findNeighborVertices(const Iterator& it) const {
-	VertexHandle v = vertexHandles[getIndex(it)];
+	VertexHandle v = vertexHandle(it);
 	std::set<Iterator> ans;
 	
 	auto beginFace = triangulation.incident_faces(v);
@@ -55,7 +55,7 @@ findNeighborVertices(const Iterator& it) const {
 Cgal2DGrid::Cell Cgal2DGrid::
 findOwnerCell(const Iterator& it, const Real2& shift) const {
 	if (shift == Real2({0, 0})) {
-		auto startFace = vertexHandles[getIndex(it)]->incident_faces();
+		auto startFace = vertexHandle(it)->incident_faces();
 		while (!startFace->is_in_domain()) { ++startFace; }
 		return createCell(it, startFace, startFace);
 	}
@@ -75,7 +75,7 @@ findOwnerCell(const Iterator& it, const Real2& shift) const {
 
 Cgal2DGrid::Cell Cgal2DGrid::
 locateOwnerCell(const Iterator& it, const Real2& shift) const {
-	VertexHandle beginVertex = vertexHandles[getIndex(it)];
+	VertexHandle beginVertex = vertexHandle(it);
 	CgalPoint2 query = beginVertex->point() + cgalVector2(shift);
 	FaceHandle ownerFace = triangulation.locate(query, beginVertex->incident_faces());
 	return createCell(it, ownerFace, ownerFace);
@@ -86,7 +86,7 @@ std::pair<Cgal2DGrid::Iterator, Cgal2DGrid::Iterator> Cgal2DGrid::
 findBorderNeighbors(const Iterator& it) const {
 	/// only for border nodes
 	assert_true(isBorder(it));
-	VertexHandle v = vertexHandles[getIndex(it)];
+	VertexHandle v = vertexHandle(it);
 	
 	/// find border edges as two neighbor different domain faces 
 	/// moving counterclockwise around the vertex

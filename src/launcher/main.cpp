@@ -144,12 +144,12 @@ Task parseTaskCgal2d() {
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 1},
+		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}, {2, 2},
 	};
 	task.cgal2DGrid.bodies = {
 		Task::Cgal2DGrid::Body(outer,
-				{/*{{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}}, {{1, 1}, {1, 2}, {2, 2}, {2, 1}}*/}),
-//		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
+				{{{-2, -1}, {-1, 0}, {0, -1}, {-1, -2}}, }),
+		Task::Cgal2DGrid::Body({{-2, 5}, {2, 5}, {0, 7}}, {})
 	};
 
 	Statement statement;
@@ -161,7 +161,7 @@ Task parseTaskCgal2d() {
 
 	statement.globalSettings.CourantNumber = 1;
 
-	statement.globalSettings.numberOfSnaps = 40;
+	statement.globalSettings.numberOfSnaps = 80;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;
