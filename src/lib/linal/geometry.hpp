@@ -299,13 +299,13 @@ template<int TM, int TN,
          template<int, typename> class TContainer>
 MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
 center(const std::initializer_list<
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer>>& points) {
+		MatrixBase<TM, TN, TElement, TSymmetry, TContainer>>& points) {
 	assert_gt(points.size(), 0);
 	auto summ = MatrixBase<TM, TN, TElement, TSymmetry, TContainer>::Zeros();
 	for (const auto& p : points) {
 		summ += p;
 	}
-    return summ / (TElement) points.size();
+	return summ / (TElement) points.size();
 }
 
 

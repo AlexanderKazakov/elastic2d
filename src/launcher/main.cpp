@@ -140,7 +140,7 @@ Task parseTaskCgal2d() {
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal2DGrid.spatialStep = 0.1;
+	task.cgal2DGrid.spatialStep = 0.2;
 	task.cgal2DGrid.movable = false;
 	
 	Task::Cgal2DGrid::Body::Border outer = {
