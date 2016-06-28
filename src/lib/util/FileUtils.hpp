@@ -29,12 +29,21 @@ public:
 		fileStream.clear();
 	}
 
-
+	
+	/** Open file stream to write in */
 	static void openTextFileStream(std::ofstream& fileStream,
 	                               const std::string& fileName) {
 		fileStream.open(fileName, std::ios::out);
 		assert_true(fileStream.is_open());
 		fileStream.clear();
+	}
+	
+	
+	/** Open file stream to read from */
+	static void openTextFileStream(std::ifstream& fileStream,
+	                               const std::string& fileName) {
+		fileStream.open(fileName, std::ios::in);
+		assert_true(fileStream.is_open());
 	}
 
 

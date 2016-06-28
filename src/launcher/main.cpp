@@ -65,8 +65,9 @@ Task parseTaskCgal3d() {
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
-	task.cgal3DGrid.spatialStep = 0.1;
-	task.cgal3DGrid.polyhedronFileName = "meshes/icosahedron.off";
+	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::CGAL_MESHER;
+	task.cgal3DGrid.spatialStep = 0.2;
+	task.cgal3DGrid.fileName = "meshes/icosahedron.off";
 //	task.cgal3DGrid.detectSharpEdges = true;
 //	task.cgal3DGrid.polyhedronFileName = "meshes/cube.off";
 	
@@ -77,9 +78,9 @@ Task parseTaskCgal3d() {
 	statement.materialConditions.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 0.5;
+	statement.globalSettings.CourantNumber = 1;
 
-	statement.globalSettings.numberOfSnaps = 70;
+	statement.globalSettings.numberOfSnaps = 50;
 	statement.globalSettings.stepsPerSnap = 1;
 
 	Statement::InitialCondition::Quantity pressure;

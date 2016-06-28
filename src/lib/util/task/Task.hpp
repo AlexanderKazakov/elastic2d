@@ -168,10 +168,16 @@ struct Task {
 		bool movable = false; ///< deformable(true) or immutable(false) grid
 		
 		/// @name Mesher properties @{
-		real spatialStep = 0; ///< effective spatial step
+		enum class Mesher {
+			CGAL_MESHER,
+			INM_MESHER,
+		} mesher;
+
+		real spatialStep = 0; ///< effective spatial step FIXME InmMesher calculate spatial step!!!
 		bool detectSharpEdges = false; ///< use true for figures with sharp edges
-		std::string polyhedronFileName; ///< file with initial polyhedron to
-				///< construct the grid from
+				///< (for CGAL mesher only)
+		std::string fileName; ///< file with mesh to load from 
+				///< (or with some initial data for perform meshing)
 		/// @}
 	} cgal3DGrid;
 

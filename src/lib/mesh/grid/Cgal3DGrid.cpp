@@ -1,5 +1,6 @@
 #include <lib/mesh/grid/Cgal3DGrid.hpp>
 #include <lib/mesh/grid/Cgal3DLineWalker.hpp>
+#include <lib/mesh/mesh_loaders/InmMeshLoader.hpp>
 
 #include <libcgal3dmesher/Cgal3DMesher.hpp>
 
@@ -12,12 +13,23 @@ Cgal3DGrid(const Task& task) :
 	effectiveSpatialStep(task.cgal3DGrid.spatialStep), 
 	movable(task.cgal3DGrid.movable) {
 
-	LOG_DEBUG("Call Cgal3DMesher");
-	cgal_3d_mesher::Cgal3DMesher::triangulate(
-			task.cgal3DGrid.spatialStep, task.cgal3DGrid.detectSharpEdges,
-			task.cgal3DGrid.polyhedronFileName, triangulation);
-	LOG_DEBUG("Number of vertices after meshing: " << triangulation.number_of_vertices());
-	LOG_DEBUG("Number of cells after meshing: " << triangulation.number_of_cells());
+	switch (task.cgal3DGrid.mesher) {
+		case Task::Cgal3DGrid::Mesher::CGAL_MESHER:
+			LOG_DEBUG("Call Cgal3DMesher");
+			cgal_3d_mesher::Cgal3DMesher::triangulate(
+					task.cgal3DGrid.spatialStep, task.cgal3DGrid.detectSharpEdges,
+					task.cgal3DGrid.fileName, triangulation);
+			break;
+		case Task::Cgal3DGrid::Mesher::INM_MESHER:
+			LOG_DEBUG("Call InmMeshLoader");
+			InmMeshLoader::load(task.cgal3DGrid.fileName, triangulation);
+			break;
+		default:
+			THROW_UNSUPPORTED("Unknown mesher");
+	}
+
+	LOG_INFO("Number of vertices after meshing: " << triangulation.number_of_vertices());
+	LOG_INFO("Number of all cells after meshing: " << triangulation.number_of_cells());
 	
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
@@ -109,7 +121,7 @@ findOwnerCell(const Iterator& it, const Real3& shift) const {
 		currentCell = lineWalker.next();
 	}
 	
-	return createCell(currentCell, previousCell);
+	return createCell(it, currentCell, previousCell);
 }
 
 
@@ -118,7 +130,7 @@ locateOwnerCell(const Iterator& it, const Real3& shift) const {
 	VertexHandle beginVertex = vertexHandle(it);
 	CgalPoint3 query = beginVertex->point() + cgalVector3(shift);
 	CellHandle c = triangulation.locate(query, beginVertex->cell());
-	return createCell(c, c);
+	return createCell(it, c, c);
 }
 
 

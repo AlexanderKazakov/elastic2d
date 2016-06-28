@@ -255,7 +255,8 @@ private:
 		       (lambda(3) > -EQUALITY_TOLERANCE);
 	}
 
-	Cell createCell(const CellHandle current, const CellHandle previous) const {
+	Cell createCell(const Iterator& it,
+			const CellHandle current, const CellHandle previous) const {
 	/// create Cell used as answer to numerical method queries about point location
 		Cell ans;
 		ans.n = 0;
@@ -270,13 +271,21 @@ private:
 			for (int i = 0; i < 4; i++) {
 				ans(i) = getIterator(current->vertex(i));
 			}
-		} else if (isInDomain(previous)) {
-			ans.n = 3;
-			auto cv = commonVertices(current, previous);
-			assert_eq(cv.size(), 3);
-			for (int i = 0; i < 3; i++) {
-				ans(i) = getIterator(cv[(size_t)i]);
+			
+		} else if ( isInDomain(previous) ) {
+		// going through the border edge
+			std::vector<VertexHandle> cv = commonVertices(current, previous);
+			VertexHandle vertex = vertexHandle(it);
+			if ( !isBorder(it) /* from inner node */ ||
+				 /* or from border node but first going through inner area */
+				 !Utils::has(cv, vertex) ) {
+			// return border edge or single border vertex
+				ans.n = (int)cv.size();
+				for (int i = 0; i < ans.n; i++) {
+					ans(i) = getIterator(cv[(size_t)i]);
+				}
 			}
+			
 		}
 		
 		return ans;
@@ -284,7 +293,14 @@ private:
 	///@}
 
 	void printCell(const CellHandle& f, const std::string& name = "") const;
- 
+
+	USE_AND_INIT_LOGGER("gcm.Cgal3DGrid")
+	
+	friend class Cgal3DLineWalker;
+
+	
+public:
+	/// @name convertion between CGAL and gcm data types @{
 	static CgalPoint3 cgalPoint3(const Real3& p) {
 		return CgalPoint3(p(0), p(1), p(2));
 	}
@@ -296,10 +312,7 @@ private:
 	static CgalVector3 cgalVector3(const Real3& p) {
 		return CgalVector3(p(0), p(1), p(2));
 	}
-
-	USE_AND_INIT_LOGGER("gcm.Cgal3DGrid")
-	
-	friend class Cgal3DLineWalker;
+	/// @}
 };
 
 

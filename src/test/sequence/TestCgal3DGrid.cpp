@@ -9,9 +9,10 @@ using namespace gcm;
 
 TEST(Cgal3DGrid, miscellaneous) {
 	Task task;
+	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::CGAL_MESHER;
 	task.cgal3DGrid.spatialStep = 0.2;
 	task.cgal3DGrid.detectSharpEdges = true;
-	task.cgal3DGrid.polyhedronFileName = "meshes/cube.off";
+	task.cgal3DGrid.fileName = "meshes/cube.off";
 	Cgal3DGrid grid(task);
 	ASSERT_EQ(190, grid.sizeOfAllNodes());
 	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
@@ -103,10 +104,11 @@ inline void checkOwnerCellVsBarycentric(const Cgal3DGrid* grid, const real step,
 
 TEST(Cgal3DGrid, ownerTetrahedronVsBarycentric) {
 	Task task;
+	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::CGAL_MESHER;
 	task.cgal3DGrid.spatialStep = 0.4;
 	task.cgal3DGrid.detectSharpEdges = true;
 	
-	task.cgal3DGrid.polyhedronFileName = "meshes/tetrahedron.off";
+	task.cgal3DGrid.fileName = "meshes/tetrahedron.off";
 	Cgal3DGrid tetrGrid(task);
 	Utils::seedRand();
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
@@ -119,7 +121,7 @@ TEST(Cgal3DGrid, ownerTetrahedronVsBarycentric) {
 	}
 	
 	task.cgal3DGrid.spatialStep = 0.2;
-	task.cgal3DGrid.polyhedronFileName = "meshes/cube.off";
+	task.cgal3DGrid.fileName = "meshes/cube.off";
 	Cgal3DGrid cubeGrid(task);
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
 //		std::cout << "cube: multiplier == " << multiplier << std::endl;
@@ -131,7 +133,7 @@ TEST(Cgal3DGrid, ownerTetrahedronVsBarycentric) {
 	}
 	
 	task.cgal3DGrid.spatialStep = 0.4;
-	task.cgal3DGrid.polyhedronFileName = "meshes/icosahedron.off";
+	task.cgal3DGrid.fileName = "meshes/icosahedron.off";
 	task.cgal3DGrid.detectSharpEdges = false;
 	Cgal3DGrid icosGrid(task);
 	VtkUtils::dumpGridToVtk(icosGrid);

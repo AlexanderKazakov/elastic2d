@@ -375,9 +375,10 @@ inline Task parseTaskCgalAnisotropy() {
 			Snapshotters::T::VTK
 	};
 
+	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::CGAL_MESHER;
 	task.cgal3DGrid.spatialStep = 0.003;
 //	task.cgal3DGrid.detectSharpEdges = true;
-	task.cgal3DGrid.polyhedronFileName = "meshes/layers_with_fracture.off";
+	task.cgal3DGrid.fileName = "meshes/layers_with_fracture.off";
 	
 	Statement statement;
 	/*real rho = 4;
