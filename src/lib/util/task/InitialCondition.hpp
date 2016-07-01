@@ -1,7 +1,7 @@
 #ifndef LIBGCM_INITIALCONDITION_HPP
 #define LIBGCM_INITIALCONDITION_HPP
 
-#include "Task.hpp"
+#include <lib/util/task/Task.hpp>
 
 namespace gcm {
 

@@ -22,6 +22,8 @@ struct AbstractMaterial {
 	typedef linal::SYMMETRIC_MATRIX<3, linal::SymmetricMatrix<3>> ElasticTensor;
 	
 	virtual ~AbstractMaterial() = default;
+	
+	int materialNumber = 0;
 
 	/** Convert 3^4 elastic tensor to 6x6 elastic matrix */
 	static ElasticMatrix convert(const ElasticTensor& q) {

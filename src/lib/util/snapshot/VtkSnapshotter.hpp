@@ -14,6 +14,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkPointData.h>
 #include <vtkFloatArray.h>
+#include <vtkIntArray.h>
 #include <vtkStructuredGrid.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLStructuredGridWriter.h>
@@ -208,12 +209,12 @@ static void writeBorderNormals(
 template<typename TGrid>
 static void writeNodesIndices(
 		const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
-	auto vtkArr = vtkSmartPointer<vtkFloatArray>::New();
+	auto vtkArr = vtkSmartPointer<vtkIntArray>::New();
 	vtkArr->SetNumberOfComponents(1);
 	vtkArr->Allocate((vtkIdType)gcmGrid.sizeOfRealNodes(), 0);
 	vtkArr->SetName("index_of_node");
 	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
-		vtkArr->InsertNextValue((float)(it.iter));
+		vtkArr->InsertNextValue((int)it.iter);
 	}
 	vtkGrid->GetPointData()->AddArray(vtkArr);
 }
@@ -259,6 +260,8 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	for (auto& quantity : TMesh::Model::InternalOde::QUANTITIES) {
 		writeQuantity(quantity.first, &VtkSnapshotter::insertOdeQuantity, 1);
 	}
+	
+	writeMaterialNumbers();
 	
 	VtkUtils::writeToFile(vtkGrid, VTK_TYPES::NewWriter(), makeFileNameForSnapshot(
 			step, VTK_TYPES::FileExtension(), FOLDER_NAME));
@@ -312,6 +315,19 @@ void insertOdeQuantity(PhysicalQuantities::T quantity, vtkSmartPointer<vtkFloatA
                        const typename TMesh::VtkIterator& it) {
 	auto Get = TMesh::Model::InternalOde::QUANTITIES.at(quantity).Get;
 	vtkArr->InsertNextValue((float)Get(mesh->ode(it)));
+}
+
+
+void writeMaterialNumbers() {
+	// FIXME - rewrite to reduce code duplication
+	auto vtkArr = vtkSmartPointer<vtkIntArray>::New();
+	vtkArr->SetNumberOfComponents(1);
+	vtkArr->Allocate((vtkIdType)(mesh->sizeOfRealNodes()), 0);
+	vtkArr->SetName("material_number");
+	for (auto it = mesh->vtkBegin(); it != mesh->vtkEnd(); ++it) {
+		vtkArr->InsertNextValue(mesh->material(it)->materialNumber);
+	}
+	vtkGrid->GetPointData()->AddArray(vtkArr);
 }
 
 

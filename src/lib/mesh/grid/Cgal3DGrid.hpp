@@ -147,6 +147,24 @@ public:
 		return ( !triangulation.is_infinite(c) ) && (cellInfo(c) != 0);
 	}
 	
+	/** @return real ("inDomain") cells of the given vertex */
+	std::list<CellHandle> neighborCells(const Iterator& it) const {
+		VertexHandle vh = vertexHandle(it);
+		std::list<CellHandle> ans;
+		triangulation.incident_cells(vh, std::back_inserter(ans));
+
+		auto listIter = ans.begin();
+		while (listIter != ans.end()) {
+			if (isInDomain(*listIter)) {
+				++listIter;
+			} else {
+				listIter = ans.erase(listIter);
+			}
+		}
+		
+		return ans;
+	}
+	
 	bool isBorder(const Iterator& it) const {
 		VertexHandle vh = vertexHandle(it);
 		std::list<CellHandle> incidentCells;

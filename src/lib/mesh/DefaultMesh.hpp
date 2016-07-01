@@ -13,9 +13,11 @@ template<typename, typename, int>      class GridCharacteristicMethodCgalGrid;
 template<typename, typename, typename> struct DataBus;
 template<typename, typename, typename> struct MeshMover;
 template<typename, typename, typename> struct SpecialBorderConditions;
+template<template<typename, typename, typename> class,
+                  typename, typename, typename> class MaterialConditionByCells;
 
 /**
- * Mesh that implement the approach when all nodal data are stored
+ * Mesh that implements the approach when all nodal data are stored
  * in separated vectors not in one node.
  * (Mesh with any other approach (CalcNodes struct, ..) can be done,
  * but it must have the same interfaces)
@@ -209,6 +211,7 @@ private:
 	friend class GridCharacteristicMethodCgalGrid<Model, Material, GRID_DIMENSIONALITY>;
 	friend class DataBus<Model, Grid, Material>;
 	friend class MeshMover<Model, Grid, Material>;
+	friend class MaterialConditionByCells<DefaultMesh, Model, Grid, Material>;
 	
 	template<typename ModelType, typename GridType, typename MaterialType> 
 			friend class SpecialBorderConditions;
@@ -231,11 +234,27 @@ allocate() {
 template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
 applyMaterialConditions(const Statement& statement) {
-	MaterialsCondition<Model, Material> condition(statement);
-	for (auto it :* this) {
-		condition.apply(node(it));
+	switch (statement.materialConditions.type) {
+		case Statement::MaterialCondition::Type::BY_AREAS:
+		{
+			MaterialsCondition<Model, Material> condition(statement);
+			for (auto it : *this) {
+				condition.apply(node(it));
+			}
+			maximalEigenvalue = condition.getMaximalEigenvalue();
+			break;
+		}
+		case Statement::MaterialCondition::Type::BY_CELLS:
+		{
+			MaterialConditionByCells<DefaultMesh, TModel, TGrid, TMaterial>::
+					apply(*this, statement.materialConditions.materialMap);
+			break;
+		}
+		default:
+		{
+			THROW_UNSUPPORTED("Unknown type of material condition");
+		}
 	}
-	maximalEigenvalue = condition.getMaximalEigenvalue();
 }
 
 
@@ -244,7 +263,7 @@ void DefaultMesh<TModel, TGrid, TMaterial>::
 applyInitialConditions(const Statement& statement) {
 	InitialCondition<Model, Material> initialCondition;
 	initialCondition.initialize(statement);
-	for (auto it :* this) {
+	for (auto it : *this) {
 		initialCondition.apply(_pde(it), this->coords(it));
 	}
 }

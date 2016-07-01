@@ -36,12 +36,32 @@ struct Statement {
 	} globalSettings;
 
 	struct MaterialCondition {
-		std::shared_ptr<AbstractMaterial> defaultMaterial;
+		typedef std::shared_ptr<AbstractMaterial> Material;
+		
+		enum class Type {
+			BY_AREAS,
+			BY_CELLS,
+		} type = Type::BY_AREAS;
+		
+		/// @name for BY_AREAS @{
+		Material defaultMaterial; ///< everywhere but inhomogenities
 		struct Inhomogenity {
 			std::shared_ptr<Area> area;
-			std::shared_ptr<AbstractMaterial> material;
+			Material material;
 		};
-		std::vector<Inhomogenity> materials;
+		std::vector<Inhomogenity> materials; ///< inhomogenities
+		/// @}
+		
+		/// @name for BY_CELLS @{
+		/// If some vertex has incident cells with different materials,
+		/// the material with higher priority will be chosen.
+		typedef int Priority; ///< must be >= 0
+		typedef std::pair<Material, Priority> MaterialPriority;
+		typedef size_t MaterialFlag;
+		typedef std::map<MaterialFlag, MaterialPriority> MaterialMap;
+		MaterialMap materialMap;
+		/// @}
+		
 	} materialConditions;
 
 	/**
@@ -178,6 +198,7 @@ struct Task {
 				///< (for CGAL mesher only)
 		std::string fileName; ///< file with mesh to load from 
 				///< (or with some initial data for perform meshing)
+		real scale = 1; ///< denominator for given coordinates to scale the points
 		/// @}
 	} cgal3DGrid;
 

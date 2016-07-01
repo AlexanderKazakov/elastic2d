@@ -6,6 +6,7 @@
 #include <lib/util/Area.hpp>
 
 #include <launcher/diploma_tasks.cpp>
+#include <launcher/skull.cpp>
 
 const int NUMBER_OF_SENSOR_POSITIONS_ALONG_AXIS = 10;
 
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
 	else if (taskId == "inverse"   ) { task = parse3D(); }
 	else if (taskId == "layers"    ) { task = parseTaskLayers(); }
 	else if (taskId == "cgalani"   ) { task = parseTaskCgalAnisotropy(); }
+	else if (taskId == "skull"     ) { task = skull(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;

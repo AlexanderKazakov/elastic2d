@@ -60,6 +60,8 @@ public:
 		DIFFERENTIATION::estimateGradient(mesh, gradients);
 		
 		/// calculate border nodes
+		LOG_INFO("Start calculate border nodes");
+		size_t counter = 0;
 //		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
@@ -70,17 +72,27 @@ public:
 							crossingPoints(*borderIter, s, timeStep, mesh), true));
 			
 			borderCorrector(mesh, s, direction, *borderIter);
+			
+			if (++counter % 20000 == 0) {
+				LOG_INFO(counter << " border nodes have been calculated");
+			}
 		}
 		
 		/// calculate inner nodes
-		#pragma omp parallel for
+		LOG_INFO("Start calculate inner nodes");
+		counter = 0;
+//		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(*innerIter) = localGcmStep(
 					mesh.matrices(*innerIter)->m[s].U1,
 					mesh.matrices(*innerIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *innerIter,
-							crossingPoints(*innerIter, s, timeStep, mesh), false));	
+							crossingPoints(*innerIter, s, timeStep, mesh), false));
+			
+			if (++counter % 20000 == 0) {
+				LOG_INFO(counter << " inner nodes have been calculated");
+			}
 		}
 		
 	}
@@ -148,7 +160,11 @@ private:
 				}
 			
 			} else {
-				assert_true(isBorder);
+				/*if (!isBorder) {
+					LOG_INFO("Missed hit from inner node at " << mesh.coordsD(it)
+							<< "t.n == " << t.n);
+				}*/ // FIXME
+				/*assert_true(isBorder);*/
 			// now, all inner and part of border cases are calculated	
 				if (isBorder &&
 					linal::dotProduct(mesh.normal(it),
@@ -161,9 +177,9 @@ private:
 				} else {
 				// it can not be calculated as border, because it would be 
 				// numerically unstable (smth like incompatible border conditions)
-					u = mesh.pde(it);
-//					LOG_DEBUG("Bad case at " << mesh.coordsD(it) << std::endl
-//							<< "shift: " << shift << std::endl);
+//					u = mesh.pde(it);
+					/*LOG_DEBUG("Bad case at " << mesh.coordsD(it) << std::endl
+							<< "shift: " << shift << std::endl);*/
 					
 				}
 			}

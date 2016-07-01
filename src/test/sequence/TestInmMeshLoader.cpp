@@ -9,7 +9,6 @@ using namespace gcm;
 TEST(InmMeshLoader, load) {
 	Task task;
 	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::INM_MESHER;
-	task.cgal3DGrid.spatialStep = 1; // FIXME
 	task.cgal3DGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.cgal3DGrid.fileName = "meshes/refined/mesh-refined.out";
 	Cgal3DGrid grid(task);

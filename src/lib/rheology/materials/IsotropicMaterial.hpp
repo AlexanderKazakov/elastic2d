@@ -17,7 +17,8 @@ struct IsotropicMaterial : public AbstractMaterial {
 
 	IsotropicMaterial(const IsotropicMaterial& other) = default;
 	IsotropicMaterial(const real rho_ = 0, const real lambda_ = 0, const real mu_ = 0,
-	                  const real yieldStrength_ = 0, const real continualDamageParameter_ = 0);
+			const real yieldStrength_ = 0, const real continualDamageParameter_ = 0,
+			const int materialNumber_ = 0);
 
 	/** For testing purposes */
 	static IsotropicMaterial generateRandomMaterial();

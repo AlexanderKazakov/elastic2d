@@ -41,23 +41,26 @@ Cgal3DGrid(const Task& task) :
 	}
 
 	markInnersAndBorders();
+	
+	real scale = task.cgal3DGrid.scale ;
+	if (scale != 1) {
+		effectiveSpatialStep /= scale;
+		for (auto& it : *this) {
+			vertexHandle(it)->point() = cgalPoint3(coordsD(it) / scale);
+		}
+	}
 }
 
 
 Real3 Cgal3DGrid::
 normal(const Iterator& it) const {
 	assert_true(isBorder(it));
-	VertexHandle v = vertexHandle(it);
 	
-	std::vector<CellHandle> incidentCells;
-	triangulation.incident_cells(v, std::back_inserter(incidentCells));
+	const auto incidentCells = neighborCells(it);
 	
 	std::vector<Real3> facesNormals;
 	for (const auto innerCell : incidentCells) {
-		if ( !isInDomain(innerCell)) {
-		// over all incident inner cells
-			continue;
-		}
+	// over all incident inner cells
 		
 		for (int i = 0; i < 4; i++) {
 			CellHandle outerCell = innerCell->neighbor(i);
@@ -69,7 +72,7 @@ normal(const Iterator& it) const {
 			std::vector<VertexHandle> innerVertexOfInnerCell;
 			std::vector<VertexHandle> borderVerticesOfInnerCell = commonVertices(
 					innerCell, outerCell, &innerVertexOfInnerCell);
-			if ( !Utils::has(borderVerticesOfInnerCell, v) ) {
+			if ( !Utils::has(borderVerticesOfInnerCell, vertexHandle(it)) ) {
 			// .. which also have our vertex
 				continue;
 			}
@@ -91,18 +94,15 @@ normal(const Iterator& it) const {
 
 std::set<Cgal3DGrid::Iterator> Cgal3DGrid::
 findNeighborVertices(const Iterator& it) const {	
-	std::vector<CellHandle> incidentCells;
-	triangulation.finite_incident_cells(
-			vertexHandle(it), std::back_inserter(incidentCells));
+	const auto incidentCells = neighborCells(it);
 	
 	std::set<Iterator> ans;
 	for (const auto cell : incidentCells) {
-		if (isInDomain(cell)) {
-			for (int i = 0; i < 4; i++) {
-				ans.insert(getIterator(cell->vertex(i)));
-			}
+		for (int i = 0; i < 4; i++) {
+			ans.insert(getIterator(cell->vertex(i)));
 		}
 	}
+	
 	ans.erase(it);
 	return ans;
 }
