@@ -3,7 +3,7 @@
 
 #include <lib/util/snapshot/snapshotters.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 #include <lib/util/Logging.hpp>
 
 
@@ -80,7 +80,8 @@ template<
         >
 struct SnapshotterFactory<SliceSnapshotter, TMesh, TModel, TGrid, TMaterial> {
 	Snapshotter* create() {
-		return create<std::is_same<TGrid, CubicGrid<3>>::value>();
+		return create<std::is_same<TGrid, CubicGrid<3>>::value &&
+		              std::is_same<TModel, ElasticModel<3>>::value>();
 	}
 
 	template<bool valid_use>
@@ -192,31 +193,27 @@ private:
 struct VirtualModelFactory {
 	virtual VirtualGridFactory* create(Models::T) const = 0;
 };
-template<typename TMaterial>
+template<int Dimensionality, typename TMaterial>
 struct ModelFactory : public VirtualModelFactory {
 	virtual VirtualGridFactory* create(Models::T modelId) const override {
 		switch (modelId) {
-			case Models::T::ELASTIC1D:
-				return new GridFactory<Elastic1DModel, TMaterial>();
-			case Models::T::ELASTIC2D:
-				return new GridFactory<Elastic2DModel, TMaterial>();
-			case Models::T::ELASTIC3D:
-				return new GridFactory<Elastic3DModel, TMaterial>();
+			case Models::T::ELASTIC:
+				return new GridFactory<ElasticModel<Dimensionality>, TMaterial>();
+			case Models::T::ACOUSTIC:
+				return new GridFactory<AcousticModel<Dimensionality>, TMaterial>();
 			default:
-				THROW_INVALID_ARG("The type of rheology model is unknown or unsuitable for specified type of material");
+				THROW_INVALID_ARG("Model is unknown or incompatible for specified type of material and dimensionality");
 		}
 	}
 };
-template<>
-struct ModelFactory<OrthotropicMaterial> : public VirtualModelFactory {
+template<int Dimensionality>
+struct ModelFactory<Dimensionality, OrthotropicMaterial> : public VirtualModelFactory {
 	virtual VirtualGridFactory* create(Models::T modelId) const override {
 		switch (modelId) {
-			case Models::T::ELASTIC2D:
-				return new GridFactory<Elastic2DModel, OrthotropicMaterial>();
-			case Models::T::ELASTIC3D:
-				return new GridFactory<Elastic3DModel, OrthotropicMaterial>();
+			case Models::T::ELASTIC:
+				return new GridFactory<ElasticModel<Dimensionality>, OrthotropicMaterial>();
 			default:
-				THROW_INVALID_ARG("The type of rheology model is unknown or unsuitable for specified type of material");
+				THROW_INVALID_ARG("Model is unknown or incompatible for specified type of material and dimensionality");
 		}
 	}
 };
@@ -225,37 +222,83 @@ struct ModelFactory<OrthotropicMaterial> : public VirtualModelFactory {
 /**
  * Choose material
  */
-struct MaterialFactory {
-	VirtualModelFactory* create(Materials::T materialId) const {
+struct VirtualMaterialFactory {
+	virtual VirtualModelFactory* create(Materials::T) const = 0;
+};
+template<int Dimensionality>
+struct MaterialFactory : public VirtualMaterialFactory {
+	virtual VirtualModelFactory* create(Materials::T materialId) const override {
 		switch (materialId) {
 			case Materials::T::ISOTROPIC:
-				return new ModelFactory<IsotropicMaterial>();
+				return new ModelFactory<Dimensionality, IsotropicMaterial>();
 			case Materials::T::ORTHOTROPIC:
-				return new ModelFactory<OrthotropicMaterial>();
+				return new ModelFactory<Dimensionality, OrthotropicMaterial>();
 			default:
 				THROW_UNSUPPORTED("Unknown type of material");
+		}
+	}
+};
+template<>
+struct MaterialFactory<1> : public VirtualMaterialFactory {
+	virtual VirtualModelFactory* create(Materials::T materialId) const override {
+		switch (materialId) {
+			case Materials::T::ISOTROPIC:
+				return new ModelFactory<1, IsotropicMaterial>();
+			default:
+				THROW_UNSUPPORTED("Material is unknown or incompatible for specified dimensionality");
 		}
 	}
 };
 
 
 /**
- * Create ProgramAbstractFactory to instantiate the program.
- * This is "ProgramAbstractFactory factory".
+ * Choose space dimensionality
+ */
+struct DimensionalityFactory {
+	VirtualMaterialFactory* create(const int dimensionality) const {
+		switch (dimensionality) {
+			case 1:
+				return new MaterialFactory<1>();
+			case 2:
+				return new MaterialFactory<2>();
+			case 3:
+				return new MaterialFactory<3>();
+			default:
+				THROW_UNSUPPORTED("Invalid dimensionality");
+		}
+	}
+};
+
+
+/**
+ * The program instantiator
  */
 struct Factory {
 	static VirtualProgramAbstactFactory* create(const Task& task) {
-		return create(task.materialId, task.gridId, task.modelId);
+		return create(
+				task.dimensionality,
+				task.materialId,
+				task.gridId,
+				task.modelId);
 	}
 
-	private:
-		static VirtualProgramAbstactFactory* create(
-				Materials::T materialId, Grids::T gridId, Models::T modelId) {
-		
-			return (new MaterialFactory())->create(materialId)->create(
-					modelId)->create(gridId)->create();
-		}
+private:
+	static VirtualProgramAbstactFactory* create(
+			const int dimensionality,
+			Materials::T materialId,
+			Grids::T gridId,
+			Models::T modelId) {
+	
+		return (new DimensionalityFactory())
+				->create(dimensionality)
+				->create(materialId)
+				->create(modelId)
+				->create(gridId)
+				->create();
+	}
 };
+
+
 }
 
 

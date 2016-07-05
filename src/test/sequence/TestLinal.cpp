@@ -786,6 +786,9 @@ TEST(Linal, solveLinearSystem) {
 TEST(Linal, createLocalBasis) {
 	auto b1 = createLocalBasis(Real1({1}));
 	ASSERT_EQ(Matrix11({1}), b1);
+	auto b1T = createLocalBasisTranspose(Real1({1}));
+	ASSERT_EQ(Matrix11({1}), b1T);
+	
 	
 	auto b2 = createLocalBasis(Real2({0, 1}));
 	ASSERT_EQ(Matrix22({1, 0,
@@ -794,6 +797,10 @@ TEST(Linal, createLocalBasis) {
 	b2 = createLocalBasis(Real2({1, 0}));
 	ASSERT_EQ(Matrix22({0, 1,
 	                   -1, 0}), b2);
+	
+	auto b2T = createLocalBasisTranspose(Real2({1, 0}));
+	ASSERT_EQ(transpose(b2), b2T);
+	
 	
 	auto b3 = createLocalBasis(Real3({0, 0, 1}));
 	ASSERT_EQ(Matrix33({1, 0, 0,
@@ -809,6 +816,9 @@ TEST(Linal, createLocalBasis) {
 	ASSERT_EQ(Matrix33({0,  0, 1,
 	                   -1,  0, 0,
 	                    0, -1, 0}), b3);
+	
+	auto b3T = createLocalBasisTranspose(Real3({1, 0, 0}));
+	ASSERT_EQ(transpose(b3), b3T);
 }
 
 

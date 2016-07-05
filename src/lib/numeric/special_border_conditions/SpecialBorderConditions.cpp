@@ -1,5 +1,5 @@
 #include <lib/numeric/special_border_conditions/SpecialBorderConditions.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 #include <lib/numeric/gcm/GridCharacteristicMethodCubicGrid.hpp>
 
 using namespace gcm;
@@ -131,14 +131,16 @@ handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh, const real timeStep,
 
 
 
-template class SpecialBorderConditions<Elastic1DModel, CubicGrid<1>, IsotropicMaterial>;
-template class SpecialBorderConditions<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>;
-template class SpecialBorderConditions<Elastic3DModel, CubicGrid<3>, IsotropicMaterial>;
+template class SpecialBorderConditions<ElasticModel<1>, CubicGrid<1>, IsotropicMaterial>;
+template class SpecialBorderConditions<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial>;
+template class SpecialBorderConditions<ElasticModel<3>, CubicGrid<3>, IsotropicMaterial>;
 //template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, IsotropicMaterial>;
 
-template class SpecialBorderConditions<Elastic2DModel, CubicGrid<2>, OrthotropicMaterial>;
-template class SpecialBorderConditions<Elastic3DModel, CubicGrid<3>, OrthotropicMaterial>;
+template class SpecialBorderConditions<ElasticModel<2>, CubicGrid<2>, OrthotropicMaterial>;
+template class SpecialBorderConditions<ElasticModel<3>, CubicGrid<3>, OrthotropicMaterial>;
 //template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, OrthotropicMaterial>;
 
-
+template class SpecialBorderConditions<AcousticModel<1>, CubicGrid<1>, IsotropicMaterial>;
+template class SpecialBorderConditions<AcousticModel<2>, CubicGrid<2>, IsotropicMaterial>;
+template class SpecialBorderConditions<AcousticModel<3>, CubicGrid<3>, IsotropicMaterial>;
 

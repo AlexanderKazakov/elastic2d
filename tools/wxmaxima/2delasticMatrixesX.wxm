@@ -1,5 +1,5 @@
 /* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
-/* [ Created with wxMaxima version 13.04.2 ] */
+/* [ Created with wxMaxima version 15.08.2 ] */
 
 /* [wxMaxima: input   start ] */
 A : zeromatrix(5,5);
@@ -8,9 +8,9 @@ A : zeromatrix(5,5);
 /* [wxMaxima: input   start ] */
 A[1][1] : 0;                A[1][2] : 0;            A[1][3] : -1.0/rho; A[1][4] : 0;        A[1][5] : 0;
 A[2][1] : 0;                A[2][2] : 0;            A[2][3] : 0;        A[2][4] : -1.0/rho; A[2][5] : 0;
-A[3][1] : -(lambda+2.0*mu); A[3][2] : 0;            A[3][3] : 0;        A[3][4] : 0;        A[3][5] : 0;
-A[4][1] : 0;                A[4][2] : -mu;          A[4][3] : 0;        A[4][4] : 0;        A[4][5] : 0;
-A[5][1] : -lambda;          A[5][2] : 0;            A[5][3] : 0;        A[5][4] : 0;        A[5][5] : 0;
+A[3][1] : -с11;             A[3][2] : 0;            A[3][3] : 0;        A[3][4] : 0;        A[3][5] : 0;
+A[4][1] : 0;                A[4][2] : -с66;         A[4][3] : 0;        A[4][4] : 0;        A[4][5] : 0;
+A[5][1] : -с12;             A[5][2] : 0;            A[5][3] : 0;        A[5][4] : 0;        A[5][5] : 0;
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -26,7 +26,7 @@ esys1 : combine(eigenvectors(A));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-U1 : transpose(matrix(esys1[2][1][1]/2.0, esys1[2][2][1]/2.0, esys1[2][3][1]/2.0, esys1[2][4][1]/2.0, -esys1[2][5][1]*lambda));
+U1 : transpose(matrix(esys1[2][1][1]/2.0, esys1[2][2][1]/2.0, esys1[2][3][1]/2.0, esys1[2][4][1]/2.0, -esys1[2][5][1]*с12));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
@@ -34,7 +34,7 @@ esys : combine(factor(eigenvectors(transpose(A))));
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
-U : matrix(esys[2][1][1]/1.0, esys[2][2][1]/1.0, esys[2][3][1]/1.0, esys[2][4][1]/1.0, esys[2][5][1]/(lambda+2*mu));
+U : matrix(esys[2][1][1]/1.0, esys[2][2][1]/1.0, esys[2][3][1]/1.0, esys[2][4][1]/1.0, esys[2][5][1]/с11);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */

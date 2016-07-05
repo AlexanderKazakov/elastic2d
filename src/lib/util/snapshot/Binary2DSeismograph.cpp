@@ -1,5 +1,5 @@
 #include <lib/util/snapshot/Binary2DSeismograph.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
 
@@ -58,5 +58,6 @@ writeHeadOfTable(const TMesh* mesh) {
 }
 
 
-template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> >;
-template class Binary2DSeismograph<DefaultMesh<Elastic2DModel, CubicGrid<2>, OrthotropicMaterial> >;
+template class Binary2DSeismograph<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> >;
+template class Binary2DSeismograph<DefaultMesh<ElasticModel<2>, CubicGrid<2>, OrthotropicMaterial> >;
+template class Binary2DSeismograph<DefaultMesh<AcousticModel<2>, CubicGrid<2>, IsotropicMaterial> >;

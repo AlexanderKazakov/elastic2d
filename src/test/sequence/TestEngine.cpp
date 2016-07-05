@@ -2,13 +2,14 @@
 
 #include <test/wrappers/Wrappers.hpp>
 #include <lib/util/Area.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 
 using namespace gcm;
 
 TEST(Engine, runStatementForTest) {
 	Task task;
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 
@@ -34,13 +35,17 @@ TEST(Engine, runStatementForTest) {
 
 	task.statements.push_back(statement);
 
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > engine(task);
+	EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> > engine(task);
 	engine.beforeStatementForTest(statement);
 
-	auto sWave = engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes.at(0) / 2, 3});
+	// s-wave
+	auto expected = engine.getSolverForTest()->getMesh()->pde(
+			{task.cubicGrid.sizes.at(0) / 2, 3});
 	engine.runStatementForTest();
-	ASSERT_EQ(sWave,
-	          engine.getSolverForTest()->getMesh()->pde({task.cubicGrid.sizes.at(0) / 2, 22}));
+	auto actual = engine.getSolverForTest()->getMesh()->pde(
+			{task.cubicGrid.sizes.at(0) / 2, 22});
+	
+	ASSERT_TRUE(linal::approximatelyEqual(expected, actual)) << expected << actual;
 }
 
 
@@ -49,7 +54,8 @@ TEST(Engine, TwoLayersDifferentRho) {
 	for (int i = 0; i < 5; i++) {
 
 		Task task;
-		task.modelId = Models::T::ELASTIC2D;
+		task.dimensionality = 2;
+		task.modelId = Models::T::ELASTIC;
 		task.materialId = Materials::T::ISOTROPIC;
 		task.gridId = Grids::T::CUBIC;
 
@@ -86,7 +92,7 @@ TEST(Engine, TwoLayersDifferentRho) {
 
 		task.statements.push_back(statement);
 
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > engine(
+		EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> > engine(
 		        task);
 		engine.beforeStatementForTest(statement);
 
@@ -132,7 +138,8 @@ TEST(Engine, TwoLayersDifferentE) {
 	for (int i = 0; i < 5; i++) {
 
 		Task task;
-		task.modelId = Models::T::ELASTIC2D;
+		task.dimensionality = 2;
+		task.modelId = Models::T::ELASTIC;
 		task.materialId = Materials::T::ISOTROPIC;
 		task.gridId = Grids::T::CUBIC;
 
@@ -170,7 +177,7 @@ TEST(Engine, TwoLayersDifferentE) {
 
 		task.statements.push_back(statement);
 
-		EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > engine(task);
+		EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> > engine(task);
 		engine.beforeStatementForTest(statement);
 
 		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);

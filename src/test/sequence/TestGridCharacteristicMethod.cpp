@@ -3,7 +3,7 @@
 #include <lib/util/Area.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <test/wrappers/Wrappers.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 
 #include <lib/util/snapshot/VtkSnapshotter.hpp>
 
@@ -29,7 +29,7 @@ TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 
 	for (int stage = 0; stage <= 1; stage++) {
 
-		MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > mesh(task);
+		MeshWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> > mesh(task);
 		mesh.beforeStatementForTest(statement);
 		for (int x = 0; x < task.cubicGrid.sizes.at(0); x++) {
 			for (int y = 0; y < task.cubicGrid.sizes.at(1); y++) {
@@ -44,7 +44,7 @@ TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 			}
 		}
 
-		auto m = GridCharacteristicMethod<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>().
+		auto m = GridCharacteristicMethod<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial>().
 				interpolateValuesAround(mesh, stage, {1, 1}, {-1, 1, -0.5, 0.5, 0});
 
 		for (int i = 0; i < 5; i++) {
@@ -89,10 +89,10 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 		
 		task.statements.push_back(statement);
 	
-		DefaultSolverWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>>
+		DefaultSolverWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial>>
 				solver(task);
 		solver.beforeStatement(statement);
-		DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial>::PdeVector 
+		DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial>::PdeVector 
 				zero({0, 0, 0, 0, 0});
 		auto pWave = solver.getMesh()->pde({0, 2});
 	

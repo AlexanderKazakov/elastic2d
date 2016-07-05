@@ -2,7 +2,7 @@
 #include <test/wrappers/Wrappers.hpp>
 
 #include <lib/util/task/Task.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 
 
 using namespace gcm;
@@ -77,9 +77,9 @@ REGISTER_TYPED_TEST_CASE_P(TestMpiConnection, MPI_NODE_TYPE);
 
 // write in generics all the Node implementations using in mpi connections
 typedef Types<
-        Elastic1DModel::PdeVector,
-        Elastic2DModel::PdeVector,
-        Elastic3DModel::PdeVector
+        ElasticModel<1>::PdeVector,
+        ElasticModel<2>::PdeVector,
+        ElasticModel<3>::PdeVector
         > AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementations);
@@ -89,7 +89,8 @@ INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementation
 TEST(MPI, MpiEngineVsSequenceEngine) {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 
@@ -113,13 +114,13 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 
 	// calculate in sequence
 	task.globalSettings.forceSequence = true;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> >
+	EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> >
 			sequenceEngine(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.globalSettings.forceSequence = false;
-	EngineWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> >
+	EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> >
 			mpiEngine(task);
 	mpiEngine.run();
 

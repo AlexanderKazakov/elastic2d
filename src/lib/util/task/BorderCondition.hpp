@@ -22,23 +22,21 @@ namespace gcm {
  * let \f$ \vec{b} = (0, velocity) \f$.
  * To set normal force into the body,
  * let \f$ \vec{b} = (0, -force) \f$.
- * 
- * It can be done more generally: not for tasks like
- * "fixed_force" but for any list of quantities with their time dependencies,
- * but it requires some logic about basis in matrix B (TODO)
  */
 template<typename TModel>
 class BorderCondition {
 public:
 	static const int PDE_SIZE = TModel::PDE_SIZE;
 	static const int DIMENSIONALITY = TModel::DIMENSIONALITY;
-	/// Legal number of outer characteristics in border node
-	static const int OUTER_NUMBER = DIMENSIONALITY;
+	/// Number of characteristics with slopes of the same sign.
+	/// It is equal to number of outer characteristics in border node.
+	static const int OUTER_NUMBER = TModel::OUTER_NUMBER;
 	
 	typedef typename TModel::PdeVariables         PdeVariables;
 	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
 	typedef linal::Vector<OUTER_NUMBER>           BorderVector;
 	typedef std::function<BorderVector(real)>     BorderVectorTimeDependency;
+	
 	
 	BorderCondition(const Statement::BorderCondition& task) :
 			type_(task.type), b_(createBorderVectorTimeDependency(task.values)) {
@@ -51,62 +49,39 @@ public:
 		}
 	}
 	
-	/**
-	 * General expression of linear border conditions is
-	 * \f$ B \vec{u}_{n+1} = \vec{b}(t_{n+1}) \f$
-	 */
-	BorderMatrix B(const linal::Vector<DIMENSIONALITY>& normal) const {
-		switch (type_) {
-			case gcm::BorderConditions::T::FIXED_VELOCITY:
-				return borderMatrixFixedVelocity(normal);
-				break;
-			case gcm::BorderConditions::T::FIXED_FORCE:
-				return borderMatrixFixedForce(normal);
-				break;
-			default:
-				THROW_INVALID_ARG("This is impossible");
-		}
-	}
 	
 	/**
 	 * General expression of linear border conditions is
 	 * \f$ B \vec{u}_{n+1} = \vec{b}(t_{n+1}) \f$
 	 */
-	BorderVector b(const linal::Vector<DIMENSIONALITY>& normal) const {
-		auto S = linal::createLocalBasis(normal); // transfer matrix
-		return S * b_(Clock::TimeAtNextTimeLayer());
+	BorderMatrix B(const linal::Vector<DIMENSIONALITY>& borderNormal) const {
+		switch (type_) {
+			case gcm::BorderConditions::T::FIXED_VELOCITY:
+				return TModel::borderMatrixFixedVelocity(borderNormal);
+				break;
+			case gcm::BorderConditions::T::FIXED_FORCE:
+				return TModel::borderMatrixFixedForce(borderNormal);
+				break;
+			default:
+				THROW_INVALID_ARG("Unknown type of border condition");
+		}
 	}
+	
+	
+	/**
+	 * General expression of linear border conditions is
+	 * \f$ B \vec{u}_{n+1} = \vec{b}(t_{n+1}) \f$.
+	 * @return \vec{b} in local (connected with border) basis
+	 */
+	BorderVector b(const linal::Vector<DIMENSIONALITY>&) const {
+		return b_(Clock::TimeAtNextTimeLayer());
+	}
+	
 	
 private:
 	const gcm::BorderConditions::T type_;
 	const BorderVectorTimeDependency b_;
 	
-	BorderMatrix borderMatrixFixedForce
-	(const linal::Vector<DIMENSIONALITY>& normal) const {
-	///	Set border matrix for the case of fixed force on border
-		BorderMatrix B_;
-		for (int i = 0; i < DIMENSIONALITY; i++) {
-			PdeVariables pde = PdeVariables::Zeros();
-			for (int j = 0; j < DIMENSIONALITY; j++) {
-				pde.sigma(i, j) = normal(j);
-			}
-			B_.setRow(i, pde);
-		}
-		return B_;
-	}
-	
-	BorderMatrix borderMatrixFixedVelocity
-	(const linal::Vector<DIMENSIONALITY>&) const {
-	///	Set border matrix for the case of fixed velocity on border.
-	/// Velocity border matrix B is independent from border normal
-		BorderMatrix B_;
-		for (int i = 0; i < DIMENSIONALITY; i++) {
-			PdeVariables pde = PdeVariables::Zeros();
-			pde.velocity(i) = 1;
-			B_.setRow(i, pde);
-		}
-		return B_;
-	}
 	
 	BorderVectorTimeDependency createBorderVectorTimeDependency
 	(const std::vector<Statement::TimeDependency> values) const {

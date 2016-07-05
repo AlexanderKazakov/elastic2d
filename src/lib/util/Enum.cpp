@@ -1,7 +1,6 @@
 #include <lib/util/Enum.hpp>
 
 using namespace gcm;
-/* *INDENT-OFF* */
 
 
 const std::map<PhysicalQuantities::T, std::string> PhysicalQuantities::NAME = {
@@ -56,9 +55,8 @@ const std::map<Grids::T, std::string> Grids::NAME = {
 
 
 const std::map<Models::T, std::string> Models::NAME = {
-		{Models::T::ELASTIC1D,    "elastic1d"},
-		{Models::T::ELASTIC2D,    "elastic2d"},
-		{Models::T::ELASTIC3D,    "elastic3d"}
+		{Models::T::ELASTIC,    "elastic"},
+		{Models::T::ACOUSTIC,   "acoustic"}
 };
 
 

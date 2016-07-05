@@ -147,7 +147,8 @@ struct Statement {
  * can be initialized at time.
  */
 struct Task {
-
+	
+	int dimensionality;
 	Materials::T materialId;
 	Grids::T gridId;
 	Models::T modelId;

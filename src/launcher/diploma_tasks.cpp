@@ -4,6 +4,56 @@
 
 using namespace gcm;
 
+
+inline Task parseTaskCubicAcoustic() {
+	Task task;
+
+	task.dimensionality = 3;
+	task.modelId = Models::T::ACOUSTIC;
+	task.materialId = Materials::T::ISOTROPIC;
+	task.gridId = Grids::T::CUBIC;
+	task.snapshottersId = {Snapshotters::T::VTK};
+
+	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.lengths = {2, 1, 1};
+	task.cubicGrid.sizes = {100, 50, 50};
+
+	Statement statement;
+	statement.materialConditions.defaultMaterial =
+		std::make_shared<IsotropicMaterial>(1, 1, 0);
+
+	statement.globalSettings.CourantNumber = 1;
+
+	statement.globalSettings.numberOfSnaps = 80;
+	statement.globalSettings.stepsPerSnap = 1;
+
+	Statement::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+	pressure.value = 10.0;
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0.5}));
+	statement.initialCondition.quantities.push_back(pressure);
+
+	
+	Statement::CubicGridBorderCondition borderCondition;
+	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+			(Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
+	borderCondition.values = {
+			{PhysicalQuantities::T::PRESSURE, [] (real) {return 0; }},
+	};
+	statement.cubicGridBorderConditions.push_back(borderCondition);
+	
+	
+	statement.vtkSnapshotter.enableSnapshotting = true;
+	statement.vtkSnapshotter.quantitiesToSnap = {
+			PhysicalQuantities::T::PRESSURE,
+	};
+
+	task.statements.push_back(statement);
+	return task;
+}
+
+
+
 const real sizeX = 0.016, sizeY = 0.016, sizeZ = 0.004;
 const int nLayers = 11;
 const real layerWidth = sizeZ / nLayers;
@@ -36,7 +86,8 @@ createArea(const int layerNumber /* from 0 at the bottom */) {
 inline Task parseTaskTriangles() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
@@ -112,7 +163,8 @@ inline Task parseTaskTriangles() {
 inline Task parseTaskLayers() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC3D;
+	task.dimensionality = 3;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ORTHOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {
@@ -213,7 +265,8 @@ inline Task parseTaskLayers() {
 inline Task parse2D() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {
@@ -289,7 +342,8 @@ inline Task parse2D() {
 inline Task parse3D() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC3D;
+	task.dimensionality = 3;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {
@@ -368,7 +422,8 @@ inline Task parse3D() {
 inline Task parseTaskCgalAnisotropy() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC3D;
+	task.dimensionality = 3;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ORTHOTROPIC;
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {

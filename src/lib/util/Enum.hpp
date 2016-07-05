@@ -5,7 +5,6 @@
 #include <map>
 #include <string>
 
-/* *INDENT-OFF* */
 
 /**
  * @file
@@ -117,9 +116,8 @@ struct Grids {
 struct Models {
 	/** Type */
 	enum class T {
-		ELASTIC1D,
-		ELASTIC2D,
-		ELASTIC3D,
+		ELASTIC,
+		ACOUSTIC,
 
 		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
 	};

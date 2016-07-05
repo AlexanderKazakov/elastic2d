@@ -1,5 +1,5 @@
 #include <lib/util/task/InitialCondition.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 
 
 using namespace gcm;
@@ -51,12 +51,18 @@ apply(PdeVector& v, const Real3& coords) const {
 }
 
 
-template class InitialCondition<Elastic1DModel, IsotropicMaterial>;
-template class InitialCondition<Elastic2DModel, IsotropicMaterial>;
-template class InitialCondition<Elastic2DModel, OrthotropicMaterial>;
-template class InitialCondition<Elastic3DModel, IsotropicMaterial>;
-template class InitialCondition<Elastic3DModel, OrthotropicMaterial>;
+template class InitialCondition<ElasticModel<1>, IsotropicMaterial>;
+
+template class InitialCondition<ElasticModel<2>, IsotropicMaterial>;
+template class InitialCondition<ElasticModel<2>, OrthotropicMaterial>;
+
+template class InitialCondition<ElasticModel<3>, IsotropicMaterial>;
+template class InitialCondition<ElasticModel<3>, OrthotropicMaterial>;
+
 template class InitialCondition<SuperDuperModel, OrthotropicMaterial>;
 template class InitialCondition<SuperDuperModel, IsotropicMaterial>;
 
+template class InitialCondition<AcousticModel<1>, IsotropicMaterial>;
+template class InitialCondition<AcousticModel<2>, IsotropicMaterial>;
+template class InitialCondition<AcousticModel<3>, IsotropicMaterial>;
 

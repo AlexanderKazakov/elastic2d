@@ -11,7 +11,7 @@ namespace linal {
 /** 
  * @name Local basis creation
  * Create local orthogonal basis for given vector n of unit length.
- * @warning vector n MUST BE of unit length
+ * @note vector n MUST BE of unit length
  * 
  * In created basis, given vector n is always at last position
  * and vector at the first position tau_1 is always in XY-plane.
@@ -22,7 +22,7 @@ namespace linal {
  * continuos while going around the sphere slice by XY-plane, but it has 
  * discontinuities while going through the points with normal(0, 0, n).
  * 
- *  
+ * 
  *          Z |      tau_2
  *            |    / 
  *  n         |   / 
@@ -37,8 +37,13 @@ namespace linal {
  *     X /          tau_1
  * 
  * 
- * @return orthogonal transfer matrix from created basis to global {X, Y, Z} basis,
+ * Functions createLocalBasis return orthogonal transfer matrix 
+ * from created basis to global {X, Y, Z} basis,
  * i.e matrix with vectors of created basis in columns.
+ * 
+ * Functions createLocalBasisTranspose return orthogonal transfer matrix 
+ * from global {X, Y, Z} basis to created basis,
+ * i.e matrix with vectors of created basis in strings.
  */
  ///@{
 inline Matrix11 createLocalBasis(const Real1& n) {
@@ -57,6 +62,25 @@ inline Matrix33 createLocalBasis(const Real3& n) {
 	return Matrix33({tau_1(0), tau_2(0), n(0),
 	                 tau_1(1), tau_2(1), n(1),
 	                 tau_1(2), tau_2(2), n(2)});
+}
+
+
+inline Matrix11 createLocalBasisTranspose(const Real1& n) {
+	return Matrix11({n(0)});
+}
+
+inline Matrix22 createLocalBasisTranspose(const Real2& n) {
+	const Real2 tau = perpendicularClockwise(n);
+	return Matrix22({tau(0), tau(1),
+	                 n(0),   n(1)});
+}
+
+inline Matrix33 createLocalBasisTranspose(const Real3& n) {
+	const Real3 tau_1 = normalize(perpendicularClockwise(n));
+	const Real3 tau_2 = crossProduct(n, tau_1);
+	return Matrix33({tau_1(0), tau_1(1), tau_1(2),
+	                 tau_2(0), tau_2(1), tau_2(2),
+	                     n(0),     n(1),     n(2)});
 }
  ///@}
 

@@ -32,11 +32,12 @@ int main(int argc, char** argv) {
 	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
 	else if (taskId == "cgal3d"    ) { task = parseTaskCgal3d(); }
 	else if (taskId == "seismo"    ) { task = parseTaskSeismo(); }
-	else if (taskId == "cubic"     ) { task = parseTask3d();     }
+	else if (taskId == "cubic"     ) { task = parseTask2d();     }
 	else if (taskId == "inverse"   ) { task = parse3D(); }
 	else if (taskId == "layers"    ) { task = parseTaskLayers(); }
 	else if (taskId == "cgalani"   ) { task = parseTaskCgalAnisotropy(); }
-	else if (taskId == "skull"     ) { task = skull(); }
+	else if (taskId == "skull"     ) { task = skullAcoustic(); }
+	else if (taskId == "acoustic"  ) { task = parseTaskCubicAcoustic(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;
@@ -62,7 +63,8 @@ int main(int argc, char** argv) {
 Task parseTaskCgal3d() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC3D;
+	task.dimensionality = 3;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
@@ -138,7 +140,8 @@ Task parseTaskCgal3d() {
 Task parseTaskCgal2d() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
@@ -227,7 +230,8 @@ Task parseTaskCgal2d() {
 Task parseTask2d() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK};
@@ -265,7 +269,8 @@ Task parseTask2d() {
 Task parseTask3d() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC3D;
+	task.dimensionality = 3;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ORTHOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK};
@@ -311,7 +316,8 @@ Task parseTask3d() {
 Task parseTaskSeismo() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {
@@ -371,7 +377,8 @@ Task parseTaskSeismo() {
 Task parseTaskCagi2d() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC2D;
+	task.dimensionality = 2;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {
@@ -472,7 +479,8 @@ Task parseTaskCagi2d() {
 Task parseTaskCagi3d() {
 	Task task;
 
-	task.modelId = Models::T::ELASTIC3D;
+	task.dimensionality = 3;
+	task.modelId = Models::T::ELASTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {/*Snapshotters::T::VTK,*/ Snapshotters::T::DETECTOR};

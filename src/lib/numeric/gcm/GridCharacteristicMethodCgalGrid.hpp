@@ -166,9 +166,9 @@ private:
 				}*/ // FIXME
 				/*assert_true(isBorder);*/
 			// now, all inner and part of border cases are calculated	
-				if (isBorder &&
+				if (isBorder /*&&
 					linal::dotProduct(mesh.normal(it),
-							linal::normalize(shift)) > cos(M_PI / 4 + EQUALITY_TOLERANCE)) {
+							linal::normalize(shift)) > cos(M_PI / 4 + EQUALITY_TOLERANCE)*/) {
 				// this is really border case
 				// add outer invariant for border corrector
 					outerInvariants.push_back(k);

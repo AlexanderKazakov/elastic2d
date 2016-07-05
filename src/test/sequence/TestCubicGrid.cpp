@@ -3,7 +3,7 @@
 #include <lib/util/Area.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 #include <test/wrappers/Wrappers.hpp>
-#include <lib/rheology/models/Model.hpp>
+#include <lib/rheology/models/models.hpp>
 
 using namespace gcm;
 
@@ -17,7 +17,7 @@ TEST(CubicGrid, initialize) {
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	task.statements.push_back(statement);
 
-	MeshWrapper<DefaultMesh<Elastic2DModel, CubicGrid<2>, IsotropicMaterial> > grid(task);
+	MeshWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> > grid(task);
 	grid.beforeStatementForTest(statement);
 	
 	ASSERT_NEAR(grid.h(0), 3.333333333, EQUALITY_TOLERANCE);
@@ -43,7 +43,7 @@ TEST(CubicGrid, PartIterator) {
 	task.cubicGrid.sizes = {X, Y, Z};
 	task.cubicGrid.lengths = {20, 8, 1};
 
-	MeshWrapper<DefaultMesh<Elastic3DModel, CubicGrid<3>, IsotropicMaterial> > grid(task);
+	MeshWrapper<DefaultMesh<ElasticModel<3>, CubicGrid<3>, IsotropicMaterial> > grid(task);
 
 	int counter = 0;
 	for (auto it = grid.slice((int)DIRECTION::Z, 3); it != it.end(); ++it) {

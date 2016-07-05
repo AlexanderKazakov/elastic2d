@@ -5,7 +5,7 @@
 
 using namespace gcm;
 
-
+/*
 TEST(InmMeshLoader, load) {
 	Task task;
 	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::INM_MESHER;
@@ -14,7 +14,7 @@ TEST(InmMeshLoader, load) {
 	Cgal3DGrid grid(task);
 	VtkUtils::dumpGridToVtk(grid);
 }
-
+*/
 
 TEST(InmMeshLoader, readFromFile) {
 	std::vector<Real3> points;
