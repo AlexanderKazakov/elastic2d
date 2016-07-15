@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 	else if (taskId == "inverse"   ) { task = parse3D(); }
 	else if (taskId == "layers"    ) { task = parseTaskLayers(); }
 	else if (taskId == "cgalani"   ) { task = parseTaskCgalAnisotropy(); }
-	else if (taskId == "skull"     ) { task = skullAcoustic(); }
+	else if (taskId == "skull"     ) { task = skull(); }
 	else if (taskId == "acoustic"  ) { task = parseTaskCubicAcoustic(); }
 	else {
 		LOG_FATAL("Invalid task file");
@@ -142,6 +142,7 @@ Task parseTaskCgal2d() {
 
 	task.dimensionality = 2;
 	task.modelId = Models::T::ELASTIC;
+//	task.modelId = Models::T::ACOUSTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CGAL;
 	task.snapshottersId = {Snapshotters::T::VTK};
@@ -191,7 +192,7 @@ Task parseTaskCgal2d() {
 		[] (real) { return 0; },
 		[] (real) { return 0; }
 	};
-
+	
 	Statement::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
@@ -213,13 +214,13 @@ Task parseTaskCgal2d() {
 	statement.borderConditions = {borderConditionAll,
 	                              borderConditionLeft,
 	                              borderConditionMid};
-
+	
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
-		PhysicalQuantities::T::Sxx,
-		PhysicalQuantities::T::Sxy,
-		PhysicalQuantities::T::Syy
+//		PhysicalQuantities::T::Sxx,
+//		PhysicalQuantities::T::Sxy,
+//		PhysicalQuantities::T::Syy
 	};
 
 	task.statements.push_back(statement);

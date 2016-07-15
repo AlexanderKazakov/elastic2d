@@ -73,7 +73,7 @@ public:
 	 * \f$ B \vec{u}_{n+1} = \vec{b}(t_{n+1}) \f$.
 	 * @return \vec{b} in local (connected with border) basis
 	 */
-	BorderVector b(const linal::Vector<DIMENSIONALITY>&) const {
+	BorderVector b() const {
 		return b_(Clock::TimeAtNextTimeLayer());
 	}
 	

@@ -163,11 +163,13 @@ struct GridFactory : public VirtualGridFactory {
 		case Grids::T::CGAL:
 			switch (TModel::DIMENSIONALITY) {
 				case 2:
-					return create<TModel::DIMENSIONALITY == 2, Cgal2DGrid>();
+					return create<(TModel::DIMENSIONALITY == 2) &&
+							(std::is_same<TMaterial, IsotropicMaterial>::value), Cgal2DGrid>();
 				case 3:
-					return create<TModel::DIMENSIONALITY == 3, Cgal3DGrid>();
+					return create<(TModel::DIMENSIONALITY == 3) &&
+							(std::is_same<TMaterial, IsotropicMaterial>::value), Cgal3DGrid>();
 				default:
-					THROW_INVALID_ARG("CGAL grids has dimensions 2 or 3 only");
+					THROW_INVALID_ARG("CGAL grids has dimensions 2 or 3 only and support only isotropic materials by now");
 			}
 
 		default:

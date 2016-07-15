@@ -61,7 +61,7 @@ public:
 		
 		/// calculate border nodes
 		LOG_INFO("Start calculate border nodes");
-		size_t counter = 0;
+//		size_t counter = 0;
 //		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
@@ -73,14 +73,14 @@ public:
 			
 			borderCorrector(mesh, s, direction, *borderIter);
 			
-			if (++counter % 20000 == 0) {
-				LOG_INFO(counter << " border nodes have been calculated");
-			}
+//			if (++counter % 20000 == 0) {
+//				LOG_INFO(counter << " border nodes have been calculated");
+//			}
 		}
 		
 		/// calculate inner nodes
 		LOG_INFO("Start calculate inner nodes");
-		counter = 0;
+//		counter = 0;
 //		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
@@ -90,9 +90,9 @@ public:
 					interpolateValuesAround(mesh, direction, *innerIter,
 							crossingPoints(*innerIter, s, timeStep, mesh), false));
 			
-			if (++counter % 20000 == 0) {
-				LOG_INFO(counter << " inner nodes have been calculated");
-			}
+//			if (++counter % 20000 == 0) {
+//				LOG_INFO(counter << " inner nodes have been calculated");
+//			}
 		}
 		
 	}
@@ -195,14 +195,20 @@ private:
 	 * Apply border conditions according to Chelnokov's PhD thesis, page 42.
 	 * Here used outerInvariants, written at interpolateValuesAround before.
 	 */
-	void borderCorrector(Mesh& mesh, const int s, const RealD /*direction*/,
+	void borderCorrector(Mesh& mesh, const int /*s*/, const RealD direction,
 			const Iterator& it) {
 		
 		if (outerInvariants.size() == 0) { return; }
 		
+		if (outerInvariants.size() == 2 * OUTER_NUMBER) {
+		/// no space - no waves
+			mesh._pdeNew(it) = mesh.pde(it);
+			return;
+		}
+		
 		if (outerInvariants.size() != OUTER_NUMBER) {
-			LOG_DEBUG("Bad case: " << outerInvariants.size() << " outer invariants "
-				<< "in border node at " << mesh.coordsD(it));
+//			LOG_INFO("Bad case: " << outerInvariants.size() << " outer invariants "
+//					<< "in border node at " << mesh.coordsD(it));
 			return;
 		}
 		
@@ -211,11 +217,17 @@ private:
 		
 		const RealD normal = mesh.normal(it);
 		const auto B = borderCondition->B(normal);
-		const auto b = borderCondition->b(normal);
-		OuterU1Matrix outerU1;	
+		const auto b = borderCondition->b();
+		
+		Matrix u1AlongBorderNormal;
+		Model::constructEigenvectors(u1AlongBorderNormal,
+				mesh.material(it), linal::createLocalBasis(
+						normal * Utils::sign(linal::dotProduct(normal, direction))));
+		
+		OuterU1Matrix outerU1;		 
 		for (int i = 0; i < OUTER_NUMBER; i++) {
-			outerU1.setColumn(
-				i, mesh.matrices(it)->m[s].U1.getColumn(outerInvariants[(size_t)i]));
+			outerU1.setColumn(i, 
+					u1AlongBorderNormal.getColumn(outerInvariants[(size_t)i]));
 		}
 		
 		const auto alpha = linal::solveLinearSystem(B * outerU1, b - B * mesh.pdeNew(it));

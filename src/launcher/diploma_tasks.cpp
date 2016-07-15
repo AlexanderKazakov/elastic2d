@@ -8,15 +8,16 @@ using namespace gcm;
 inline Task parseTaskCubicAcoustic() {
 	Task task;
 
-	task.dimensionality = 3;
+//	task.dimensionality = 3;
+	task.dimensionality = 2;
 	task.modelId = Models::T::ACOUSTIC;
 	task.materialId = Materials::T::ISOTROPIC;
 	task.gridId = Grids::T::CUBIC;
 	task.snapshottersId = {Snapshotters::T::VTK};
 
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.lengths = {2, 1, 1};
-	task.cubicGrid.sizes = {100, 50, 50};
+	task.cubicGrid.lengths = {2, 1};//, 1};
+	task.cubicGrid.sizes = {100, 50};//, 50};
 
 	Statement statement;
 	statement.materialConditions.defaultMaterial =
@@ -30,7 +31,7 @@ inline Task parseTaskCubicAcoustic() {
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0.5}));
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0/*.5*/}));
 	statement.initialCondition.quantities.push_back(pressure);
 
 	

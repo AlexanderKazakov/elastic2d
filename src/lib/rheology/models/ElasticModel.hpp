@@ -27,6 +27,7 @@ public:
 	
 	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
 	typedef typename GCM_MATRICES::GcmMatrix      GcmMatrix;
+	typedef typename GCM_MATRICES::Matrix         Matrix;
 	typedef typename InternalOde::Variables       OdeVariables;
 	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
 	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
@@ -77,10 +78,17 @@ public:
 	 * @param basis local orthonormal basis; last column - direction of waves propagation
 	 * @param l scale of variables change along the direction of waves propagation
 	 */
-	static void 
-	constructGcmMatrix(
+	static void constructGcmMatrix(
 			GcmMatrix& m, std::shared_ptr<const IsotropicMaterial> material,
 			const MatrixDD& basis, const real l = 1);
+	
+	/** Construct matrix U1 for given basis. @see constructGcmMatrix */
+	static void constructEigenvectors(Matrix& u1,
+			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
+	
+	/** Construct matrix U for given basis. @see constructGcmMatrix */
+	static void constructEigenstrings(Matrix& u,
+			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
 	
 	
 	/**
@@ -93,22 +101,22 @@ public:
 	(const linal::Vector<DIMENSIONALITY>& p) {
 		BorderMatrix B_;
 		auto S = linal::createLocalBasis(p);
-		SigmaD G;
 		/// T * p = S * f, f - fixed force in local basis
 		/// S^T * (T * p) = f
 		/// S_{ik} * T_{ij} * p_{j} = f_{k}
-		/// G_{k}_{ij} : T_{ij} = f_{k}
-		
+		/// G_{k}_{ij} * T_{ij} = f_{k}
+
 		for (int k = 0; k < DIMENSIONALITY; k++) {
 			
+			SigmaD G = SigmaD::Zeros();			
 			for (int i = 0; i < DIMENSIONALITY; i++) {
-				for (int j = 0; j <= i; j++) {
-					G(i, j) = S(i, k) * p(j);
+				for (int j = 0; j < DIMENSIONALITY; j++) {
+					G(i, j) += S(i, k) * p(j);
 				}
 			}
 			
 			PdeVariables pde = PdeVariables::Zeros();
-			pde.setSigma(correctFromTensorToVector(G));
+			pde.setSigma(G);
 			B_.setRow(k, pde);
 			
 		}
@@ -144,7 +152,7 @@ private:
 	/// Because formulas for tension (sigma) are usually written 
 	/// as for symmetric DxD tensor, however in program
 	/// we have sigma as vector of length D*(D-1).
-	/// It does matter when we make its contraction by both indices.
+	/// It does matter for dot products.
 		return (2 * s - linal::Diag(s));
 	}
 	
@@ -194,21 +202,16 @@ constructGcmMatrix(
 	const real c1 = sqrt((lambda + 2*mu) / rho);
 	const real c2 = sqrt(mu / rho);
 	
+	const RealD n = basis.getColumn(DIMENSIONALITY - 1);
 	
-	RealD n[DIMENSIONALITY];
-	for (int i = 0; i < DIMENSIONALITY; i++) {
-		n[i] = basis.getColumn((i + DIMENSIONALITY - 1) % DIMENSIONALITY);
-	}
-	
-	
-	/// fill matrix A along direction n[0] with scale l
+	/// fill matrix A along direction n with scale l
 	PdeVariables vec;
 	linal::clear(m.A);
 	/// set DIMENSIONALITY first strings
 	for (int i = 0; i < DIMENSIONALITY; i++) {
 		linal::clear(vec);
 		for (int j = 0; j < DIMENSIONALITY; j++) {
-			vec.sigma(i, j) = -l * n[0](j) / rho;
+			vec.sigma(i, j) = -l * n(j) / rho;
 		}
 		m.A.setRow(i, vec);
 	}
@@ -216,14 +219,13 @@ constructGcmMatrix(
 	for (int i = 0; i < DIMENSIONALITY; i++) {
 		linal::clear(vec);
 		for (int j = 0; j < DIMENSIONALITY; j++) {
-			vec.sigma(i, j)  = -l * mu * n[0](j);
+			vec.sigma(i, j)  = -l * mu * n(j);
 		}
 		for (int j = 0; j < DIMENSIONALITY; j++) {
-			vec.sigma(j, j) += -l * (lambda + (i == j) * mu) * n[0](i);
+			vec.sigma(j, j) += -l * (lambda + (i == j) * mu) * n(i);
 		}
 		m.A.setColumn(i, vec);
 	}
-	
 	
 	/// fill L with eigenvalues
 	linal::clear(m.L);
@@ -234,88 +236,150 @@ constructGcmMatrix(
 		m.L(2 * i + 1) = -l*c2;
 	}
 	
+	constructEigenvectors(m.U1, material, basis);
+	constructEigenstrings(m.U, material, basis);
 	
-	/// fill U1 with eigenvectors
+	m.checkDecomposition(100*EQUALITY_TOLERANCE);
+}
+
+
+template<int Dimensionality>
+inline void ElasticModel<Dimensionality>::
+constructEigenvectors(
+		Matrix& u1,
+		std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis) {
+	/// fill u1 with eigenvectors
+	
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real mu = material->mu;
+	
+	const real c1 = sqrt((lambda + 2*mu) / rho);
+	const real c2 = sqrt(mu / rho);
+	
+	RealD n[DIMENSIONALITY];
+	for (int i = 0; i < DIMENSIONALITY; i++) {
+		n[i] = basis.getColumn((i + DIMENSIONALITY - 1) % DIMENSIONALITY);
+	}
+	
 	const SigmaD I = SigmaD::Identity();
+	
 	linal::SYMMETRIC_MATRIX<DIMENSIONALITY, SigmaD> N;
 	for (int i = 0; i < DIMENSIONALITY; i++) {
 		for (int j = 0; j <= i; j++) {
 			N(i, j) = linal::symmDirectProduct(n[i], n[j]);
 		}
 	}
+	
 	const real alpha = 0.5; ///< normalizator for U*U1 = I
+	
+	
 	/// p-waves
+	PdeVariables vec;
 	vec.setVelocity(alpha * n[0]);
 	vec.setSigma(-alpha / c1 * (lambda * I + 2 * mu * N(0,0)));
-	m.U1.setColumn(0, vec);
+	u1.setColumn(0, vec);
 	vec.setSigma(-vec.getSigma());
-	m.U1.setColumn(1, vec);
+	u1.setColumn(1, vec);
+	
 	/// s-waves
 	for (int i = 1; i < DIMENSIONALITY; i++) {
 		vec.setVelocity(alpha * n[i]);
 		vec.setSigma(-2 * alpha * mu / c2 * N(0,i));
-		m.U1.setColumn(2 * i, vec);
+		u1.setColumn(2 * i, vec);
 		vec.setSigma(-vec.getSigma());
-		m.U1.setColumn(2 * i + 1, vec);
+		u1.setColumn(2 * i + 1, vec);
 	}
+	
 	/// zero eigenvalues
 	vec.setVelocity(RealD::Zeros());
 	switch (DIMENSIONALITY) {
 		case 3:
 			vec.setSigma(2 * N(1,2));
-			m.U1.setColumn(6, vec);
+			u1.setColumn(6, vec);
 			vec.setSigma((N(1,1) - N(2,2)) / 2);
-			m.U1.setColumn(7, vec);
+			u1.setColumn(7, vec);
 			vec.setSigma((N(1,1) + N(2,2)) / 2);
-			m.U1.setColumn(8, vec);
+			u1.setColumn(8, vec);
 			break;
 		case 2:
 			vec.setSigma(I - N(0,0));
-			m.U1.setColumn(4, vec);
+			u1.setColumn(4, vec);
 			break;
 		default:
 			break;
 	}
 	
+}
+
+
+template<int Dimensionality>
+inline void ElasticModel<Dimensionality>::
+constructEigenstrings(
+		Matrix& u,
+		std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis) {
+	/// fill u with eigenstrings
 	
-	/// fill U with eigenstrings
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real mu = material->mu;
+	
+	const real c1 = sqrt((lambda + 2*mu) / rho);
+	const real c2 = sqrt(mu / rho);
+	
+	RealD n[DIMENSIONALITY];
+	for (int i = 0; i < DIMENSIONALITY; i++) {
+		n[i] = basis.getColumn((i + DIMENSIONALITY - 1) % DIMENSIONALITY);
+	}
+	
+	const SigmaD I = SigmaD::Identity();
+	
+	linal::SYMMETRIC_MATRIX<DIMENSIONALITY, SigmaD> N;
+	for (int i = 0; i < DIMENSIONALITY; i++) {
+		for (int j = 0; j <= i; j++) {
+			N(i, j) = linal::symmDirectProduct(n[i], n[j]);
+		}
+	}
+	
+	
 	/// p-waves
+	PdeVariables vec;
 	vec.setVelocity(n[0]);
 	vec.setSigma(correctFromTensorToVector(N(0,0) / (-c1 * rho)));
-	m.U.setRow(0, vec);
+	u.setRow(0, vec);
 	vec.setSigma(-vec.getSigma());
-	m.U.setRow(1, vec);
+	u.setRow(1, vec);
+	
 	/// s-waves
 	for (int i = 1; i < DIMENSIONALITY; i++) {
 		vec.setVelocity(n[i]);
 		vec.setSigma(correctFromTensorToVector(N(0,i) / (-c2 * rho)));
-		m.U.setRow(2 * i, vec);
+		u.setRow(2 * i, vec);
 		vec.setSigma(-vec.getSigma());
-		m.U.setRow(2 * i + 1, vec);
+		u.setRow(2 * i + 1, vec);
 	}
+	
 	/// zero eigenvalues
 	vec.setVelocity(RealD::Zeros());
 	switch (DIMENSIONALITY) {
 		case 3:
 			vec.setSigma(correctFromTensorToVector(N(1,2)));
-			m.U.setRow(6, vec);
+			u.setRow(6, vec);
 			vec.setSigma(correctFromTensorToVector(N(1,1) - N(2,2)));
-			m.U.setRow(7, vec);
+			u.setRow(7, vec);
 			vec.setSigma(correctFromTensorToVector(
 					N(1,1) + N(2,2) - 2 * lambda / (lambda + 2 * mu) * N(0,0)));
-			m.U.setRow(8, vec);
+			u.setRow(8, vec);
 			break;
 		case 2:
 			vec.setSigma(correctFromTensorToVector(
 					N(1,1) - lambda / (lambda + 2 * mu) * N(0,0)));
-			m.U.setRow(4, vec);
+			u.setRow(4, vec);
 			break;
 		default:
 			break;
 	}
 	
-	
-	m.checkDecomposition(100*EQUALITY_TOLERANCE);
 }
 
 

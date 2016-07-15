@@ -38,9 +38,9 @@ inline Task skullAcoustic() {
 			{5, {vessels,          1000} },
 	};
 	
-	statement.globalSettings.CourantNumber = 0.2;
+	statement.globalSettings.CourantNumber = 1;
 	statement.globalSettings.numberOfSnaps = 100;
-	statement.globalSettings.stepsPerSnap = 25;
+	statement.globalSettings.stepsPerSnap = 5;
 
 	
 	Statement::BorderCondition freeBorder;
@@ -97,6 +97,10 @@ inline Task skull() {
 	
 	
 	Statement statement;
+	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_AREAS;
+	statement.materialConditions.defaultMaterial = 
+			std::make_shared<IsotropicMaterial>(1, 2, 1);
+	/*
 	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_CELLS;
 	auto connectiveTissue = std::make_shared<IsotropicMaterial>(1.008, 2.187, 0.0911, 0, 0, 1);
 	auto muscles          = std::make_shared<IsotropicMaterial>(1.041, 1.765, 0.4413, 0, 0, 2);
@@ -110,10 +114,11 @@ inline Task skull() {
 			{4, {bones,            10} },
 			{5, {vessels,          1000} },
 	};
+	*/
 	
-	statement.globalSettings.CourantNumber = 1;
+	statement.globalSettings.CourantNumber = 0.5;
 	statement.globalSettings.numberOfSnaps = 100;
-	statement.globalSettings.stepsPerSnap = 5;
+	statement.globalSettings.stepsPerSnap = 1;
 
 	
 	Statement::BorderCondition freeBorder;
@@ -127,23 +132,23 @@ inline Task skull() {
 	};
 	
 	
-//	Statement::BorderCondition source;
-//	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
-//	source.type = BorderConditions::T::FIXED_FORCE;
-//	source.values = {
-//		[] (real) { return 0; },
-//		[] (real) { return 0; },
-//		[] (real /*t*/) { return -1; }
-////		[] (real t) { return sin(omega * t) * exp(-t*t / ( 2 * tau)); }
-//	};
+	Statement::BorderCondition source;
+	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
+	source.type = BorderConditions::T::FIXED_FORCE;
+	source.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; },
+		[] (real /*t*/) { return -1; }
+//		[] (real t) { return sin(omega * t) * exp(-t*t / ( 2 * tau)); }
+	};
 	
-	statement.borderConditions = {/*freeBorder, source*/};
+	statement.borderConditions = {freeBorder, source};
 
-	Statement::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 1;
-	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 0, 148}));
-	statement.initialCondition.quantities.push_back(pressure);
+//	Statement::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 1;
+//	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
+//	statement.initialCondition.quantities.push_back(pressure);
 	
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

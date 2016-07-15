@@ -28,6 +28,7 @@ public:
 
 	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
 	typedef typename GCM_MATRICES::GcmMatrix      GcmMatrix;
+	typedef typename GCM_MATRICES::Matrix         Matrix;
 	typedef typename InternalOde::Variables       OdeVariables;
 	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
 	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
@@ -65,6 +66,14 @@ public:
 	constructGcmMatrix(
 			GcmMatrix& m, std::shared_ptr<const IsotropicMaterial> material,
 			const MatrixDD& basis, const real l = 1);
+	
+	/** Construct matrix U1 for given basis. @see constructGcmMatrix */
+	static void constructEigenvectors(Matrix& u1,
+			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
+	
+	/** Construct matrix U for given basis. @see constructGcmMatrix */
+	static void constructEigenstrings(Matrix& u,
+			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
 	
 	
 	/**
@@ -114,6 +123,40 @@ constructGcmMatrix(
 	const real lambda = material->lambda;
 	const real c1 = sqrt(lambda / rho);
 	
+	const RealD n = basis.getColumn(DIMENSIONALITY - 1);
+	
+	/// fill matrix A along direction n with scale l
+	PdeVariables vec;
+	linal::clear(m.A);
+	
+	vec.pressure() = 0;
+	vec.setVelocity(l * lambda * n);
+	m.A.setRow(DIMENSIONALITY, vec);
+	vec.setVelocity(l / rho * n);
+	m.A.setColumn(DIMENSIONALITY, vec);
+	
+	/// fill L with eigenvalues
+	linal::clear(m.L);
+	m.L(0) =  l*c1;
+	m.L(1) = -l*c1;
+	
+	constructEigenvectors(m.U1, material, basis);
+	constructEigenstrings(m.U, material, basis);
+	
+	m.checkDecomposition(100*EQUALITY_TOLERANCE);
+}
+
+
+template<int Dimensionality>
+inline void AcousticModel<Dimensionality>::
+constructEigenvectors(
+		Matrix& u1,
+		std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis) {
+	/// fill u1 with eigenvectors
+	
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real c1 = sqrt(lambda / rho);
 	
 	RealD n[DIMENSIONALITY];
 	for (int i = 0; i < DIMENSIONALITY; i++) {
@@ -121,57 +164,58 @@ constructGcmMatrix(
 	}
 	
 	
-	/// fill matrix A along direction n[0] with scale l
-	PdeVariables vec;
-	linal::clear(m.A);
-	
-	vec.pressure() = 0;
-	vec.setVelocity(l * lambda * n[0]);
-	m.A.setRow(DIMENSIONALITY, vec);
-	vec.setVelocity(l / rho * n[0]);
-	m.A.setColumn(DIMENSIONALITY, vec);
-	
-	
-	/// fill L with eigenvalues
-	linal::clear(m.L);
-	m.L(0) =  l*c1;
-	m.L(1) = -l*c1;
-	
-	
-	/// fill U1 with eigenvectors
 	/// p-waves
+	PdeVariables vec;
 	vec.setVelocity(n[0]);
 	vec.pressure() = c1 * rho;
-	m.U1.setColumn(0, vec);
+	u1.setColumn(0, vec);
 	vec.pressure() = -vec.pressure();
-	m.U1.setColumn(1, vec);
+	u1.setColumn(1, vec);
 	
 	/// zero eigenvalues
 	vec.pressure() = 0;
 	for (int i = 1; i < DIMENSIONALITY; i++) {
 		vec.setVelocity(n[i]);
-		m.U1.setColumn(i + 1, vec);
+		u1.setColumn(i + 1, vec);
 	}
 	
+}
+
+
+template<int Dimensionality>
+inline void AcousticModel<Dimensionality>::
+constructEigenstrings(
+		Matrix& u,
+		std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis) {
+	/// fill u with eigenstrings
 	
-	/// fill U with eigenstrings
-	const real alpha = 0.5; //< normalizer for U1*U == I		
+	const real rho = material->rho;
+	const real lambda = material->lambda;
+	const real c1 = sqrt(lambda / rho);
+	
+	RealD n[DIMENSIONALITY];
+	for (int i = 0; i < DIMENSIONALITY; i++) {
+		n[i] = basis.getColumn((i + DIMENSIONALITY - 1) % DIMENSIONALITY);
+	}
+	
+	const real alpha = 0.5; ///< normalizer for U1*U == I
+	
+	
 	/// p-waves
+	PdeVariables vec;
 	vec.setVelocity(alpha * n[0]);
 	vec.pressure() = alpha / (c1 * rho);
-	m.U.setRow(0, vec);
+	u.setRow(0, vec);
 	vec.pressure() = -vec.pressure();
-	m.U.setRow(1, vec);
+	u.setRow(1, vec);
 	
 	/// zero eigenvalues
 	vec.pressure() = 0;
 	for (int i = 1; i < DIMENSIONALITY; i++) {
 		vec.setVelocity(n[i]);
-		m.U.setRow(i + 1, vec);
+		u.setRow(i + 1, vec);
 	}
 	
-	
-	m.checkDecomposition(100*EQUALITY_TOLERANCE);
 }
 
 
