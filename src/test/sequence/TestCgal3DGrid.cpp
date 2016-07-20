@@ -1,4 +1,4 @@
-#include <lib/mesh/grid/Cgal3DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
 #include <lib/util/snapshot/VtkSnapshotter.hpp>
 
 #include <gtest/gtest.h>

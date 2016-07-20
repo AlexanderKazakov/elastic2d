@@ -1,9 +1,7 @@
-#include <lib/mesh/grid/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal2DLineWalker.hpp>
 
-#include <CGAL/Delaunay_mesh_size_criteria_2.h>
-#include <CGAL/Polygon_2.h>
-#include <CGAL/Delaunay_mesher_2.h>
-
+#include <libcgalmesh/Cgal2DMesher.hpp>
 
 using namespace gcm;
 
@@ -11,10 +9,22 @@ using namespace gcm;
 Cgal2DGrid::
 Cgal2DGrid(const Task& task) :
 	UnstructuredGrid(task),
-	effectiveSpatialStep(task.cgal2DGrid.spatialStep), 
+	effectiveSpatialStep(task.cgal2DGrid.spatialStep),
 	movable(task.cgal2DGrid.movable) {
-
-	triangulate(task.cgal2DGrid);
+	
+	// convert task to cgal mesher format
+	typedef cgalmesh::Cgal2DMesher::Body Body;
+	std::vector<Body> bodies;
+	for (const auto& b : task.cgal2DGrid.bodies) {
+		bodies.push_back({b.outer, b.inner});
+	}
+	
+	LOG_DEBUG("Call Cgal2DMesher");
+	cgalmesh::Cgal2DMesher::triangulate(
+			task.cgal2DGrid.spatialStep, bodies, triangulation);
+	LOG_DEBUG("Number of vertices after meshing: " << triangulation.number_of_vertices());
+	LOG_DEBUG("Number of faces after meshing: " << triangulation.number_of_faces());
+	
 	
 	vertexHandles.resize(triangulation.number_of_vertices());
 	size_t vertexIndex = 0;
@@ -25,7 +35,7 @@ Cgal2DGrid(const Task& task) :
 		vertexHandles[vertexIndex] = handle;
 		vertexIndex++;
 	}
-
+	
 	markInnersAndBorders();
 }
 
@@ -38,7 +48,7 @@ findNeighborVertices(const Iterator& it) const {
 	auto beginFace = triangulation.incident_faces(v);
 	auto faceCirculator = beginFace;
 	do {
-		if (faceCirculator->is_in_domain()) {
+		if (isInDomain(faceCirculator)) {
 			int vLocalIndex = faceCirculator->index(v);
 			ans.insert(getIterator(
 					faceCirculator->vertex(faceCirculator->cw(vLocalIndex))));
@@ -56,11 +66,11 @@ Cgal2DGrid::Cell Cgal2DGrid::
 findOwnerCell(const Iterator& it, const Real2& shift) const {
 	if (shift == Real2({0, 0})) {
 		auto startFace = vertexHandle(it)->incident_faces();
-		while (!startFace->is_in_domain()) { ++startFace; }
+		while (!isInDomain(startFace)) { ++startFace; }
 		return createCell(it, startFace, startFace);
 	}
 	
-	LineWalker lineWalker(this, it, shift);
+	Cgal2DLineWalker lineWalker(this, it, shift);
 	Real2 query = coordsD(it) + shift;
 	FaceHandle previousFace = lineWalker.faceHandle();
 	FaceHandle currentFace = previousFace;
@@ -93,16 +103,16 @@ findBorderNeighbors(const Iterator& it) const {
 	auto firstFace = triangulation.incident_faces(v);
 	auto secondFace = firstFace; ++secondFace;
 	
-	while ( !(  firstFace->is_in_domain() && 
-	           !secondFace->is_in_domain() ) ) {
+	while ( !(  isInDomain(firstFace) && 
+	           !isInDomain(secondFace) ) ) {
 		++firstFace; ++secondFace;
 	}
 	VertexHandle firstBorderNeighbour = 
 			firstFace->vertex(firstFace->cw(firstFace->index(v)));
 	assert_true(secondFace->has_vertex(firstBorderNeighbour));
 	
-	while ( !( !firstFace->is_in_domain() && 
-	            secondFace->is_in_domain() ) ) {
+	while ( !( !isInDomain(firstFace) && 
+	            isInDomain(secondFace) ) ) {
 		++firstFace; ++secondFace;
 	}
 	VertexHandle secondBorderNeighbour = 
@@ -121,96 +131,6 @@ findVertexByCoordinates(const Real2& coordinates) const {
 		}
 	}
 	THROW_INVALID_ARG("There isn't a vertex with such coordinates");
-}
-
-
-void Cgal2DGrid::
-triangulate(const Task::Cgal2DGrid& task) {
-	// Special "seeds" in the interior of inner cavities
-	// to tell CGAL do not mesh these cavities
-	std::list<CgalPoint2> listOfSeeds;
-	
-	// insert all task outer borders and inner cavities
-	for (const auto& body : task.bodies) {
-		// TODO - check bodies and cavities intersections
-		insertPolygon(makePolygon(body.outer));
-		for (const auto& innerCavity : body.inner) {
-			insertPolygon(makePolygon(innerCavity));
-			listOfSeeds.push_back(findInnerPoint(makePolygon(innerCavity)));
-		}
-	}
-
-	LOG_DEBUG("Number of vertices before meshing: " << triangulation.number_of_vertices());
-	LOG_DEBUG("Number of faces before meshing: " << triangulation.number_of_faces());
-	LOG_DEBUG("Meshing the triangulation...");
-	
-	Mesher mesher(triangulation);
-	mesher.set_seeds(listOfSeeds.begin(), listOfSeeds.end());
-	
-	Criteria meshingCriteria;
-	assert_gt(effectiveSpatialStep, 0);
-	meshingCriteria.set_size_bound(effectiveSpatialStep);
-	mesher.set_criteria(meshingCriteria);
-	
-	mesher.refine_mesh(); // meshing
-	
-	LOG_DEBUG("Number of vertices after meshing: " << triangulation.number_of_vertices());
-	LOG_DEBUG("Number of faces after meshing: " << triangulation.number_of_faces());
-}
-
-
-Cgal2DGrid::Polygon Cgal2DGrid::
-makePolygon(const std::vector<Real2>& points) {
-	/// convert point set to simple CGAL polygon
-	assert_ge(points.size(), 3); // polygon is a closed line
-	
-	Polygon polygon;
-	for (const auto& p : points) {
-		polygon.push_back(cgalPoint2(p));
-	}
-	assert_true(polygon.is_simple()); // has not intersections
-	
-	return polygon;
-}
-
-
-void Cgal2DGrid::
-insertPolygon(const Polygon& polygon) {
-	/// insert points and constraints - lines between them - to triangulation
-	auto point = polygon.vertices_begin();
-	VertexHandle first = triangulation.insert(*point);
-	VertexHandle last = first;
-	++point;
-	
-	while(point != polygon.vertices_end()) {
-		VertexHandle current = triangulation.insert(*point);
-		triangulation.insert_constraint(last, current);
-		last = current;
-		++point;
-	}
-	
-	triangulation.insert_constraint(last, first);
-}
-
-
-Cgal2DGrid::CgalPoint2 Cgal2DGrid::
-findInnerPoint(const Polygon& polygon) {
-	/// find inner point in polygon
-	Real2 a = real2(polygon.vertex(0));
-	Real2 b = real2(polygon.vertex(1));
-	Real2 middle = (a + b) / 2.0;
-	Real2 cross = linal::perpendicularClockwise(b - a);
-	Real2 innerPoint = middle + cross;
-	int n = 1; // iteration number
-	while (!polygon.has_on_bounded_side(cgalPoint2(innerPoint))) {
-	// watching on the both sides of the edge, getting closer on each iteration
-		innerPoint = middle + cross / pow(-2, n);
-		if (n > 20) {
-			THROW_BAD_MESH("Exceed number of iterations in polygon inner point search");
-		}
-		n++;
-	}
-	return cgalPoint2(innerPoint);
 }
 
 
@@ -261,10 +181,6 @@ printFace(const FaceHandle& f, const std::string& name) const {
 		}
 	}
 }
-
-
-
-
 
 
 

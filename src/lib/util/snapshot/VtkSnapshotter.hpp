@@ -1,8 +1,8 @@
 #ifndef LIBGCM_VTKSNAPSHOTTER_HPP
 #define LIBGCM_VTKSNAPSHOTTER_HPP
 
-#include <lib/mesh/grid/Cgal2DGrid.hpp>
-#include <lib/mesh/grid/Cgal3DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
 #include <lib/util/snapshot/Snapshotter.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
 

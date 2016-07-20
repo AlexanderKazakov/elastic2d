@@ -175,14 +175,15 @@ struct Task {
 		real spatialStep = 0;       ///< effective spatial step
 		
 		struct Body {
-			typedef std::vector<Real2> Border;
+			typedef std::array<real, 2> Point;
+			typedef std::vector<Point> Border;
 			Body(const Border& outer_, const std::vector<Border>& inner_) :
-				outer(outer_), inner(inner_) { }
+					outer(outer_), inner(inner_) { }
 			
 			Border outer;               ///< outer border of the body
 			std::vector<Border> inner;  ///< borders of the inner cavities
 		};
-		std::vector<Body> bodies; ///< list of bodies contained in the grid		
+		std::vector<Body> bodies; ///< list of bodies contained in the grid
 	} cgal2DGrid;
 	
 	struct Cgal3DGrid {

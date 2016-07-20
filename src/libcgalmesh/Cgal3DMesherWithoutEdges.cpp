@@ -1,34 +1,38 @@
-#include "Cgal3DMesher.hpp"
+#include <libcgalmesh/Cgal3DMesher.hpp>
 
+#include <CGAL/Polyhedron_3.h>
 #include <CGAL/Mesh_triangulation_3.h>
 #include <CGAL/Mesh_complex_3_in_triangulation_3.h>
 #include <CGAL/Mesh_criteria_3.h>
-#include <CGAL/Polyhedral_mesh_domain_with_features_3.h>
+#include <CGAL/Polyhedral_mesh_domain_3.h>
 #include <CGAL/make_mesh_3.h>
+#include <CGAL/IO/Polyhedron_iostream.h>
 
-using namespace cgal_3d_mesher;
+using namespace cgalmesh;
+
 
 void Cgal3DMesher::
-triangulateWithEdges(const std::string polyhedronFileName,
+triangulateWithoutEdges(const std::string polyhedronFileName,
 			const double spatialStep, ResultingTriangulation& result) {
-	
+
 	// Types connected with meshing
 	// Initial mesh "domain" - from what CGAL builds the triangulation
-	typedef CGAL::Polyhedral_mesh_domain_with_features_3<K>               MeshDomain;
+	typedef CGAL::Polyhedron_3<K>                                         Polyhedron;
+	typedef CGAL::Polyhedral_mesh_domain_3<Polyhedron, K>                 MeshDomain;
 	// Triangulation used by mesher
 	typedef CGAL::Mesh_triangulation_3<MeshDomain>::type                  MeshingTriangulation;
-	typedef CGAL::Mesh_complex_3_in_triangulation_3<MeshingTriangulation,
-			MeshDomain::Corner_index, MeshDomain::Curve_segment_index>    C3t3;
+	typedef CGAL::Mesh_complex_3_in_triangulation_3<MeshingTriangulation> C3t3;
 	// Meshing criteria
 	typedef CGAL::Mesh_criteria_3<MeshingTriangulation>                   MeshingCriteria;
 
+	Polyhedron polyhedron;
+	readFromTextFile(polyhedronFileName, polyhedron);
+	assert(polyhedron.is_valid());
+			
 	// Create initial mesh domain
-	MeshDomain domain(polyhedronFileName.c_str());
-	// Get sharp features
-	domain.detect_features();
+	MeshDomain domain(polyhedron);
 	
 	MeshingCriteria meshingCriteria(
-			CGAL::parameters::edge_size = spatialStep,
 			CGAL::parameters::facet_topology = CGAL::FACET_VERTICES_ON_SAME_SURFACE_PATCH,
 			CGAL::parameters::facet_angle = 25,
 			CGAL::parameters::cell_radius_edge_ratio = 3,
@@ -42,5 +46,6 @@ triangulateWithEdges(const std::string polyhedronFileName,
 	assert(mt.is_valid());
 	
 	copyTriangulation(mt, result);
+	assert(result.is_valid());
 }
 

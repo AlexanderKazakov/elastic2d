@@ -245,10 +245,7 @@ protected:
 
 	
 private:
-	/** Functions for building the triangulation */
-	///@{
 	void markInnersAndBorders();
-	///@}
 
 	/// Auxilliary functions
 	///@{

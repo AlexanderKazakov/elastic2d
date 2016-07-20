@@ -3,43 +3,37 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Triangulation_face_base_with_info_2.h>
 #include <CGAL/Delaunay_mesh_face_base_2.h>
-
 
 #include <lib/mesh/grid/UnstructuredGrid.hpp>
 
-namespace CGAL {
-	template <class Traits_P, class Container_P> class Polygon_2;
-	template <class CDT> class Delaunay_mesh_size_criteria_2;
-	template <typename Tr, typename Crit> class Delaunay_mesher_2;
-}
 
 namespace gcm {
+class Cgal2DLineWalker;
+
 /**
  * 2D movable unstructured triangle grid by CGAL library
  */
 class Cgal2DGrid : public UnstructuredGrid {
 public:
-	typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-	typedef CGAL::Triangulation_vertex_base_with_info_2
-	                                                <size_t, K> Vb;
-	typedef CGAL::Delaunay_mesh_face_base_2<K>                  Fb;
-	typedef CGAL::Triangulation_data_structure_2<Vb, Fb>        Tds;
-	typedef CGAL::Constrained_Delaunay_triangulation_2<K, Tds>  CDT;
-	typedef CGAL::Delaunay_mesh_size_criteria_2<CDT>            Criteria;
-	typedef CGAL::Delaunay_mesher_2<CDT, Criteria>              Mesher;
-	typedef CDT::Vertex_handle                                  VertexHandle;
-	typedef CDT::Face_handle                                    FaceHandle;
-	typedef CDT::Geom_traits::Vector_2                          CgalVector2;
-	typedef CDT::Triangle                                       CgalTriangle2;
-	typedef CDT::Point                                          CgalPoint2;
-	typedef CGAL::Polygon_2<K, std::vector<CgalPoint2>>         Polygon;
-	typedef CDT::Finite_faces_iterator                          FiniteFacesIterator;
-	typedef CDT::Finite_vertices_iterator                       FiniteVerticesIterator;
-	typedef CDT::Line_face_circulator                           LineFaceCirculator;
-
-	typedef elements::Triangle<Iterator>                        Cell;
+	typedef CGAL::Exact_predicates_inexact_constructions_kernel      K;
+	typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>   Vb;
+	typedef CGAL::Triangulation_face_base_with_info_2<size_t, K>     Fb;
+	typedef CGAL::Triangulation_data_structure_2<Vb, Fb>             Tds;
+	typedef CGAL::Delaunay_triangulation_2<K, Tds>                   Triangulation;
+	
+	typedef Triangulation::Vertex_handle                VertexHandle;
+	typedef Triangulation::Face_handle                  FaceHandle;
+	typedef Triangulation::Geom_traits::Vector_2        CgalVector2;
+	typedef Triangulation::Triangle                     CgalTriangle2;
+	typedef Triangulation::Point                        CgalPoint2;
+	typedef Triangulation::Finite_faces_iterator        FiniteFacesIterator;
+	typedef Triangulation::Finite_vertices_iterator     FiniteVerticesIterator;
+	
+	typedef elements::Triangle<Iterator>                Cell;
 	
 	/// Space dimensionality
 	static const int DIMENSIONALITY = 2;
@@ -71,29 +65,34 @@ public:
 	///@}
 
 	/**
-	 * Iteration over all real mesh faces.
-	 * "Real" means face which covers the body not outer space ("is_in_domain()").
-	 * There are also not meshing ("!is_in_domain()") faces in the triangulation.
+	 * Iteration over all real mesh cells.
+	 * "Real" means cell which covers the body not outer space ("isInDomain").
+	 * There are also not meshing ("!isInDomain") cells in the triangulation.
 	 * They cover the space around bodies, because CGAL triangulation 
 	 * is a convex hull of its vertices.
 	 */
 	///@{
-	struct RealFaceTester {
+	struct RealCellTester {
 		bool operator()(const FiniteFacesIterator& it) const {
-			return !it->is_in_domain();
+			return !grid->isInDomain(it);
 		}
-	} realFaceTester;
+		RealCellTester(const Cgal2DGrid* const grid_) : grid(grid_) { }
+	private:
+		const Cgal2DGrid* const grid;
+	};
 	
-	typedef CGAL::Filter_iterator<FiniteFacesIterator, RealFaceTester> CellIterator;
+	typedef CGAL::Filter_iterator<FiniteFacesIterator, RealCellTester> CellIterator;
 	
 	CellIterator cellBegin() const { 
 		return CellIterator(triangulation.finite_faces_end(),
-		                    realFaceTester,
-		                    triangulation.finite_faces_begin()); }
+		                    RealCellTester(this),
+		                    triangulation.finite_faces_begin());
+	}
 	CellIterator cellEnd() const { 
 		return CellIterator(triangulation.finite_faces_end(),
-		                    realFaceTester,
-		                    triangulation.finite_faces_end()); }
+		                    RealCellTester(this),
+		                    triangulation.finite_faces_end());
+	}
 	///@}
 	///@}
 
@@ -126,6 +125,14 @@ public:
 	size_t getIndex(const Iterator& it) const {
 		return it.iter;
 	}
+	
+	size_t cellInfo(const FaceHandle c) const {
+		return c->info();
+	}
+	
+	bool isInDomain(const FaceHandle c) const { // FIXME
+		return ( !triangulation.is_infinite(c) ) && (cellInfo(c) != 0);
+	}
 
 	/** @return indices of all vertices in vertexHandles which specified cell owns */
 	std::array<size_t, 3> getVerticesOfCell(const CellIterator& it) const {
@@ -145,7 +152,7 @@ public:
 		auto beginFace = triangulation.incident_faces(vh);
 		auto faceCirculator = beginFace;
 		do {
-			if ( !faceCirculator->is_in_domain() ) {
+			if ( !isInDomain(faceCirculator) ) {
 				return true;
 			}
 			++faceCirculator;
@@ -206,7 +213,7 @@ public:
 protected:
 	/// Data
 	///@{
-	CDT triangulation;                       ///< CGAL triangulation data structure
+	Triangulation triangulation;             ///< CGAL triangulation structure
 	std::vector<VertexHandle> vertexHandles; ///< CGAL-"pointers" to each grid vertex
 	std::vector<size_t> borderIndices;       ///< indices of border vertices in vertexHandles
 	std::vector<size_t> innerIndices;        ///< indices of inner vertices in vertexHandles
@@ -223,19 +230,12 @@ protected:
 
 	
 private:
-	/** Functions for building the triangulation */
-	///@{
-	void triangulate(const Task::Cgal2DGrid& task);
-	void insertPolygon(const Polygon& polygon);
-	static Polygon makePolygon(const std::vector<Real2>& points);
-	static CgalPoint2 findInnerPoint(const Polygon& polygon);
 	void markInnersAndBorders();
-	///@}
 
 	/// Auxilliary functions for handling numerical methods queries 
 	/// @{		
 	VertexHandle vertexHandle(const Iterator& it) const {
-		return vertexHandles [getIndex(it)];
+		return vertexHandles[getIndex(it)];
 	}
 	
 	std::vector<VertexHandle> commonVertices(const FaceHandle& a, const FaceHandle& b) const;	
@@ -279,15 +279,15 @@ private:
 			return ans;
 		}
 		
-		if ( current->is_in_domain() ) {
+		if ( isInDomain(current) ) {
 			// return found cell
-			assert_true(previous->is_in_domain());
+			assert_true(isInDomain(previous));
 			ans.n = 3;
 			for (int i = 0; i < 3; i++) {
 				ans(i) = getIterator(current->vertex(i));
 			}
 			
-		} else if ( previous->is_in_domain() ) {
+		} else if ( isInDomain(previous) ) {
 		// going through the border edge
 			std::vector<VertexHandle> cv = commonVertices(current, previous);
 			VertexHandle vertex = vertexHandle(it);
@@ -307,118 +307,6 @@ private:
 	}
 	/// @}
 
-	/**
-	 * Wrapper around CGAL LineFaceCirculator in order to prevent different
-	 * yield situations with line_walk (empty circulator when the line is 
-	 * tangent to body and body is at the right of the line, etc..)
-	 */
-	struct LineWalker {
-	
-		/** Create line walker from point it in direction determined by shift */
-		LineWalker(const Cgal2DGrid* grid_, const Iterator& it, const Real2& shift) :
-				grid(grid_), p(grid->coordsD(it)), q(p + shift) {
-			assert_true(p != q);
-
-			alongBorder = false;
-			if (grid->isBorder(it)) {
-				auto borderNeighbors = grid->findBorderNeighbors(it);
-				alongBorder = 
-						fabs(linal::orientedArea(p, q, grid->coordsD(
-								borderNeighbors.first))) < EQUALITY_TOLERANCE ||
-						fabs(linal::orientedArea(p, q, grid->coordsD(
-								borderNeighbors.second))) < EQUALITY_TOLERANCE;	
-			}
-			
-			// find not empty LineFaceCirculator		
-			VertexHandle startVertex = grid->vertexHandle(it);
-			plusPlus = true;
-			lfc = grid->triangulation.line_walk(cgalPoint2(p), cgalPoint2(q),
-					startVertex->incident_faces());
-			currentFace = lfc;
-			
-			if (currentFace == NULL) { // lfc is empty
-			// LineFaceCirculator recognizes tangent faces if they are at the left 
-			// of the line only; try to change line direction
-				plusPlus = false;
-				lfc = grid->triangulation.line_walk(cgalPoint2(q), cgalPoint2(p));
-				currentFace = lfc;
-			}
-			
-			if (currentFace != NULL) {
-			// Now, lfc is not empty.
-			// Make it on "in_domain" face which has startVertex
-				correctBorderYieldCase();
-				auto lfcBegin = lfc;
-				while ( !(faceHandle()->is_in_domain() &&
-				          faceHandle()->has_vertex(startVertex)) ) {
-					next();
-					if (lfc == lfcBegin) {
-						currentFace = NULL;
-						break;
-					}
-				}
-			}
-		}
-		
-		/** Go to the next face and return it */
-		FaceHandle next() {
-			if (plusPlus) { ++lfc; }
-			else          { --lfc; }
-			currentFace = lfc;
-			correctBorderYieldCase();
-			return faceHandle();
-		}
-		
-		FaceHandle faceHandle() const {
-			return currentFace;
-		}
-		bool isValid() const { 
-			return currentFace != NULL && currentFace->is_in_domain();
-		}
-		
-	private:
-		const Cgal2DGrid * const grid;
-		const Real2 p, q; // start and finish
-		LineFaceCirculator lfc;
-		FaceHandle currentFace; // not always equal to lfc
-		
-		bool plusPlus; // use "++" not "--" to go to the next face
-		bool alongBorder; // lfc goes along the border not inside the body
-		
-		void correctBorderYieldCase() {
-			if (alongBorder && !currentFace->is_in_domain()) {
-			// try neighbor face on the other side of the line
-				Real2 currentCenter = linal::center({
-						real2(currentFace->vertex(0)->point()), 
-						real2(currentFace->vertex(1)->point()), 
-						real2(currentFace->vertex(2)->point()) });
-				for (int i = 0; i < 3; i++) {
-					FaceHandle neighbor = currentFace->neighbor(i);
-					if ( !neighbor->is_in_domain() ) { continue; }
-					Real2 neighborCenter = linal::center({
-							real2(neighbor->vertex(0)->point()), 
-							real2(neighbor->vertex(1)->point()), 
-							real2(neighbor->vertex(2)->point()) });
-					
-					if ( linal::crossProduct(q - p, currentCenter - p) *
-					     linal::crossProduct(q - p, neighborCenter - p) < 0 ) {
-					// on the different sides of the line
-						auto common = grid->commonVertices(currentFace, neighbor);
-						if (fabs(linal::orientedArea(
-									p, q, real2(common.at(0)->point()))) < EQUALITY_TOLERANCE &&
-						    fabs(linal::orientedArea(
-						    		p, q, real2(common.at(1)->point()))) < EQUALITY_TOLERANCE) {
-						// their common vertices lie on the line
-							currentFace = neighbor;
-							break;
-						}
-					}
-				}
-			}
-		}
-		
-	};
-
 	void printFace(const FaceHandle& f, const std::string& name = "") const;
  
 	static CgalPoint2 cgalPoint2(const Real2& p) {
@@ -434,6 +322,8 @@ private:
 	}
 
 	USE_AND_INIT_LOGGER("gcm.Cgal2DGrid")
+	
+	friend class Cgal2DLineWalker;
 };
 
 

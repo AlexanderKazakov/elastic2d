@@ -1,8 +1,8 @@
-#include <lib/mesh/grid/Cgal3DGrid.hpp>
-#include <lib/mesh/grid/Cgal3DLineWalker.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DLineWalker.hpp>
 #include <lib/mesh/mesh_loaders/InmMeshLoader.hpp>
 
-#include <libcgal3dmesher/Cgal3DMesher.hpp>
+#include <libcgalmesh/Cgal3DMesher.hpp>
 
 using namespace gcm;
 
@@ -16,7 +16,7 @@ Cgal3DGrid(const Task& task) :
 	switch (task.cgal3DGrid.mesher) {
 		case Task::Cgal3DGrid::Mesher::CGAL_MESHER:
 			LOG_DEBUG("Call Cgal3DMesher");
-			cgal_3d_mesher::Cgal3DMesher::triangulate(
+			cgalmesh::Cgal3DMesher::triangulate(
 					task.cgal3DGrid.spatialStep, task.cgal3DGrid.detectSharpEdges,
 					task.cgal3DGrid.fileName, triangulation);
 			break;

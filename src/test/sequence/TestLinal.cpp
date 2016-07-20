@@ -740,9 +740,6 @@ TEST(Linal, plainDivision) {
 	            plainDivision(a, b)(0), EQUALITY_TOLERANCE);
 	ASSERT_NEAR(-std::numeric_limits<real>::max(),
 	            plainDivision(-a, b) (0), EQUALITY_TOLERANCE);
-#if CONFIG_ENABLE_ASSERTIONS
-	ASSERT_THROW(plainDivision(b, b), Exception);
-#endif
 }
 
 

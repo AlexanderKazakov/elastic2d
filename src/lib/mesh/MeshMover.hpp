@@ -1,7 +1,7 @@
 #ifndef LIBGCM_MESHMOVER_HPP
 #define LIBGCM_MESHMOVER_HPP
 
-#include <lib/mesh/grid/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal2DGrid.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
 
 

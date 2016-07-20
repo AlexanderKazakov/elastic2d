@@ -1,8 +1,8 @@
 #ifndef LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
 #define LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
 
-#include <lib/mesh/grid/Cgal2DGrid.hpp>
-#include <lib/mesh/grid/Cgal3DGrid.hpp> 
+#include <lib/mesh/grid/cgal/Cgal2DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp> 
 #include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 #include <lib/numeric/gcm/Differentiation.hpp>
 

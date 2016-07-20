@@ -1,7 +1,7 @@
 #ifndef LIBGCM_CGAL3DLINEWALKER_HPP
 #define LIBGCM_CGAL3DLINEWALKER_HPP
 
-#include <lib/mesh/grid/Cgal3DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
 
 
 namespace gcm {

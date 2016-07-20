@@ -1,5 +1,5 @@
-#ifndef LIBCGAL3DMESH_CGAL3DMESHER_HPP
-#define LIBCGAL3DMESH_CGAL3DMESHER_HPP
+#ifndef LIBCGALMESH_CGAL3DMESHER_HPP
+#define LIBCGALMESH_CGAL3DMESHER_HPP
 
 #include <string>
 #include <fstream>
@@ -10,7 +10,7 @@
 #include <CGAL/Delaunay_triangulation_3.h>
 
 
-namespace cgal_3d_mesher {
+namespace cgalmesh {
 
 /**
  * 3D mesher by CGAL library
@@ -118,4 +118,4 @@ private:
 
 }
 
-#endif // LIBCGAL3DMESH_CGAL3DMESHER_HPP
+#endif // LIBCGALMESH_CGAL3DMESHER_HPP

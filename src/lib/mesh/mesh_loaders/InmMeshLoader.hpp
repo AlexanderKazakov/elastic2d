@@ -4,7 +4,7 @@
 #include <lib/util/FileUtils.hpp>
 #include <lib/util/StringUtils.hpp>
 
-#include <lib/mesh/grid/Cgal3DGrid.hpp>
+#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
 
 
