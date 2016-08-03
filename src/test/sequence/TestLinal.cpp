@@ -1091,11 +1091,14 @@ TEST(Linal, positionRelativeToAngle) {
 TEST(Linal, orientedArea) {
 	ASSERT_EQ( 0, orientedArea({0, 0}, {0, 1}, {0, 2}));
 	ASSERT_EQ( 0, orientedArea({0, 0}, {1, 1}, {2, 2}));
-	ASSERT_EQ( 0, area({0, 0}, {1, 1}, {2, 2}));
+	ASSERT_EQ( 0, area(Real2({0, 0}), Real2({1, 1}), Real2({2, 2})));
 	ASSERT_EQ(-2, orientedArea({0, 0}, {0, 2}, {2, 0}));
-	ASSERT_EQ( 2, area({0, 0}, {0, 2}, {2, 0}));
+	ASSERT_EQ( 2, area(Real2({0, 0}), Real2({0, 2}), Real2({2, 0})));
 	ASSERT_EQ( 2, orientedArea({0, 0}, {2, 0}, {0, 2}));
-	ASSERT_EQ( 2, area({0, 0}, {2, 0}, {0, 2}));
+	ASSERT_EQ( 2, area(Real2({0, 0}), Real2({2, 0}), Real2({0, 2})));
+	
+	ASSERT_EQ( 2, area(Real3({0, 0, 0}), Real3({0, 2, 0}), Real3({2, 0, 0})));
+	ASSERT_NEAR(sqrt(3) / 2, area(Real3({1, 0, 0}), Real3({0, 1, 0}), Real3({0, 0, 1})), EQUALITY_TOLERANCE);
 }
 
 
@@ -1108,6 +1111,15 @@ TEST(Linal, orientedVolume) {
 	ASSERT_EQ( 1.0 / 6, volume({0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {0, 0, 1}));
 	ASSERT_EQ(-1.0 / 6, orientedVolume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0,-1}));
 	ASSERT_EQ( 1.0 / 6, volume({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0,-1}));
+}
+
+
+TEST(Linal, minimalHeight) {
+	ASSERT_NEAR(1.0 / sqrt(2), minimalHeight({0, 0}, {1, 0}, {0, 1}), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(2, minimalHeight({0, 0}, {5, 2}, {8, 0}), EQUALITY_TOLERANCE);
+	
+	ASSERT_NEAR(1.0 / sqrt(3), minimalHeight({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(2, minimalHeight({0, 0, 0}, {5, 0, 0}, {0, 8, 0}, {2, 2, 2}), EQUALITY_TOLERANCE);
 }
 
 

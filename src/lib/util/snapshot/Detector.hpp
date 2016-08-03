@@ -52,7 +52,7 @@ protected:
 
 	virtual void afterStatement() override {
 		FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
-		                                        (-1, FILE_EXTENSION, FOLDER_NAME));
+				("?", -1, FILE_EXTENSION, FOLDER_NAME));
 		FileUtils::writeStdVectorToBinaryFileStream(fileStream, seismo);
 		FileUtils::closeFileStream(fileStream);
 	}

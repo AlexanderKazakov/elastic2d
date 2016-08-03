@@ -7,15 +7,14 @@
 #include <lib/Engine.hpp>
 
 namespace gcm {
+
 /**
  * Base class for all grids
  */
 class AbstractGrid {
 public:
-	AbstractGrid(const Task&) : id("mesh") { }
+	AbstractGrid(const Task&) { }
 	virtual ~AbstractGrid() { }
-
-	const std::string id;
 };
 
 

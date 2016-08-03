@@ -1,33 +1,23 @@
 #ifndef LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
 #define LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
 
-#include <lib/mesh/grid/cgal/Cgal2DGrid.hpp>
-#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp> 
+#include <lib/mesh/grid/SimplexGrid.hpp>
+#include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
 #include <lib/numeric/gcm/GridCharacteristicMethod.hpp>
 #include <lib/numeric/gcm/Differentiation.hpp>
 
 
 namespace gcm {
 
-template<int Dimensionality> struct CgalGrid;
-
-template<> struct CgalGrid<2> { 
-	typedef Cgal2DGrid type;
-};
-
-template<> struct CgalGrid<3> {
-	typedef Cgal3DGrid type;
-};
-
-
 /**
- * Grid-characteristic method implementation for
- * meshes based on CGAL 2D and 3D grids
+ * Grid-characteristic method specialization for meshes based on SimplexGrid
  */
 template<typename TModel, typename TMaterial, int Dimensionality>
-class GridCharacteristicMethodCgalGrid {
+class GridCharacteristicMethod<
+		TModel, SimplexGrid<Dimensionality, CgalTriangulation>, TMaterial> {
 public:
-	typedef typename CgalGrid<Dimensionality>::type            Grid;
+	
+	typedef SimplexGrid<Dimensionality, CgalTriangulation>     Grid;
 	typedef TModel                                             Model;
 	typedef DefaultMesh<Model, Grid, TMaterial>                Mesh;
 	typedef typename Mesh::Matrix                              Matrix;
@@ -71,6 +61,7 @@ public:
 					interpolateValuesAround(mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh), true));
 			
+//			std::cout << mesh.coordsD(*borderIter) << std::endl;
 			borderCorrector(mesh, s, direction, *borderIter);
 			
 //			if (++counter % 20000 == 0) {
@@ -215,7 +206,7 @@ private:
 		const BORDER_CONDITION* borderCondition = mesh.getBorderCondition(it);
 		if (borderCondition == nullptr) { return; } // non-reflection
 		
-		const RealD normal = mesh.normal(it);
+		const RealD normal = mesh.borderNormal(it);
 		const auto B = borderCondition->B(normal);
 		const auto b = borderCondition->b();
 		
@@ -228,6 +219,13 @@ private:
 		for (int i = 0; i < OUTER_NUMBER; i++) {
 			outerU1.setColumn(i, 
 					u1AlongBorderNormal.getColumn(outerInvariants[(size_t)i]));
+		}
+		
+		if (fabs(linal::determinant(B * outerU1)) < EQUALITY_TOLERANCE) {
+			LOG_INFO("Degenerate system in border corrector: det = "
+					<< linal::determinant(B * outerU1) << ", coords = "
+					<< mesh.coordsD(it) << "outerU1 = " << outerU1);
+			return;
 		}
 		
 		const auto alpha = linal::solveLinearSystem(B * outerU1, b - B * mesh.pdeNew(it));
@@ -366,20 +364,7 @@ private:
 };
 
 
-/**
- * Grid-characteristic method for meshes based on Cgal2DGrid
- */
-template<typename TModel, typename TMaterial>
-class GridCharacteristicMethod<TModel, Cgal2DGrid, TMaterial> :
-		public GridCharacteristicMethodCgalGrid<TModel, TMaterial, 2> { };
-/**
- * Grid-characteristic method for meshes based on Cgal3DGrid
- */
-template<typename TModel, typename TMaterial>
-class GridCharacteristicMethod<TModel, Cgal3DGrid, TMaterial> :
-		public GridCharacteristicMethodCgalGrid<TModel, TMaterial, 3> { };
-
-
 }
+
 
 #endif // LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP

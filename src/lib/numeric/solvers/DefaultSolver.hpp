@@ -23,6 +23,7 @@ public:
 	typedef typename Mesh::Model                            Model;
 	typedef typename Mesh::Grid                             Grid;
 	typedef typename Mesh::Material                         Material;
+	typedef typename Mesh::GridId                           GridId;
 
 	typedef typename Model::Corrector                       Corrector;
 	typedef typename Model::InternalOde                     InternalOde;
@@ -34,21 +35,25 @@ public:
 	
 	static const int GRID_DIMENSIONALITY = Mesh::GRID_DIMENSIONALITY;
 	typedef linal::Matrix<GRID_DIMENSIONALITY, GRID_DIMENSIONALITY> BasisMatrix;
-
-	DefaultSolver(const Task& task);
+	
+	DefaultSolver(const Task& task,
+			AbstractGlobalScene* abstractGlobalScene, const GridId gridId_);
 	virtual ~DefaultSolver();
-
+	
 	virtual void beforeStatement(const Statement& statement) override;
 	virtual void afterStatement() override;
-
+	
 	virtual void nextTimeStep() override;
-
+	
 	/** @return mesh with actual values */
 	virtual AbstractGrid* getActualMesh() const { return mesh; }
-
+	
 	/** Calculate time step from Courant–Friedrichs–Lewy condition */
 	virtual real calculateTimeStep() const override;
-
+	
+	const Mesh* getMesh() const { return mesh; }
+	void stage(const int s, const real timeStep);
+	
 protected:
 	real CourantNumber = 0; ///< number from Courant–Friedrichs–Lewy condition
 	BasisMatrix calcBasis;  ///< along this lines stages performed (for 
@@ -61,7 +66,6 @@ protected:
 
 	Mesh* mesh = nullptr;
 
-	void stage(const int s, const real timeStep);
 	void internalOdeNextStep(const real timeStep);
 	void applyCorrectors();
 	void moveMesh(const real timeStep);
@@ -72,8 +76,11 @@ protected:
 
 template<class TMesh>
 DefaultSolver<TMesh>::
-DefaultSolver(const Task& task) : Solver(task) {
-	mesh = new Mesh(task);
+DefaultSolver(const Task& task, AbstractGlobalScene* abstractGlobalScene,
+		const GridId gridId_) : Solver(task) {
+	typedef typename Mesh::GlobalScene GlobalScene;
+	GlobalScene* globalScene = dynamic_cast<GlobalScene*>(abstractGlobalScene);
+	mesh = new Mesh(task, globalScene, gridId_);
 	specialBorder = new SpecialBorder();
 	
 	calcBasis = linal::identity(calcBasis); //linal::randomBasis(calcBasis);

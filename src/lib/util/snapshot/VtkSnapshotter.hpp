@@ -1,14 +1,16 @@
 #ifndef LIBGCM_VTKSNAPSHOTTER_HPP
 #define LIBGCM_VTKSNAPSHOTTER_HPP
 
-#include <lib/mesh/grid/cgal/Cgal2DGrid.hpp>
-#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
+
 #include <lib/util/snapshot/Snapshotter.hpp>
+#include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
+#include <lib/mesh/grid/SimplexGrid.hpp>
 
 
+// disable warnings from vtk headers
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion" // disable warnings from vtk headers
+#pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 
 #include <vtkSmartPointer.h>
@@ -29,12 +31,12 @@ namespace gcm {
 
 template<typename TGrid> struct VtkTypesBase;
 
-template<> struct VtkTypesBase<Cgal2DGrid> {
+template<> struct VtkTypesBase<SimplexGrid<2, CgalTriangulation>> {
 	typedef vtkUnstructuredGrid          GridType;
 	typedef vtkXMLUnstructuredGridWriter WriterType;
 	typedef vtkTriangle                  VtkCellType;
 };
-template<> struct VtkTypesBase<Cgal3DGrid> {
+template<> struct VtkTypesBase<SimplexGrid<3, CgalTriangulation>> {
 	typedef vtkUnstructuredGrid          GridType;
 	typedef vtkXMLUnstructuredGridWriter WriterType;
 	typedef vtkTetra                     VtkCellType;
@@ -104,7 +106,8 @@ writeGeometry(const CubicGrid<D>& gcmGrid, vtkSmartPointer<vtkStructuredGrid> vt
  * Write CGAL 2D grid geometry to vtk
  */
 static void 
-writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+writeGeometry(const SimplexGrid<2, CgalTriangulation>& gcmGrid,
+		vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
 	writePoints(gcmGrid, vtkGrid);
 	writeCells(gcmGrid, vtkGrid);
 	writeBorderNormals(gcmGrid, vtkGrid);
@@ -116,7 +119,8 @@ writeGeometry(const Cgal2DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vt
  * Write CGAL 3D grid geometry to vtk
  */
 static void 
-writeGeometry(const Cgal3DGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
+writeGeometry(const SimplexGrid<3, CgalTriangulation>& gcmGrid,
+		vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
 	writePoints(gcmGrid, vtkGrid);
 	writeCells(gcmGrid, vtkGrid);
 	writeBorderNormals(gcmGrid, vtkGrid);
@@ -173,15 +177,13 @@ static void writePoints(const TGcmGrid& gcmGrid, vtkSmartPointer<TVtkGrid> vtkGr
 template<typename TGrid>
 static void writeCells(const TGrid& gcmGrid, vtkSmartPointer<vtkUnstructuredGrid> vtkGrid) {
 	/// write cells of the unstructured grid
-	auto cell = VtkTypes<TGrid>::NewCell();
+	auto vtkCell = VtkTypes<TGrid>::NewCell();
 	for (auto it = gcmGrid.cellBegin(); it != gcmGrid.cellEnd(); ++it) {
-		auto verticesIndices = gcmGrid.getVerticesOfCell(it);
-		int i = 0;
-		for (const auto& vI : verticesIndices) {
-			cell->GetPointIds()->SetId(i, (vtkIdType)vI);
-			i++;
+		const auto gcmCell = gcmGrid.createCell(*it);
+		for (int i = 0; i < gcmCell.N; i++) {
+			vtkCell->GetPointIds()->SetId(i, (vtkIdType)(gcmCell(i).iter));
 		}
-		vtkGrid->InsertNextCell(cell->GetCellType(), cell->GetPointIds());
+		vtkGrid->InsertNextCell(vtkCell->GetCellType(), vtkCell->GetPointIds());
 	}
 }
 
@@ -195,7 +197,7 @@ static void writeBorderNormals(
 	for (auto it = gcmGrid.vtkBegin(); it != gcmGrid.vtkEnd(); ++it) {
 		float vtkNormal[3] = {0, 0, 0};
 		if (gcmGrid.isBorder(it)) {
-			auto normal = gcmGrid.normal(it);
+			auto normal = gcmGrid.borderNormal(it);
 			for (int i = 0; i < normal.SIZE; i++) {
 				vtkNormal[i] = (float) normal(i);
 			}
@@ -264,7 +266,7 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	writeMaterialNumbers();
 	
 	VtkUtils::writeToFile(vtkGrid, VTK_TYPES::NewWriter(), makeFileNameForSnapshot(
-			step, VTK_TYPES::FileExtension(), FOLDER_NAME));
+			std::to_string(mesh->id()), step, VTK_TYPES::FileExtension(), FOLDER_NAME));
 }
 
 

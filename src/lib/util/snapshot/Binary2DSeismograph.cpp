@@ -14,7 +14,7 @@ beforeStatementImpl(const Statement& statement) {
 	auto quantityToWrite = statement.binary2DSeismograph.quantityToWrite;
 	valuesGetter = PdeVariables::QUANTITIES.at(quantityToWrite).Get;
 	FileUtils::openBinaryFileStream(fileStream, makeFileNameForSnapshot
-	                                        (-1, FILE_EXTENSION, FOLDER_NAME));
+			("?", -1, FILE_EXTENSION, FOLDER_NAME));
 	firstCallInTheStatement = true;
 }
 

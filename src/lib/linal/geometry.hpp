@@ -207,6 +207,12 @@ inline real area(const Real2 a, const Real2 b, const Real2 c) {
 }
 
 
+/** @return area of triangle {a, b, c} */
+inline real area(const Real3 a, const Real3 b, const Real3 c) {
+	return length(crossProduct(b - a, c - a)) / 2;
+}
+
+
 /** 
  * @return oriented volume of tetrahedron {a, b, c, d};
  * Orientation is positive, if dotProduct(d - a, crossProduct(b - a, c - a)) > 0.
@@ -318,6 +324,28 @@ inline Real3 oppositeFaceNormal(const Real3& opposite,
 
 	Real3 ans = normalize(crossProduct(a - b, c - b));
 	return (dotProduct(ans, a - opposite) > 0) ? ans : -ans;
+}
+
+
+/** Minimal height in triangle */
+inline real minimalHeight(const Real2 a, const Real2 b, const Real2 c) {
+	const real S = area(a, b, c);
+	const real ab = length(a - b);
+	const real ac = length(a - c);
+	const real bc = length(b - c);
+	return 2 * S / fmax(ab, fmax(ac, bc));
+}
+
+
+/** Minimal height in tetrahedron */
+inline real minimalHeight(
+		const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+	const real V = volume(a, b, c, d);
+	const real A = area(b, c, d);
+	const real B = area(c, d, a);
+	const real C = area(d, a, b);
+	const real D = area(a, b, c);
+	return 3 * V / fmax(A, fmax(B, fmax(C, D)));
 }
 
 

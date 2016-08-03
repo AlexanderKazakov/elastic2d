@@ -7,41 +7,46 @@ using namespace gcm;
 
 inline Task skullAcoustic() {
 	Task task;
-
-	task.dimensionality = 3;
-	task.modelId = Models::T::ACOUSTIC;
-	task.materialId = Materials::T::ISOTROPIC;
-	task.gridId = Grids::T::CGAL;
-	task.snapshottersId = {
-			Snapshotters::T::VTK
-	};
-
 	
-	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::INM_MESHER;
-	task.cgal3DGrid.spatialStep = 0.5;
-	task.cgal3DGrid.fileName = "meshes/coarse/mesh-coarse.out";
-	task.cgal3DGrid.scale = 10;
+	task.globalSettings.dimensionality = 3;
+	task.globalSettings.gridId = Grids::T::SIMPLEX;
+	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
+	
+	task.bodies = {
+			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 1},
+			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 2},
+			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 3},
+			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 4},
+			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 5},
+	};
+	
+	
+	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
+	task.simplexGrid.spatialStep = 0.5;
+	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+	task.simplexGrid.scale = 10;
 	
 	
 	Statement statement;
-	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_CELLS;
+	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_BODIES;
 	auto connectiveTissue = std::make_shared<IsotropicMaterial>(1.008,  2.369, 0, 0, 0, 1);
 	auto muscles          = std::make_shared<IsotropicMaterial>(1.041,  2.648, 0, 0, 0, 2);
 	auto cerebrum         = std::make_shared<IsotropicMaterial>(1.030,  2.475, 0, 0, 0, 3);
 	auto bones            = std::make_shared<IsotropicMaterial>(1.672, 10.552, 0, 0, 0, 4);
 	auto vessels          = std::make_shared<IsotropicMaterial>(1.063,  2.726, 0, 0, 0, 5);
-	statement.materialConditions.materialMap = {
-			{1, {connectiveTissue, 100} },
-			{2, {muscles,          1} },
-			{3, {cerebrum,         5} },
-			{4, {bones,            10} },
-			{5, {vessels,          1000} },
+	statement.materialConditions.byBodies.bodyMaterialMap = {
+			{1, connectiveTissue},
+			{2, muscles},
+			{3, cerebrum},
+			{4, bones},
+			{5, vessels},
 	};
+	
 	
 	statement.globalSettings.CourantNumber = 1;
 	statement.globalSettings.numberOfSnaps = 100;
 	statement.globalSettings.stepsPerSnap = 5;
-
+	
 	
 	Statement::BorderCondition freeBorder;
 	freeBorder.area = std::make_shared<AxisAlignedBoxArea>(
@@ -61,7 +66,7 @@ inline Task skullAcoustic() {
 //	};
 	
 	statement.borderConditions = {freeBorder/*, source*/};
-
+	
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 1;
@@ -72,7 +77,7 @@ inline Task skullAcoustic() {
 	statement.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
 	};
-
+	
 	task.statements.push_back(statement);
 	return task;
 }
@@ -81,24 +86,28 @@ inline Task skullAcoustic() {
 inline Task skull() {
 	Task task;
 
-	task.dimensionality = 3;
-	task.modelId = Models::T::ELASTIC;
-	task.materialId = Materials::T::ISOTROPIC;
-	task.gridId = Grids::T::CGAL;
-	task.snapshottersId = {
-			Snapshotters::T::VTK
-	};
-
+	task.globalSettings.dimensionality = 3;
+	task.globalSettings.gridId = Grids::T::SIMPLEX;
+	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
-	task.cgal3DGrid.mesher = Task::Cgal3DGrid::Mesher::INM_MESHER;
-	task.cgal3DGrid.spatialStep = 0.5;
-	task.cgal3DGrid.fileName = "meshes/coarse/mesh-coarse.out";
-	task.cgal3DGrid.scale = 10;
+	task.bodies = {
+			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 1},
+			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 2},
+			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 3},
+			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 4},
+			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 5},
+	};
+	
+	
+	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
+	task.simplexGrid.spatialStep = 0.5;
+	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+	task.simplexGrid.scale = 10;
 	
 	
 	Statement statement;
-	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_AREAS;
-	statement.materialConditions.defaultMaterial = 
+	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_BODIES;
+	statement.materialConditions.byAreas.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(1, 2, 1);
 	/*
 	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_CELLS;
@@ -119,7 +128,7 @@ inline Task skull() {
 	statement.globalSettings.CourantNumber = 0.5;
 	statement.globalSettings.numberOfSnaps = 100;
 	statement.globalSettings.stepsPerSnap = 1;
-
+	
 	
 	Statement::BorderCondition freeBorder;
 	freeBorder.area = std::make_shared<AxisAlignedBoxArea>(
@@ -143,7 +152,7 @@ inline Task skull() {
 	};
 	
 	statement.borderConditions = {freeBorder, source};
-
+	
 //	Statement::InitialCondition::Quantity pressure;
 //	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 //	pressure.value = 1;
@@ -154,7 +163,7 @@ inline Task skull() {
 	statement.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
 	};
-
+	
 	task.statements.push_back(statement);
 	return task;
 }

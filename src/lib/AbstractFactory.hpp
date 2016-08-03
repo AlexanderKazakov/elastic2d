@@ -102,20 +102,23 @@ struct SnapshotterFactory<SliceSnapshotter, TMesh, TModel, TGrid, TMaterial> {
  * Create solvers, snapshotters, etc.
  */
 struct VirtualProgramAbstactFactory {
-	virtual Solver* createSolver(const Task& task) const = 0;
-	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) const = 0;
-
+	virtual Solver* createSolver(const Task&, const Task::Body&,
+			AbstractGlobalScene*) = 0;
+	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) = 0;
+	
 };
 template<
         template<typename, typename, typename> class TMesh,
         typename TModel, typename TGrid, typename TMaterial
         >
 struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
-	virtual Solver* createSolver(const Task& task) const override {
-		return new DefaultSolver<TMesh<TModel, TGrid, TMaterial> >(task);
+	virtual Solver* createSolver(const Task& task, const Task::Body& body,
+			AbstractGlobalScene* globalScene) override {
+		return new DefaultSolver<TMesh<TModel, TGrid, TMaterial>>(
+				task, globalScene, body.id);
 	}
-
-	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) const override {
+	
+	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) override {
 		switch (snapshotterId) {
 			case Snapshotters::T::VTK:
 				return SnapshotterFactory<VtkSnapshotter, TMesh, TModel, TGrid, TMaterial>().create();
@@ -129,7 +132,7 @@ struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
 				THROW_UNSUPPORTED("Unknown type of snapshotter");
 		}
 	}
-
+	
 };
 
 
@@ -137,54 +140,12 @@ struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
  * Choose type of mesh
  */
 struct VirtualMeshFactory {
-	virtual VirtualProgramAbstactFactory* create() const = 0;
+	virtual VirtualProgramAbstactFactory* create() = 0;
 };
 template<typename TModel, typename TGrid, typename TMaterial>
 struct MeshFactory : public VirtualMeshFactory {
-	virtual VirtualProgramAbstactFactory* create() const override {
+	virtual VirtualProgramAbstactFactory* create() override {
 		return new ProgramAbstactFactory<DefaultMesh, TModel, TGrid, TMaterial>();
-	}
-};
-
-
-/**
- * Choose grid
- */
-struct VirtualGridFactory {
-	virtual VirtualMeshFactory* create(Grids::T) const = 0;
-};
-template<typename TModel, typename TMaterial>
-struct GridFactory : public VirtualGridFactory {
-	virtual VirtualMeshFactory* create(Grids::T gridId) const override {
-		switch (gridId) {
-			case Grids::T::CUBIC:
-				return new MeshFactory<TModel, CubicGrid<TModel::DIMENSIONALITY>, TMaterial>();
-
-		case Grids::T::CGAL:
-			switch (TModel::DIMENSIONALITY) {
-				case 2:
-					return create<(TModel::DIMENSIONALITY == 2) &&
-							(std::is_same<TMaterial, IsotropicMaterial>::value), Cgal2DGrid>();
-				case 3:
-					return create<(TModel::DIMENSIONALITY == 3) &&
-							(std::is_same<TMaterial, IsotropicMaterial>::value), Cgal3DGrid>();
-				default:
-					THROW_INVALID_ARG("CGAL grids has dimensions 2 or 3 only and support only isotropic materials by now");
-			}
-
-		default:
-			THROW_INVALID_ARG("The type of grid is unknown or unsuitable for specified type of model and material");
-		}
-	}
-	
-private:
-	template<bool valid_use, typename GridType>
-	typename std::enable_if<valid_use, VirtualMeshFactory*>::type create() const {
-		return new MeshFactory<TModel, GridType, TMaterial>();
-	}
-	template<bool valid_use, typename GridType>
-	typename std::enable_if<!valid_use, VirtualMeshFactory*>::type create() const {
-		THROW_INVALID_ARG("The type of grid is not suitable for specified type of material and rheology model");
 	}
 };
 
@@ -193,61 +154,126 @@ private:
  * Choose rheology model
  */
 struct VirtualModelFactory {
-	virtual VirtualGridFactory* create(Models::T) const = 0;
+	virtual VirtualMeshFactory* create(Models::T) = 0;
 };
-template<int Dimensionality, typename TMaterial>
+template<typename TGrid, typename TMaterial>
 struct ModelFactory : public VirtualModelFactory {
-	virtual VirtualGridFactory* create(Models::T modelId) const override {
+	static const int D = TGrid::DIMENSIONALITY;
+	virtual VirtualMeshFactory* create(Models::T modelId) override {
 		switch (modelId) {
 			case Models::T::ELASTIC:
-				return new GridFactory<ElasticModel<Dimensionality>, TMaterial>();
+				return new MeshFactory<ElasticModel<D>, TGrid, TMaterial>();
 			case Models::T::ACOUSTIC:
-				return new GridFactory<AcousticModel<Dimensionality>, TMaterial>();
+				return new MeshFactory<AcousticModel<D>, TGrid, TMaterial>();
 			default:
-				THROW_INVALID_ARG("Model is unknown or incompatible for specified type of material and dimensionality");
+				THROW_UNSUPPORTED("Unknown or incompatible type of model");
 		}
 	}
 };
-template<int Dimensionality>
-struct ModelFactory<Dimensionality, OrthotropicMaterial> : public VirtualModelFactory {
-	virtual VirtualGridFactory* create(Models::T modelId) const override {
+template<typename TGrid>
+struct ModelFactory<TGrid, OrthotropicMaterial> : public VirtualModelFactory {
+	static const int D = TGrid::DIMENSIONALITY;
+	virtual VirtualMeshFactory* create(Models::T modelId) override {
 		switch (modelId) {
 			case Models::T::ELASTIC:
-				return new GridFactory<ElasticModel<Dimensionality>, OrthotropicMaterial>();
+				return new MeshFactory<ElasticModel<D>, TGrid, OrthotropicMaterial>();
 			default:
-				THROW_INVALID_ARG("Model is unknown or incompatible for specified type of material and dimensionality");
+				THROW_UNSUPPORTED("Unknown or incompatible type of model");
 		}
 	}
 };
 
 
 /**
- * Choose material
+ * Choose type of material
  */
 struct VirtualMaterialFactory {
-	virtual VirtualModelFactory* create(Materials::T) const = 0;
+	virtual VirtualModelFactory* create(Materials::T) = 0;
 };
-template<int Dimensionality>
+template<typename TGrid>
 struct MaterialFactory : public VirtualMaterialFactory {
-	virtual VirtualModelFactory* create(Materials::T materialId) const override {
+	virtual VirtualModelFactory* create(Materials::T materialId) override {
 		switch (materialId) {
 			case Materials::T::ISOTROPIC:
-				return new ModelFactory<Dimensionality, IsotropicMaterial>();
+				return new ModelFactory<TGrid, IsotropicMaterial>();
 			case Materials::T::ORTHOTROPIC:
-				return new ModelFactory<Dimensionality, OrthotropicMaterial>();
+				return new ModelFactory<TGrid, OrthotropicMaterial>();
 			default:
-				THROW_UNSUPPORTED("Unknown type of material");
+				THROW_UNSUPPORTED("Unknown or incompatible type of material");
+		}
+	}
+};
+template<int D, template<int, typename, typename> class Triangulation>
+struct MaterialFactory<SimplexGrid<D, Triangulation>> : public VirtualMaterialFactory {
+	typedef SimplexGrid<D, Triangulation> Grid;
+	virtual VirtualModelFactory* create(Materials::T materialId) override {
+		switch (materialId) {
+			case Materials::T::ISOTROPIC:
+				return new ModelFactory<Grid, IsotropicMaterial>();
+			default:
+				THROW_UNSUPPORTED("Unknown or incompatible type of material");
 		}
 	}
 };
 template<>
-struct MaterialFactory<1> : public VirtualMaterialFactory {
-	virtual VirtualModelFactory* create(Materials::T materialId) const override {
+struct MaterialFactory<CubicGrid<1>> : public VirtualMaterialFactory {
+	virtual VirtualModelFactory* create(Materials::T materialId) override {
 		switch (materialId) {
 			case Materials::T::ISOTROPIC:
-				return new ModelFactory<1, IsotropicMaterial>();
+				return new ModelFactory<CubicGrid<1>, IsotropicMaterial>();
 			default:
-				THROW_UNSUPPORTED("Material is unknown or incompatible for specified dimensionality");
+				THROW_UNSUPPORTED("Unknown or incompatible type of material");
+		}
+	}
+};
+
+
+/**
+ * Choose type of grid
+ */
+struct VirtualGridFactory {
+	virtual VirtualMaterialFactory* create(Grids::T) = 0;
+	virtual AbstractGlobalScene* createGlobalScene(const Task& task) = 0;
+};
+template<int Dimensionality>
+struct GridFactory : public VirtualGridFactory {
+	virtual VirtualMaterialFactory* create(Grids::T gridId) override {
+		switch (gridId) {
+			case Grids::T::CUBIC:
+				return new MaterialFactory<CubicGrid<Dimensionality>>();
+			case Grids::T::SIMPLEX:
+				return new MaterialFactory<SimplexGrid<Dimensionality, CgalTriangulation>>();
+			default:
+				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
+		}
+	}
+	virtual AbstractGlobalScene* createGlobalScene(const Task& task) override {
+		switch (task.globalSettings.gridId) {
+			case Grids::T::CUBIC:
+				return new typename CubicGrid<Dimensionality>::GlobalScene(task);
+			case Grids::T::SIMPLEX:
+				return new typename SimplexGrid<Dimensionality, CgalTriangulation>::GlobalScene(task);
+			default:
+				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
+		}
+	}
+};
+template<>
+struct GridFactory<1> : public VirtualGridFactory {
+	virtual VirtualMaterialFactory* create(Grids::T gridId) override {
+		switch (gridId) {
+			case Grids::T::CUBIC:
+				return new MaterialFactory<CubicGrid<1>>();
+			default:
+				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
+		}
+	}
+	virtual AbstractGlobalScene* createGlobalScene(const Task& task) override {
+		switch (task.globalSettings.gridId) {
+			case Grids::T::CUBIC:
+				return new typename CubicGrid<1>::GlobalScene(task);
+			default:
+				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
 		}
 	}
 };
@@ -257,14 +283,14 @@ struct MaterialFactory<1> : public VirtualMaterialFactory {
  * Choose space dimensionality
  */
 struct DimensionalityFactory {
-	VirtualMaterialFactory* create(const int dimensionality) const {
+	VirtualGridFactory* create(const int dimensionality) {
 		switch (dimensionality) {
 			case 1:
-				return new MaterialFactory<1>();
+				return new GridFactory<1>();
 			case 2:
-				return new MaterialFactory<2>();
+				return new GridFactory<2>();
 			case 3:
-				return new MaterialFactory<3>();
+				return new GridFactory<3>();
 			default:
 				THROW_UNSUPPORTED("Invalid dimensionality");
 		}
@@ -276,28 +302,23 @@ struct DimensionalityFactory {
  * The program instantiator
  */
 struct Factory {
-	static VirtualProgramAbstactFactory* create(const Task& task) {
-		return create(
-				task.dimensionality,
-				task.materialId,
-				task.gridId,
-				task.modelId);
-	}
-
-private:
-	static VirtualProgramAbstactFactory* create(
-			const int dimensionality,
-			Materials::T materialId,
-			Grids::T gridId,
-			Models::T modelId) {
 	
+	static VirtualProgramAbstactFactory* create(
+			const Task& task, const Task::Body& body) {
 		return (new DimensionalityFactory())
-				->create(dimensionality)
-				->create(materialId)
-				->create(modelId)
-				->create(gridId)
+				->create(task.globalSettings.dimensionality)
+				->create(task.globalSettings.gridId)
+				->create(body.materialId)
+				->create(body.modelId)
 				->create();
 	}
+	
+	static AbstractGlobalScene* createGlobalScene(const Task& task) {
+		return (new DimensionalityFactory())
+				->create(task.globalSettings.dimensionality)
+				->createGlobalScene(task);
+	}
+	
 };
 
 

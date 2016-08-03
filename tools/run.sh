@@ -37,9 +37,9 @@ if ((run_paraview)); then
     echo "Run Paraview ..."
     if (($np == 1)); then
         if (ls snapshots/vtk | grep vts); then
-            paraview --data=snapshots/vtk/core00snap..vts
+            paraview --data=snapshots/vtk/mesh0core00snap..vts
         else
-            paraview --data=snapshots/vtk/core00snap..vtu
+            paraview --data=snapshots/vtk/mesh0core00snap..vtu
         fi
     else
         paraview

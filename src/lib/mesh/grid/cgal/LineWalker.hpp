@@ -1,31 +1,36 @@
-#ifndef LIBGCM_CGAL3DLINEWALKER_HPP
-#define LIBGCM_CGAL3DLINEWALKER_HPP
+#ifndef LIBGCM_LINEWALKER_HPP
+#define LIBGCM_LINEWALKER_HPP
 
-#include <lib/mesh/grid/cgal/Cgal3DGrid.hpp>
+#include <lib/mesh/grid/cgal/LineWalker2D.hpp>
 
 
 namespace gcm {
 
 /** 
- * Struct to go along the line cell-by-cell through Cgal3DGrid.
- * Implement line walk in triangulation strategy.
+ * Struct to go along the line cell-by-cell through a 3D triangulation.
+ * Implement "line walk in triangulation" strategy.
  * Yield cases seem to be impossible to handle accurately, so for some cases
- * like queries along borders infinite loops and line missing possible.
+ * like queries along borders infinite loops and line missings are possible.
  */
-class Cgal3DLineWalker {
-	typedef Cgal3DGrid::Iterator      Iterator;
-	typedef Cgal3DGrid::VertexHandle  VertexHandle;
-	typedef Cgal3DGrid::CellHandle    CellHandle;
-	typedef Cgal3DGrid::CgalPoint3    CgalPoint3;
-	typedef Cgal3DGrid::Triangulation Triangulation;
-	typedef Triangulation::Edge       Edge;
-
+template<typename Triangulation>
+class LineWalker<Triangulation, 3> {
 public:
-	/** Create line walker from point it to point it + shift */
-	Cgal3DLineWalker(const Cgal3DGrid* const grid_, const Iterator it, const Real3 shift) :
-			grid(grid_), 
-			q(grid->vertexHandle(it)), 
-			p(q->point() + Cgal3DGrid::cgalVector3(shift)) {
+	
+	typedef typename Triangulation::VertexHandle  VertexHandle;
+	typedef typename Triangulation::CellHandle    CellHandle;
+	typedef typename Triangulation::CgalPointD    CgalPointD;
+	
+	static const int TETR_SIZE = Triangulation::CELL_POINTS_NUMBER;
+	
+	/**
+	 * Create line walker from point vh to point vh + shift
+	 */
+	LineWalker(const Triangulation* const triangulation_,
+			const VertexHandle vh, const Real3 shift, const size_t id_) :
+					triangulation(triangulation_), 
+					q(vh), 
+					p(q->point() + Triangulation::cgalVectorD(shift)),
+					id(id_) {
 
 		t = findCrossedTetrahedron();
 		if (t == NULL) { return; }
@@ -36,21 +41,18 @@ public:
 		if (orientation(u, v, w, q->point()) < 0) { std::swap(u, v); }
 	}
 	
-	/** Current cell */
-	CellHandle cell() const {
-		return t;
-	}
-	
-	/** Go to the next cell along the line and return it */
+	/** 
+	 * Go to the next cell along the line and return it
+	 */
 	CellHandle next() {
 		assert_true(t != NULL);
-		assert_false(grid->triangulation.is_infinite(t));
+		assert_false(triangulation->triangulation.is_infinite(t));
 		
 //		assert_ge(orientation(u, w, v, p), 0); // p is not behind already
 		
 		t = neighborThrough(t, u, v, w);
 		VertexHandle s = otherVertex(t, u, v, w);
-					
+		
 		if (orientation(u, s, q, p) > 0) {
 			if (orientation(v, s, q, p) > 0) {
 				u = s;
@@ -65,34 +67,38 @@ public:
 			}
 		}
 		
-		return cell();
+		return t;
 	}
-
+	
+	
+	CellHandle currentCell() const { return t; }
+	
+	
 private:
-	const Cgal3DGrid* const grid;
+	const Triangulation* const triangulation;
 	const VertexHandle q; ///< start point
-	const CgalPoint3 p;   ///< finish point
+	const CgalPointD p;   ///< finish point
 	CellHandle t;         ///< currentCell
 	VertexHandle u, v, w; ///< vertices of the face of current cell 
 			///< the line goes through
-		
+	const size_t id;
+	
 	CellHandle findCrossedTetrahedron() const {
 	/// return incident to q finite cell which is crossed by ray (q, p)
 	/// or NULL if there isn't such (i.e. crossed cell is infinite)
 		
-		std::list<CellHandle> fic;
-		grid->triangulation.finite_incident_cells(q, std::back_inserter(fic));
+		std::list<CellHandle> cells = triangulation->allIncidentCells(q);
 		
-		for (CellHandle candidate : fic) {
-			if ( !grid->isInDomain(candidate) ) { continue; }
+		for (CellHandle candidate : cells) {
+			if ( candidate->info().getGridId() != id ) { continue; }
 			VertexHandle a = otherVertex(candidate, q, q, q);
 			VertexHandle b = otherVertex(candidate, q, q, a);
 			VertexHandle c = otherVertex(candidate, q, a, b);
 			
 			Real4 lambda = linal::barycentricCoordinates(
-					Cgal3DGrid::real3(q->point()), Cgal3DGrid::real3(a->point()),
-					Cgal3DGrid::real3(b->point()), Cgal3DGrid::real3(c->point()),
-					Cgal3DGrid::real3(p));
+					Triangulation::realD(q->point()), Triangulation::realD(a->point()),
+					Triangulation::realD(b->point()), Triangulation::realD(c->point()),
+					Triangulation::realD(p));
 			
 			if (lambda(0) > 1) {
 			// behind q
@@ -116,7 +122,7 @@ private:
 	static int otherVertexIndex(const CellHandle cell,
 			const VertexHandle a, const VertexHandle b, const VertexHandle c) {
 	/// return index of that vertex of cell, which is not a, b, c
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < TETR_SIZE; i++) {
 			VertexHandle d = cell->vertex(i);
 			if ( (d != a) && (d != b) && (d != c) ) { return i; }
 		}
@@ -130,10 +136,10 @@ private:
 	}
 	
 	static real orientation(const VertexHandle a, const VertexHandle b,
-			const VertexHandle c, const CgalPoint3 d) {
+			const VertexHandle c, const CgalPointD d) {
 		return linal::orientedVolume(
-				Cgal3DGrid::real3(a->point()), Cgal3DGrid::real3(b->point()),
-				Cgal3DGrid::real3(c->point()), Cgal3DGrid::real3(d));
+				Triangulation::realD(a->point()), Triangulation::realD(b->point()),
+				Triangulation::realD(c->point()), Triangulation::realD(d));
 	}
 	
 };
@@ -141,4 +147,4 @@ private:
 
 }
 
-#endif // LIBGCM_CGAL3DLINEWALKER_HPP
+#endif // LIBGCM_LINEWALKER_HPP

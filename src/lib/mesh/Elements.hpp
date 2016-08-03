@@ -75,6 +75,16 @@ struct Element {
 		return ans;
 	}
 	
+	
+	bool has(const Point& point) const {
+		for (int i = 0; i < n; i++) {
+			if ((*this)(i) == point) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 };
 
 

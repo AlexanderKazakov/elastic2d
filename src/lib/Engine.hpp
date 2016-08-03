@@ -4,6 +4,7 @@
 #include <mpi.h>
 
 #include <lib/util/task/Task.hpp>
+#include <lib/mesh/grid/AbstractGlobalScene.hpp>
 #include <lib/util/Logging.hpp>
 
 /**
@@ -21,9 +22,11 @@
  *
  */
 
+
 namespace gcm {
 class Solver;
 class Snapshotter;
+
 
 /**
  * Current physical time and time step used by the program.
@@ -59,6 +62,7 @@ struct Clock {
 		/// DO NOT put another "friends" here!
 		friend class Engine;
 };
+
 
 /**
  * MPI information
@@ -96,6 +100,7 @@ struct Mpi {
 		friend class Engine;
 };
 
+
 /**
  * Main class. Responsible for the whole process of calculation
  */
@@ -105,30 +110,49 @@ public:
 	~Engine();
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
-
+	
+	
 	/**
 	 * Perform calculation of the whole task (it can be several statements)
 	 */
 	void run();
-
-protected:
-	Solver* solver = nullptr;
-	std::vector<Snapshotter*> snapshotters;
-	Task task;
-	real requiredTime = 0;
-
+	
+	
 	/**
 	 * Prepare to run statement
 	 */
 	void beforeStatement(const Statement& statement);
-
+	
+	
 	/**
-	 * Perform calculation of statement
+	 * Perform calculation of statement after preparation
 	 */
 	void runStatement();
-
+	
+	
+	/// for tests
+	const Solver* getSolver() const {
+		assert_eq(1, bodies.size());
+		return bodies.front().solver;
+	}
+	
+private:
+	
+	struct Body {
+		Solver* solver;
+		std::vector<Snapshotter*> snapshotters;
+	};
+	
+	
+	AbstractGlobalScene* globalScene;
+	std::vector<Body> bodies;
+	Task task;
+	real requiredTime = 0;
+	
+	
 	void estimateTimeStep();
-
+	
+	
 	USE_AND_INIT_LOGGER("gcm.Engine")
 };
 

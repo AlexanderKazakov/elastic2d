@@ -17,7 +17,7 @@ namespace gcm {
 template<int Dimensionality>
 class CubicGrid : public StructuredGrid {
 public:
-
+	
 	static const int DIMENSIONALITY = Dimensionality;
 	
 	typedef linal::Vector<DIMENSIONALITY>                         RealD;
@@ -28,18 +28,26 @@ public:
 	typedef linal::SlowZFastX<DIMENSIONALITY>                     VtkIterator;
 	typedef linal::BoxIterator<DIMENSIONALITY, linal::SlowXFastZ> PartIterator;
 	
+	/// Unique number of the grid among other grids of this type
+	typedef size_t GridId;
+	
+	struct GlobalScene : public AbstractGlobalScene {
+		GlobalScene(const Task&) { }
+		virtual ~GlobalScene() { }
+	};
+	
 	/** @name memory efficient (sequential) iteration */
 	/// @{
 	ForwardIterator begin() const { return ForwardIterator::begin(sizes); }
 	ForwardIterator end() const { return ForwardIterator::end(sizes); }
 	/// @}
-
+	
 	/** @name iteration suitable for vtk snapshotters */
 	/// @{
 	VtkIterator vtkBegin() const { return VtkIterator::begin(sizes); }
 	VtkIterator vtkEnd() const { return VtkIterator::end(sizes); }
 	/// @}
-
+	
 	/**
 	 * Iteration over slice of cube carried across specified direction through
 	 * the point with specified index (index along that direction)
@@ -51,7 +59,7 @@ public:
 		IntD max = sizes; max(direction) = index + 1;
 		return PartIterator(min, min, max);
 	}
-
+	
 	/**
 	 * Iteration over rectangular box of the grid
 	 * from min INclusive to max EXclusive
@@ -60,14 +68,14 @@ public:
 		return PartIterator(min, min, max);
 	}
 	
-	CubicGrid(const Task& task);
+	CubicGrid(const Task& task, GlobalScene* globalScene, const GridId gridId_);
 	virtual ~CubicGrid() { }
-
+	
 	/** Read-only access to real coordinates */
 	const RealD coordsD(const Iterator& it) const {
 		return startR + linal::plainMultiply(it, h);
 	}
-
+	
 	/** Read-only access to real coordinates */
 	const Real3 coords(const Iterator& it) const {
 		Real3 ans = Real3::Zeros();
@@ -77,15 +85,15 @@ public:
 		}
 		return ans;
 	}
-
+	
 	size_t sizeOfRealNodes() const {
 		return (size_t) linal::directProduct(sizes);
 	}
-
+	
 	size_t sizeOfAllNodes() const {
 		return (size_t) (indexMaker(0) * (2 * borderSize + sizes(0)));
 	}
-
+	
 	/**
 	 * @param it begin() <= iterator < end()
 	 * @return index in std::vector
@@ -94,19 +102,26 @@ public:
 	size_t getIndex(const Iterator& it) const {
 		size_t ans = 0;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-            ans += (size_t) indexMaker(i) * (size_t)(it(i) + borderSize);
+			ans += (size_t) indexMaker(i) * (size_t)(it(i) + borderSize);
 		}
 		return ans;
 	}
-
-
+	
+	
+	/** Unique number of the grid among other grids of this type */
+	GridId id() const { return gridId; }
+	
+	
 	const int borderSize;  ///< number of virtual nodes on border
 	const IntD sizes;      ///< numbers of nodes along each direction
 	const IntD indexMaker; ///< increments of plain array index when corresponding
 	                       ///< dimensional index increases by one
 	const RealD h;         ///< spatial steps along each direction
 	const RealD startR;    ///< global coordinates of the first real node of the grid
-
+	const GridId gridId;   ///< unique number of the grid among other grids of this type
+	
+	GlobalScene * const globalScene;
+	
 	real getMinimalSpatialStep() const {
 		real ans = std::numeric_limits<real>::max();
 		for (int i = 0; i < DIMENSIONALITY; i++) {
@@ -135,15 +150,17 @@ private:
 
 template<int Dimensionality>
 CubicGrid<Dimensionality>::
-CubicGrid(const Task& task) :
-	StructuredGrid(task),
-	borderSize(task.cubicGrid.borderSize),
-	sizes(calculateSizes(task.cubicGrid)),
-	indexMaker(calculateIndexMaker()),
-	h(calculateH(task.cubicGrid)),
-	startR(calculateStartR(task.cubicGrid)) {
+CubicGrid(const Task& task, GlobalScene* gS, const GridId gridId_) :
+		StructuredGrid(task),
+		borderSize(task.cubicGrid.borderSize),
+		sizes(calculateSizes(task.cubicGrid)),
+		indexMaker(calculateIndexMaker()),
+		h(calculateH(task.cubicGrid)),
+		startR(calculateStartR(task.cubicGrid)),
+		gridId(gridId_),
+		globalScene(gS) {
 // note: the order in the initialization list above is important!
-
+	
 	assert_gt(borderSize, 0);
 	for (int i = 0; i < DIMENSIONALITY; i++) {
 		assert_ge(sizes(i), borderSize);

@@ -1,4 +1,4 @@
-#include <libcgalmesh/Cgal2DMesher.hpp>
+#include <libcgalmesher/Cgal2DMesher.hpp>
 
 #include <CGAL/Delaunay_mesh_face_base_2.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
@@ -6,12 +6,12 @@
 #include <CGAL/Delaunay_mesher_2.h>
 
 
-using namespace cgalmesh;
+using namespace cgalmesher;
 
 
-void Cgal2DMesher::
-triangulate(const double spatialStep, const std::vector<Body> bodies,
-		ResultingTriangulation& result) {
+Cgal2DMesher::IntermediateTriangulation
+Cgal2DMesher::
+triangulate(const double spatialStep, const std::vector<CgalBody> bodies) {
 	
 	typedef CGAL::Delaunay_mesh_face_base_2<K>                  Fb;
 	typedef CGAL::Triangulation_data_structure_2<Vb, Fb>        Tds;
@@ -21,52 +21,47 @@ triangulate(const double spatialStep, const std::vector<Body> bodies,
 	
 	CDT cdt;
 	
-	auto insertPolygon = [&](const Polygon& polygon) {
-		// insert points and constraints - lines between them - to cdt
-		auto point = polygon.vertices_begin();
-		CDT::Vertex_handle first = cdt.insert(*point);
-		CDT::Vertex_handle last = first;
-		++point;
-		
-		while(point != polygon.vertices_end()) {
-			CDT::Vertex_handle current = cdt.insert(*point);
-			cdt.insert_constraint(last, current);
-			last = current;
-			++point;
-		}
-		
-		cdt.insert_constraint(last, first);
-	};
-	
 	// Special "seeds" in the interior of inner cavities
 	// to tell CGAL do not mesh these cavities
 	std::list<CgalPoint2> listOfSeeds;
 	
-	// insert all task outer borders and inner cavities
+	// insert all bodies to triangulation as its constraints
 	for (const auto& body : bodies) {
-		insertPolygon(makePolygon(body.outer));
+		insertPolygon(body.outer, cdt);
 		for (const auto& innerCavity : body.inner) {
-			insertPolygon(makePolygon(innerCavity));
-			listOfSeeds.push_back(findInnerPoint(makePolygon(innerCavity)));
+			insertPolygon(innerCavity, cdt);
+			listOfSeeds.push_back(findInnerPoint(innerCavity));
 		}
 	}
 	
 	Mesher mesher(cdt);
 	mesher.set_seeds(listOfSeeds.begin(), listOfSeeds.end());
-	
 	Criteria meshingCriteria;
 	assert(spatialStep > 0);
 	meshingCriteria.set_size_bound(spatialStep);
 	mesher.set_criteria(meshingCriteria);
 	
-	mesher.refine_mesh(); //< meshing
+	// meshing itself
+	mesher.refine_mesh();
 	
-	copyTriangulation(cdt, result);
+	// copy from CDT to IntermediateTriangulation adding info
+	// about containing body to triangulation cells
+	typedef CDT::Vertex CdtVertex;
+	typedef CDT::Face   CdtCell;
+	typedef IntermediateTriangulation::Vertex IntermediateVertex;
+	typedef IntermediateTriangulation::Face   IntermediateCell;
+	
+	DefaultVertexConverter<CdtVertex, IntermediateVertex> vertexConverter;
+	BodiesCellConverter<CdtCell, IntermediateCell, CDT> cellConverter(&bodies, &cdt);
+	
+	IntermediateTriangulation result;
+	copyTriangulation(cdt, result, cellConverter, vertexConverter);
+	return result;
 }
 
 
 Cgal2DMesher::Polygon Cgal2DMesher::
-makePolygon(const std::vector<Body::Point>& points) {
+makePolygon(const TaskBody::Border& points) {
 	/// convert point set to simple CGAL polygon
 	assert(points.size() >= 3); // polygon is a closed line
 	

@@ -4,54 +4,7 @@
 
 using namespace gcm;
 
-
-inline Task parseTaskCubicAcoustic() {
-	Task task;
-
-//	task.dimensionality = 3;
-	task.dimensionality = 2;
-	task.modelId = Models::T::ACOUSTIC;
-	task.materialId = Materials::T::ISOTROPIC;
-	task.gridId = Grids::T::CUBIC;
-	task.snapshottersId = {Snapshotters::T::VTK};
-
-	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.lengths = {2, 1};//, 1};
-	task.cubicGrid.sizes = {100, 50};//, 50};
-
-	Statement statement;
-	statement.materialConditions.defaultMaterial =
-		std::make_shared<IsotropicMaterial>(1, 1, 0);
-
-	statement.globalSettings.CourantNumber = 1;
-
-	statement.globalSettings.numberOfSnaps = 80;
-	statement.globalSettings.stepsPerSnap = 1;
-
-	Statement::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0/*.5*/}));
-	statement.initialCondition.quantities.push_back(pressure);
-
-	
-	Statement::CubicGridBorderCondition borderCondition;
-	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-			(Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
-	borderCondition.values = {
-			{PhysicalQuantities::T::PRESSURE, [] (real) {return 0; }},
-	};
-	statement.cubicGridBorderConditions.push_back(borderCondition);
-	
-	
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {
-			PhysicalQuantities::T::PRESSURE,
-	};
-
-	task.statements.push_back(statement);
-	return task;
-}
+/*
 
 
 
@@ -72,7 +25,7 @@ createMaterial(const real phi) {
 
 
 inline std::shared_ptr<AxisAlignedBoxArea>
-createArea(const int layerNumber /* from 0 at the bottom */) {
+createArea(const int layerNumber from 0 at the bottom) {
 	const real Zmin = layerWidth * layerNumber;
 	const real Zmax = layerWidth * (layerNumber + 1);
 	const real Xmin = -10, Ymin = -10;
@@ -188,13 +141,13 @@ inline Task parseTaskLayers() {
 			{createArea(5),  createMaterial( M_PI / 2)},
 			{createArea(8),  createMaterial(-M_PI / 4)},
 			{createArea(10), createMaterial( M_PI / 4)},
-			/*
-			{createArea(11), createMaterial( M_PI / 4)},
-			{createArea(13), createMaterial(-M_PI / 4)},
-			{createArea(16), createMaterial( M_PI / 2)},
-			{createArea(19), createMaterial(-M_PI / 4)},
-			{createArea(21), createMaterial( M_PI / 4)},
-			*/
+			
+//			{createArea(11), createMaterial( M_PI / 4)},
+//			{createArea(13), createMaterial(-M_PI / 4)},
+//			{createArea(16), createMaterial( M_PI / 2)},
+//			{createArea(19), createMaterial(-M_PI / 4)},
+//			{createArea(21), createMaterial( M_PI / 4)},
+			
 	};
 	
 	statement.globalSettings.CourantNumber = 1.0;
@@ -437,11 +390,11 @@ inline Task parseTaskCgalAnisotropy() {
 	task.cgal3DGrid.fileName = "meshes/layers_with_fracture.off";
 	
 	Statement statement;
-	/*real rho = 4;
-	real lambda = 2;
-	real mu = 1;
-	statement.materialConditions.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);*/
+	real rho = 4;
+//	real lambda = 2;
+//	real mu = 1;
+//	statement.materialConditions.defaultMaterial =
+//	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
 	statement.materialConditions.defaultMaterial = createMaterial(0);
 	statement.materialConditions.materials = {
@@ -480,7 +433,7 @@ inline Task parseTaskCgalAnisotropy() {
 	sourceUp.values = {
 		[] (real) { return 0; },
 		[] (real) { return 0; },
-		[] (real t) { return (t < 10e-6 /*0.005*/) ? -1 : 0; }
+		[] (real t) { return (t < 10e-6) ? -1 : 0; }
 	};
 	
 	Statement::BorderCondition fracture;
@@ -507,3 +460,4 @@ inline Task parseTaskCgalAnisotropy() {
 	task.statements.push_back(statement);
 	return task;
 }
+*/

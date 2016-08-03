@@ -4,16 +4,15 @@
 #include <lib/mesh/grid/AbstractGrid.hpp>
 
 namespace gcm {
+
 /**
- * Non-movable structured grid
+ * Structured grid base
  */
 class StructuredGrid : public AbstractGrid {
 public:
 	StructuredGrid(const Task& task) : AbstractGrid(task) { }
 	virtual ~StructuredGrid() { }
-
-protected:
-	USE_AND_INIT_LOGGER("gcm.StructuredGrid")
+	
 };
 
 

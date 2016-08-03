@@ -5,20 +5,24 @@
 #include <lib/mesh/Elements.hpp>
 
 namespace gcm {
+
 /**
- * Movable unstructured grid
+ * Unstructured grid base
  */
 class UnstructuredGrid : public AbstractGrid {
 public:
-
+	
 	/** 
-	 * Simple size_t index iterator over all mesh nodes
+	 * Simple plain size_t index iterator over all mesh nodes
 	 */
 	struct Iterator {
-		size_t iter = 0;
+		typedef size_t Index;
 		
-		Iterator() : iter(0) { }
-		Iterator(size_t value) : iter(value) { }
+		Index iter = 0;
+		
+		Iterator(size_t value = 0) : iter(value) { }
+		
+		operator Index() const { return iter; }
 		
 		const Iterator& operator*() const { return *this; }
 		
@@ -33,7 +37,7 @@ public:
 		bool operator<(const Iterator& other) const {
 			return iter < other.iter;
 		}
-
+	
 		Iterator& operator++() {
 			iter++;
 			return (*this);
@@ -46,14 +50,20 @@ public:
 		struct {
 			bool border;
 		};
-	} Flags;
-
-
+	} Flags; ///< currently unused
+	
+	
 	UnstructuredGrid(const Task& task) : AbstractGrid(task) { }
 	virtual ~UnstructuredGrid() { }
-
-protected:
-	USE_AND_INIT_LOGGER("gcm.UnstructuredGrid")
+	
+	/**
+	 * @param it begin() <= iterator < end()
+	 * @return index of node by the Iterator in std::vector storage
+	 */
+	size_t getIndex(const Iterator& it) const {
+		return it.iter;
+	}
+	
 };
 
 

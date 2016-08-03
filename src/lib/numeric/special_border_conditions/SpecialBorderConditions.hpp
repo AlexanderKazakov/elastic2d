@@ -56,16 +56,16 @@ struct SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial> {
 		int normal;          ///< -1 or 1 only
 		Condition condition; ///< border condition od the surface
 	};
-
+	
 	void beforeStatement(const Statement& statement);
 	void applyBorderBeforeStage(Mesh* mesh, const real timeStep, const int stage) const;
 	void applyBorderAfterStage(Mesh* mesh, const real timeStep, const int stage) const;
-
+	
 	void handleSide(Mesh* mesh, const int direction, const bool onTheRight) const;
-
+	
 	static void handleBorderPoint(Mesh* mesh, const Iterator& borderIter,
 			const Map& values, const int direction, const bool onTheRight);
-
+	
 	static void handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh,
 			const real timeStep, const int direction, const Iterator& iter, 
 			const Map& values, const int surfaceNormal);
@@ -77,7 +77,8 @@ struct SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial> {
 		helpTask.cubicGrid.h = {mesh->h(stage)};
 		helpTask.cubicGrid.sizes = {mesh->borderSize};
 		
-		auto helpMesh = new HelpMesh(helpTask);
+		auto helpMesh = new HelpMesh(helpTask, 
+				new typename HelpMesh::GlobalScene(helpTask), 0);
 		helpMesh->allocate();
 		return helpMesh;
 	}
@@ -88,7 +89,7 @@ private:
 	std::vector<Condition> conditions;
 	/// list of inner surfaces
 	std::vector<InnerSurface> innerSurfaces;
-
+	
 };
 
 

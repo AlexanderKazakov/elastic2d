@@ -1,5 +1,9 @@
 #include <gtest/gtest.h>
-#include <test/wrappers/Wrappers.hpp>
+
+#include <lib/Engine.hpp>
+#include <lib/mesh/DefaultMesh.hpp>
+#include <lib/numeric/solvers/DefaultSolver.hpp>
+#include <lib/mesh/grid/CubicGrid.hpp>
 
 #include <lib/util/task/Task.hpp>
 #include <lib/rheology/models/models.hpp>
@@ -89,10 +93,12 @@ INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementation
 TEST(MPI, MpiEngineVsSequenceEngine) {
 	Task task;
 
-	task.dimensionality = 2;
-	task.modelId = Models::T::ELASTIC;
-	task.materialId = Materials::T::ISOTROPIC;
-	task.gridId = Grids::T::CUBIC;
+	task.globalSettings.dimensionality = 2;
+	task.globalSettings.gridId = Grids::T::CUBIC;
+
+	task.bodies = {
+		{Materials::T::ISOTROPIC, Models::T::ELASTIC, 0},
+	};
 
 	Statement statement;
 	task.cubicGrid.borderSize = 2;
@@ -100,7 +106,7 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	task.cubicGrid.lengths = {2, 1};
 
 	statement.globalSettings.CourantNumber = 1.8;
-	statement.materialConditions.defaultMaterial = 
+	statement.materialConditions.byAreas.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	statement.globalSettings.numberOfSnaps = 5;
 
@@ -114,22 +120,33 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 
 	// calculate in sequence
 	task.globalSettings.forceSequence = true;
-	EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> >
-			sequenceEngine(task);
+	Engine sequenceEngine(task);
 	sequenceEngine.run();
 
 	// calculate in parallel
 	task.globalSettings.forceSequence = false;
-	EngineWrapper<DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> >
-			mpiEngine(task);
+	Engine mpiEngine(task);
 	mpiEngine.run();
-
+	
+	
+	struct Wrapper {
+		typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
+		static const Mesh* getMesh(const Engine& engine) {
+			const AbstractGrid* grid = engine.getSolver()->getActualMesh();
+			const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
+			assert_true(mesh);
+			return mesh;
+		}
+	};
+	
 	// check that parallel result is equal to sequence result
-	auto mpiMesh = mpiEngine.getSolverForTest()->getMesh();
-	auto sequenceMesh = sequenceEngine.getSolverForTest()->getMesh();
+	auto mpiMesh = Wrapper::getMesh(mpiEngine);
+	auto sequenceMesh = Wrapper::getMesh(sequenceEngine);
 
-	int numberOfNodesAlongXPerOneCore = CubicGrid<2>::numberOfNodesAlongXPerOneCore(task.cubicGrid);
+	int numberOfNodesAlongXPerOneCore = CubicGrid<2>::
+			numberOfNodesAlongXPerOneCore(task.cubicGrid);
 	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
+	
 	for (int x = 0; x < mpiMesh->sizes(0); x++) {
 		for (int y = 0; y < mpiMesh->sizes(1); y++) {
 			ASSERT_EQ(mpiMesh->pde({x, y}), sequenceMesh->pde({x + startX, y})) 

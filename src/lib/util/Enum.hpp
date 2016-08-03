@@ -25,26 +25,24 @@ struct PhysicalQuantities {
 	enum class T {
 		VELOCITY,
 		FORCE,
-
+		
 		Vx /* Velocity component along x-axis */,
 		Vy /* Velocity component along y-axis */,
 		Vz /* Velocity component along z-axis */,
-
+		
 		Sxx /* Component of tension tensor */,
 		Sxy /* Component of tension tensor */,
 		Sxz /* Component of tension tensor */,
 		Syy /* Component of tension tensor */,
 		Syz /* Component of tension tensor */,
 		Szz /* Component of tension tensor */,
-
+		
 		RHO /* Density */,
 		PRESSURE /* Pressure = -Sxx (1D), -(Sxx + Syy)/2 (2D), -(Sxx + Syy + Szz)/3 (3D) */,
-
+		
 		DAMAGE_MEASURE /* from continual damage model */,
-
-		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		
 	};
-
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
 };
@@ -58,10 +56,8 @@ struct Waves {
 		P_FORWARD, P_BACKWARD,
 		S1_FORWARD, S1_BACKWARD,
 		S2_FORWARD, S2_BACKWARD,
-
-		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		
 	};
-
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
 };
@@ -73,7 +69,6 @@ struct BorderConditions {
 		FIXED_FORCE,
 		FIXED_VELOCITY
 	};
-
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
 };
@@ -86,10 +81,8 @@ struct Materials {
 	enum class T {
 		ISOTROPIC,
 		ORTHOTROPIC,
-
-		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		
 	};
-
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
 };
@@ -101,11 +94,9 @@ struct Grids {
 	/** Type */
 	enum class T {
 		CUBIC,
-		CGAL,
-
-		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		SIMPLEX,
+		
 	};
-
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
 };
@@ -118,10 +109,8 @@ struct Models {
 	enum class T {
 		ELASTIC,
 		ACOUSTIC,
-
-		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		
 	};
-
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
 };
@@ -136,12 +125,31 @@ struct Snapshotters {
 		BIN2DSEISM,
 		DETECTOR,
 		SLICESNAP,
-
-		SIZE_OF_ENUM /* This MUST be at the last position here! DO NOT insert anything after that!!! */
+		
 	};
 
 	/** string names of concepts */
 	static const std::map<T, std::string> NAME;
+};
+
+/**
+ * For all types of solvers used in the program.
+ */
+struct Solvers {
+	/** Type */
+	enum class T {
+		DEFAULT,
+	};
+};
+
+/**
+ * For all types of meshes used in the program.
+ */
+struct Meshes {
+	/** Type */
+	enum class T {
+		DEFAULT,
+	};
 };
 
 enum class DIRECTION {X = 0, Y = 1, Z = 2};

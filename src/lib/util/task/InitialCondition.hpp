@@ -2,31 +2,94 @@
 #define LIBGCM_INITIALCONDITION_HPP
 
 #include <lib/util/task/Task.hpp>
+#include <lib/util/task/MaterialsCondition.hpp>
 
 namespace gcm {
 
-template<typename TModel, typename TMaterial>
+template<typename TModel, typename TGrid, typename TMaterial,
+         template<typename, typename, typename> class TMesh>
 class InitialCondition {
 public:
-	typedef typename TModel::PdeVariables    PdeVariables;
-	typedef typename TModel::PdeVector       PdeVector;
-	typedef typename TModel::GCM_MATRICES    GCM_MATRICES;
-
-	/** Convert task terms of initial conditions to own format */
-	void initialize(const Statement& statement);
-
-	/** Apply initial conditions to node assume that its coordinates is coords */
-	void apply(PdeVector& v, const Real3& coords) const;
-
+	typedef TMesh<TModel, TGrid, TMaterial>  Mesh;
+	typedef typename Mesh::PdeVariables      PdeVariables;
+	typedef typename Mesh::PdeVector         PdeVector;
+	typedef typename Mesh::GCM_MATRICES      GCM_MATRICES;
+	typedef typename Mesh::GridId            GridId;
+	
+	typedef MaterialsCondition<TModel, TGrid, TMaterial, TMesh> MC;
+	
+	
+	/**
+	 * Apply initial conditions to mesh according to given task
+	 */
+	static void apply(const Statement& statement, Mesh* mesh) {
+		
+		Conditions conditions = convertToLocalFormat(statement, mesh->id());
+		
+		for (const auto& it : *mesh) {
+			linal::clear(mesh->_pde(it));
+			for (const auto& condition : conditions) {
+				if (condition.area->contains(mesh->coords(it))) {
+					mesh->_pde(it) += condition.pdeVector;
+				}
+			}
+		}
+		
+	}
+	
+	
 private:
-	struct PdeCondition {
-		PdeCondition(std::shared_ptr<Area> area_, PdeVector pdeVector_) :
-			area(area_), pdeVector(pdeVector_) { }
+	
+	struct Condition {
 		std::shared_ptr<Area> area;
 		PdeVector pdeVector;
 	};
-	std::vector<PdeCondition> pdeConditions;
-
+	
+	typedef std::vector<Condition> Conditions;
+	
+	
+	static Conditions convertToLocalFormat(
+			const Statement& statement, const GridId gridId) {
+		
+		Conditions conditions;
+		
+		for (auto& v : statement.initialCondition.vectors) {
+			assert_eq(PdeVector::M, v.list.size());
+			conditions.push_back({v.area, PdeVector(v.list)});
+		}
+		
+		
+		typename MC::Conditions mcConditions = 
+				MC::convertToLocalFormat(statement, gridId);
+		auto material = mcConditions.front().material;
+		auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>();
+		TModel::constructGcmMatrices(gcmMatricesPtr, material);
+		
+		for (auto& wave : statement.initialCondition.waves) {
+			assert_lt(wave.direction, TModel::DIMENSIONALITY);
+			
+			auto A = (*gcmMatricesPtr)(wave.direction);
+			int columnNumber = TModel::MATERIALS_WAVES_MAP.at(TMaterial::ID).at(wave.waveType);
+			
+			PdeVector tmp = A.U1.getColumn(columnNumber);
+			real currentValue = PdeVariables::QUANTITIES.at(wave.quantity).Get(tmp);
+			assert_ne(currentValue, 0);
+			
+			tmp *= wave.quantityValue / currentValue;
+			conditions.push_back({wave.area, tmp});
+		}
+		
+		
+		for (auto& q : statement.initialCondition.quantities) {
+			PdeVector tmp;
+			linal::clear(tmp);
+			PdeVariables::QUANTITIES.at(q.physicalQuantity).Set(q.value, tmp);
+			conditions.push_back({q.area, tmp});
+		}
+		
+		return conditions;
+	}
+	
 };
 
 

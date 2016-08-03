@@ -4,6 +4,7 @@
 
 using namespace gcm;
 
+/*
 template<class TConcept>
 class TestConcepts : public testing::Test {
 protected:
@@ -14,8 +15,8 @@ protected:
 };
 
 
-/** Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc
-  for explaination */
+// Look at https://github.com/google/googletest/blob/master/googletest/samples/sample6_unittest.cc
+  for explaination 
 #if GTEST_HAS_TYPED_TEST_P
 using testing::Types;
 TYPED_TEST_CASE_P(TestConcepts);
@@ -25,8 +26,8 @@ TYPED_TEST_P(TestConcepts, SizeOfMap) {
 REGISTER_TYPED_TEST_CASE_P(TestConcepts, SizeOfMap);
 
 // When new concept arrears, place it here
-typedef Types<PhysicalQuantities, Waves, Materials, Grids, Models> AllImplementations;
+typedef Types<PhysicalQuantities, Waves> AllImplementations;
 
 INSTANTIATE_TYPED_TEST_CASE_P(AllConcepts, TestConcepts, AllImplementations);
 #endif // GTEST_HAS_TYPED_TEST_P
-
+*/

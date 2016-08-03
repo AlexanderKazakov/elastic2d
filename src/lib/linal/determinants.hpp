@@ -6,6 +6,15 @@
 namespace gcm {
 namespace linal {
 
+
+/**
+ * 1x1 determinant
+ */
+inline real determinant(const Matrix11& m) {
+	return m(0, 0);
+}
+
+
 /**
  * Arbitrary type 2x2 determinant
  */
