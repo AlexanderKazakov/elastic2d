@@ -5,6 +5,7 @@
 
 #include <lib/util/Utils.hpp>
 #include <lib/linal/Matrix.hpp>
+#include <lib/linal/determinants.hpp>
 
 namespace gcm {
 namespace linal {
@@ -49,6 +50,45 @@ template<int TM, int TN,
 MatrixBase<TN, TM, TElement, Diagonal, TContainer>
 transpose(const MatrixBase<TM, TN, TElement, Diagonal, TContainer>& m) {
 	return m;
+}
+
+
+/**
+ * Invert 1x1 matrix
+ */
+template<typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<1, 1, TElement, NonSymmetric, TContainer>
+invert(const MatrixBase<1, 1, TElement, NonSymmetric, TContainer>& m) {
+	return MatrixBase<1, 1, TElement, NonSymmetric, TContainer>({1.0 / m(0, 0)});
+}
+
+
+/**
+ * Invert 2x2 matrix
+ */
+template<typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<2, 2, TElement, NonSymmetric, TContainer>
+invert(const MatrixBase<2, 2, TElement, NonSymmetric, TContainer>& m) {
+	return MatrixBase<2, 2, TElement, NonSymmetric, TContainer>(
+			{ m(1, 1), -m(0, 1),
+			 -m(1, 0),  m(0, 0) }) / determinant(m);
+}
+
+
+/**
+ * Invert 3x3 matrix
+ */
+template<typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<3, 3, TElement, NonSymmetric, TContainer>
+invert(const MatrixBase<3, 3, TElement, NonSymmetric, TContainer>& m) {
+	return MatrixBase<3, 3, TElement, NonSymmetric, TContainer>(
+{ m(1,1)*m(2,2)-m(1,2)*m(2,1), m(0,2)*m(2,1)-m(0,1)*m(2,2), m(0,1)*m(1,2)-m(1,1)*m(0,2),
+  m(1,2)*m(2,0)-m(1,0)*m(2,2), m(0,0)*m(2,2)-m(0,2)*m(2,0), m(0,2)*m(1,0)-m(0,0)*m(1,2),
+  m(1,0)*m(2,1)-m(1,1)*m(2,0), m(0,1)*m(2,0)-m(0,0)*m(2,1), m(0,0)*m(1,1)-m(0,1)*m(1,0) }
+			) / determinant(m);
 }
 
 

@@ -11,6 +11,25 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, invert) {
+	Utils::seedRand();
+	for (int i = 0; i < LINAL_TEST_NUMBER_ITERATIONS; i++) {
+		
+		auto m1 = random<Matrix11>(-1, 1);
+		ASSERT_TRUE(approximatelyEqual(identity(m1), m1 * invert(m1)))
+				<< "matrix = " << m1 << "identity = " << m1 * invert(m1);
+		
+		auto m2 = random<Matrix22>(-1, 1);
+		ASSERT_TRUE(approximatelyEqual(identity(m2), m2 * invert(m2), 1e-5))
+				<< "matrix = " << m2 << "identity = " << m2 * invert(m2);
+		
+		auto m3 = random<Matrix33>(-1, 1);
+		ASSERT_TRUE(approximatelyEqual(identity(m3), m3 * invert(m3), 1e-5))
+				<< "matrix = " << m3 << "identity = " << m3 * invert(m3);
+	}
+}
+
+
 TEST(Linal, Assignment) {
 	Matrix<1, 4> r = {1, 0, -3.4, 1.5};
 	

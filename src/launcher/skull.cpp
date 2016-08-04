@@ -22,7 +22,6 @@ inline Task skullAcoustic() {
 	
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.spatialStep = 0.5;
 	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 	task.simplexGrid.scale = 10;
 	
@@ -85,7 +84,7 @@ inline Task skullAcoustic() {
 
 inline Task skull() {
 	Task task;
-
+	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
@@ -100,32 +99,30 @@ inline Task skull() {
 	
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.spatialStep = 0.5;
 	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 	task.simplexGrid.scale = 10;
 	
 	
 	Statement statement;
+//	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_AREAS;
+//	statement.materialConditions.byAreas.defaultMaterial = 
+//			std::make_shared<IsotropicMaterial>(1, 2, 1);
+	
 	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_BODIES;
-	statement.materialConditions.byAreas.defaultMaterial = 
-			std::make_shared<IsotropicMaterial>(1, 2, 1);
-	/*
-	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_CELLS;
 	auto connectiveTissue = std::make_shared<IsotropicMaterial>(1.008, 2.187, 0.0911, 0, 0, 1);
 	auto muscles          = std::make_shared<IsotropicMaterial>(1.041, 1.765, 0.4413, 0, 0, 2);
 	auto cerebrum         = std::make_shared<IsotropicMaterial>(1.030, 2.284, 0.0952, 0, 0, 3);
 	auto bones            = std::make_shared<IsotropicMaterial>(1.672, 5.197, 2.6773, 0, 0, 4);
 	auto vessels          = std::make_shared<IsotropicMaterial>(1.063, 2.517, 0.1049, 0, 0, 5);
-	statement.materialConditions.materialMap = {
-			{1, {connectiveTissue, 100} },
-			{2, {muscles,          1} },
-			{3, {cerebrum,         5} },
-			{4, {bones,            10} },
-			{5, {vessels,          1000} },
+	statement.materialConditions.byBodies.bodyMaterialMap = {
+			{1, connectiveTissue},
+			{2, muscles},
+			{3, cerebrum},
+			{4, bones},
+			{5, vessels},
 	};
-	*/
 	
-	statement.globalSettings.CourantNumber = 0.5;
+	statement.globalSettings.CourantNumber = 1;
 	statement.globalSettings.numberOfSnaps = 100;
 	statement.globalSettings.stepsPerSnap = 1;
 	

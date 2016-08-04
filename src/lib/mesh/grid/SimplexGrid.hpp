@@ -415,6 +415,7 @@ SimplexGrid(const Task& task, GlobalScene * const triangulation_, const GridId g
 		gridId(gridId_) {
 	
 	assert_ne(gridId, EmptySpaceFlag);
+	LOG_INFO("Start construction of the grid " << gridId << " ...");
 	
 	/// find local cells and vertices in global triangulation
 	std::set<VertexHandle> localVertices;

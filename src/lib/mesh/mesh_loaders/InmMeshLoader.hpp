@@ -60,8 +60,12 @@ public:
 		
 		LOG_INFO("Start adding materials to cells ...");
 		size_t counter = 0, matchCounter = 0;
-		for (auto cell =  triangulation.finite_cells_begin();
-				  cell != triangulation.finite_cells_end(); ++cell) {
+		for (auto cell  = triangulation.all_cells_begin();
+		          cell != triangulation.all_cells_end(); ++cell) {
+			
+			cell->info().setGridId(EmptyMaterialFlag);
+			if (triangulation.is_infinite(cell)) { continue; }
+			
 			Cell inmCell = {
 					cell->vertex(0)->info(),
 					cell->vertex(1)->info(),
@@ -74,8 +78,6 @@ public:
 			if (material != materials.end()) {
 				++matchCounter;
 				cell->info().setGridId((size_t)(*material).second);
-			} else {
-				cell->info().setGridId(EmptyMaterialFlag);
 			}
 			
 			if (++counter % 500000 == 0) { LOG_INFO(counter << " cells have been loaded"); }
