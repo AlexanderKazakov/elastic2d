@@ -1,4 +1,5 @@
 #include <lib/Engine.hpp>
+#include <lib/GlobalVariables.hpp>
 #include <lib/AbstractFactory.hpp>
 #include <lib/numeric/solvers/Solver.hpp>
 #include <lib/util/snapshot/Snapshotter.hpp>
@@ -8,29 +9,21 @@
 using namespace gcm;
 
 
-real Clock::time = 0;
-real Clock::timeStep = 0;
-int Mpi::rank = 0;
-int Mpi::size = 1;
-bool Mpi::forceSequence = false;
-
-
-
 Engine::
-Engine(const Task& task_) :
-		task(task_) {
+Engine(const Task& task_) : task(task_) {
+	
 	LOG_INFO("Start Engine");
 	Clock::setZero();
 	Mpi::initialize(task.globalSettings.forceSequence);
 	
 	assert_gt(task.statements.size(), 0);
 	
-	globalScene = Factory::createGlobalScene(task);
+	globalScene = Factory::createGlobalScene(task, this);
 	
-	for (const Task::Body& body : task.bodies) {
-		auto factory = Factory::create(task, body);
+	for (const auto& body : task.bodies) {
+		auto factory = Factory::create(task, body.second);
 		
-		Solver* solver = factory->createSolver(task, body, globalScene);
+		Solver* solver = factory->createSolver(task, body.first, globalScene);
 		
 		std::vector<Snapshotter*> snapshotters;
 		for (const auto snapId : task.globalSettings.snapshottersId) {
@@ -39,19 +32,21 @@ Engine(const Task& task_) :
 			snapshotters.push_back(snapshotter);
 		}
 		
-		bodies.push_back({solver, snapshotters});
+		bodies.insert({body.first, {solver, snapshotters}});
 	}
 	
+	globalScene->afterGridsConstruction(task);
 }
 
 
 Engine::~Engine() {
-	for (Body& body : bodies) {
-		for (Snapshotter* snapshotter : body.snapshotters) {
+	for (const auto body : bodies) {
+		for (Snapshotter* snapshotter : body.second.snapshotters) {
 			delete snapshotter;
 		}
-		delete body.solver;
+		delete body.second.solver;
 	}
+	delete globalScene;
 }
 
 
@@ -68,11 +63,11 @@ run() {
 void Engine::
 beforeStatement(const Statement& statement) {
 	Clock::setZero();
-	for (Body& body : bodies) {
-		body.solver->beforeStatement(statement);
-		for (Snapshotter* snapshotter : body.snapshotters) {
+	for (const auto body : bodies) {
+		body.second.solver->beforeStatement(statement);
+		for (Snapshotter* snapshotter : body.second.snapshotters) {
 			snapshotter->beforeStatement(statement);
-			snapshotter->snapshot(body.solver->getActualMesh(), 0);
+			snapshotter->snapshot(body.second.solver->getAbstractMesh(), 0);
 		}
 	}
 	
@@ -97,21 +92,19 @@ runStatement() {
 		
 		LOG_INFO("Start next time step. Time = " << Clock::Time()
 				<< ", TimeStep = " << Clock::TimeStep());
-		for (Body& body : bodies) {
-			body.solver->nextTimeStep();
-		}
+		nextTimeStep();
 		step++; Clock::tickTack();
 		
-		for (Body& body : bodies) {
-			for (Snapshotter* snapshotter : body.snapshotters) {
-				snapshotter->snapshot(body.solver->getActualMesh(), step);
+		for (const auto body : bodies) {
+			for (Snapshotter* snapshotter : body.second.snapshotters) {
+				snapshotter->snapshot(body.second.solver->getAbstractMesh(), step);
 			}
 		}
 	}
 	
-	for (Body& body : bodies) {
-		body.solver->afterStatement();
-		for (Snapshotter* snapshotter : body.snapshotters) {
+	for (const auto body : bodies) {
+		body.second.solver->afterStatement();
+		for (Snapshotter* snapshotter : body.second.snapshotters) {
 			snapshotter->afterStatement();
 		}
 	}
@@ -119,11 +112,39 @@ runStatement() {
 
 
 void Engine::
+nextTimeStep() {
+	
+	for (int stage = 0; stage < task.globalSettings.dimensionality; stage++) {
+		
+		for (const auto body : bodies) {
+			body.second.solver->beforeStage();
+		}
+		
+		for (const auto body : bodies) {
+			body.second.solver->contactStage(stage, Clock::TimeStep());
+		}
+		
+		globalScene->correctContacts();
+		
+		for (const auto body : bodies) {
+			body.second.solver->privateStage(stage, Clock::TimeStep());
+		}
+		
+	}
+	
+	for (const auto body : bodies) {
+		body.second.solver->afterStages(Clock::TimeStep());
+	}
+	
+}
+
+
+void Engine::
 estimateTimeStep() {
 	/// minimal among all solvers
 	real minimalTimeStep = std::numeric_limits<real>::max();
-	for (Body& body : bodies) {
-		real solverTimeStep = body.solver->calculateTimeStep();
+	for (const auto body : bodies) {
+		real solverTimeStep = body.second.solver->calculateTimeStep();
 		if (solverTimeStep < minimalTimeStep) {
 			minimalTimeStep = solverTimeStep;
 		}

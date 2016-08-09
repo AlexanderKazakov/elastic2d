@@ -15,7 +15,7 @@ using namespace gcm;
 struct Wrapper {
 	typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
 	static const Mesh* getMesh(const Engine& engine) {
-		const AbstractGrid* grid = engine.getSolver()->getActualMesh();
+		const AbstractGrid* grid = engine.getSolver()->getAbstractMesh();
 		const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
 		assert_true(mesh);
 		return mesh;
@@ -30,7 +30,7 @@ TEST(Engine, runStatement) {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	
 	task.bodies = {
-		{Materials::T::ISOTROPIC, Models::T::ELASTIC, 0},
+		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 	};
 	
 	Statement statement;
@@ -76,7 +76,7 @@ TEST(Engine, TwoLayersDifferentRho) {
 		task.globalSettings.gridId = Grids::T::CUBIC;
 		
 		task.bodies = {
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 0},
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 		};
 		
 		Statement statement;
@@ -161,7 +161,7 @@ TEST(Engine, TwoLayersDifferentE) {
 		task.globalSettings.gridId = Grids::T::CUBIC;
 		
 		task.bodies = {
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 0},
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 		};
 		
 		Statement statement;

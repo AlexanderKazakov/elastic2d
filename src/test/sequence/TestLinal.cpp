@@ -11,6 +11,28 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, normMax) {
+	ASSERT_EQ(7, normMax(Matrix22({
+			1, 2,
+			3, 4 })));
+	ASSERT_EQ(11, normMax(Matrix22({
+			5, 6,
+			3, 4 })));
+	ASSERT_EQ(19, normMax(Matrix33({
+			1, 2, 3,
+			3, 4, 10,
+			11, 0, 8 })));
+}
+
+
+TEST(Linal, conditionNumber) {
+	ASSERT_EQ(1, conditionNumber(Matrix33::Identity()));
+	ASSERT_EQ(199*199, conditionNumber(Matrix22({
+			100, 99,
+			 99, 98 })));
+}
+
+
 TEST(Linal, invert) {
 	Utils::seedRand();
 	for (int i = 0; i < LINAL_TEST_NUMBER_ITERATIONS; i++) {

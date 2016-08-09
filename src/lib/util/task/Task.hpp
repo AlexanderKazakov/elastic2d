@@ -161,9 +161,9 @@ struct Task {
 	struct Body {
 		Materials::T materialId; ///< body material
 		Models::T modelId;       ///< body rheology
-		size_t id;               ///< body indicator > 0
 	};
-	std::vector<Body> bodies; ///< list of bodies to calculate
+	/// Bodies sorted by unique id
+	std::map<size_t, Body> bodies;
 	
 	
 	struct GlobalSettings {
@@ -223,6 +223,13 @@ struct Task {
 		std::vector<Body> bodies; ///< list of bodies contained in the grid
 	
 	} simplexGrid;
+	
+	
+	struct ContactCondition {
+		typedef std::pair<size_t, size_t> GridsContact;
+		ContactConditions::T defaultCondition;
+		std::map<GridsContact, ContactConditions::T> gridToGridConditions;
+	} contactCondition;
 	
 	
 	/// list of statements to calculate on the same geometry

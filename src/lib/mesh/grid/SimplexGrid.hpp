@@ -4,10 +4,13 @@
 #include <list>
 
 #include <lib/mesh/grid/UnstructuredGrid.hpp>
-#include <lib/mesh/grid/cgal/LineWalker.hpp>
 
 
 namespace gcm {
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+class SimplexGlobalScene;
 
 /**
  * Unstructured grid on simplices (aka tetrahedrons in 3D and triangles in 2D).
@@ -23,7 +26,7 @@ template<int Dimensionality,
 class SimplexGrid : public UnstructuredGrid {
 public:
 	
-	/// Unique number of the grid among other grids of this type
+	/// Unique number of the grid among other grids
 	typedef size_t GridId;
 	
 	/// Indicator that no grid owns the cell (auxiliary empty cell)
@@ -60,15 +63,14 @@ public:
 	typedef TriangulationT<Dimensionality, VertexInfo, CellInfo> Triangulation;
 	
 	/// All simplex grid in the program are in the unique global triangulation
-	typedef Triangulation GlobalScene;
+	/// which is stored in the GlobalScene
+	typedef SimplexGlobalScene<Dimensionality, TriangulationT>   GlobalScene;
 	
 	/// Some sort of pointer to triangulation cell
 	typedef typename Triangulation::CellHandle             CellHandle;
 	/// Some sort of pointer to triangulation vertex
 	typedef typename Triangulation::VertexHandle           VertexHandle;
 	
-	/// Struct allows to go along the line cell-by-cell in triangulation
-	typedef LineWalker<Triangulation, DIMENSIONALITY>      LINE_WALKER;
 	
 	/// Point (Vector) in the space of triangulation
 	typedef typename Triangulation::RealD         RealD;
@@ -129,8 +131,7 @@ public:
 	///@}
 	
 	
-	SimplexGrid(const Task& task, 
-			GlobalScene * const triangulation_, const GridId gridId_);
+	SimplexGrid(const Task&, GlobalScene* gS, const GridId gridId_);
 	virtual ~SimplexGrid() { }
 	
 	
@@ -198,7 +199,7 @@ public:
 	
 	/** NOT Minimal, but average (!) height among all simplices */
 	real getMinimalSpatialStep() const {
-		assert_false(triangulation->isMovable()); // TODO - recalculate
+		// TODO - recalculate for movable meshes
 		// FIXME - solve the problem with degenerate cells 
 		// for 3D figures with sharp edges
 		assert_gt(averageSpatialStep, 0);
@@ -242,10 +243,6 @@ public:
 	}
 	
 	
-	/** Unique number of the grid among other grids of this type */
-	GridId id() const { return gridId; }
-	
-	
 	/** Create Cell with all vertices from CellHandle */
 	Cell createCell(const CellHandle ch) const {
 		Cell ans;
@@ -264,10 +261,6 @@ private:
 	/// Pointer to global triangulation structure contains several grids
 	Triangulation * const triangulation;
 	
-	/// Id of this grid to distinguish from other grids in global triangulation.
-	/// The cells this grid owns are marked by this id.
-	const GridId gridId;
-	
 	/// Pointers to triangulation vertices this grid owns.
 	/// LocalVertexIndex is the index of VertexHandle in this vector.
 	/// One vertex can be shared between several grids
@@ -277,7 +270,8 @@ private:
 	std::vector<LocalVertexIndex> borderIndices;  ///< indices of border vertices in vertexHandles
 	std::vector<LocalVertexIndex> innerIndices;   ///< indices of inner vertices in vertexHandles
 	
-	/// Pointers to triangulation cells this grid owns.
+	/// Pointers to global triangulation cells this grid owns.
+	/// Each cell is marked by id of the grid the cell belongs to.
 	/// A cell in triangulation can belong to the only one grid (unlike vertices)
 	std::vector<CellHandle> cellHandles;
 	
@@ -288,6 +282,7 @@ private:
 	
 	///@}
 	
+	friend class SimplexGlobalScene<Dimensionality, TriangulationT>;
 	USE_AND_INIT_LOGGER("gcm.SimplexGrid")
 	
 	/** Iterator of vertex at indexInCell position in ch */
@@ -320,7 +315,7 @@ private:
 	
 	/** Is given cell belongs to this grid */
 	bool belongsToTheGrid(const CellHandle ch) const {
-		return ch->info().getGridId() == gridId;
+		return ch->info().getGridId() == id;
 	}
 	
 	
@@ -358,7 +353,7 @@ private:
 	BorderState borderState(const LocalVertexIndex it) const {
 		std::set<GridId> incidentGrids = gridsAroundVertex(it);
 		
-		incidentGrids.erase(gridId);
+		incidentGrids.erase(id);
 		if (incidentGrids.empty()) { return BorderState::INNER; }
 		
 		incidentGrids.erase((GridId)EmptySpaceFlag);
@@ -400,221 +395,9 @@ private:
 	}
 	
 	
-	/** Set minimalSpatialStep to minimal height among all local cells */
 	void calculateMinimalSpatialStep();
 	
 };
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-SimplexGrid<Dimensionality, TriangulationT>::
-SimplexGrid(const Task& task, GlobalScene * const triangulation_, const GridId gridId_) :
-		UnstructuredGrid(task),
-		triangulation(triangulation_),
-		gridId(gridId_) {
-	
-	assert_ne(gridId, EmptySpaceFlag);
-	LOG_INFO("Start construction of the grid " << gridId << " ...");
-	
-	/// find local cells and vertices in global triangulation
-	std::set<VertexHandle> localVertices;
-	for (auto cellIter  = triangulation->allCellsBegin();
-	          cellIter != triangulation->allCellsEnd(); ++cellIter) {
-		if (cellIter->info().getGridId() == gridId) {
-			
-			// check on mesher artifacts
-			if (Triangulation::minimalCellHeight(cellIter) < EQUALITY_TOLERANCE) {
-				// FIXME - EQUALITY_TOLERANCE is bad solution, move to mesher?
-				cellIter->info().setGridId(EmptySpaceFlag);
-//				triangulation->printCell(cellIter, std::string(
-//						"replaced as degenerate with minimalHeight == ") +
-//						std::to_string(Triangulation::minimalCellHeight(cellIter)));
-				continue;
-			}
-			
-			cellHandles.push_back(cellIter);
-			for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
-				localVertices.insert(cellIter->vertex(i));
-			}
-		}
-	}
-	vertexHandles.assign(localVertices.begin(), localVertices.end());
-	
-	/// write local vertices indices to vertices info
-	/// note (!) later, it will be invalidated by other grids constructors,
-	/// so it is just temporary auxiliary info
-	for (size_t i = 0; i < vertexHandles.size(); i++) {
-		vertexHandles[i]->info() = i;
-	}
-	
-	/// write local vertices indices to cells info
-	/// this is not temporary, because cell belongs to the only one grid
-	for (CellIterator cell = cellBegin(); cell != cellEnd(); ++cell) {
-		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
-			(*cell)->info().localVertexIndices[i] = (*cell)->vertex(i)->info();
-		}
-	}
-	
-	markInnersAndBorders();
-	calculateMinimalSpatialStep();
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-typename SimplexGrid<Dimensionality, TriangulationT>::RealD
-SimplexGrid<Dimensionality, TriangulationT>::
-contactNormal(const Iterator& it, const GridId neighborId) const {
-
-	std::list<RealD> facesNormals;
-	
-	const std::list<CellHandle> localCells = localIncidentCells(it);
-	for (const CellHandle localCell : localCells) {
-		
-		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
-			CellHandle outerCell = localCell->neighbor(i);
-			
-			if (
-			/// localCell's neighbor with neighborId ..
-				outerCell->info().getGridId() == neighborId &&
-			/// .. which also has our vertex
-				Utils::has(Triangulation::commonVertices(localCell, outerCell),
-						vertexHandle(it)) ) {
-				
-				facesNormals.push_back(
-						Triangulation::contactNormal(localCell, outerCell));
-			}
-		}
-	}
-	
-	assert_false(facesNormals.empty());
-	return linal::normalize(std::accumulate(
-			facesNormals.begin(), facesNormals.end(), RealD::Zeros()));
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-typename SimplexGrid<Dimensionality, TriangulationT>::Cell
-SimplexGrid<Dimensionality, TriangulationT>::
-findOwnerCell(const Iterator& it, const RealD& shift) const {
-	LINE_WALKER lineWalker(triangulation, vertexHandle(it), shift, gridId);
-	RealD query = coordsD(it) + shift;
-	
-	CellHandle current = lineWalker.currentCell();
-	CellHandle previous = current;
-	if (current == NULL) { return createCell(); }
-	
-	while ( belongsToTheGrid(current) &&
-	        !Triangulation::contains(current, query) ) {
-	// along the line until found or go outside the grid
-		previous = current;
-		current = lineWalker.next();
-	}
-	
-	
-	if ( belongsToTheGrid(current) ) {
-	// cell found inside the grid
-		assert_true(belongsToTheGrid(previous));
-		return createCell(current);
-	}
-	
-	if ( belongsToTheGrid(previous) ) {
-	// seems to go outside the grid through the border
-		Cell ans = createCell(
-				Triangulation::commonVertices(current, previous), previous);
-		if ( isInner(it) || !ans.has(it) ) {
-		// it is not immediate outgoing from a border node
-			return ans;
-		}
-	}
-	
-	return createCell();
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-typename SimplexGrid<Dimensionality, TriangulationT>::Iterator
-SimplexGrid<Dimensionality, TriangulationT>::
-findVertexByCoordinates(const RealD& coordinates) const {
-	for (const auto& it : *this) {
-		if (coordsD(it) == coordinates) {
-			return it;
-		}
-	}
-	THROW_INVALID_ARG("There isn't a node with such coordinates");
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-void
-SimplexGrid<Dimensionality, TriangulationT>::
-markInnersAndBorders() {
-/// insert indices of contact vertices into contactIndices
-/// insert indices of border vertices into borderIndices
-/// and indices of inner vertices into innerIndices
-	contactIndices.clear();
-	borderIndices.clear();
-	innerIndices.clear();
-	
-	
-	for (const auto it : *this) {
-		switch (borderState(it)) {
-			case BorderState::CONTACT:
-				contactIndices.push_back(it);
-				break;
-				
-			case BorderState::BORDER:
-				borderIndices.push_back(it);
-				break;
-				
-			case BorderState::INNER:
-				innerIndices.push_back(it);
-				break;
-				
-			default:
-				THROW_BAD_MESH("Unknown border state");
-				break;
-		}
-	}
-	
-	assert_eq(contactIndices.size() + borderIndices.size() +
-			innerIndices.size(), sizeOfAllNodes());
-	
-	LOG_DEBUG("Number of contact vertices: " << contactIndices.size());
-	LOG_DEBUG("Number of border vertices: " << borderIndices.size());
-	LOG_DEBUG("Number of inner vertices: " << innerIndices.size());
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-void
-SimplexGrid<Dimensionality, TriangulationT>::
-calculateMinimalSpatialStep() {
-	real summHeight = 0;
-	size_t cellsNumber = 0;
-	minimalSpatialStep = std::numeric_limits<real>::max();
-	
-	for (auto cell = cellBegin(); cell != cellEnd(); ++cell) {
-		real h = Triangulation::minimalCellHeight(*cell);
-		if (minimalSpatialStep > h) {
-			minimalSpatialStep = h;
-		}
-		
-		real summPrevious = summHeight;
-		summHeight += h;
-		assert_ne(summPrevious, summHeight); // check overflow and zero
-		++cellsNumber;
-	}
-	
-	averageSpatialStep = summHeight / (real)cellsNumber;
-	LOG_INFO("Minimal height: " << minimalSpatialStep
-	    << ", Average height: " << averageSpatialStep);
-}
 
 
 }

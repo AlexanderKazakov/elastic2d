@@ -266,7 +266,7 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	writeMaterialNumbers();
 	
 	VtkUtils::writeToFile(vtkGrid, VTK_TYPES::NewWriter(), makeFileNameForSnapshot(
-			std::to_string(mesh->id()), step, VTK_TYPES::FileExtension(), FOLDER_NAME));
+			std::to_string(mesh->id), step, VTK_TYPES::FileExtension(), FOLDER_NAME));
 }
 
 

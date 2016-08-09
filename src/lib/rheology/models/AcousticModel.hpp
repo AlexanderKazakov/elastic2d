@@ -14,7 +14,7 @@ template<int Dimensionality>
 class AcousticModel {
 public:
 	static const int DIMENSIONALITY = Dimensionality;
-
+	
 	typedef AcousticVariables<DIMENSIONALITY> PdeVariables;
 	typedef DummyOde                          InternalOde;
 	typedef DummyCorrector                    Corrector;
@@ -23,16 +23,16 @@ public:
 	typedef linal::Vector<DIMENSIONALITY>     RealD;
 	typedef linal::Matrix<DIMENSIONALITY,
 	                      DIMENSIONALITY>     MatrixDD;
-
+	
 	static const int PDE_SIZE = PdeVector::M;
-
+	
 	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
 	typedef typename GCM_MATRICES::GcmMatrix      GcmMatrix;
 	typedef typename GCM_MATRICES::Matrix         Matrix;
 	typedef typename InternalOde::Variables       OdeVariables;
 	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
 	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
-
+	
 	static const MaterialsWavesMap MATERIALS_WAVES_MAP;
 	
 	/// Number of characteristics with slopes of the same sign.
@@ -41,6 +41,9 @@ public:
 	/// Matrix of linear border condition "B * \vec{u} = b"
 	/// @see BorderCondition
 	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
+	/// Matrix of outer eigenvectors
+	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterMatrix;
+	
 	
 	
 	/**
@@ -73,6 +76,10 @@ public:
 	
 	/** Construct matrix U for given basis. @see constructGcmMatrix */
 	static void constructEigenstrings(Matrix& u,
+			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
+	
+	/** Construct matrix with waves which are outer if given basis is local border */
+	static OuterMatrix constructOuterEigenvectors(
 			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
 	
 	
@@ -216,6 +223,22 @@ constructEigenstrings(
 		u.setRow(i + 1, vec);
 	}
 	
+}
+
+
+template<int Dimensionality>
+inline typename AcousticModel<Dimensionality>::OuterMatrix
+AcousticModel<Dimensionality>::
+constructOuterEigenvectors(std::shared_ptr<const IsotropicMaterial> material,
+		const MatrixDD& basis) {
+	
+	Matrix u1;
+	constructEigenvectors(u1, material, basis);
+	
+	// FIXME - do smth with MaterialsWavesMap
+	OuterMatrix ans;
+	ans.setColumn(0, u1.getColumn(1));
+	return ans;
 }
 
 

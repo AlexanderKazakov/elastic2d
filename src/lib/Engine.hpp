@@ -1,11 +1,12 @@
 #ifndef LIBGCM_ENGINE_HPP
 #define LIBGCM_ENGINE_HPP
 
-#include <mpi.h>
-
 #include <lib/util/task/Task.hpp>
 #include <lib/mesh/grid/AbstractGlobalScene.hpp>
+#include <lib/numeric/solvers/Solver.hpp>
+#include <lib/util/snapshot/Snapshotter.hpp>
 #include <lib/util/Logging.hpp>
+
 
 /**
  * @mainpage
@@ -24,81 +25,10 @@
 
 
 namespace gcm {
-class Solver;
-class Snapshotter;
 
-
-/**
- * Current physical time and time step used by the program.
- */
-struct Clock {
-	/** Current physical time in the calculated statement */
-	static real Time() {
-		return time;
-	}
-	
-	/** Time step (aka "tau") used by the whole program to calculate the time layer */
-	static real TimeStep() {
-		return timeStep;
-	}
-	
-	/** Physical time in the calculated statement at next time layer */
-	static real TimeAtNextTimeLayer() {
-		return Time() + TimeStep();
-	}
-
-	private:
-		static real time;
-		static real timeStep;
-		
-		static void setZero() {
-			time = timeStep = 0;
-		}
-		
-		static void tickTack() {
-			time += timeStep;
-		}
-		
-		/// DO NOT put another "friends" here!
-		friend class Engine;
-};
-
-
-/**
- * MPI information
- */
-struct Mpi {
-	static int Rank() {
-		return rank;
-	}
-
-	static int Size() {
-		return size;
-	}
-
-	/**
-	 * If true, independently from number of working processes
-	 * calculation of every concrete statement is performed in sequence.
-	 * Useful for inverse problem calculation and MPI testing.
-	 */
-	static bool ForceSequence() {
-		return forceSequence;
-	}
-
-	private:
-		static int rank;
-		static int size;
-		static bool forceSequence;
-
-		static void initialize(const bool forceSequence_) {
-			rank = MPI::COMM_WORLD.Get_rank();
-			size = MPI::COMM_WORLD.Get_size();
-			forceSequence = forceSequence_;
-		}
-
-		/// DO NOT put another "friends" here!
-		friend class Engine;
-};
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+class SimplexGlobalScene;
 
 
 /**
@@ -106,6 +36,9 @@ struct Mpi {
  */
 class Engine {
 public:
+	typedef AbstractGrid::GridId GridId;
+	
+	
 	Engine(const Task& task_);
 	~Engine();
 	Engine(const Engine&) = delete;
@@ -130,11 +63,20 @@ public:
 	void runStatement();
 	
 	
+	/**
+	 * Return mesh with given id
+	 */
+	AbstractGrid* getAbstractMesh(const GridId id) {
+		return bodies.at(id).solver->getAbstractMesh();
+	}
+	
+	
 	/// for tests
 	const Solver* getSolver() const {
 		assert_eq(1, bodies.size());
-		return bodies.front().solver;
+		return bodies.begin()->second.solver;
 	}
+	
 	
 private:
 	
@@ -143,15 +85,23 @@ private:
 		std::vector<Snapshotter*> snapshotters;
 	};
 	
-	
 	AbstractGlobalScene* globalScene;
-	std::vector<Body> bodies;
+	
+	/// Bodies sorted by unique id
+	std::map<GridId, Body> bodies;
+	
 	Task task;
 	real requiredTime = 0;
 	
 	
+	void nextTimeStep();
+	
 	void estimateTimeStep();
 	
+	
+	template<int Dimensionality,
+			 template<int, typename, typename> class TriangulationT>
+	friend class SimplexGlobalScene;
 	
 	USE_AND_INIT_LOGGER("gcm.Engine")
 };

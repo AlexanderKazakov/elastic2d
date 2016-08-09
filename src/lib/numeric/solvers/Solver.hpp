@@ -14,18 +14,38 @@ class Solver {
 public:
 	Solver(const Task&) { }
 	virtual ~Solver() { }
-
+	
 	virtual void beforeStatement(const Statement& statement) = 0;
 	virtual void afterStatement() = 0;
-
-	virtual void nextTimeStep() = 0;
-
+	
+	
+	/**
+	 * All necessary solver actions before a stage would be performed
+	 */
+	virtual void beforeStage() = 0;
+	
+	/**
+	 * Calculate contact nodes in given stage
+	 */
+	virtual void contactStage(const int s, const real timeStep) = 0;
+	
+	/**
+	 * Calculate inner and border nodes in given stage
+	 */
+	virtual void privateStage(const int s, const real timeStep) = 0;
+	
+	/**
+	 * All necessary solver actions after stages performed
+	 */
+	virtual void afterStages(const real timeStep) = 0;
+	
+	
 	/** @return grid with actual values */
-	virtual AbstractGrid* getActualMesh() const = 0;
-
+	virtual AbstractGrid* getAbstractMesh() const = 0;
+	
 	/** Calculate time step from Courant–Friedrichs–Lewy condition */
 	virtual real calculateTimeStep() const = 0;
-
+	
 };
 
 

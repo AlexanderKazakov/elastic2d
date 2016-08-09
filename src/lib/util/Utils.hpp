@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <set>
 
 #include <lib/util/Types.hpp>
 #include <lib/util/Assertion.hpp>
@@ -78,6 +79,24 @@ public:
 		}
 		return 2;
 	}
+	
+	
+	/** All possible pairs combined from the set of items */
+	template<typename T>
+	static std::vector<std::pair<T, T>> makePairs(const std::set<T>& items) {
+		
+		std::vector<std::pair<T, T>> ans;
+		ans.reserve((items.size() * (items.size() - 1)) / 2);
+		
+		for (auto i = items.begin(); i != items.end(); ++i) {
+			for (auto j = std::next(i); j != items.end(); ++j) {
+				ans.push_back({*i, *j});
+			}
+		}
+		
+		return ans;
+	}
+	
 	
 };
 

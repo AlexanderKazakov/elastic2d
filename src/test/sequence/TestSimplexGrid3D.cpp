@@ -1,5 +1,6 @@
 #include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
 #include <lib/mesh/grid/SimplexGrid.hpp>
+#include <lib/mesh/grid/SimplexGlobalScene.hpp>
 #include <lib/util/snapshot/VtkSnapshotter.hpp>
 
 #include <gtest/gtest.h>
@@ -26,7 +27,7 @@ TEST(SimplexGrid3D, miscellaneous) {
 	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
 	ASSERT_NEAR(0.1384, grid.getMinimalSpatialStep(), 1e-4);
 	
-	ASSERT_THROW(grid.borderNormal(*(grid.innerBegin())), Exception);
+	ASSERT_EQ(Real3::Zeros(), grid.borderNormal(*(grid.innerBegin())));
 	
 	for (auto borderIt  = grid.borderBegin();
 	          borderIt != grid.borderEnd(); ++borderIt) {

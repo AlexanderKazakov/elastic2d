@@ -41,6 +41,8 @@ public:
 	/// Matrix of linear border condition "B * \vec{u} = b"
 	/// @see BorderCondition
 	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
+	/// Matrix of outer eigenvectors
+	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterMatrix;
 	
 	
 	/**
@@ -88,6 +90,10 @@ public:
 	
 	/** Construct matrix U for given basis. @see constructGcmMatrix */
 	static void constructEigenstrings(Matrix& u,
+			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
+	
+	/** Construct matrix with waves which are outer if given basis is local border */
+	static OuterMatrix constructOuterEigenvectors(
 			std::shared_ptr<const IsotropicMaterial> material, const MatrixDD& basis);
 	
 	
@@ -141,6 +147,45 @@ public:
 			pde.setVelocity(S.getColumn(i));
 			B_.setRow(i, pde);
 			
+		}
+		return B_;
+	}
+	
+	
+	/**
+	 * Matrix of linear border condition in global basis
+	 * for the case of fixed force on border.
+	 * @see BorderCondition
+	 */
+	static BorderMatrix borderMatrixFixedForceGlobalBasis
+	(const linal::Vector<DIMENSIONALITY>& borderNormal) {
+	/// T * p = f, f - fixed force in global basis
+		BorderMatrix B_;
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			PdeVariables pde = PdeVariables::Zeros();
+			for (int j = 0; j < DIMENSIONALITY; j++) {
+				pde.sigma(i, j) = borderNormal(j);
+			}
+			B_.setRow(i, pde);
+			
+		}
+		return B_;
+	}
+	
+	
+	/**
+	 * Matrix of linear border condition in global basis
+	 * for the case of fixed velocity on border.
+	 * @see BorderCondition
+	 */
+	static BorderMatrix borderMatrixFixedVelocityGlobalBasis
+	(const linal::Vector<DIMENSIONALITY>&) {
+		
+		BorderMatrix B_;
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			PdeVariables pde = PdeVariables::Zeros();
+			pde.velocity(i) = 1;
+			B_.setRow(i, pde);
 		}
 		return B_;
 	}
@@ -380,6 +425,25 @@ constructEigenstrings(
 			break;
 	}
 	
+}
+
+
+template<int Dimensionality>
+inline typename ElasticModel<Dimensionality>::OuterMatrix
+ElasticModel<Dimensionality>::
+constructOuterEigenvectors(std::shared_ptr<const IsotropicMaterial> material,
+		const MatrixDD& basis) {
+	
+	Matrix u1;
+	constructEigenvectors(u1, material, basis);
+	
+	// FIXME - do smth with MaterialsWavesMap
+	OuterMatrix ans;
+	for (int i = 0; i < DIMENSIONALITY; i++) {
+		ans.setColumn(i, u1.getColumn(1 + 2 * i));
+	}
+	
+	return ans;
 }
 
 

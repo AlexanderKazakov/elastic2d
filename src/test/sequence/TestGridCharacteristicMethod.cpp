@@ -122,7 +122,7 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 						<< "value" << value;
 				}
 			}
-			solver.stage(1, solver.calculateTimeStep());
+			solver.privateStage(1, solver.calculateTimeStep());
 		}
 	}
 }

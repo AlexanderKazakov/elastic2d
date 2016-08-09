@@ -13,8 +13,16 @@ template<typename, typename, int>      class GridCharacteristicMethodCgalGrid;
 template<typename, typename, typename> struct DataBus;
 template<typename, typename, typename> struct MeshMover;
 template<typename, typename, typename> struct SpecialBorderConditions;
-template<template<typename, typename, typename> class,
-                  typename, typename, typename> class MaterialConditionByCells;
+
+template<typename ModelA, typename MaterialA,
+         typename ModelB, typename MaterialB,
+         typename TGrid>
+class AdhesionContactCorrector;
+template<typename ModelA, typename MaterialA,
+         typename ModelB, typename MaterialB,
+         typename TGrid>
+class SlidingContactCorrector;
+
 
 /**
  * Mesh that implements the approach when all nodal data are stored
@@ -207,6 +215,7 @@ private:
 	void recalculateMaximalLambda() { /* TODO for non-linear materials */ }
 	void afterStatement() { }
 	
+	// FIXME - move _pde() to public?
 	friend class DefaultSolver<DefaultMesh>;
 	friend class GridCharacteristicMethod<Model, Grid, Material>;
 	friend class GridCharacteristicMethodCgalGrid<Model, Material, GRID_DIMENSIONALITY>;
@@ -216,7 +225,12 @@ private:
 	friend class InitialCondition<Model, Grid, Material, DefaultMesh>;
 	
 	template<typename ModelType, typename GridType, typename MaterialType> 
-			friend class SpecialBorderConditions;
+	friend class SpecialBorderConditions;
+	
+	template<typename, typename, typename, typename, typename>
+	friend class AdhesionContactCorrector;
+	template<typename, typename, typename, typename, typename>
+	friend class SlidingContactCorrector;
 };
 
 

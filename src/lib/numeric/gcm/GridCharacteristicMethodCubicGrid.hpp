@@ -20,6 +20,9 @@ public:
 	typedef typename Mesh::Iterator              Iterator;
 	typedef linal::Vector<Dimensionality>        RealD;
 	
+	void beforeStage(const Mesh&) { }
+	void contactStage(const int, const real, Mesh&, const RealD) { }
+	
 	/**
 	 * Do grid-characteristic stage of splitting method
 	 * @param s stage (here is equal to direction 0 == X, 1 == Y, 2 == Z)

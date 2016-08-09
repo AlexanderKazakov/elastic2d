@@ -13,11 +13,11 @@ inline Task skullAcoustic() {
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
 	task.bodies = {
-			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 1},
-			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 2},
-			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 3},
-			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 4},
-			{Materials::T::ISOTROPIC, Models::T::ACOUSTIC, 5},
+			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
+			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
+			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
 	};
 	
 	
@@ -25,6 +25,7 @@ inline Task skullAcoustic() {
 	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 	task.simplexGrid.scale = 10;
 	
+	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	
 	Statement statement;
 	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_BODIES;
@@ -43,8 +44,8 @@ inline Task skullAcoustic() {
 	
 	
 	statement.globalSettings.CourantNumber = 1;
-	statement.globalSettings.numberOfSnaps = 100;
-	statement.globalSettings.stepsPerSnap = 5;
+	statement.globalSettings.numberOfSnaps = 1000;
+	statement.globalSettings.stepsPerSnap = 1;
 	
 	
 	Statement::BorderCondition freeBorder;
@@ -56,15 +57,15 @@ inline Task skullAcoustic() {
 	};
 	
 	
-//	Statement::BorderCondition source;
-//	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
-//	source.type = BorderConditions::T::FIXED_FORCE;
-//	source.values = {
-//		[] (real /*t*/) { return -1; }
-////		[] (real t) { return sin(omega * t) * exp(-t*t / ( 2 * tau)); }
-//	};
+	Statement::BorderCondition source;
+	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
+	source.type = BorderConditions::T::FIXED_FORCE;
+	source.values = {
+		[] (real t) { return (t < 0.5) ? -1 : 0; }
+//		[] (real t) { return sin(omega * t) * exp(-t*t / ( 2 * tau)); }
+	};
 	
-	statement.borderConditions = {freeBorder/*, source*/};
+	statement.borderConditions = {freeBorder, source};
 	
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -90,17 +91,19 @@ inline Task skull() {
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
 	task.bodies = {
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 1},
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 2},
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 3},
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 4},
-			{Materials::T::ISOTROPIC, Models::T::ELASTIC, 5},
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
+			{2, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
+			{4, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
 	};
 	
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
 	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 	task.simplexGrid.scale = 10;
+	
+	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;
 	
 	
 	Statement statement;
@@ -123,7 +126,7 @@ inline Task skull() {
 	};
 	
 	statement.globalSettings.CourantNumber = 1;
-	statement.globalSettings.numberOfSnaps = 100;
+	statement.globalSettings.numberOfSnaps = 1000;
 	statement.globalSettings.stepsPerSnap = 1;
 	
 	
@@ -144,17 +147,17 @@ inline Task skull() {
 	source.values = {
 		[] (real) { return 0; },
 		[] (real) { return 0; },
-		[] (real /*t*/) { return -1; }
+		[] (real t) { return (t < 0.5) ? -1 : 0; }
 //		[] (real t) { return sin(omega * t) * exp(-t*t / ( 2 * tau)); }
 	};
 	
 	statement.borderConditions = {freeBorder, source};
 	
-//	Statement::InitialCondition::Quantity pressure;
-//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-//	pressure.value = 1;
-//	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
-//	statement.initialCondition.quantities.push_back(pressure);
+	Statement::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+	pressure.value = 1;
+	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
+	statement.initialCondition.quantities.push_back(pressure);
 	
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {

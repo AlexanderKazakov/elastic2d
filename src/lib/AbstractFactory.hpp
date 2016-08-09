@@ -102,8 +102,8 @@ struct SnapshotterFactory<SliceSnapshotter, TMesh, TModel, TGrid, TMaterial> {
  * Create solvers, snapshotters, etc.
  */
 struct VirtualProgramAbstactFactory {
-	virtual Solver* createSolver(const Task&, const Task::Body&,
-			AbstractGlobalScene*) = 0;
+	virtual Solver* createSolver(const Task&,
+			const size_t id, AbstractGlobalScene*) = 0;
 	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) = 0;
 	
 };
@@ -112,10 +112,10 @@ template<
         typename TModel, typename TGrid, typename TMaterial
         >
 struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
-	virtual Solver* createSolver(const Task& task, const Task::Body& body,
-			AbstractGlobalScene* globalScene) override {
+	virtual Solver* createSolver(const Task& task,
+			const size_t id, AbstractGlobalScene* globalScene) override {
 		return new DefaultSolver<TMesh<TModel, TGrid, TMaterial>>(
-				task, globalScene, body.id);
+				task, globalScene, id);
 	}
 	
 	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) override {
@@ -233,7 +233,7 @@ struct MaterialFactory<CubicGrid<1>> : public VirtualMaterialFactory {
  */
 struct VirtualGridFactory {
 	virtual VirtualMaterialFactory* create(Grids::T) = 0;
-	virtual AbstractGlobalScene* createGlobalScene(const Task& task) = 0;
+	virtual AbstractGlobalScene* createGlobalScene(const Task&, Engine*) = 0;
 };
 template<int Dimensionality>
 struct GridFactory : public VirtualGridFactory {
@@ -247,12 +247,12 @@ struct GridFactory : public VirtualGridFactory {
 				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
 		}
 	}
-	virtual AbstractGlobalScene* createGlobalScene(const Task& task) override {
+	virtual AbstractGlobalScene* createGlobalScene(const Task& task, Engine* engine) override {
 		switch (task.globalSettings.gridId) {
 			case Grids::T::CUBIC:
-				return new typename CubicGrid<Dimensionality>::GlobalScene(task);
+				return new typename CubicGrid<Dimensionality>::GlobalScene(task, engine);
 			case Grids::T::SIMPLEX:
-				return new typename SimplexGrid<Dimensionality, CgalTriangulation>::GlobalScene(task);
+				return new typename SimplexGrid<Dimensionality, CgalTriangulation>::GlobalScene(task, engine);
 			default:
 				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
 		}
@@ -268,10 +268,10 @@ struct GridFactory<1> : public VirtualGridFactory {
 				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
 		}
 	}
-	virtual AbstractGlobalScene* createGlobalScene(const Task& task) override {
+	virtual AbstractGlobalScene* createGlobalScene(const Task& task, Engine* engine) override {
 		switch (task.globalSettings.gridId) {
 			case Grids::T::CUBIC:
-				return new typename CubicGrid<1>::GlobalScene(task);
+				return new typename CubicGrid<1>::GlobalScene(task, engine);
 			default:
 				THROW_UNSUPPORTED("Unknown or incompatible type of grid");
 		}
@@ -313,10 +313,10 @@ struct Factory {
 				->create();
 	}
 	
-	static AbstractGlobalScene* createGlobalScene(const Task& task) {
+	static AbstractGlobalScene* createGlobalScene(const Task& task, Engine* engine) {
 		return (new DimensionalityFactory())
 				->create(task.globalSettings.dimensionality)
-				->createGlobalScene(task);
+				->createGlobalScene(task, engine);
 	}
 	
 };

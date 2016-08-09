@@ -1,5 +1,5 @@
-#ifndef LIBGCM_BORDERCONDITIONS_SIGMA_HPP
-#define LIBGCM_BORDERCONDITIONS_SIGMA_HPP
+#ifndef LIBGCM_BORDERCONDITION_HPP
+#define LIBGCM_BORDERCONDITION_HPP
 
 #include <lib/linal/linal.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
@@ -109,4 +109,4 @@ private:
 
 }
 
-#endif // LIBGCM_BORDERCONDITIONS_SIGMA_HPP
+#endif // LIBGCM_BORDERCONDITION_HPP

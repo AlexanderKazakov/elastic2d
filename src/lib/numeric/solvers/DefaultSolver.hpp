@@ -10,11 +10,12 @@
 #include <lib/mesh/DataBus.hpp>
 #include <lib/mesh/MeshMover.hpp>
 #include <lib/rheology/correctors/correctors.hpp>
+#include <lib/mesh/grid/SimplexGlobalScene.hpp>
 
 namespace gcm {
+
 /**
- * Class for handling complete time step
- * @tparam TMesh type of mesh to deal with
+ * Class for handling mesh of a concrete type
  */
 template<class TMesh>
 class DefaultSolver : public Solver {
@@ -24,7 +25,8 @@ public:
 	typedef typename Mesh::Grid                             Grid;
 	typedef typename Mesh::Material                         Material;
 	typedef typename Mesh::GridId                           GridId;
-
+	typedef typename Mesh::GlobalScene                      GlobalScene;
+	
 	typedef typename Model::Corrector                       Corrector;
 	typedef typename Model::InternalOde                     InternalOde;
 
@@ -43,16 +45,36 @@ public:
 	virtual void beforeStatement(const Statement& statement) override;
 	virtual void afterStatement() override;
 	
-	virtual void nextTimeStep() override;
 	
-	/** @return mesh with actual values */
-	virtual AbstractGrid* getActualMesh() const { return mesh; }
+	/**
+	 * All necessary solver actions before stages would performed
+	 */
+	virtual void beforeStage() override;
+	
+	/**
+	 * Calculate contact nodes in given stage
+	 */
+	virtual void contactStage(const int s, const real timeStep) override;
+	
+	/**
+	 * Calculate inner and border nodes in given stage
+	 */
+	virtual void privateStage(const int s, const real timeStep) override;
+	
+	/**
+	 * All necessary solver actions after stages performed
+	 */
+	virtual void afterStages(const real timeStep) override;
+	
+	
+	/// abstract interface to mesh
+	virtual AbstractGrid* getAbstractMesh() const override { return mesh; }
 	
 	/** Calculate time step from Courant–Friedrichs–Lewy condition */
 	virtual real calculateTimeStep() const override;
 	
+	/// for tests
 	const Mesh* getMesh() const { return mesh; }
-	void stage(const int s, const real timeStep);
 	
 protected:
 	real CourantNumber = 0; ///< number from Courant–Friedrichs–Lewy condition
@@ -74,12 +96,13 @@ protected:
 };
 
 
+
 template<class TMesh>
 DefaultSolver<TMesh>::
 DefaultSolver(const Task& task, AbstractGlobalScene* abstractGlobalScene,
 		const GridId gridId_) : Solver(task) {
-	typedef typename Mesh::GlobalScene GlobalScene;
 	GlobalScene* globalScene = dynamic_cast<GlobalScene*>(abstractGlobalScene);
+	assert_true(globalScene);
 	mesh = new Mesh(task, globalScene, gridId_);
 	specialBorder = new SpecialBorder();
 	
@@ -87,13 +110,11 @@ DefaultSolver(const Task& task, AbstractGlobalScene* abstractGlobalScene,
 	LOG_DEBUG("Calculation basis:" << calcBasis);
 }
 
-
 template<class TMesh>
 DefaultSolver<TMesh>::~DefaultSolver() {
 	delete specialBorder;
 	delete mesh;
 }
-
 
 template<class TMesh>
 void DefaultSolver<TMesh>::
@@ -107,20 +128,6 @@ beforeStatement(const Statement& statement) {
 	mesh->beforeStatement(statement);
 }
 
-
-template<class TMesh>
-void DefaultSolver<TMesh>::
-nextTimeStep() {
-	real timeStep = Clock::TimeStep();
-	for (int s = 0; s < Mesh::DIMENSIONALITY; s++) {
-		stage(s, timeStep);
-	}
-	internalOdeNextStep(timeStep);
-	moveMesh(timeStep);
-	applyCorrectors();
-}
-
-
 template<class TMesh>
 void DefaultSolver<TMesh>::
 afterStatement() {
@@ -132,7 +139,19 @@ afterStatement() {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::
-stage(const int s, const real timeStep) {
+beforeStage() {
+	gridCharacteristicMethod.beforeStage(*mesh);
+}
+
+template<class TMesh>
+void DefaultSolver<TMesh>::
+contactStage(const int s, const real timeStep) {
+	gridCharacteristicMethod.contactStage(s, timeStep, *mesh, calcBasis.getColumn(s));
+}
+
+template<class TMesh>
+void DefaultSolver<TMesh>::
+privateStage(const int s, const real timeStep) {
 	LOG_DEBUG("Start stage " << s << " ... ");
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	
@@ -143,6 +162,14 @@ stage(const int s, const real timeStep) {
 	
 	// return actual PDE values back to pdeVariables
 	std::swap(mesh->pdeVariables, mesh->pdeVariablesNew);
+}
+
+template<class TMesh>
+void DefaultSolver<TMesh>::
+afterStages(const real timeStep) {
+	internalOdeNextStep(timeStep);
+	moveMesh(timeStep);
+	applyCorrectors();
 }
 
 
@@ -157,7 +184,6 @@ internalOdeNextStep(const real timeStep) {
 	}
 }
 
-
 template<class TMesh>
 void DefaultSolver<TMesh>::
 applyCorrectors() {
@@ -167,7 +193,6 @@ applyCorrectors() {
 		}
 	}
 }
-
 
 template<class TMesh>
 void DefaultSolver<TMesh>::

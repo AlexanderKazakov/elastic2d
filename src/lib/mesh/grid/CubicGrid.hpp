@@ -1,10 +1,15 @@
 #ifndef LIBGCM_CUBICGRID_HPP
 #define LIBGCM_CUBICGRID_HPP
 
+#include <lib/mesh/grid/AbstractGlobalScene.hpp>
 #include <lib/mesh/grid/StructuredGrid.hpp>
 #include <lib/linal/linal.hpp>
+#include <lib/GlobalVariables.hpp>
 
 namespace gcm {
+
+class Engine;
+
 
 /**
  * Non-movable structured rectangular grid.
@@ -32,8 +37,10 @@ public:
 	typedef size_t GridId;
 	
 	struct GlobalScene : public AbstractGlobalScene {
-		GlobalScene(const Task&) { }
+		GlobalScene(const Task&, Engine* = nullptr) { }
 		virtual ~GlobalScene() { }
+		virtual void afterGridsConstruction(const Task&) override { }
+		virtual void correctContacts() override { }
 	};
 	
 	/** @name memory efficient (sequential) iteration */
@@ -108,9 +115,6 @@ public:
 	}
 	
 	
-	/** Unique number of the grid among other grids of this type */
-	GridId id() const { return gridId; }
-	
 	
 	const int borderSize;  ///< number of virtual nodes on border
 	const IntD sizes;      ///< numbers of nodes along each direction
@@ -118,7 +122,6 @@ public:
 	                       ///< dimensional index increases by one
 	const RealD h;         ///< spatial steps along each direction
 	const RealD startR;    ///< global coordinates of the first real node of the grid
-	const GridId gridId;   ///< unique number of the grid among other grids of this type
 	
 	GlobalScene * const globalScene;
 	
@@ -151,13 +154,12 @@ private:
 template<int Dimensionality>
 CubicGrid<Dimensionality>::
 CubicGrid(const Task& task, GlobalScene* gS, const GridId gridId_) :
-		StructuredGrid(task),
+		StructuredGrid(task, Grids::T::CUBIC, DIMENSIONALITY, gridId_),
 		borderSize(task.cubicGrid.borderSize),
 		sizes(calculateSizes(task.cubicGrid)),
 		indexMaker(calculateIndexMaker()),
 		h(calculateH(task.cubicGrid)),
 		startR(calculateStartR(task.cubicGrid)),
-		gridId(gridId_),
 		globalScene(gS) {
 // note: the order in the initialization list above is important!
 	

@@ -110,6 +110,40 @@ invert(const MatrixBase<TM, TN, TElement, Diagonal, TContainer>& m) {
 
 
 /**
+ * Norm of the matrix consistent with maximum (aka infinity) norm of vectors
+ * @see Petrov, Lobanov "Lections on numerical mathematics" page 34
+ */
+template<int TM,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer>
+TElement normMax(const MatrixBase<TM, TM, TElement, TSymmetry, TContainer>& m) {
+	TElement ans = zeros(TElement());
+	for (int i = 0; i < TM; i++) {
+		TElement ith = zeros(TElement());
+		for (int j = 0; j < TM; j++) {
+			ith += fabs(m(i, j));
+		}
+		if (ans < ith) { ans = ith; }
+	}
+	return ans;
+}
+
+
+/**
+ * Condition number of matrix A in maximum (aka infinity) norm
+ * \f$  mu = normMax(A) * normMax(invert(A))  \f$
+ */
+template<int TM,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer>
+TElement conditionNumber(const MatrixBase<TM, TM, TElement, TSymmetry, TContainer>& A) {
+	return normMax(A) * normMax(invert(A));
+}
+
+
+/**
  * Computes product of two matrices, but the first one is transposed:
  * C = transpose(m1) * m2.
  * m1: TNxTM.

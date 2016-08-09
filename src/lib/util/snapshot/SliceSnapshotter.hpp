@@ -52,7 +52,7 @@ protected:
 		seismo.push_back((precision)valueToWrite);
 		
 		FileUtils::writeStdVectorsToTextFile(makeFileNameForSnapshot(
-				std::to_string(mesh->id()),
+				std::to_string(mesh->id),
 				step, FILE_EXTENSION, "detector"), 
 				std::vector<Values>({seismo}));
 		
@@ -66,7 +66,7 @@ protected:
 			Szz.push_back(mesh->pdeVars(it).sigma(2, 2));
 		}
 		FileUtils::writeStdVectorsToTextFile(makeFileNameForSnapshot(
-						std::to_string(mesh->id()),
+						std::to_string(mesh->id),
 						step, FILE_EXTENSION, "zaxis"), 
 				std::vector<Values>({coordZ, Vz, Szz}));
 	}

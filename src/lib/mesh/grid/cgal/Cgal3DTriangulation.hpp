@@ -14,7 +14,9 @@
 #include <lib/util/Logging.hpp>
 
 namespace gcm {
-class Cgal3DLineWalker;
+
+template<int Dimensionality, typename VertexInfo, typename CellInfo>
+class CgalTriangulation;
 
 /**
  * 3D triangulation by CGAL library.
@@ -155,7 +157,7 @@ protected:
 	Triangulation triangulation; ///< CGAL triangulation structure
 	
 	USE_AND_INIT_LOGGER("gcm.Cgal3DTriangulation")
-	
+	friend class CgalTriangulation<DIMENSIONALITY, VertexInfo, CellInfo>;
 };
 
 

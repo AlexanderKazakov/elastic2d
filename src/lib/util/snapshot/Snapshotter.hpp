@@ -5,6 +5,7 @@
 #include <lib/util/FileUtils.hpp>
 #include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/rheology/variables/GetSetter.hpp>
+#include <lib/GlobalVariables.hpp>
 
 namespace gcm {
 

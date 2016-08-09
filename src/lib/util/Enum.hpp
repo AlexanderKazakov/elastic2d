@@ -63,6 +63,16 @@ struct Waves {
 };
 
 
+struct ContactConditions {
+	/** Type */
+	enum class T {
+		ADHESION,
+		SLIDE
+	};
+//	/** string names of concepts */
+//	static const std::map<T, std::string> NAME;
+};
+
 struct BorderConditions {
 	/** Type */
 	enum class T {

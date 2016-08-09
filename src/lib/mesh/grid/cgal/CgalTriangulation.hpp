@@ -32,8 +32,7 @@ struct CgalTriangulationBase<3, VertexInfo, CellInfo> {
  */
 template<int Dimensionality, typename VertexInfo, typename CellInfo>
 class CgalTriangulation :
-		public CgalTriangulationBase<Dimensionality, VertexInfo, CellInfo>::type,
-		public AbstractGlobalScene {
+		public CgalTriangulationBase<Dimensionality, VertexInfo, CellInfo>::type {
 public:
 	
 	typedef typename CgalTriangulationBase<
@@ -63,9 +62,18 @@ public:
 			Base::MAX_NUMBER_OF_NEIGHBOR_VERTICES;
 	
 	
+	/// @name iteration over all finite vertices @{
+	typedef typename Base::Triangulation::Finite_vertices_iterator VerticesIterator;
+	VerticesIterator verticesBegin() const {
+		return this->triangulation.finite_vertices_begin();
+	}
+	VerticesIterator verticesEnd() const {
+		return this->triangulation.finite_vertices_end();
+	}
+	/// @}
 	
-	CgalTriangulation(const Task& task) : Base(task),
-			movable(task.globalSettings.movable) {
+	
+	CgalTriangulation(const Task& task) : Base(task) {
 		rescale(task.simplexGrid.scale);
 	}
 	virtual ~CgalTriangulation() { }
@@ -112,13 +120,11 @@ public:
 	}
 	
 	
-	/** Is motion and deformations enabled */
-	bool isMovable() const { return movable; }
-	
-	
-	/** Move specified point on specified distance */
+	/** 
+	 * Move specified point on specified distance
+	 * without any triangulation reconstruction
+	 */
 	void move(const VertexHandle vh, const RealD distance) {
-		assert_true(isMovable());
 		auto& point = vh->point();
 		point = point + cgalVectorD(distance);
 	}
@@ -139,9 +145,6 @@ public:
 	
 	
 private:
-	/// on/off points motion
-	bool movable = false;
-	
 	USE_AND_INIT_LOGGER("gcm.CgalTriangulation")
 	friend class LineWalker<CgalTriangulation, DIMENSIONALITY>;
 	

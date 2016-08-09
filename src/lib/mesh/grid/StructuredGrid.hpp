@@ -10,7 +10,11 @@ namespace gcm {
  */
 class StructuredGrid : public AbstractGrid {
 public:
-	StructuredGrid(const Task& task) : AbstractGrid(task) { }
+	StructuredGrid(const Task& task,
+					const Grids::T gridType_, const int dimensionality_,
+					const GridId id_) :
+			AbstractGrid(task, gridType_, dimensionality_, id_) { }
+	
 	virtual ~StructuredGrid() { }
 	
 };

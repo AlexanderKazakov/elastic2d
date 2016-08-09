@@ -24,7 +24,7 @@ public:
 	 */
 	static void apply(const Statement& statement, Mesh* mesh) {
 		
-		Conditions conditions = convertToLocalFormat(statement, mesh->id());
+		Conditions conditions = convertToLocalFormat(statement, mesh->id);
 		
 		for (const auto& it : *mesh) {
 			linal::clear(mesh->_pde(it));

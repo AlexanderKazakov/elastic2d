@@ -35,8 +35,35 @@ public:
 	static const int PDE_SIZE = Model::PDE_SIZE;
 	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterU1Matrix;
 	
+	
+	void beforeStage(const Mesh& mesh) {
+		/// calculate spatial derivatives of all mesh pde values ones before stage
+		/// in order to use them multiple times while stage calculation 
+		DIFFERENTIATION::estimateGradient(mesh, gradients);
+	}
+	
+	
 	/**
-	 * Do grid-characteristic stage of splitting method
+	 * Do grid-characteristic stage of splitting method on contact nodes
+	 */
+	void contactStage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
+		
+		/// calculate inner waves of contact nodes
+		for (auto contactIter = mesh.contactBegin(); 
+		          contactIter < mesh.contactEnd(); ++contactIter) {
+			mesh._pdeNew(*contactIter) = localGcmStep(
+					mesh.matrices(*contactIter)->m[s].U1,
+					mesh.matrices(*contactIter)->m[s].U,
+					interpolateValuesAround(mesh, direction, *contactIter,
+							crossingPoints(*contactIter, s, timeStep, mesh), false));
+		}
+		
+	}
+	
+	
+	/**
+	 * Do grid-characteristic stage of splitting method on inner and border nodes
+	 * @note contact nodes must be already calculated
 	 * @param s number of stage (GcmMatrix number)
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
@@ -45,13 +72,8 @@ public:
 	void stage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
 		assert_eq(linal::length(direction), 1);
 		
-		/// calculate spatial derivatives of all mesh pde values ones before stage
-		/// in order to use them multiple times while stage calculation 
-		DIFFERENTIATION::estimateGradient(mesh, gradients);
-		
 		/// calculate border nodes
-		LOG_INFO("Start calculate border nodes");
-//		size_t counter = 0;
+//		LOG_INFO("Start calculate border nodes");
 //		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
@@ -59,19 +81,13 @@ public:
 					mesh.matrices(*borderIter)->m[s].U1,
 					mesh.matrices(*borderIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *borderIter,
-							crossingPoints(*borderIter, s, timeStep, mesh), true));
+							crossingPoints(*borderIter, s, timeStep, mesh), false));
 			
-//			std::cout << mesh.coordsD(*borderIter) << std::endl;
 			borderCorrector(mesh, s, direction, *borderIter);
-			
-//			if (++counter % 20000 == 0) {
-//				LOG_INFO(counter << " border nodes have been calculated");
-//			}
 		}
 		
 		/// calculate inner nodes
-		LOG_INFO("Start calculate inner nodes");
-//		counter = 0;
+//		LOG_INFO("Start calculate inner nodes");
 //		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
@@ -79,16 +95,11 @@ public:
 					mesh.matrices(*innerIter)->m[s].U1,
 					mesh.matrices(*innerIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *innerIter,
-							crossingPoints(*innerIter, s, timeStep, mesh), false));
-			
-//			if (++counter % 20000 == 0) {
-//				LOG_INFO(counter << " inner nodes have been calculated");
-//			}
+							crossingPoints(*innerIter, s, timeStep, mesh), true));
 		}
-		
 	}
-
-
+	
+	
 private:
 	/** Points where characteristics from next time layer cross current time layer */
 	PdeVector crossingPoints(const Iterator& it, const int s,
@@ -96,7 +107,7 @@ private:
 		return -timeStep * linal::diag(mesh.matrices(it)->m[s].L);
 	}
 	
-
+	
 	/**
 	 * Interpolate nodal values in specified points.
 	 * Interpolated value for k-th point in vector dx are
@@ -109,13 +120,13 @@ private:
 	 * @param it index-iterator of node
 	 * @param dx Vector of distances from reference node on which
 	 * values should be interpolated
-	 * @param isBorder is given node border or not
+	 * @param canInterpolateInSpaceTime is base of interpolation calculated
 	 * @return Matrix with interpolated nodal values in columns
 	 */
 	Matrix interpolateValuesAround(const Mesh& mesh, const RealD direction,
 	                               const Iterator& it, const PdeVector& dx,
-	                               const bool isBorder) {
-	    outerInvariants.clear();
+	                               const bool canInterpolateInSpaceTime) {
+		outerInvariants.clear();
 		Matrix ans;
 		
 		for (int k = 0; k < PdeVector::M; k++) {
@@ -135,44 +146,23 @@ private:
 			// characteristic hits into body
 			// second order interpolate inner value in triangle on current time layer
 				u = interpolateInSpace(mesh, mesh.coordsD(it) + shift, t);
-					
+				
+			} else if (t.n == 0) {
+			// outer characteristic from border/contact node
+				outerInvariants.push_back(k);
+				
+			} else if (!canInterpolateInSpaceTime) {
+			// TODO - we cannot interpolate in space-time without guarantee
+				continue;
+				
 			} else if (t.n == t.N - 1) {
 			// characteristic hits out of body going throughout border face
-				if (!isBorder) { // TODO
-				// if node is border, the base of interpolation can be not calculated yet
-					u = interpolateInSpaceTime(mesh, it, shift, t);
-				}
-			
-			} else if (t.n == t.N - 2) {
-			// characteristic hits out of body going throughout corner of border face
-				if (!isBorder) { // TODO
-				// if node is border, the base of interpolation can be not calculated yet
-					u = interpolateInSpaceTime1D(mesh, it, shift, t);
-				}
-			
-			} else {
-				/*if (!isBorder) {
-					LOG_INFO("Missed hit from inner node at " << mesh.coordsD(it)
-							<< "t.n == " << t.n);
-				}*/ // FIXME
-				/*assert_true(isBorder);*/
-			// now, all inner and part of border cases are calculated	
-				if (isBorder /*&&
-					linal::dotProduct(mesh.normal(it),
-							linal::normalize(shift)) > cos(M_PI / 4 + EQUALITY_TOLERANCE)*/) {
-				// this is really border case
-				// add outer invariant for border corrector
-					outerInvariants.push_back(k);
-					u = PdeVector::Zeros();
+				u = interpolateInSpaceTime(mesh, it, shift, t);
 				
-				} else {
-				// it can not be calculated as border, because it would be 
-				// numerically unstable (smth like incompatible border conditions)
-//					u = mesh.pde(it);
-					/*LOG_DEBUG("Bad case at " << mesh.coordsD(it) << std::endl
-							<< "shift: " << shift << std::endl);*/
-					
-				}
+			} else if (t.n == t.N - 2) {
+			// exact hit to border edge(point)
+				u = interpolateInSpaceTime1D(mesh, it, shift, t);
+				
 			}
 			
 			ans.setColumn(k, u);
@@ -222,9 +212,9 @@ private:
 		}
 		
 		if (fabs(linal::determinant(B * outerU1)) < EQUALITY_TOLERANCE) {
-			LOG_INFO("Degenerate system in border corrector: det = "
-					<< linal::determinant(B * outerU1) << ", coords = "
-					<< mesh.coordsD(it) << "outerU1 = " << outerU1);
+//			LOG_INFO("Degenerate system in border corrector: det = "
+//					<< linal::determinant(B * outerU1) << ", coords = "
+//					<< mesh.coordsD(it) << "outerU1 = " << outerU1);
 			return;
 		}
 		

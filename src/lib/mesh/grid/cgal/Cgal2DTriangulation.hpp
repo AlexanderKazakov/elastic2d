@@ -159,7 +159,6 @@ protected:
 	Triangulation triangulation;
 	
 	USE_AND_INIT_LOGGER("gcm.Cgal2DTriangulation")
-	
 };
 
 

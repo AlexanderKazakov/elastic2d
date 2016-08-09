@@ -53,7 +53,11 @@ public:
 	} Flags; ///< currently unused
 	
 	
-	UnstructuredGrid(const Task& task) : AbstractGrid(task) { }
+	UnstructuredGrid(const Task& task,
+					const Grids::T gridType_, const int dimensionality_,
+					const GridId id_) :
+			AbstractGrid(task, gridType_, dimensionality_, id_) { }
+	
 	virtual ~UnstructuredGrid() { }
 	
 	/**

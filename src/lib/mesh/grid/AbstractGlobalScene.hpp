@@ -4,14 +4,27 @@
 
 namespace gcm {
 
+class Task;
+
 /**
- * Base class for global scene of the program --
+ * Abstract base class for global scene of the program --
  * a conglomeration of several grids
  */
 class AbstractGlobalScene {
 public:
 	virtual ~AbstractGlobalScene() { }
 	
+	
+	/**
+	 * Actions to perform after all grids would be constructed
+	 */
+	virtual void afterGridsConstruction(const Task&) = 0;
+	
+	
+	/**
+	 * Apply contact correctors
+	 */
+	virtual void correctContacts() = 0;
 };
 
 
