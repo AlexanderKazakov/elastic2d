@@ -242,7 +242,10 @@ Task parseTaskCgal2d() {
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}};
+	task.bodies = {
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
+	};
 	
 	task.simplexGrid.spatialStep = 0.2;
 	
@@ -256,6 +259,8 @@ Task parseTaskCgal2d() {
 		Task::SimplexGrid::Body({0, outer, inner}),
 		Task::SimplexGrid::Body({1, { {-2, 5}, {2, 5}, {0, 7} }, {}})
 	};
+	
+	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;
 	
 	Statement statement;
 	real rho = 4;

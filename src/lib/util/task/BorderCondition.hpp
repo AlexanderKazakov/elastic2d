@@ -2,8 +2,8 @@
 #define LIBGCM_BORDERCONDITION_HPP
 
 #include <lib/linal/linal.hpp>
-#include <lib/mesh/DefaultMesh.hpp>
-#include <lib/Engine.hpp>
+#include <lib/util/task/Task.hpp>
+#include <lib/GlobalVariables.hpp>
 
 
 namespace gcm {
@@ -39,34 +39,7 @@ public:
 	
 	
 	BorderCondition(const Statement::BorderCondition& task) :
-			type_(task.type), b_(createBorderVectorTimeDependency(task.values)) {
-		switch (type_) {
-			case gcm::BorderConditions::T::FIXED_VELOCITY:
-			case gcm::BorderConditions::T::FIXED_FORCE:
-				break;
-			default:
-				THROW_INVALID_ARG("Unknown type of border condition");
-		}
-	}
-	
-	
-	/**
-	 * General expression of linear border conditions is
-	 * \f$ B \vec{u}_{n+1} = \vec{b}(t_{n+1}) \f$
-	 */
-	BorderMatrix B(const linal::Vector<DIMENSIONALITY>& borderNormal) const {
-		switch (type_) {
-			case gcm::BorderConditions::T::FIXED_VELOCITY:
-				return TModel::borderMatrixFixedVelocity(borderNormal);
-				break;
-			case gcm::BorderConditions::T::FIXED_FORCE:
-				return TModel::borderMatrixFixedForce(borderNormal);
-				break;
-			default:
-				THROW_INVALID_ARG("Unknown type of border condition");
-		}
-	}
-	
+			b_(createBorderVectorTimeDependency(task.values)) { }
 	
 	/**
 	 * General expression of linear border conditions is
@@ -79,7 +52,6 @@ public:
 	
 	
 private:
-	const gcm::BorderConditions::T type_;
 	const BorderVectorTimeDependency b_;
 	
 	

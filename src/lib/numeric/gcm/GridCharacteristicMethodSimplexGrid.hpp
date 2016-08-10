@@ -23,7 +23,6 @@ public:
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
 	typedef typename Mesh::Iterator                            Iterator;
-	typedef typename Mesh::BORDER_CONDITION                    BORDER_CONDITION;
 	typedef typename Mesh::Cell                                Cell;
 	
 	typedef Differentiation<Mesh>                              DIFFERENTIATION;
@@ -31,9 +30,9 @@ public:
 	typedef linal::SYMMETRIC_MATRIX<Dimensionality, PdeVector> PdeHessian;
 	typedef linal::Vector<Dimensionality>                      RealD;
 	
-	static const int OUTER_NUMBER = BORDER_CONDITION::OUTER_NUMBER;
-	static const int PDE_SIZE = Model::PDE_SIZE;
-	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterU1Matrix;
+//	static const int OUTER_NUMBER = BORDER_CONDITION::OUTER_NUMBER;
+//	static const int PDE_SIZE = Model::PDE_SIZE;
+//	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterU1Matrix;
 	
 	
 	void beforeStage(const Mesh& mesh) {
@@ -44,7 +43,7 @@ public:
 	
 	
 	/**
-	 * Do grid-characteristic stage of splitting method on contact nodes
+	 * Do grid-characteristic stage of splitting method on contact and border nodes
 	 */
 	void contactStage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
 		
@@ -58,23 +57,7 @@ public:
 							crossingPoints(*contactIter, s, timeStep, mesh), false));
 		}
 		
-	}
-	
-	
-	/**
-	 * Do grid-characteristic stage of splitting method on inner and border nodes
-	 * @note contact nodes must be already calculated
-	 * @param s number of stage (GcmMatrix number)
-	 * @param timeStep time step
-	 * @param mesh mesh to perform calculation
-	 * @param direction direction of line to perform stage along
-	 */
-	void stage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
-		assert_eq(linal::length(direction), 1);
-		
-		/// calculate border nodes
-//		LOG_INFO("Start calculate border nodes");
-//		#pragma omp parallel for
+		/// calculate inner waves of border nodes
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
 			mesh._pdeNew(*borderIter) = localGcmStep(
@@ -82,12 +65,23 @@ public:
 					mesh.matrices(*borderIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh), false));
-			
-			borderCorrector(mesh, s, direction, *borderIter);
 		}
 		
+	}
+	
+	
+	/**
+	 * Do grid-characteristic stage of splitting method on inner nodes
+	 * @note contact and border nodes must be already calculated
+	 * @param s number of stage (GcmMatrix number)
+	 * @param timeStep time step
+	 * @param mesh mesh to perform calculation
+	 * @param direction direction of line to perform stage along
+	 */
+	void stage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
+		
+		assert_eq(linal::length(direction), 1);
 		/// calculate inner nodes
-//		LOG_INFO("Start calculate inner nodes");
 //		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
@@ -169,57 +163,6 @@ private:
 		}
 		
 		return ans;
-	}
-	
-	
-	/**
-	 * Apply border conditions according to Chelnokov's PhD thesis, page 42.
-	 * Here used outerInvariants, written at interpolateValuesAround before.
-	 */
-	void borderCorrector(Mesh& mesh, const int /*s*/, const RealD direction,
-			const Iterator& it) {
-		
-		if (outerInvariants.size() == 0) { return; }
-		
-		if (outerInvariants.size() == 2 * OUTER_NUMBER) {
-		/// no space - no waves
-			mesh._pdeNew(it) = mesh.pde(it);
-			return;
-		}
-		
-		if (outerInvariants.size() != OUTER_NUMBER) {
-//			LOG_INFO("Bad case: " << outerInvariants.size() << " outer invariants "
-//					<< "in border node at " << mesh.coordsD(it));
-			return;
-		}
-		
-		const BORDER_CONDITION* borderCondition = mesh.getBorderCondition(it);
-		if (borderCondition == nullptr) { return; } // non-reflection
-		
-		const RealD normal = mesh.borderNormal(it);
-		const auto B = borderCondition->B(normal);
-		const auto b = borderCondition->b();
-		
-		Matrix u1AlongBorderNormal;
-		Model::constructEigenvectors(u1AlongBorderNormal,
-				mesh.material(it), linal::createLocalBasis(
-						normal * Utils::sign(linal::dotProduct(normal, direction))));
-		
-		OuterU1Matrix outerU1;		 
-		for (int i = 0; i < OUTER_NUMBER; i++) {
-			outerU1.setColumn(i, 
-					u1AlongBorderNormal.getColumn(outerInvariants[(size_t)i]));
-		}
-		
-		if (fabs(linal::determinant(B * outerU1)) < EQUALITY_TOLERANCE) {
-//			LOG_INFO("Degenerate system in border corrector: det = "
-//					<< linal::determinant(B * outerU1) << ", coords = "
-//					<< mesh.coordsD(it) << "outerU1 = " << outerU1);
-			return;
-		}
-		
-		const auto alpha = linal::solveLinearSystem(B * outerU1, b - B * mesh.pdeNew(it));
-		mesh._pdeNew(it) = mesh.pdeNew(it) + outerU1 * alpha;
 	}
 	
 	
@@ -336,6 +279,7 @@ private:
 	 */
 	PdeVector interpolateInSpaceTime1D(const Mesh& /*mesh*/, 
 			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/) const {
+		THROW_UNSUPPORTED("TODO");
 		return PdeVector::Zeros(); // FIXME
 	}
 	
@@ -349,7 +293,7 @@ private:
 	/// The storage of hessians of mesh pde values. (Unused now)
 	std::vector<PdeHessian> hessians;
 	
-	USE_AND_INIT_LOGGER("gcm.GridCharacteristicMethodCgalGrid")
+	USE_AND_INIT_LOGGER("gcm.GridCharacteristicMethodSimplexGrid")
 	
 };
 

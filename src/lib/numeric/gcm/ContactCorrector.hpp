@@ -41,9 +41,10 @@ public:
 	
 	
 protected:
-	/// maximal found condition numbers of contact corrector matrices
+	/// maximal found condition numbers of correctors matrices
 	real maxConditionR = 0;
 	real maxConditionA = 0;
+	real maxConditionM = 0;
 	
 	
 	/**
@@ -52,41 +53,66 @@ protected:
 	 *     B2_A * u_A = B2_B * u_B,
 	 * where u is pde-vector and B is border matrices.
 	 * Given with inner-calculated pde vectors, we correct them
-	 * with outer waves combination in order to satisfy contact conditions.
+	 * with outer waves combination (Omega) in order to satisfy contact condition.
 	 * @see BorderCondition
 	 */
 	template<typename PdeVector, typename MatrixOmega, typename MatrixB>
 	void
 	correctNodesContact(
 			PdeVector& uA,
-			const MatrixOmega& omegaA, const MatrixB& B1A, const MatrixB& B2A,
+			const MatrixOmega& OmegaA, const MatrixB& B1A, const MatrixB& B2A,
 			PdeVector& uB,
-			const MatrixOmega& omegaB, const MatrixB& B1B, const MatrixB& B2B) {
+			const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
 		
-		const auto R = linal::invert(B1A * omegaA);
-		const real currentConditionR = linal::conditionNumber(R);
-		if (currentConditionR > maxConditionR) {
-			maxConditionR = currentConditionR;
-			LOG_INFO("New maximal condition number in matrix R: " << maxConditionR);
-		}
-		
+		const auto R = linal::invert(B1A * OmegaA);
+		checkConditionNumber(R, "R", maxConditionR);
 		const auto p = R * (B1B * uB - B1A * uA);
-		const auto Q = R * (B1B * omegaB);
+		const auto Q = R * (B1B * OmegaB);
 		
-		const auto A = (B2B * omegaB) - ((B2A * omegaA) * Q);
-		const real currentConditionA = linal::conditionNumber(A);
-		if (currentConditionA > maxConditionA) {
-			maxConditionA = currentConditionA;
-			LOG_INFO("New maximal condition number in matrix A: " << maxConditionA);
-		}
-		
-		const auto f = ((B2A * omegaA) * p) + (B2A * uA) - (B2B * uB);
+		const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
+		checkConditionNumber(A, "A", maxConditionA);
+		const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
 		
 		const auto alphaB = linal::solveLinearSystem(A, f);
 		const auto alphaA = p + Q * alphaB;
 		
-		uA += omegaA * alphaA;
-		uB += omegaB * alphaB;
+		uA += OmegaA * alphaA;
+		uB += OmegaB * alphaB;
+	}
+	
+	
+	/**
+	 * General expression of linear border condition is:
+	 *     B * u = b,
+	 * where u is pde-vector and B is border matrix.
+	 * Given with inner-calculated pde vector, we correct them
+	 * with outer waves combination (Omega) in order to satisfy border condition.
+	 * @see BorderCondition
+	 */
+	template<typename PdeVector,
+			typename MatrixOmega, typename MatrixB, typename VectorB>
+	void
+	correctBorder(PdeVector& u,
+			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
+		
+		const auto M = B * Omega;
+		checkConditionNumber(M, "M", maxConditionM);
+		const auto alpha = linal::solveLinearSystem(M, b - B * u);
+		u += Omega * alpha;
+	}
+	
+	
+private:
+	
+	template<typename MatrixT>
+	void
+	checkConditionNumber(const MatrixT& m, const std::string name, real& currentMax) {
+		const real currentValue = linal::conditionNumber(m);
+		if (currentValue > currentMax) {
+			currentMax = currentValue;
+			LOG_INFO("New maximal condition number in matrix "
+					<< name << ": " << currentMax);
+		}
 	}
 	
 	
@@ -117,10 +143,10 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
-			const auto omegaA = ModelA::constructOuterEigenvectors(
+			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),
 					linal::createLocalBasis(  nodesContact.normal));
-			const auto omegaB = ModelB::constructOuterEigenvectors(
+			const auto OmegaB = ModelB::constructOuterEigenvectors(
 					meshB->material(nodesContact.second),
 					linal::createLocalBasis( -nodesContact.normal));
 			
@@ -137,8 +163,8 @@ public:
 			auto& uA = meshA->_pdeNew(nodesContact.first);
 			auto& uB = meshB->_pdeNew(nodesContact.second);
 			
-			this->correctNodesContact(uA, omegaA, B1A, B2A,
-			                          uB, omegaB, B1B, B2B);
+			this->correctNodesContact(uA, OmegaA, B1A, B2A,
+			                          uB, OmegaB, B1B, B2B);
 		}
 	}
 	
@@ -154,7 +180,7 @@ public:
 	
 	typedef DefaultMesh<ModelA, TGrid, MaterialA> MeshA;
 	typedef DefaultMesh<ModelA, TGrid, MaterialB> MeshB;
-	
+
 	typedef AbstractContactCorrector<TGrid> Base;
 	typedef typename Base::NodesContact     NodesContact;
 	
@@ -168,10 +194,10 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
-			const auto omegaA = ModelA::constructOuterEigenvectors(
+			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),
 					linal::createLocalBasis(  nodesContact.normal));
-			const auto omegaB = ModelB::constructOuterEigenvectors(
+			const auto OmegaB = ModelB::constructOuterEigenvectors(
 					meshB->material(nodesContact.second),
 					linal::createLocalBasis( -nodesContact.normal));
 			
@@ -188,8 +214,8 @@ public:
 			auto& uA = meshA->_pdeNew(nodesContact.first);
 			auto& uB = meshB->_pdeNew(nodesContact.second);
 			
-			this->correctNodesContact(uA, omegaA, B1A, B2A,
-			                          uB, omegaB, B1B, B2B);
+			this->correctNodesContact(uA, OmegaA, B1A, B2A,
+			                          uB, OmegaB, B1B, B2B);
 		}
 	}
 	
@@ -206,12 +232,13 @@ public:
 	typedef ElasticModel<DIMENSIONALITY>     ElasticModelD;
 	typedef AcousticModel<DIMENSIONALITY>    AcousticModelD;
 	
+	
 	static std::shared_ptr<AbstractContactCorrector<TGrid>> create(
-			const ContactConditions::T type,
+			const ContactConditions::T condition,
 			const Models::T model1, const Materials::T material1,
 			const Models::T model2, const Materials::T material2) {
 		
-		switch (type) {
+		switch (condition) {
 			case ContactConditions::T::ADHESION:
 				if (model1 == Models::T::ELASTIC &&
 				    model2 == Models::T::ELASTIC &&
@@ -246,7 +273,6 @@ public:
 				THROW_INVALID_ARG("Unknown type of contact condition");
 		}
 	}
-	
 	
 };
 

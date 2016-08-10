@@ -1,28 +1,13 @@
 #ifndef LIBGCM_DEFAULTMESH_HPP
 #define LIBGCM_DEFAULTMESH_HPP
 
-#include <lib/util/task/BorderCondition.hpp>
 #include <lib/util/task/InitialCondition.hpp>
 #include <lib/util/task/MaterialsCondition.hpp>
 
 namespace gcm {
 
 template<typename> class DefaultSolver;
-template<typename, typename, typename> class GridCharacteristicMethod;
-template<typename, typename, int>      class GridCharacteristicMethodCgalGrid;
-template<typename, typename, typename> struct DataBus;
-template<typename, typename, typename> struct MeshMover;
-template<typename, typename, typename> struct SpecialBorderConditions;
-
-template<typename ModelA, typename MaterialA,
-         typename ModelB, typename MaterialB,
-         typename TGrid>
-class AdhesionContactCorrector;
-template<typename ModelA, typename MaterialA,
-         typename ModelB, typename MaterialB,
-         typename TGrid>
-class SlidingContactCorrector;
-
+template<typename, typename, typename> class DataBus;
 
 /**
  * Mesh that implements the approach when all nodal data are stored
@@ -38,7 +23,6 @@ template<typename TModel, typename TGrid, typename TMaterial>
 class DefaultMesh : public TGrid {
 public:
 	typedef TModel                              Model;
-	typedef BorderCondition<Model>              BORDER_CONDITION;
 	typedef typename Model::PdeVariables        PdeVariables;
 	typedef typename Model::PdeVector           PdeVector;
 	typedef typename Model::OdeVariables        OdeVariables;
@@ -101,8 +85,9 @@ public:
 		allocate();
 		MaterialsCondition<Model, Grid, Material, DefaultMesh>::apply(statement, this);
 		InitialCondition<Model, Grid, Material, DefaultMesh>::apply(statement, this);
-		setBorderConditions(statement);
 	}
+	
+	void allocate(); // FIXME - return back to private
 	
 	/** Read-only access to actual PDE variables */
 	const PdeVariables& pdeVars(const Iterator& it) const {
@@ -142,7 +127,6 @@ public:
 		return maximalEigenvalue;
 	}
 	
-protected:
 	/** Read / write "node" wrapper */
 	std::shared_ptr<Node> node(const Iterator& it) {
 		return std::make_shared<Node>(it, this);
@@ -173,6 +157,9 @@ protected:
 		return this->materials[this->getIndex(it)];
 	}
 	
+	
+	
+protected:
 	/**
 	 * Data storage. Real values plus auxiliary values on borders.
 	 * "...New" means on the next time layer.
@@ -187,50 +174,18 @@ protected:
 	
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
 	
-	/// list of border conditions
-	std::vector<std::pair<std::shared_ptr<Area>,
-	                      BORDER_CONDITION> > borderConditions;
-	
-	/**
-	 * @return border condition for specified point. 
-	 * If several border conditions are overlapped here,
-	 * the last in borderConditions is returned.
-	 * If no border conditions in this point, nullptr returned.
-	 */
-	const BORDER_CONDITION* getBorderCondition(const Iterator& it) {
-		const BORDER_CONDITION* ans = nullptr;
-		for (const auto& bc : borderConditions) {
-			if (bc.first->contains(this->coords(it))) {
-				ans = &(bc.second);
-			}
-		}
-		return ans;
-	}
 	
 	
 private:
-	void allocate();
-	void setBorderConditions(const Statement& statement);
+	
+	friend class DefaultSolver<DefaultMesh>;
+	friend class DataBus<Model, Grid, Material>;
+	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
+	
 	
 	void recalculateMaximalLambda() { /* TODO for non-linear materials */ }
 	void afterStatement() { }
 	
-	// FIXME - move _pde() to public?
-	friend class DefaultSolver<DefaultMesh>;
-	friend class GridCharacteristicMethod<Model, Grid, Material>;
-	friend class GridCharacteristicMethodCgalGrid<Model, Material, GRID_DIMENSIONALITY>;
-	friend class DataBus<Model, Grid, Material>;
-	friend class MeshMover<Model, Grid, Material>;
-	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
-	friend class InitialCondition<Model, Grid, Material, DefaultMesh>;
-	
-	template<typename ModelType, typename GridType, typename MaterialType> 
-	friend class SpecialBorderConditions;
-	
-	template<typename, typename, typename, typename, typename>
-	friend class AdhesionContactCorrector;
-	template<typename, typename, typename, typename, typename>
-	friend class SlidingContactCorrector;
 };
 
 
@@ -243,16 +198,6 @@ allocate() {
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
 	if (Model::InternalOde::NonTrivial) {
 		odeVariables.resize(this->sizeOfAllNodes());
-	}
-}
-
-
-template<typename TModel, typename TGrid, typename TMaterial>
-void DefaultMesh<TModel, TGrid, TMaterial>::
-setBorderConditions(const Statement& statement) {
-	borderConditions.clear();
-	for (const auto& bc : statement.borderConditions) {
-		borderConditions.push_back({bc.area, BORDER_CONDITION(bc)});
 	}
 }
 
