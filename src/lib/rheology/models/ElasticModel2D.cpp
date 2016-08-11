@@ -78,16 +78,13 @@ void ElasticModel<2>::constructNotRotated(
 
 
 template<>
-template<typename ... Args>
 void ElasticModel<2>::constructGcmMatrices(GcmMatricesPtr m,
-		std::shared_ptr<const OrthotropicMaterial> material, const Args& ...) {
+		std::shared_ptr<const OrthotropicMaterial> material,
+		const MatrixDD& basis) {
+	assert_true(basis == linal::identity(basis)); // TODO
 	constructNotRotated(m, material->rho,
 			material->c11, material->c12, material->c22, material->c66);
 }
-
-
-template void ElasticModel<2>::constructGcmMatrices(
-		GcmMatricesPtr, std::shared_ptr<const OrthotropicMaterial>);
 
 
 }

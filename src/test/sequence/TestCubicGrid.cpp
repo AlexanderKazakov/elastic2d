@@ -2,6 +2,7 @@
 
 #include <lib/util/Area.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
+#include <lib/mesh/grid/CubicGlobalScene.hpp>
 #include <lib/mesh/DefaultMesh.hpp>
 #include <lib/rheology/models/models.hpp>
 

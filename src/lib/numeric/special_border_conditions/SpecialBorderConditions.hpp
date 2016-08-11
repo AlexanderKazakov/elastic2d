@@ -3,6 +3,7 @@
 
 #include <lib/mesh/DefaultMesh.hpp>
 #include <lib/mesh/grid/CubicGrid.hpp>
+#include <lib/mesh/grid/CubicGlobalScene.hpp>
 
 
 namespace gcm {
@@ -23,10 +24,10 @@ template<typename TModel, typename TMaterial, int Dimensionality>
 struct SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial> {
 	typedef CubicGrid<Dimensionality>                       Grid;
 	typedef DefaultMesh<TModel, Grid, TMaterial>            Mesh;
-	typedef CubicGrid<1>                                    HelpGrid;
-	typedef DefaultMesh<TModel, HelpGrid, TMaterial>        HelpMesh;
-	typedef SpecialBorderConditions<TModel, HelpGrid, TMaterial>
-	                                                        HelpSpecBorderCond;
+//	typedef CubicGrid<1>                                    HelpGrid;
+//	typedef DefaultMesh<TModel, HelpGrid, TMaterial>        HelpMesh;
+//	typedef SpecialBorderConditions<TModel, HelpGrid, TMaterial>
+//	                                                        HelpSpecBorderCond;
 
 	typedef typename Mesh::PdeVector                        PdeVector;
 	typedef typename Mesh::Iterator                         Iterator;
@@ -66,22 +67,22 @@ struct SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial> {
 	static void handleBorderPoint(Mesh* mesh, const Iterator& borderIter,
 			const Map& values, const int direction, const bool onTheRight);
 	
-	static void handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh,
-			const real timeStep, const int direction, const Iterator& iter, 
-			const Map& values, const int surfaceNormal);
+//	static void handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh,
+//			const real timeStep, const int direction, const Iterator& iter, 
+//			const Map& values, const int surfaceNormal);
 	
-	static HelpMesh* allocateHelpMesh(const Mesh* mesh, const int stage) {
-		Task helpTask;
-		helpTask.cubicGrid.forceSequence = true;
-		helpTask.cubicGrid.borderSize = mesh->borderSize;
-		helpTask.cubicGrid.h = {mesh->h(stage)};
-		helpTask.cubicGrid.sizes = {mesh->borderSize};
+//	static HelpMesh* allocateHelpMesh(const Mesh* mesh, const int stage) {
+//		Task helpTask;
+//		helpTask.cubicGrid.forceSequence = true;
+//		helpTask.cubicGrid.borderSize = mesh->borderSize;
+//		helpTask.cubicGrid.h = {mesh->h(stage)};
+//		helpTask.cubicGrid.sizes = {mesh->borderSize};
 		
-		auto helpMesh = new HelpMesh(helpTask, 
-				new typename HelpMesh::GlobalScene(helpTask), 0);
-		helpMesh->allocate();
-		return helpMesh;
-	}
+//		auto helpMesh = new HelpMesh(helpTask, 
+//				new typename HelpMesh::GlobalScene(helpTask), 0);
+//		helpMesh->allocate();
+//		return helpMesh;
+//	}
 	
 	
 private:

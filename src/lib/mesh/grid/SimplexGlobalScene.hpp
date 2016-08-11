@@ -24,12 +24,12 @@ public:
 	typedef typename Grid::Iterator                        Iterator;
 	typedef typename Grid::GridId                          GridId;
 	typedef typename Grid::RealD                           RealD;
+	typedef typename Grid::MatrixDD                        MatrixDD;
 	
 	typedef typename Triangulation::VertexHandle           VertexHandle;
 	typedef typename Triangulation::CellHandle             CellHandle;
 	
 	static const GridId EmptySpaceFlag = Grid::EmptySpaceFlag;
-	
 	
 	typedef AbstractContactCorrector<Grid>                 ContactCorrector;
 	typedef typename ContactCorrector::NodesContact        NodesContact;
@@ -104,28 +104,29 @@ public:
 	}
 	
 	
-	/**
-	 * Apply contact and border correctors
-	 */
-	virtual void correctContacts() override {
+	virtual void nextTimeStep() override {
 		
-		for (const auto& contact : contacts) {
-			contact.second.contactCorrector->apply(
-					engine->getAbstractMesh(contact.first.first),
-					engine->getAbstractMesh(contact.first.second),
-					contact.second.nodesInContact);
-		}
+		createNewCalculationBasis();
 		
-		for (const auto& bodyWithBorders : borders) {
-			for (const Border& border : bodyWithBorders.second) {
-				border.borderCorrector->apply(
-						engine->getAbstractMesh(bodyWithBorders.first),
-						border.borderNodes);
+		for (int stage = 0; stage < Dimensionality; stage++) {
+			
+			for (const auto body : engine->bodies) {
+				body.second.solver->beforeStage();
 			}
+			
+			for (const auto body : engine->bodies) {
+				body.second.solver->contactStage(stage, Clock::TimeStep());
+			}
+			
+			correctContactsAndBorders(stage);
+			
+			for (const auto body : engine->bodies) {
+				body.second.solver->privateStage(stage, Clock::TimeStep());
+			}
+			
 		}
 		
 	}
-	
 	
 	
 private:
@@ -136,6 +137,10 @@ private:
 	
 	/// on/off points motion
 	bool movable = false;
+	
+	
+	/// Current basis of calculations
+	MatrixDD calculationBasis = linal::randomBasis(MatrixDD());
 	
 	
 	/// all contact conditions of all grids
@@ -149,6 +154,39 @@ private:
 	friend class SimplexGrid<Dimensionality, TriangulationT>;
 	USE_AND_INIT_LOGGER("gcm.SimplexGlobalScene")
 	
+	
+	void createNewCalculationBasis() {
+		calculationBasis = linal::randomBasis(calculationBasis);
+		LOG_INFO("New calculation basis:" << calculationBasis);
+		
+		for (const auto& body : engine->bodies) {
+			Grid* grid = dynamic_cast<Grid*>(engine->getAbstractMesh(body.first));
+			assert_true(grid);
+			grid->changeCalculationBasis(calculationBasis);
+		}
+	}
+	
+	
+	void correctContactsAndBorders(const int stage) {
+		
+		for (const auto& contact : contacts) {
+			contact.second.contactCorrector->apply(
+					engine->getAbstractMesh(contact.first.first),
+					engine->getAbstractMesh(contact.first.second),
+					contact.second.nodesInContact,
+					calculationBasis.getColumn(stage));
+		}
+		
+		for (const auto& bodyWithBorders : borders) {
+			for (const Border& border : bodyWithBorders.second) {
+				border.borderCorrector->apply(
+						engine->getAbstractMesh(bodyWithBorders.first),
+						border.borderNodes,
+						calculationBasis.getColumn(stage));
+			}
+		}
+		
+	}
 	
 	
 	/** Create object in contacts for each grid-grid pair */

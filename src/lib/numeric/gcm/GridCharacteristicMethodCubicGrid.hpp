@@ -20,19 +20,18 @@ public:
 	typedef typename Mesh::Iterator              Iterator;
 	typedef linal::Vector<Dimensionality>        RealD;
 	
-	void beforeStage(const Mesh&) { }
-	void contactStage(const int, const real, Mesh&, const RealD) { }
+	
+	void beforeStage(Mesh&) const { }
+	void contactStage(const int, const real&, Mesh&) const { }
 	
 	/**
 	 * Do grid-characteristic stage of splitting method
 	 * @param s stage (here is equal to direction 0 == X, 1 == Y, 2 == Z)
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
-	 * @param direction (RealD) unused because for cubic grids only directions 
 	 * collinear with coordinate axes are available
 	 */
-	void stage(const int s, const real& timeStep, Mesh& mesh, 
-	           const RealD /*direction*/ = RealD::Zeros()) const {
+	void stage(const int s, const real& timeStep, Mesh& mesh) const {
 		for (auto it : mesh) {
 			mesh._pdeNew(it) = localGcmStep(
 					mesh.matrices(it)->m[s].U1,

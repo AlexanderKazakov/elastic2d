@@ -30,6 +30,9 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 class SimplexGlobalScene;
 
+template<int Dimensionality>
+class CubicGlobalScene;
+
 
 /**
  * Main class. Responsible for the whole process of calculation
@@ -99,9 +102,12 @@ private:
 	void estimateTimeStep();
 	
 	
-	template<int Dimensionality,
-			 template<int, typename, typename> class TriangulationT>
+	template<int Dimensionality, 
+	         template<int, typename, typename> class TriangulationT>
 	friend class SimplexGlobalScene;
+	
+	template<int Dimensionality>
+	friend class CubicGlobalScene;
 	
 	USE_AND_INIT_LOGGER("gcm.Engine")
 };

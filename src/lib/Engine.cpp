@@ -86,6 +86,7 @@ void Engine::
 runStatement() {
 	
 	int step = 0;
+	Utils::seedRand();
 	
 	while (Clock::Time() < requiredTime) {
 		estimateTimeStep();
@@ -113,29 +114,10 @@ runStatement() {
 
 void Engine::
 nextTimeStep() {
-	
-	for (int stage = 0; stage < task.globalSettings.dimensionality; stage++) {
-		
-		for (const auto body : bodies) {
-			body.second.solver->beforeStage();
-		}
-		
-		for (const auto body : bodies) {
-			body.second.solver->contactStage(stage, Clock::TimeStep());
-		}
-		
-		globalScene->correctContacts();
-		
-		for (const auto body : bodies) {
-			body.second.solver->privateStage(stage, Clock::TimeStep());
-		}
-		
-	}
-	
+	globalScene->nextTimeStep();
 	for (const auto body : bodies) {
 		body.second.solver->afterStages(Clock::TimeStep());
 	}
-	
 }
 
 

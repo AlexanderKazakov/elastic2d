@@ -17,6 +17,7 @@ namespace gcm {
  * @defgroup Border correctors
  * Classes for applying "outer-waves"-correction on border nodes
  * in order to satisfy some border condition.
+ * @see BorderCondition
  */
 
 template<typename TGrid>
@@ -35,10 +36,11 @@ public:
 	
 	
 	/**
-	 * Apply contact corrector for all nodes from the list
+	 * Apply border corrector for all nodes from the list 
+	 * along given direction
 	 */
 	virtual void apply(AbstractGrid* grid,
-			std::list<NodeBorder> borderNodes) = 0;
+			std::list<NodeBorder> borderNodes, const RealD& direction) = 0;
 	
 	
 protected:
@@ -85,20 +87,22 @@ private:
 
 
 
-template<typename Model, typename Material, typename TGrid>
-class FixedForceBorderCorrector : public AbstractBorderCorrector<TGrid> {
+template<typename Model, typename Material, typename TGrid,
+         typename BorderMatrixCreator>
+class ConcreteBorderCorrector : public AbstractBorderCorrector<TGrid> {
 public:
 	
 	typedef DefaultMesh<Model, TGrid, Material> Mesh;
 	
 	typedef AbstractBorderCorrector<TGrid>      Base;
 	typedef typename Base::NodeBorder           NodeBorder;
+	typedef typename Base::RealD                RealD;
 	
-	FixedForceBorderCorrector(const Statement::BorderCondition& bc) :
+	ConcreteBorderCorrector(const Statement::BorderCondition& bc) :
 			borderCondition(bc) { }
 	
 	virtual void apply(AbstractGrid* grid, 
-			std::list<NodeBorder> borderNodes) override {
+			std::list<NodeBorder> borderNodes, const RealD& direction) override {
 		
 		Mesh* mesh = dynamic_cast<Mesh*>(grid);
 		assert_true(mesh);
@@ -106,11 +110,13 @@ public:
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			
+			const RealD outerDirection = direction * Utils::sign(
+					linal::dotProduct(direction, nodeBorder.normal));
+			
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),
-					linal::createLocalBasis(nodeBorder.normal));
-			const auto B = Model::borderMatrixFixedForce(
-					nodeBorder.normal);
+					linal::createLocalBasis(outerDirection));
+			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			auto& u = mesh->_pdeNew(nodeBorder.iterator);
 			
 			this->correctBorder(u, Omega, B, b);
@@ -118,47 +124,29 @@ public:
 		
 	}
 	
+	
 private:
 	const BorderCondition<Model> borderCondition;
+	
 };
 
 
 
-template<typename Model, typename Material, typename TGrid>
-class FixedVelocityBorderCorrector : public AbstractBorderCorrector<TGrid> {
-public:
-	
-	typedef DefaultMesh<Model, TGrid, Material> Mesh;
-	
-	typedef AbstractBorderCorrector<TGrid>      Base;
-	typedef typename Base::NodeBorder           NodeBorder;
-	
-	FixedVelocityBorderCorrector(const Statement::BorderCondition& bc) :
-			borderCondition(bc) { }
-	
-	virtual void apply(AbstractGrid* grid, 
-			std::list<NodeBorder> borderNodes) override {
-		
-		Mesh* mesh = dynamic_cast<Mesh*>(grid);
-		assert_true(mesh);
-		const auto b = borderCondition.b();
-		
-		for (const NodeBorder& nodeBorder: borderNodes) {
-			
-			const auto Omega = Model::constructOuterEigenvectors(
-					mesh->material(nodeBorder.iterator),
-					linal::createLocalBasis(nodeBorder.normal));
-			const auto B = Model::borderMatrixFixedVelocity(
-					nodeBorder.normal);
-			auto& u = mesh->_pdeNew(nodeBorder.iterator);
-			
-			this->correctBorder(u, Omega, B, b);
-		}
-		
+template<typename TModel>
+struct FixedForceBorderMatrixCreator {
+	typedef typename TModel::RealD        RealD;
+	typedef typename TModel::BorderMatrix BorderMatrix;
+	static BorderMatrix create(const RealD& normal) {
+		return TModel::borderMatrixFixedForce(normal);
 	}
-	
-private:
-	const BorderCondition<Model> borderCondition;
+};
+template<typename TModel>
+struct FixedVelocityBorderMatrixCreator {
+	typedef typename TModel::RealD        RealD;
+	typedef typename TModel::BorderMatrix BorderMatrix;
+	static BorderMatrix create(const RealD& normal) {
+		return TModel::borderMatrixFixedVelocity(normal);
+	}
 };
 
 
@@ -186,11 +174,15 @@ public:
 				
 				switch (model) {
 					case Models::T::ELASTIC:
-						return std::make_shared<FixedForceBorderCorrector<
-								ElasticModelD, IsotropicMaterial, TGrid>>(condition);
+						return std::make_shared<ConcreteBorderCorrector<
+								ElasticModelD, IsotropicMaterial, TGrid,
+								FixedForceBorderMatrixCreator<ElasticModelD>>>(
+										condition);
 					case Models::T::ACOUSTIC:
-						return std::make_shared<FixedForceBorderCorrector<
-								AcousticModelD, IsotropicMaterial, TGrid>>(condition);
+						return std::make_shared<ConcreteBorderCorrector<
+								AcousticModelD, IsotropicMaterial, TGrid,
+								FixedForceBorderMatrixCreator<AcousticModelD>>>(
+										condition);
 					default:
 						THROW_INVALID_ARG("Unknown type of model");
 				}
@@ -199,11 +191,15 @@ public:
 				
 				switch (model) {
 					case Models::T::ELASTIC:
-						return std::make_shared<FixedVelocityBorderCorrector<
-								ElasticModelD, IsotropicMaterial, TGrid>>(condition);
+						return std::make_shared<ConcreteBorderCorrector<
+								ElasticModelD, IsotropicMaterial, TGrid,
+								FixedVelocityBorderMatrixCreator<ElasticModelD>>>(
+										condition);
 					case Models::T::ACOUSTIC:
-						return std::make_shared<FixedVelocityBorderCorrector<
-								AcousticModelD, IsotropicMaterial, TGrid>>(condition);
+						return std::make_shared<ConcreteBorderCorrector<
+								AcousticModelD, IsotropicMaterial, TGrid,
+								FixedVelocityBorderMatrixCreator<AcousticModelD>>>(
+										condition);
 					default:
 						THROW_INVALID_ARG("Unknown type of model");
 				}

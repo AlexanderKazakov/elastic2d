@@ -1,14 +1,14 @@
 #ifndef LIBGCM_CUBICGRID_HPP
 #define LIBGCM_CUBICGRID_HPP
 
-#include <lib/mesh/grid/AbstractGlobalScene.hpp>
 #include <lib/mesh/grid/StructuredGrid.hpp>
 #include <lib/linal/linal.hpp>
 #include <lib/GlobalVariables.hpp>
 
+
 namespace gcm {
 
-class Engine;
+template<int> class CubicGlobalScene;
 
 
 /**
@@ -25,6 +25,7 @@ public:
 	
 	static const int DIMENSIONALITY = Dimensionality;
 	
+	typedef linal::Matrix<DIMENSIONALITY, DIMENSIONALITY>         MatrixDD;
 	typedef linal::Vector<DIMENSIONALITY>                         RealD;
 	typedef linal::VectorInt<DIMENSIONALITY>                      IntD;
 	
@@ -33,15 +34,10 @@ public:
 	typedef linal::SlowZFastX<DIMENSIONALITY>                     VtkIterator;
 	typedef linal::BoxIterator<DIMENSIONALITY, linal::SlowXFastZ> PartIterator;
 	
+	typedef CubicGlobalScene<DIMENSIONALITY>                      GlobalScene;
+	
 	/// Unique number of the grid among other grids of this type
 	typedef size_t GridId;
-	
-	struct GlobalScene : public AbstractGlobalScene {
-		GlobalScene(const Task&, Engine* = nullptr) { }
-		virtual ~GlobalScene() { }
-		virtual void afterGridsConstruction(const Task&) override { }
-		virtual void correctContacts() override { }
-	};
 	
 	/** @name memory efficient (sequential) iteration */
 	/// @{
@@ -137,7 +133,13 @@ public:
 	static int numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
 		return (int) std::round((real) task.sizes.at(0) / Mpi::Size());
 	}
-
+	
+	
+protected:
+	/** To override in mesh, when model and material appear */
+	virtual void changeCalculationBasis(const MatrixDD&) { }
+	
+	
 private:
 	/** functions for constructor */
 	///@{ 

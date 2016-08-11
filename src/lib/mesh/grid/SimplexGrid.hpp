@@ -42,6 +42,8 @@ public:
 	/// Number of vertices in face
 	static const int FACE_POINTS_NUMBER = DIMENSIONALITY;
 	
+	typedef linal::Matrix<DIMENSIONALITY, DIMENSIONALITY> MatrixDD;
+	
 	
 	/** Auxiliary information stored in global triangulation cells */
 	struct CellInfo {
@@ -252,6 +254,11 @@ public:
 		}
 		return ans;
 	}
+	
+	
+protected:
+	/** To override in mesh, when model and material appear */
+	virtual void changeCalculationBasis(const MatrixDD&) { }
 	
 	
 private:

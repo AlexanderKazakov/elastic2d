@@ -35,16 +35,17 @@ public:
 	
 	/**
 	 * Apply contact corrector for all nodes from the list
+	 * along given direction
 	 */
 	virtual void apply(AbstractGrid* a, AbstractGrid* b,
-			std::list<NodesContact> nodesInContact) = 0;
+			std::list<NodesContact> nodesInContact,
+			const RealD& direction) = 0;
 	
 	
 protected:
 	/// maximal found condition numbers of correctors matrices
 	real maxConditionR = 0;
 	real maxConditionA = 0;
-	real maxConditionM = 0;
 	
 	
 	/**
@@ -54,7 +55,7 @@ protected:
 	 * where u is pde-vector and B is border matrices.
 	 * Given with inner-calculated pde vectors, we correct them
 	 * with outer waves combination (Omega) in order to satisfy contact condition.
-	 * @see BorderCondition
+	 * @see BorderCorrector
 	 */
 	template<typename PdeVector, typename MatrixOmega, typename MatrixB>
 	void
@@ -81,27 +82,6 @@ protected:
 	}
 	
 	
-	/**
-	 * General expression of linear border condition is:
-	 *     B * u = b,
-	 * where u is pde-vector and B is border matrix.
-	 * Given with inner-calculated pde vector, we correct them
-	 * with outer waves combination (Omega) in order to satisfy border condition.
-	 * @see BorderCondition
-	 */
-	template<typename PdeVector,
-			typename MatrixOmega, typename MatrixB, typename VectorB>
-	void
-	correctBorder(PdeVector& u,
-			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
-		
-		const auto M = B * Omega;
-		checkConditionNumber(M, "M", maxConditionM);
-		const auto alpha = linal::solveLinearSystem(M, b - B * u);
-		u += Omega * alpha;
-	}
-	
-	
 private:
 	
 	template<typename MatrixT>
@@ -123,8 +103,9 @@ private:
 
 template<typename ModelA, typename MaterialA,
          typename ModelB, typename MaterialB,
-         typename TGrid>
-class AdhesionContactCorrector : public AbstractContactCorrector<TGrid> {
+         typename TGrid,
+         typename ContactMatrixCreator>
+class ConcreteContactCorrector : public AbstractContactCorrector<TGrid> {
 public:
 	
 	typedef DefaultMesh<ModelA, TGrid, MaterialA> MeshA;
@@ -132,9 +113,11 @@ public:
 	
 	typedef AbstractContactCorrector<TGrid> Base;
 	typedef typename Base::NodesContact     NodesContact;
+	typedef typename Base::RealD            RealD;
 	
 	virtual void apply(AbstractGrid* a, AbstractGrid* b, 
-			std::list<NodesContact> nodesInContact) override {
+			std::list<NodesContact> nodesInContact,
+			const RealD& direction) override {
 		
 		MeshA* meshA = dynamic_cast<MeshA*>(a);
 		assert_true(meshA);
@@ -143,22 +126,20 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
+			const RealD directionFromAToB = direction * Utils::sign(
+					linal::dotProduct(direction, nodesContact.normal));
+			
 			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),
-					linal::createLocalBasis(  nodesContact.normal));
+					linal::createLocalBasis(  directionFromAToB));
 			const auto OmegaB = ModelB::constructOuterEigenvectors(
 					meshB->material(nodesContact.second),
-					linal::createLocalBasis( -nodesContact.normal));
+					linal::createLocalBasis( -directionFromAToB));
 			
-			const auto B1A = ModelA::borderMatrixFixedVelocityGlobalBasis(
-					nodesContact.normal);
-			const auto B1B = ModelB::borderMatrixFixedVelocityGlobalBasis(
-					nodesContact.normal);
-			
-			const auto B2A = ModelA::borderMatrixFixedForceGlobalBasis(
-					nodesContact.normal);
-			const auto B2B = ModelB::borderMatrixFixedForceGlobalBasis(
-					nodesContact.normal);
+			const auto B1A = ContactMatrixCreator::createB1A(nodesContact.normal);
+			const auto B1B = ContactMatrixCreator::createB1B(nodesContact.normal);
+			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
+			const auto B2B = ContactMatrixCreator::createB2B(nodesContact.normal);
 			
 			auto& uA = meshA->_pdeNew(nodesContact.first);
 			auto& uB = meshB->_pdeNew(nodesContact.second);
@@ -172,53 +153,42 @@ public:
 
 
 
-template<typename ModelA, typename MaterialA,
-         typename ModelB, typename MaterialB,
-         typename TGrid>
-class SlidingContactCorrector : public AbstractContactCorrector<TGrid> {
-public:
+template<typename ModelA, typename ModelB>
+struct AdhesionContactMatrixCreator {
+	typedef typename ModelA::RealD        RealD;
+	typedef typename ModelA::BorderMatrix BorderMatrix;
 	
-	typedef DefaultMesh<ModelA, TGrid, MaterialA> MeshA;
-	typedef DefaultMesh<ModelA, TGrid, MaterialB> MeshB;
-
-	typedef AbstractContactCorrector<TGrid> Base;
-	typedef typename Base::NodesContact     NodesContact;
-	
-	virtual void apply(AbstractGrid* a, AbstractGrid* b, 
-			std::list<NodesContact> nodesInContact) override {
-		
-		MeshA* meshA = dynamic_cast<MeshA*>(a);
-		assert_true(meshA);
-		MeshB* meshB = dynamic_cast<MeshB*>(b);
-		assert_true(meshB);
-		
-		for (const NodesContact& nodesContact : nodesInContact) {
-			
-			const auto OmegaA = ModelA::constructOuterEigenvectors(
-					meshA->material(nodesContact.first),
-					linal::createLocalBasis(  nodesContact.normal));
-			const auto OmegaB = ModelB::constructOuterEigenvectors(
-					meshB->material(nodesContact.second),
-					linal::createLocalBasis( -nodesContact.normal));
-			
-			const auto B1A = ModelA::borderMatrixFixedVelocity(
-					nodesContact.normal);
-			const auto B1B = ModelB::borderMatrixFixedVelocity(
-					nodesContact.normal);
-			
-			const auto B2A = ModelA::borderMatrixFixedForce(
-					nodesContact.normal);
-			const auto B2B = ModelB::borderMatrixFixedForce(
-					nodesContact.normal);
-			
-			auto& uA = meshA->_pdeNew(nodesContact.first);
-			auto& uB = meshB->_pdeNew(nodesContact.second);
-			
-			this->correctNodesContact(uA, OmegaA, B1A, B2A,
-			                          uB, OmegaB, B1B, B2B);
-		}
+	static BorderMatrix createB1A(const RealD& normal) {
+		return ModelA::borderMatrixFixedVelocityGlobalBasis(normal);
 	}
+	static BorderMatrix createB1B(const RealD& normal) {
+		return ModelB::borderMatrixFixedVelocityGlobalBasis(normal);
+	}
+	static BorderMatrix createB2A(const RealD& normal) {
+		return ModelA::borderMatrixFixedForceGlobalBasis(normal);
+	}
+	static BorderMatrix createB2B(const RealD& normal) {
+		return ModelB::borderMatrixFixedForceGlobalBasis(normal);
+	}
+};
+template<typename ModelA, typename ModelB>
+struct SlideContactMatrixCreator {
+	typedef typename ModelA::RealD        RealD;
+	typedef typename ModelA::BorderMatrix BorderMatrix;
 	
+	// FIXME - this is valid for acoustic model only
+	static BorderMatrix createB1A(const RealD& normal) {
+		return ModelA::borderMatrixFixedVelocity(normal);
+	}
+	static BorderMatrix createB1B(const RealD& normal) {
+		return ModelB::borderMatrixFixedVelocity(normal);
+	}
+	static BorderMatrix createB2A(const RealD& normal) {
+		return ModelA::borderMatrixFixedForce(normal);
+	}
+	static BorderMatrix createB2B(const RealD& normal) {
+		return ModelB::borderMatrixFixedForce(normal);
+	}
 };
 
 
@@ -245,9 +215,10 @@ public:
 				    material1 == Materials::T::ISOTROPIC &&
 				    material2 == Materials::T::ISOTROPIC) {
 					
-					return std::make_shared<AdhesionContactCorrector<
+					return std::make_shared<ConcreteContactCorrector<
 							ElasticModelD, IsotropicMaterial,
-							ElasticModelD, IsotropicMaterial, TGrid>>();
+							ElasticModelD, IsotropicMaterial, TGrid,
+							AdhesionContactMatrixCreator<ElasticModelD, ElasticModelD>>>();
 					
 				} else {
 					THROW_UNSUPPORTED("Incompatible or unsupported contact conditions, \
@@ -260,9 +231,10 @@ public:
 				    material1 == Materials::T::ISOTROPIC &&
 				    material2 == Materials::T::ISOTROPIC) {
 					
-					return std::make_shared<SlidingContactCorrector<
+					return std::make_shared<ConcreteContactCorrector<
 							AcousticModelD, IsotropicMaterial,
-							AcousticModelD, IsotropicMaterial, TGrid>>();
+							AcousticModelD, IsotropicMaterial, TGrid,
+							SlideContactMatrixCreator<AcousticModelD, AcousticModelD>>>();
 					
 				} else {
 					THROW_UNSUPPORTED("Incompatible or unsupported contact conditions, \

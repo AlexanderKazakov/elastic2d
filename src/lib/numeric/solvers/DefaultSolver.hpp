@@ -10,7 +10,7 @@
 #include <lib/mesh/DataBus.hpp>
 #include <lib/mesh/MeshMover.hpp>
 #include <lib/rheology/correctors/correctors.hpp>
-#include <lib/mesh/grid/SimplexGlobalScene.hpp>
+
 
 namespace gcm {
 
@@ -29,14 +29,13 @@ public:
 	
 	typedef typename Model::Corrector                       Corrector;
 	typedef typename Model::InternalOde                     InternalOde;
-
+	
 	typedef SpecialBorderConditions<Model, Grid, Material>  SpecialBorder;
 	typedef DataBus<Model, Grid, Material>                  DATA_BUS;
 	typedef MeshMover<Model, Grid, Material>                MESH_MOVER;
 	typedef GridCharacteristicMethod<Model, Grid, Material> GcmMethod;
 	
 	static const int GRID_DIMENSIONALITY = Mesh::GRID_DIMENSIONALITY;
-	typedef linal::Matrix<GRID_DIMENSIONALITY, GRID_DIMENSIONALITY> BasisMatrix;
 	
 	DefaultSolver(const Task& task,
 			AbstractGlobalScene* abstractGlobalScene, const GridId gridId_);
@@ -78,9 +77,6 @@ public:
 	
 protected:
 	real CourantNumber = 0; ///< number from Courant–Friedrichs–Lewy condition
-	BasisMatrix calcBasis;  ///< along this lines stages performed (for 
-			///< unstructured grids only)
-			
 	GcmMethod gridCharacteristicMethod;
 	Corrector* corrector = nullptr;
 	InternalOde* internalOde = nullptr;
@@ -105,9 +101,6 @@ DefaultSolver(const Task& task, AbstractGlobalScene* abstractGlobalScene,
 	assert_true(globalScene);
 	mesh = new Mesh(task, globalScene, gridId_);
 	specialBorder = new SpecialBorder();
-	
-	calcBasis = linal::identity(calcBasis); //linal::randomBasis(calcBasis);
-	LOG_DEBUG("Calculation basis:" << calcBasis);
 }
 
 template<class TMesh>
@@ -146,7 +139,7 @@ beforeStage() {
 template<class TMesh>
 void DefaultSolver<TMesh>::
 contactStage(const int s, const real timeStep) {
-	gridCharacteristicMethod.contactStage(s, timeStep, *mesh, calcBasis.getColumn(s));
+	gridCharacteristicMethod.contactStage(s, timeStep, *mesh);
 }
 
 template<class TMesh>
@@ -156,7 +149,7 @@ privateStage(const int s, const real timeStep) {
 	DATA_BUS::exchangeNodesWithNeighbors(mesh);
 	
 	specialBorder->applyBorderBeforeStage(mesh, timeStep, s);
-	gridCharacteristicMethod.stage(s, timeStep, *mesh, calcBasis.getColumn(s));
+	gridCharacteristicMethod.stage(s, timeStep, *mesh);
 			//< now actual PDE values is in pdeVariablesNew
 	specialBorder->applyBorderAfterStage(mesh, timeStep, s);
 	

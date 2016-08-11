@@ -46,26 +46,25 @@ public:
 	
 	
 	/**
-	 * Construct gcm matrices for calculation in global basis axes
+	 * Construct gcm matrices for calculation in given basis
 	 */
-	template<typename ... Args>
 	static void constructGcmMatrices(GcmMatricesPtr m,
-			std::shared_ptr<const IsotropicMaterial> material, const Args& ...) {
+			std::shared_ptr<const IsotropicMaterial> material,
+			const MatrixDD& basis = MatrixDD::Identity()) {
 		
 		for (int i = 0; i < DIMENSIONALITY; i++) {
-			RealD n = RealD::Zeros();
-			n(i) = 1;
+			RealD n = basis.getColumn(i);
 			constructGcmMatrix((*m)(i), material, linal::createLocalBasis(n));
 		}
 	}
 	
 	
 	/**
-	 * Construct gcm matrices for calculation in global basis axes
+	 * Construct gcm matrices for calculation in global orthonormal basis
 	 */
-	template<typename ... Args>
 	static void constructGcmMatrices(GcmMatricesPtr m,
-			std::shared_ptr<const OrthotropicMaterial> material, const Args& ...);
+			std::shared_ptr<const OrthotropicMaterial> material,
+			const MatrixDD& basis = MatrixDD::Identity());
 	
 	
 	/**

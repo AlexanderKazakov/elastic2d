@@ -3,6 +3,8 @@
 
 #include <lib/util/snapshot/snapshotters.hpp>
 #include <lib/numeric/solvers/DefaultSolver.hpp>
+#include <lib/mesh/grid/SimplexGlobalScene.hpp>
+#include <lib/mesh/grid/CubicGlobalScene.hpp>
 #include <lib/rheology/models/models.hpp>
 #include <lib/util/Logging.hpp>
 

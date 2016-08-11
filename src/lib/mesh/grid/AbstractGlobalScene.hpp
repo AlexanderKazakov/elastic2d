@@ -22,9 +22,10 @@ public:
 	
 	
 	/**
-	 * Apply contact correctors
+	 * Perform next time step (part, connected with waves propagation)
 	 */
-	virtual void correctContacts() = 0;
+	virtual void nextTimeStep() = 0;
+	
 };
 
 

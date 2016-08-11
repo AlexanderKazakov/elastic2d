@@ -18,7 +18,7 @@ public:
 	 */
 	template<typename T>
 	static int sign(const T& t) {
-//		assert_ne(t, 0); FIXME - return assert after skull calculation success
+		assert_ne(t, 0);
 		return (t > 0) ? 1 : -1;
 	}
 	

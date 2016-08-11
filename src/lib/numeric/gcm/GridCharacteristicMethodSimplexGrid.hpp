@@ -1,5 +1,5 @@
-#ifndef LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
-#define LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
+#ifndef LIBGCM_GRIDCHARACTERISTICMETHODSIMPLEXGRID_HPP
+#define LIBGCM_GRIDCHARACTERISTICMETHODSIMPLEXGRID_HPP
 
 #include <lib/mesh/grid/SimplexGrid.hpp>
 #include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
@@ -45,7 +45,9 @@ public:
 	/**
 	 * Do grid-characteristic stage of splitting method on contact and border nodes
 	 */
-	void contactStage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
+	void contactStage(const int s, const real timeStep, Mesh& mesh) {
+		RealD direction = mesh.calculationBasis.getColumn(s);
+		assert_eq(linal::length(direction), 1);
 		
 		/// calculate inner waves of contact nodes
 		for (auto contactIter = mesh.contactBegin(); 
@@ -76,11 +78,11 @@ public:
 	 * @param s number of stage (GcmMatrix number)
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
-	 * @param direction direction of line to perform stage along
 	 */
-	void stage(const int s, const real timeStep, Mesh& mesh, const RealD direction) {
-		
+	void stage(const int s, const real timeStep, Mesh& mesh) {
+		RealD direction = mesh.calculationBasis.getColumn(s);
 		assert_eq(linal::length(direction), 1);
+		
 		/// calculate inner nodes
 //		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
@@ -301,4 +303,4 @@ private:
 }
 
 
-#endif // LIBGCM_GRIDCHARACTERISTICMETHODCGALGRID_HPP
+#endif // LIBGCM_GRIDCHARACTERISTICMETHODSIMPLEXGRID_HPP

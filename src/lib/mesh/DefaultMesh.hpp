@@ -8,6 +8,7 @@ namespace gcm {
 
 template<typename> class DefaultSolver;
 template<typename, typename, typename> class DataBus;
+template<typename, typename, typename> class GridCharacteristicMethod;
 
 /**
  * Mesh that implements the approach when all nodal data are stored
@@ -35,6 +36,7 @@ public:
 	typedef typename Grid::GridId               GridId;
 	typedef typename Grid::GlobalScene          GlobalScene;
 	typedef typename Grid::Iterator             Iterator;
+	typedef typename Grid::MatrixDD             MatrixDD;
 	
 	typedef TMaterial                           Material;
 	typedef std::shared_ptr<Material>           MaterialPtr;
@@ -172,14 +174,16 @@ protected:
 	std::vector<OdeVariables> odeVariables;
 	///@}
 	
+	MatrixDD calculationBasis = MatrixDD::Identity();
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
 	
-	
+	virtual void changeCalculationBasis(const MatrixDD& basis) override;
 	
 private:
 	
 	friend class DefaultSolver<DefaultMesh>;
 	friend class DataBus<Model, Grid, Material>;
+	friend class GridCharacteristicMethod<Model, Grid, Material>;
 	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
 	
 	
@@ -199,6 +203,20 @@ allocate() {
 	if (Model::InternalOde::NonTrivial) {
 		odeVariables.resize(this->sizeOfAllNodes());
 	}
+}
+
+
+template<typename TModel, typename TGrid, typename TMaterial>
+void DefaultMesh<TModel, TGrid, TMaterial>::
+changeCalculationBasis(const MatrixDD& basis) {
+	
+	calculationBasis = basis;
+	
+	// FIXME - here we suppose mesh homogenity!
+	Iterator someNode = *(this->begin());
+	
+	Model::constructGcmMatrices(this->_matrices(someNode),
+			this->material(someNode), calculationBasis);
 }
 
 
