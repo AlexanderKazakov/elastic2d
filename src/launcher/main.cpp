@@ -243,6 +243,8 @@ Task parseTaskCgal2d() {
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
 	task.bodies = {
+//			{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
+//			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
 			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 	};
@@ -260,6 +262,7 @@ Task parseTaskCgal2d() {
 		Task::SimplexGrid::Body({1, { {-2, 5}, {2, 5}, {0, 7} }, {}})
 	};
 	
+//	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;
 	
 	Statement statement;
@@ -272,7 +275,7 @@ Task parseTaskCgal2d() {
 	statement.globalSettings.CourantNumber = 1;
 	
 	statement.globalSettings.numberOfSnaps = 80;
-	statement.globalSettings.stepsPerSnap = 1;
+	statement.globalSettings.stepsPerSnap = 10;
 	
 	Statement::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;

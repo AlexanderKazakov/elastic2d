@@ -47,7 +47,6 @@ public:
 	 */
 	void contactStage(const int s, const real timeStep, Mesh& mesh) {
 		RealD direction = mesh.calculationBasis.getColumn(s);
-		assert_eq(linal::length(direction), 1);
 		
 		/// calculate inner waves of contact nodes
 		for (auto contactIter = mesh.contactBegin(); 
@@ -81,7 +80,6 @@ public:
 	 */
 	void stage(const int s, const real timeStep, Mesh& mesh) {
 		RealD direction = mesh.calculationBasis.getColumn(s);
-		assert_eq(linal::length(direction), 1);
 		
 		/// calculate inner nodes
 //		#pragma omp parallel for
