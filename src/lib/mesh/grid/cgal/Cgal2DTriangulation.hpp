@@ -82,17 +82,22 @@ public:
 	/**
 	 * Returns all incident to vh cells in counterclockwise order.
 	 * If ch provided (must be incident), it will be the first in the answer.
+	 * @threadsafe
 	 */
 	std::list<CellHandle> allIncidentCells(
 			const VertexHandle vh, const CellHandle ch = CellHandle()) const {
 		
+		std::list<CellHandle> ans;
+		/// Don't know why and how, but reading incident cells from
+		/// CGAL triangulation by several threads is not thread-safe.
+		/// So we have critical section here
+		#pragma omp critical
+		{
 		auto faceCirculator = triangulation.incident_faces(vh, ch);
 		auto begin = faceCirculator;
-		std::list<CellHandle> ans;
-		
 		do { ans.push_back(faceCirculator++); }
 		while (faceCirculator != begin);
-		
+		}
 		return ans;
 	}
 	

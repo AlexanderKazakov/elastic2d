@@ -111,12 +111,19 @@ public:
 	
 	/**
 	 * Locate cell that contains point on specified distance (shift)
-	 * from specified vertex vh by triangulation.locate function
+	 * from specified vertex vh by triangulation.locate function.
+	 * @threadsafe
 	 */
 	CellHandle locateOwnerCell(
 			const VertexHandle beginVertex, const RealD shift) const {
 		auto query = beginVertex->point() + Base::cgalVectorD(shift);
-		return this->triangulation.locate(query, Base::someCellOfVertex(beginVertex));
+		CellHandle ans;
+		#pragma omp critical
+		{
+		ans = this->triangulation.locate(
+				query, Base::someCellOfVertex(beginVertex));
+		}
+		return ans;
 	}
 	
 	

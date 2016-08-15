@@ -85,10 +85,18 @@ public:
 	
 	/**
 	 * Returns all incident to vh cells. Order of cells is not defined.
+	 * @threadsafe
 	 */
 	std::list<CellHandle> allIncidentCells(const VertexHandle vh) const {
+		
 		std::list<CellHandle> ans;
+		/// Don't know why and how, but reading incident cells from
+		/// CGAL triangulation by several threads is not thread-safe.
+		/// So we have critical section here
+		#pragma omp critical
+		{
 		triangulation.incident_cells(vh, std::back_inserter(ans));
+		}
 		return ans;
 	}
 	

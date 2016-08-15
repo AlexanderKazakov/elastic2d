@@ -22,7 +22,7 @@ inline Task skullAcoustic() {
 	
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
@@ -45,7 +45,7 @@ inline Task skullAcoustic() {
 	
 	statement.globalSettings.CourantNumber = 1;
 	statement.globalSettings.numberOfSnaps = 1000;
-	statement.globalSettings.stepsPerSnap = 1;
+	statement.globalSettings.stepsPerSnap = 5;
 	
 	
 	Statement::BorderCondition freeBorder;
@@ -60,18 +60,22 @@ inline Task skullAcoustic() {
 	Statement::BorderCondition source;
 	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
+	real tau = 0.5;
+	real omega = 2 * M_PI / tau;
 	source.values = {
-		[] (real t) { return (t < 0.5) ? -1 : 0; }
-//		[] (real t) { return sin(omega * t) * exp(-t*t / ( 2 * tau)); }
+//		[=] (real t) { return (t < tau) ? 1 : 0; }
+		[=] (real t) {
+			t -= 2 * tau;
+			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
 	};
 	
 	statement.borderConditions = {freeBorder, source};
 	
-	Statement::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 1;
-	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
-	statement.initialCondition.quantities.push_back(pressure);
+//	Statement::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 1;
+//	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
+//	statement.initialCondition.quantities.push_back(pressure);
 	
 	statement.vtkSnapshotter.enableSnapshotting = true;
 	statement.vtkSnapshotter.quantitiesToSnap = {
