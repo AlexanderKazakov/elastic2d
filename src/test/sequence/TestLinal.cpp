@@ -11,6 +11,29 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, reflectionDirection) {
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real2({0, -1}),
+			reflectionDirection(normalize(Real2({1, 1})), Real2({1, 0}))));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real2({-1, 0}),
+			reflectionDirection(normalize(Real2({1, 1})), Real2({0, 1}))));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real3({0, -1, 0}),
+			reflectionDirection(normalize(Real3({0, 1, 1})), Real3({0, 0, 1}))));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real3({0, 0, 1}),
+			reflectionDirection(normalize(Real3({0, 0, 1})), Real3({0, 0, -1}))));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real3({1, 0, 0}),
+			reflectionDirection(normalize(Real3({0, 0, 1})), Real3({1, 0, 0}))));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			normalize(Real3({1, 1, -1})),
+			reflectionDirection(normalize(Real3({0, 0, 1})),
+			                    normalize(Real3({1, 1, 1})))));
+}
+
+
 TEST(Linal, normMax) {
 	ASSERT_EQ(7, normMax(Matrix22({
 			1, 2,

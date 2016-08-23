@@ -349,6 +349,18 @@ inline real minimalHeight(
 }
 
 
+/** 
+ * Direction of the ray reflection from the surface
+ * @param normal surface normal
+ */
+template<int TM>
+Vector<TM> reflectionDirection(
+		const Vector<TM> normal, const Vector<TM> initialDirection) {
+	return normalize(initialDirection -
+			2 * normal * dotProduct(initialDirection, normal));
+}
+
+
 }
 }
 

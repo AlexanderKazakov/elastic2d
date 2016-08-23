@@ -35,7 +35,7 @@ public:
 			
 		gradients.resize(mesh.sizeOfAllNodes());
 		
-//		#pragma omp parallel for
+		#pragma omp parallel for
 		for (size_t it = 0; it < mesh.sizeOfRealNodes(); ++it) {
 			// SLE matrix
 			auto A = linal::Matrix<MAX_NUMBER_OF_NEIGHBOR_VERTICES, DIMENSIONALITY>::Zeros();

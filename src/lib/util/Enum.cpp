@@ -62,7 +62,6 @@ const std::map<Models::T, std::string> Models::NAME = {
 
 const std::map<Snapshotters::T, std::string> Snapshotters::NAME = {
 		{Snapshotters::T::VTK,            "vtk"},
-		{Snapshotters::T::BIN2DSEISM,     "bin2dseism"},
 		{Snapshotters::T::DETECTOR,       "detector"},
 		{Snapshotters::T::SLICESNAP,      "slice_snap"},
 };

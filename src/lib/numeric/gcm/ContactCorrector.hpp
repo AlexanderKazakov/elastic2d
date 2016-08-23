@@ -66,12 +66,12 @@ protected:
 			const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
 		
 		const auto R = linal::invert(B1A * OmegaA);
-		checkConditionNumber(R, "R", maxConditionR);
+//		checkConditionNumber(R, "R", maxConditionR);
 		const auto p = R * (B1B * uB - B1A * uA);
 		const auto Q = R * (B1B * OmegaB);
 		
 		const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
-		checkConditionNumber(A, "A", maxConditionA);
+//		checkConditionNumber(A, "A", maxConditionA);
 		const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
 		
 		const auto alphaB = linal::solveLinearSystem(A, f);
@@ -117,7 +117,7 @@ public:
 	
 	virtual void apply(AbstractGrid* a, AbstractGrid* b, 
 			std::list<NodesContact> nodesInContact,
-			const RealD& direction) override {
+			const RealD& /*direction*/) override {
 		
 		MeshA* meshA = dynamic_cast<MeshA*>(a);
 		assert_true(meshA);
@@ -126,8 +126,9 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
-			const RealD directionFromAToB = direction * Utils::sign(
-					linal::dotProduct(direction, nodesContact.normal));
+			const RealD directionFromAToB = nodesContact.normal;
+					/*direction * Utils::sign(
+					linal::dotProduct(direction, nodesContact.normal));*/
 			
 			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),

@@ -1,4 +1,3 @@
-#include <lib/util/StringUtils.hpp>
 #include <lib/Engine.hpp>
 #include <lib/util/Area.hpp>
 

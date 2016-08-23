@@ -138,11 +138,6 @@ struct Statement {
 		std::vector<PhysicalQuantities::T> quantities;
 		std::shared_ptr<Area> area;
 	} detector;
-	
-	
-	struct Binary2DSeismograph {
-		PhysicalQuantities::T quantityToWrite;
-	} binary2DSeismograph;
 };
 
 

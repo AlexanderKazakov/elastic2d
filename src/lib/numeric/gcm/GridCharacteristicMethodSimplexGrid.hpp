@@ -30,10 +30,6 @@ public:
 	typedef linal::SYMMETRIC_MATRIX<Dimensionality, PdeVector> PdeHessian;
 	typedef linal::Vector<Dimensionality>                      RealD;
 	
-//	static const int OUTER_NUMBER = BORDER_CONDITION::OUTER_NUMBER;
-//	static const int PDE_SIZE = Model::PDE_SIZE;
-//	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterU1Matrix;
-	
 	
 	void beforeStage(const Mesh& mesh) {
 		/// calculate spatial derivatives of all mesh pde values ones before stage
@@ -49,6 +45,7 @@ public:
 		RealD direction = mesh.calculationBasis.getColumn(s);
 		
 		/// calculate inner waves of contact nodes
+		#pragma omp parallel for
 		for (auto contactIter = mesh.contactBegin(); 
 		          contactIter < mesh.contactEnd(); ++contactIter) {
 			mesh._pdeNew(*contactIter) = localGcmStep(
@@ -59,6 +56,7 @@ public:
 		}
 		
 		/// calculate inner waves of border nodes
+		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
 			mesh._pdeNew(*borderIter) = localGcmStep(
@@ -82,7 +80,7 @@ public:
 		RealD direction = mesh.calculationBasis.getColumn(s);
 		
 		/// calculate inner nodes
-//		#pragma omp parallel for
+		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(*innerIter) = localGcmStep(

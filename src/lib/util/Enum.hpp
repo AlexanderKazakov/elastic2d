@@ -132,7 +132,6 @@ struct Snapshotters {
 	/** Type */
 	enum class T {
 		VTK,
-		BIN2DSEISM,
 		DETECTOR,
 		SLICESNAP,
 		
