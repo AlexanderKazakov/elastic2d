@@ -10,13 +10,11 @@ using namespace gcm;
 
 
 Engine::
-Engine(const Task& task_) : task(task_) {
+Engine(const Task& task) {
 	
 	LOG_INFO("Start Engine");
 	Clock::setZero();
 	Mpi::initialize(task.globalSettings.forceSequence);
-	
-	assert_gt(task.statements.size(), 0);
 	
 	globalScene = Factory::createGlobalScene(task, this);
 	
@@ -27,8 +25,7 @@ Engine(const Task& task_) : task(task_) {
 		
 		std::vector<Snapshotter*> snapshotters;
 		for (const auto snapId : task.globalSettings.snapshottersId) {
-			Snapshotter* snapshotter = factory->createSnapshotter(snapId);
-			snapshotter->initialize(task);
+			Snapshotter* snapshotter = factory->createSnapshotter(task, snapId);
 			snapshotters.push_back(snapshotter);
 		}
 		
@@ -36,6 +33,23 @@ Engine(const Task& task_) : task(task_) {
 	}
 	
 	globalScene->afterGridsConstruction(task);
+	
+	Clock::setZero();
+	for (const auto body : bodies) {
+		for (Snapshotter* snapshotter : body.second.snapshotters) {
+			snapshotter->snapshot(body.second.solver->getAbstractMesh(), 0);
+		}
+	}
+	
+	estimateTimeStep();
+	
+	requiredTime = task.globalSettings.numberOfSnaps *
+	               task.globalSettings.stepsPerSnap * Clock::TimeStep();
+	if (task.globalSettings.numberOfSnaps <= 0) {
+		requiredTime = task.globalSettings.requiredTime;
+	}
+	assert_gt(requiredTime, 0);
+	
 }
 
 
@@ -50,40 +64,7 @@ Engine::~Engine() {
 }
 
 
-void Engine::
-run() {
-	for (const Statement& statement : task.statements) {
-		LOG_INFO("Start statement " << statement.id);
-		beforeStatement(statement);
-		runStatement();
-	}
-}
-
-
-void Engine::
-beforeStatement(const Statement& statement) {
-	Clock::setZero();
-	for (const auto body : bodies) {
-		body.second.solver->beforeStatement(statement);
-		for (Snapshotter* snapshotter : body.second.snapshotters) {
-			snapshotter->beforeStatement(statement);
-			snapshotter->snapshot(body.second.solver->getAbstractMesh(), 0);
-		}
-	}
-	
-	estimateTimeStep();
-	
-	requiredTime = statement.globalSettings.numberOfSnaps *
-	               statement.globalSettings.stepsPerSnap * Clock::TimeStep();
-	if (statement.globalSettings.numberOfSnaps <= 0) {
-		requiredTime = statement.globalSettings.requiredTime;
-	}
-	assert_gt(requiredTime, 0);
-}
-
-
-void Engine::
-runStatement() {
+void Engine::run() {
 	
 	int step = 0;
 	Utils::seedRand();
@@ -100,13 +81,6 @@ runStatement() {
 			for (Snapshotter* snapshotter : body.second.snapshotters) {
 				snapshotter->snapshot(body.second.solver->getAbstractMesh(), step);
 			}
-		}
-	}
-	
-	for (const auto body : bodies) {
-		body.second.solver->afterStatement();
-		for (Snapshotter* snapshotter : body.second.snapshotters) {
-			snapshotter->afterStatement();
 		}
 	}
 }

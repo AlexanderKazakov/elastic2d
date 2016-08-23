@@ -14,16 +14,16 @@ public:
 	typedef typename TMesh::PdeVector    PdeVector;
 	typedef typename TMesh::Model        Model;
 	typedef typename Model::PdeVariables PdeVariables;
-
+	
 	const int DIMENSIONALITY = TMesh::DIMENSIONALITY;
 	const std::string FILE_EXTENSION = std::string("txt");
-
+	
 protected:
-
-	virtual void beforeStatementImpl(const Statement& statement) override {
-		assert_eq(statement.detector.quantities.size(), 1); // more than one still unsupported
-		quantityToWrite = statement.detector.quantities[0];
-		detectionArea = statement.detector.area;
+	
+	SliceSnapshotter(const Task& task) {
+		assert_eq(task.detector.quantities.size(), 1); // more than one still unsupported
+		quantityToWrite = task.detector.quantities[0];
+		detectionArea = task.detector.area;
 		seismo.clear();
 		assert_eq(Mpi::Size() % 2, 1);
 	}
@@ -75,18 +75,18 @@ private:
 	typedef std::vector<real> Values;
 	Values seismo;
 	Values valuesInArea;
-
+	
 	std::shared_ptr<Area> detectionArea;
-
+	
 	PhysicalQuantities::T quantityToWrite;
-
+	
 	std::ofstream fileStream;
-
+	
 	void detect(const PdeVector pde, const Real3) {
 		real realValue = PdeVariables::QUANTITIES.at(quantityToWrite).Get(pde);
 		valuesInArea.push_back(realValue);
 	}
-
+	
 };
 
 

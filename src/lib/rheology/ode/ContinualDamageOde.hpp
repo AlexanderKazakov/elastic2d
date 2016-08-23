@@ -27,7 +27,7 @@ public:
 		variablesToSetTo.hi = value;
 	}
 
-	ContinualDamageOde(const Statement&) { }
+	ContinualDamageOde(const Task&) { }
 
 	template<typename TNodePtr>
 	void nextStep(TNodePtr node, const real timeStep) {

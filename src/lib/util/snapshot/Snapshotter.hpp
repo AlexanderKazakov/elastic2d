@@ -22,7 +22,6 @@ public:
 	const std::string MESH = std::string("mesh");
 	const std::string CORE = std::string("core");
 	const std::string SNAPSHOTS = std::string("snapshots");
-	const std::string STATEMENT = std::string("statement");
 	const std::string SNAP = std::string("snap");
 	const std::string SLASH = std::string("/");
 	const std::string DOT = std::string(".");
@@ -31,20 +30,10 @@ public:
 	const int NUMBER_OF_DIGITS_IN_CORE = 2;
 	///@}
 	
-	
-	void initialize(const Task& task) {
-		if (task.statements.size() > 1) {
-			writeStatementToFileName = true;
-		}
+	Snapshotter(const Task& task) {
+		stepsPerSnap = task.globalSettings.stepsPerSnap;
 	}
-	
-	
-	void beforeStatement(const Statement& statement) {
-		statementId = statement.id;
-		stepsPerSnap = statement.globalSettings.stepsPerSnap;
-		beforeStatementImpl(statement);
-	}
-	
+	virtual ~Snapshotter() { }
 	
 	void snapshot(const AbstractGrid* grid, const int step) {
 		if (step % stepsPerSnap == 0) {
@@ -53,12 +42,7 @@ public:
 	}
 	
 	
-	virtual void afterStatement() { }
-	virtual ~Snapshotter() { }
-	
-	
 protected:
-	virtual void beforeStatementImpl(const Statement&) { }
 	virtual void snapshotImpl(const AbstractGrid* grid, const int step) = 0;
 	
 	/** @return relative name for snapshot file */
@@ -70,17 +54,13 @@ protected:
 				SNAP + StringUtils::toString(step, NUMBER_OF_DIGITS_IN_SNAP) : "";
 		std::string core = CORE + 
 				StringUtils::toString(Mpi::Rank(), NUMBER_OF_DIGITS_IN_CORE);
-		std::string statement = writeStatementToFileName ?
-				STATEMENT + statementId : "";
 		
 		return SNAPSHOTS + SLASH + folder + SLASH +
-				mesh + core + statement + snap + DOT + fileExtension;
+				mesh + core + snap + DOT + fileExtension;
 	}
 	
 	
 private:
-	bool writeStatementToFileName = false;
-	std::string statementId = "";
 	int stepsPerSnap = 1;
 	
 };

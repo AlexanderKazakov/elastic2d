@@ -58,8 +58,7 @@ struct Mpi {
 
 	/**
 	 * If true, independently from number of working processes
-	 * calculation of every concrete statement is performed in sequence.
-	 * Useful for inverse problem calculation and MPI testing.
+	 * calculation is performed in sequence. Useful for MPI testing.
 	 */
 	static bool ForceSequence() {
 		return forceSequence;

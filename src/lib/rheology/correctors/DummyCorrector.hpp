@@ -11,7 +11,7 @@ class DummyCorrector {
 public:
 	static const bool NonTrivial = false;
 
-	DummyCorrector(const Statement&) { }
+	DummyCorrector(const Task&) { }
 
 	/**
 	 * This function should't be called at all, this is just stub

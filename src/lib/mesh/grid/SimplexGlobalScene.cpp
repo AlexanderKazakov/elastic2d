@@ -11,7 +11,7 @@ SimplexGlobalScene<Dimensionality, TriangulationT>::
 SimplexGlobalScene(const Task& task, Engine* engine_) :
 		engine(engine_),
 		triangulation(task),
-		movable(task.globalSettings.movable) { }
+		movable(task.simplexGrid.movable) { }
 
 
 template<int Dimensionality,
@@ -156,13 +156,10 @@ void SimplexGlobalScene<Dimensionality, TriangulationT>::
 createBorders(const Task& task) {
 	assert_true(engine);
 	
-	assert_eq(task.statements.size(), 1); // FIXME - remove statements at all
-	Statement statement = task.statements.front();
-	
 	for (const auto& body : engine->bodies) {
 		std::vector<Border> bodyBorderConditions;
-		for (const Statement::BorderCondition condition :
-				statement.borderConditions) {
+		for (const Task::BorderCondition condition :
+				task.borderConditions) {
 			AbstractGrid* grid = engine->getAbstractMesh(body.first);
 			Border border;
 			border.borderCorrector = BorderCorrectorFactory<Grid>::create(

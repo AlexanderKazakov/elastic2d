@@ -100,23 +100,20 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 	};
 
-	Statement statement;
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.sizes = {20, 10};
 	task.cubicGrid.lengths = {2, 1};
 
-	statement.globalSettings.CourantNumber = 1.8;
-	statement.materialConditions.byAreas.defaultMaterial = 
+	task.globalSettings.CourantNumber = 1.8;
+	task.materialConditions.byAreas.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-	statement.globalSettings.numberOfSnaps = 5;
+	task.globalSettings.numberOfSnaps = 5;
 
-	Statement::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 2.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
-	statement.initialCondition.quantities.push_back(pressure);
-
-	task.statements.push_back(statement);
+	task.initialCondition.quantities.push_back(pressure);
 
 	// calculate in sequence
 	task.globalSettings.forceSequence = true;

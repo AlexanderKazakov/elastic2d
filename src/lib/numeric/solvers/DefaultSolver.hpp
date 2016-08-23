@@ -8,7 +8,6 @@
 #include <lib/util/task/Task.hpp>
 #include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/mesh/DataBus.hpp>
-#include <lib/mesh/MeshMover.hpp>
 #include <lib/rheology/correctors/correctors.hpp>
 
 
@@ -32,7 +31,6 @@ public:
 	
 	typedef SpecialBorderConditions<Model, Grid, Material>  SpecialBorder;
 	typedef DataBus<Model, Grid, Material>                  DATA_BUS;
-	typedef MeshMover<Model, Grid, Material>                MESH_MOVER;
 	typedef GridCharacteristicMethod<Model, Grid, Material> GcmMethod;
 	
 	static const int GRID_DIMENSIONALITY = Mesh::GRID_DIMENSIONALITY;
@@ -40,9 +38,6 @@ public:
 	DefaultSolver(const Task& task,
 			AbstractGlobalScene* abstractGlobalScene, const GridId gridId_);
 	virtual ~DefaultSolver();
-	
-	virtual void beforeStatement(const Statement& statement) override;
-	virtual void afterStatement() override;
 	
 	
 	/**
@@ -97,34 +92,22 @@ template<class TMesh>
 DefaultSolver<TMesh>::
 DefaultSolver(const Task& task, AbstractGlobalScene* abstractGlobalScene,
 		const GridId gridId_) : Solver(task) {
+	
 	GlobalScene* globalScene = dynamic_cast<GlobalScene*>(abstractGlobalScene);
 	assert_true(globalScene);
+	
 	mesh = new Mesh(task, globalScene, gridId_);
-	specialBorder = new SpecialBorder();
+	specialBorder = new SpecialBorder(task);
+	corrector = new Corrector(task);
+	internalOde = new InternalOde(task);
+	
+	CourantNumber = task.globalSettings.CourantNumber;
 }
 
 template<class TMesh>
 DefaultSolver<TMesh>::~DefaultSolver() {
 	delete specialBorder;
 	delete mesh;
-}
-
-template<class TMesh>
-void DefaultSolver<TMesh>::
-beforeStatement(const Statement& statement) {
-	CourantNumber = statement.globalSettings.CourantNumber;
-
-	corrector = new Corrector(statement);
-	internalOde = new InternalOde(statement);
-
-	specialBorder->beforeStatement(statement);
-	mesh->beforeStatement(statement);
-}
-
-template<class TMesh>
-void DefaultSolver<TMesh>::
-afterStatement() {
-	mesh->afterStatement();
 	delete corrector;
 	delete internalOde;
 }
@@ -189,9 +172,7 @@ applyCorrectors() {
 
 template<class TMesh>
 void DefaultSolver<TMesh>::
-moveMesh(const real timeStep) {
-	MESH_MOVER::moveMesh(*mesh, timeStep);
-}
+moveMesh(const real) { }
 
 
 template<class TMesh>

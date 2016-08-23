@@ -22,9 +22,9 @@ public:
 	/**
 	 * Apply initial conditions to mesh according to given task
 	 */
-	static void apply(const Statement& statement, Mesh* mesh) {
+	static void apply(const Task& task, Mesh* mesh) {
 		
-		Conditions conditions = convertToLocalFormat(statement, mesh->id);
+		Conditions conditions = convertToLocalFormat(task, mesh->id);
 		
 		for (const auto& it : *mesh) {
 			linal::clear(mesh->_pde(it));
@@ -49,23 +49,23 @@ private:
 	
 	
 	static Conditions convertToLocalFormat(
-			const Statement& statement, const GridId gridId) {
+			const Task& task, const GridId gridId) {
 		
 		Conditions conditions;
 		
-		for (auto& v : statement.initialCondition.vectors) {
+		for (auto& v : task.initialCondition.vectors) {
 			assert_eq(PdeVector::M, v.list.size());
 			conditions.push_back({v.area, PdeVector(v.list)});
 		}
 		
 		
 		typename MC::Conditions mcConditions = 
-				MC::convertToLocalFormat(statement, gridId);
+				MC::convertToLocalFormat(task, gridId);
 		auto material = mcConditions.front().material;
 		auto gcmMatricesPtr = std::make_shared<GCM_MATRICES>();
 		TModel::constructGcmMatrices(gcmMatricesPtr, material);
 		
-		for (auto& wave : statement.initialCondition.waves) {
+		for (auto& wave : task.initialCondition.waves) {
 			assert_lt(wave.direction, TModel::DIMENSIONALITY);
 			
 			auto A = (*gcmMatricesPtr)(wave.direction);
@@ -80,7 +80,7 @@ private:
 		}
 		
 		
-		for (auto& q : statement.initialCondition.quantities) {
+		for (auto& q : task.initialCondition.quantities) {
 			PdeVector tmp;
 			linal::clear(tmp);
 			PdeVariables::QUANTITIES.at(q.physicalQuantity).Set(q.value, tmp);

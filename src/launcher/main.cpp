@@ -78,32 +78,31 @@ Task parseTaskContact2D() {
 		Task::SimplexGrid::Body({1, body2border, {} })
 	};
 	
-	Statement statement;
-	statement.materialConditions.type = Statement::MaterialCondition::Type::BY_BODIES;
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
 	const auto material1 = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 	const auto material2 = std::make_shared<IsotropicMaterial>(4 * rho, lambda, mu);
-	statement.materialConditions.byBodies.bodyMaterialMap = {
+	task.materialConditions.byBodies.bodyMaterialMap = {
 		{0, material1},
 		{1, material2}
 	};
 	
-	statement.globalSettings.CourantNumber = 1;
-	statement.globalSettings.numberOfSnaps = 50;
-	statement.globalSettings.stepsPerSnap = 3;
+	task.globalSettings.CourantNumber = 1;
+	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.stepsPerSnap = 3;
 	
-	Statement::InitialCondition::Wave wave;
+	Task::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::P_BACKWARD;
 	wave.direction = 0;
 	wave.quantity = PhysicalQuantities::T::PRESSURE;
 	wave.quantityValue = 1;
 	wave.area = std::make_shared<AxisAlignedBoxArea>(
 				Real3({5, -10, -10}), Real3({7, 10, 10}));
-	statement.initialCondition.waves.push_back(wave);
+	task.initialCondition.waves.push_back(wave);
 	
-	Statement::BorderCondition borderConditionAll;
+	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
 	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
@@ -111,7 +110,7 @@ Task parseTaskContact2D() {
 //		[] (real) { return 0; }
 	};
 	
-	Statement::BorderCondition borderConditionLeft;
+	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
 	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
@@ -120,7 +119,7 @@ Task parseTaskContact2D() {
 		[] (real t) { return (t < 1) ? -1 : 0; }
 	};
 	
-	Statement::BorderCondition borderConditionMid;
+	Task::BorderCondition borderConditionMid;
 	borderConditionMid.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-2.5, -2.5, -10}), Real3({0.5, 0.5, 10}));
 	borderConditionMid.type = BorderConditions::T::FIXED_VELOCITY;
@@ -129,19 +128,18 @@ Task parseTaskContact2D() {
 		[] (real) { return 0; }
 	};
 	
-	statement.borderConditions = {borderConditionAll,
+	task.borderConditions = {borderConditionAll,
 	                              /*borderConditionLeft,
 	                              borderConditionMid*/};
 	
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {
+	
+	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
 //		PhysicalQuantities::T::Sxx,
 //		PhysicalQuantities::T::Sxy,
 //		PhysicalQuantities::T::Syy
 	};
-
-	task.statements.push_back(statement);
+	
 	return task;
 }
 
@@ -161,26 +159,25 @@ Task parseTaskCgal3d() {
 //	task.simplexGrid.detectSharpEdges = true;
 //	task.simplexGrid.polyhedronFileName = "meshes/cube.off";
 	
-	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.materialConditions.byAreas.defaultMaterial =
+	task.materialConditions.byAreas.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 	
-	statement.globalSettings.CourantNumber = 1;
+	task.globalSettings.CourantNumber = 1;
 	
-	statement.globalSettings.numberOfSnaps = 50;
-	statement.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.stepsPerSnap = 1;
 	
-	Statement::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 0.5;
 	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
 //	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
-	statement.initialCondition.quantities.push_back(pressure);
+	task.initialCondition.quantities.push_back(pressure);
 
-	Statement::BorderCondition borderConditionAll;
+	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
 	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
@@ -189,7 +186,7 @@ Task parseTaskCgal3d() {
 		[] (real) { return 0; }
 	};
 	
-	Statement::BorderCondition borderConditionLeft;
+	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({0.01, 10, 10}));
 	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
@@ -199,7 +196,7 @@ Task parseTaskCgal3d() {
 		[] (real t) { return (t < 0.5) ? -1 : 0; }
 	};
 	
-	Statement::BorderCondition borderConditionRight;
+	Task::BorderCondition borderConditionRight;
 	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({0.99, -10, -10}), Real3({10, 10, 10}));
 	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
@@ -209,16 +206,16 @@ Task parseTaskCgal3d() {
 		[] (real) { return 0; }
 	};
 	
-	statement.borderConditions = {borderConditionAll,
+	task.borderConditions = {borderConditionAll,
 	                              /*borderConditionLeft,
 	                              borderConditionRight*/};
 
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {
+	
+	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
 	};
 
-	task.statements.push_back(statement);
+	
 	return task;
 }
 
@@ -253,33 +250,32 @@ Task parseTaskCgal2d() {
 //	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;
 	
-	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.materialConditions.byAreas.defaultMaterial =
+	task.materialConditions.byAreas.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 	
-	statement.globalSettings.CourantNumber = 1;
+	task.globalSettings.CourantNumber = 1;
 	
-	statement.globalSettings.numberOfSnaps = 50;
-	statement.globalSettings.stepsPerSnap = 3;
+	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.stepsPerSnap = 3;
 	
-	Statement::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 0.5;
 	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 6, 0}));
-	statement.initialCondition.quantities.push_back(pressure);
+	task.initialCondition.quantities.push_back(pressure);
 	
-//	Statement::InitialCondition::Wave wave;
+//	Task::InitialCondition::Wave wave;
 //	wave.waveType = Waves::T::P_FORWARD;
 //	wave.direction = 1;
 //	wave.quantity = PhysicalQuantities::T::PRESSURE;
 //	wave.quantityValue = 1;
 //	wave.area = std::make_shared<AxisAlignedBoxArea>(Real3({-10, 0, -10}), Real3({10, 1, 10}));
-//	statement.initialCondition.waves.push_back(wave);
+//	task.initialCondition.waves.push_back(wave);
 	
-	Statement::BorderCondition borderConditionAll;
+	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
 	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
@@ -287,7 +283,7 @@ Task parseTaskCgal2d() {
 		[] (real) { return 0; }
 	};
 	
-	Statement::BorderCondition borderConditionLeft;
+	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
 	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
@@ -296,7 +292,7 @@ Task parseTaskCgal2d() {
 		[] (real t) { return (t < 1) ? -1 : 0; }
 	};
 	
-	Statement::BorderCondition borderConditionMid;
+	Task::BorderCondition borderConditionMid;
 	borderConditionMid.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-2.5, -2.5, -10}), Real3({0.5, 0.5, 10}));
 	borderConditionMid.type = BorderConditions::T::FIXED_VELOCITY;
@@ -305,19 +301,19 @@ Task parseTaskCgal2d() {
 		[] (real) { return 0; }
 	};
 	
-	statement.borderConditions = {borderConditionAll,
+	task.borderConditions = {borderConditionAll,
 	                              borderConditionLeft,
 	                              borderConditionMid};
 	
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {
+	
+	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
 //		PhysicalQuantities::T::Sxx,
 //		PhysicalQuantities::T::Sxy,
 //		PhysicalQuantities::T::Syy
 	};
 
-	task.statements.push_back(statement);
+	
 	return task;
 }
 
@@ -332,31 +328,30 @@ Task parseTask2d() {
 	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}};
 	
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.lengths = {4, 2, 1};
-	task.cubicGrid.sizes = {100, 50, 1};
+	task.cubicGrid.lengths = {4, 2};
+	task.cubicGrid.sizes = {100, 50};
 
-	Statement statement;
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	statement.materialConditions.byAreas.defaultMaterial =
+	task.materialConditions.byAreas.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 
-	statement.globalSettings.CourantNumber = 0.9;
+	task.globalSettings.CourantNumber = 0.9;
 
-	statement.globalSettings.numberOfSnaps = 20;
-	statement.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.numberOfSnaps = 20;
+	task.globalSettings.stepsPerSnap = 1;
 
-	Statement::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, Real3({2, 1, 0}));
-	statement.initialCondition.quantities.push_back(pressure);
+	task.initialCondition.quantities.push_back(pressure);
 
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
+	
+	task.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
 
-	task.statements.push_back(statement);
+	
 	return task;
 }
 
@@ -368,32 +363,31 @@ Task parseTask3d() {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}};
+	task.bodies = {{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC}}};
 	
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.lengths = {4, 2, 1};
-	task.cubicGrid.sizes = {200, 100, 50};
+	task.cubicGrid.sizes = {100, 50, 20};
 
-	Statement statement;
 	real rho = 4;
-//	statement.materialConditions.byAreas.defaultMaterial =
+//	task.materialConditions.byAreas.defaultMaterial =
 //	        std::make_shared<IsotropicMaterial>(rho, 2, 1, 1, 1);
-	statement.materialConditions.byAreas.defaultMaterial = std::shared_ptr<OrthotropicMaterial>(
+	task.materialConditions.byAreas.defaultMaterial = std::shared_ptr<OrthotropicMaterial>(
 			new OrthotropicMaterial(rho, {360, 70, 70, 180, 70, 90, 10, 10, 10}, 1, 1));
 
-	statement.globalSettings.CourantNumber = 1;
+	task.globalSettings.CourantNumber = 1;
 
-	statement.globalSettings.numberOfSnaps = 100;
-	statement.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.numberOfSnaps = 100;
+	task.globalSettings.stepsPerSnap = 1;
 
-	Statement::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, Real3({2, 1, 0.5}));
-	statement.initialCondition.quantities.push_back(pressure);
+	task.initialCondition.quantities.push_back(pressure);
 
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {
+	
+	task.vtkSnapshotter.quantitiesToSnap = {
 			PhysicalQuantities::T::PRESSURE,
 			PhysicalQuantities::T::Sxx,
 			PhysicalQuantities::T::Sxy,
@@ -403,7 +397,7 @@ Task parseTask3d() {
 			PhysicalQuantities::T::Szz
 	};
 
-	task.statements.push_back(statement);
+	
 	return task;
 }
 
@@ -421,36 +415,34 @@ inline Task parseTaskCubicAcoustic() {
 	task.cubicGrid.lengths = {2, 1};//, 1};
 	task.cubicGrid.sizes = {100, 50};//, 50};
 
-	Statement statement;
-	statement.materialConditions.byAreas.defaultMaterial =
+	task.materialConditions.byAreas.defaultMaterial =
 		std::make_shared<IsotropicMaterial>(1, 1, 0);
 
-	statement.globalSettings.CourantNumber = 1;
+	task.globalSettings.CourantNumber = 1;
 
-	statement.globalSettings.numberOfSnaps = 80;
-	statement.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.numberOfSnaps = 80;
+	task.globalSettings.stepsPerSnap = 1;
 
-	Statement::InitialCondition::Quantity pressure;
+	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
-	statement.initialCondition.quantities.push_back(pressure);
+	task.initialCondition.quantities.push_back(pressure);
 
 	
-	Statement::CubicGridBorderCondition borderCondition;
+	Task::CubicGridBorderCondition borderCondition;
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
 			(Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
 	borderCondition.values = {
 			{PhysicalQuantities::T::PRESSURE, [] (real) {return 0; }},
 	};
-	statement.cubicGridBorderConditions.push_back(borderCondition);
+	task.cubicGridBorderConditions.push_back(borderCondition);
 	
 	
-	statement.vtkSnapshotter.enableSnapshotting = true;
-	statement.vtkSnapshotter.quantitiesToSnap = {
+	
+	task.vtkSnapshotter.quantitiesToSnap = {
 			PhysicalQuantities::T::PRESSURE,
 	};
-
-	task.statements.push_back(statement);
+	
 	return task;
 }

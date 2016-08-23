@@ -80,14 +80,12 @@ public:
 	};
 	
 	DefaultMesh(const Task& task, GlobalScene* gS, const GridId gridId_) :
-			Grid(task, gS, gridId_) { }
-	virtual ~DefaultMesh() { }
-	
-	void beforeStatement(const Statement& statement) {
+			Grid(task, gS, gridId_) {
 		allocate();
-		MaterialsCondition<Model, Grid, Material, DefaultMesh>::apply(statement, this);
-		InitialCondition<Model, Grid, Material, DefaultMesh>::apply(statement, this);
+		MaterialsCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
+		InitialCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
 	}
+	virtual ~DefaultMesh() { }
 	
 	void allocate(); // FIXME - return back to private
 	
@@ -185,10 +183,6 @@ private:
 	friend class DataBus<Model, Grid, Material>;
 	friend class GridCharacteristicMethod<Model, Grid, Material>;
 	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
-	
-	
-	void recalculateMaximalLambda() { /* TODO for non-linear materials */ }
-	void afterStatement() { }
 	
 };
 

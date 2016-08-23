@@ -98,7 +98,7 @@ public:
 	typedef typename Base::NodeBorder           NodeBorder;
 	typedef typename Base::RealD                RealD;
 	
-	ConcreteBorderCorrector(const Statement::BorderCondition& bc) :
+	ConcreteBorderCorrector(const Task::BorderCondition& bc) :
 			borderCondition(bc) { }
 	
 	virtual void apply(AbstractGrid* grid, 
@@ -163,7 +163,7 @@ public:
 	
 	
 	static std::shared_ptr<AbstractBorderCorrector<TGrid>> create(
-			const Statement::BorderCondition& condition,
+			const Task::BorderCondition& condition,
 			const Models::T model, const Materials::T material) {
 		
 		if (material != Materials::T::ISOTROPIC) {

@@ -13,7 +13,7 @@ class IdealPlasticFlowCorrector {
 public:
 	static const bool NonTrivial = true;
 
-	IdealPlasticFlowCorrector(const Statement&) { }
+	IdealPlasticFlowCorrector(const Task&) { }
 
 	template<typename TNodePtr>
 	void apply(TNodePtr node) const {

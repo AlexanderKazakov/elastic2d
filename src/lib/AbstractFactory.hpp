@@ -29,7 +29,8 @@ namespace gcm {
 struct VirtualProgramAbstactFactory {
 	virtual Solver* createSolver(const Task&,
 			const size_t id, AbstractGlobalScene*) = 0;
-	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) = 0;
+	virtual Snapshotter* createSnapshotter(const Task& task,
+			Snapshotters::T snapshotterId) = 0;
 	
 };
 
@@ -45,15 +46,16 @@ struct ProgramAbstactFactory : public VirtualProgramAbstactFactory {
 				task, globalScene, id);
 	}
 	
-	virtual Snapshotter* createSnapshotter(Snapshotters::T snapshotterId) override {
+	virtual Snapshotter* createSnapshotter(const Task& task,
+			Snapshotters::T snapshotterId) override {
 		switch (snapshotterId) {
 			case Snapshotters::T::VTK:
-				return new VtkSnapshotter<TMesh<TModel, TGrid, TMaterial>>();
+				return new VtkSnapshotter<TMesh<TModel, TGrid, TMaterial>>(task);
 			// TODO - make good universal detector and slice snapshotters
 //			case Snapshotters::T::DETECTOR:
-//				return new Detector<TMesh<TModel, TGrid, TMaterial>>();
+//				return new Detector<TMesh<TModel, TGrid, TMaterial>>(task);
 //			case Snapshotters::T::SLICESNAP:
-//				return new SliceSnapshotter<TMesh<TModel, TGrid, TMaterial>>();
+//				return new SliceSnapshotter<TMesh<TModel, TGrid, TMaterial>>(task);
 			default:
 				THROW_UNSUPPORTED("Unknown type of snapshotter");
 		}

@@ -18,7 +18,7 @@ public:
 
 	static const std::map<PhysicalQuantities::T, GetSetter<Variables> > QUANTITIES;
 
-	DummyOde(const Statement&) { }
+	DummyOde(const Task&) { }
 
 	template<typename TNodePtr>
 	void nextStep(TNodePtr, const real) { }

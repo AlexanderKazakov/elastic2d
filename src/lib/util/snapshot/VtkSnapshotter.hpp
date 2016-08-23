@@ -227,6 +227,7 @@ static void writeNodesIndices(
 
 template<typename TMesh>
 class VtkSnapshotter : public Snapshotter {
+public:
 
 typedef typename TMesh::Grid           Grid;
 typedef VtkTypes<Grid>                 VTK_TYPES;
@@ -235,16 +236,13 @@ typedef typename VTK_TYPES::WriterType VtkWriter;
 
 const std::string FOLDER_NAME = std::string("vtk");
 
-bool enableSnapshotting = false;
 std::vector<PhysicalQuantities::T> quantitiesToSnap;
 
-virtual void beforeStatementImpl(const Statement& statement) override {
-	enableSnapshotting = statement.vtkSnapshotter.enableSnapshotting;
-	quantitiesToSnap = statement.vtkSnapshotter.quantitiesToSnap;
+VtkSnapshotter(const Task& task) : Snapshotter(task) {
+	quantitiesToSnap = task.vtkSnapshotter.quantitiesToSnap;
 }
 
 virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
-	if (!enableSnapshotting) { return; }
 	
 	mesh = dynamic_cast<const TMesh*>(_mesh);
 	assert_true(mesh);

@@ -22,9 +22,9 @@ public:
 	 * Set materials, gcm matrices and maximal eigenvalue to mesh
 	 * according to given task
 	 */
-	static void apply(const Statement& statement, Mesh* mesh) {
+	static void apply(const Task& task, Mesh* mesh) {
 		
-		Conditions conditions = convertToLocalFormat(statement, mesh->id);
+		Conditions conditions = convertToLocalFormat(task, mesh->id);
 		
 		for (const auto& it : *mesh) {
 			for (const auto& condition : conditions) {
@@ -41,7 +41,7 @@ public:
 	
 	/// Local format of task conditions
 	struct Condition {
-		Condition(Statement::MaterialCondition::Material material_,
+		Condition(Task::MaterialCondition::Material material_,
 				std::shared_ptr<Area> area_) {
 			area = area_;
 			material = std::dynamic_pointer_cast<TMaterial>(material_);
@@ -60,26 +60,26 @@ public:
 	
 	
 	static Conditions convertToLocalFormat(
-			const Statement& statement, const GridId id) {
+			const Task& task, const GridId id) {
 		
 		Conditions conditions;
 		
-		switch (statement.materialConditions.type) {
-			case Statement::MaterialCondition::Type::BY_AREAS:
+		switch (task.materialConditions.type) {
+			case Task::MaterialCondition::Type::BY_AREAS:
 			{
 				conditions.push_back(Condition(
-						statement.materialConditions.byAreas.defaultMaterial,
+						task.materialConditions.byAreas.defaultMaterial,
 						std::make_shared<InfiniteArea>()));
 				
-				for (const auto& m : statement.materialConditions.byAreas.materials) {
+				for (const auto& m : task.materialConditions.byAreas.materials) {
 					conditions.push_back(Condition(m.material, m.area));
 				}
 				
 				break;
 			}
-			case Statement::MaterialCondition::Type::BY_BODIES:
+			case Task::MaterialCondition::Type::BY_BODIES:
 			{
-				const auto material = statement.
+				const auto material = task.
 						materialConditions.byBodies.bodyMaterialMap.at(id);
 				
 				conditions.push_back(Condition(material,

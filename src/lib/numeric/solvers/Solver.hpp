@@ -15,10 +15,6 @@ public:
 	Solver(const Task&) { }
 	virtual ~Solver() { }
 	
-	virtual void beforeStatement(const Statement& statement) = 0;
-	virtual void afterStatement() = 0;
-	
-	
 	/**
 	 * All necessary solver actions before a stage would be performed
 	 */

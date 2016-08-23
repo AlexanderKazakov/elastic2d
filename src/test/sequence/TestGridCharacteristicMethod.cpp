@@ -14,21 +14,20 @@ using namespace gcm;
 
 TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 	Task task;
-	Statement statement;
-	statement.materialConditions.byAreas.defaultMaterial =
+	
+	task.materialConditions.byAreas.defaultMaterial =
 			std::make_shared<IsotropicMaterial>(2, 2, 1);
 	
 	task.cubicGrid.sizes = {3, 3};
 	task.cubicGrid.borderSize = 1;
 	task.cubicGrid.lengths = {2, 2}; // h_x = h_y = 1.0
 	
-	Statement::InitialCondition::Quantity quantity;
+	Task::InitialCondition::Quantity quantity;
 	quantity.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	quantity.value = -1.0;
 	quantity.area = std::make_shared<SphereArea>(0.1, Real3({1, 1, 0}));
-	statement.initialCondition.quantities.push_back(quantity);
+	task.initialCondition.quantities.push_back(quantity);
 	
-	task.statements.push_back(statement);
 	
 	for (int stage = 0; stage <= 1; stage++) {
 		
@@ -36,9 +35,7 @@ TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 		typedef typename Grid::GlobalScene GS;
 		std::shared_ptr<GS> gs(new GS(task));
 		
-		DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(
-				task, gs.get(), 0);
-		mesh.beforeStatement(statement);
+		DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, gs.get(), 0);
 		for (int x = 0; x < task.cubicGrid.sizes.at(0); x++) {
 			for (int y = 0; y < task.cubicGrid.sizes.at(1); y++) {
 				// check that values is set properly
@@ -79,15 +76,15 @@ TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
-		Statement statement;
+		
 		task.cubicGrid.borderSize = accuracyOrder;
-		statement.globalSettings.CourantNumber = 1;
-		statement.materialConditions.byAreas.defaultMaterial = 
+		task.globalSettings.CourantNumber = 1;
+		task.materialConditions.byAreas.defaultMaterial = 
 				std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 		task.cubicGrid.sizes = {10, 10};
 		task.cubicGrid.lengths = {3, 2};
 	
-		Statement::InitialCondition::Wave wave;
+		Task::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::PRESSURE;
@@ -95,9 +92,7 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 		Real3 min({ -1, 0.3, -1});
 		Real3 max({  4, 0.7, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-		statement.initialCondition.waves.push_back(wave);
-		
-		task.statements.push_back(statement);
+		task.initialCondition.waves.push_back(wave);
 		
 		typedef CubicGrid<2> Grid;
 		typedef typename Grid::GlobalScene GS;
@@ -106,7 +101,6 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 		DefaultSolver<DefaultMesh<
 				ElasticModel<2>, CubicGrid<2>, IsotropicMaterial>>
 						solver(task, gs.get(), 0);
-		solver.beforeStatement(statement);
 		
 		const auto zero = ElasticModel<2>::PdeVector::Zeros();
 		auto pWave = solver.getMesh()->pde({0, 2});

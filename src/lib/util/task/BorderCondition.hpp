@@ -38,7 +38,7 @@ public:
 	typedef std::function<BorderVector(real)>     BorderVectorTimeDependency;
 	
 	
-	BorderCondition(const Statement::BorderCondition& task) :
+	BorderCondition(const Task::BorderCondition& task) :
 			b_(createBorderVectorTimeDependency(task.values)) { }
 	
 	/**
@@ -56,11 +56,11 @@ private:
 	
 	
 	BorderVectorTimeDependency createBorderVectorTimeDependency
-	(const std::vector<Statement::TimeDependency> values) const {
+	(const std::vector<Task::TimeDependency> values) const {
 	/// translate border condition from task format to own format
 		
 		assert_eq(values.size(), OUTER_NUMBER);
-		Statement::TimeDependency v[OUTER_NUMBER];
+		Task::TimeDependency v[OUTER_NUMBER];
 		for (int i = 0; i < OUTER_NUMBER; i++) {
 			v[i] = values[(size_t)i];
 		}

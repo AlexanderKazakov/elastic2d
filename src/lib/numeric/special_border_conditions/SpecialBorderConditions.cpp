@@ -7,21 +7,6 @@ using namespace gcm;
 
 template<typename TModel, typename TMaterial, int Dimensionality>
 void SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial>::
-beforeStatement(const Statement& statement) {
-	for (const auto& bc : statement.cubicGridBorderConditions) {
-		conditions.push_back(Condition(bc.area, bc.values));
-	}
-	for (const auto& fr : statement.fractures) {
-		innerSurfaces.push_back(
-				InnerSurface(fr.direction, fr.index,    -1, fr.area, fr.values));
-		innerSurfaces.push_back(
-				InnerSurface(fr.direction, fr.index + 1, 1, fr.area, fr.values));
-	}
-}
-
-
-template<typename TModel, typename TMaterial, int Dimensionality>
-void SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial>::
 applyBorderBeforeStage(Mesh* mesh, const real /*timeStep*/, const int stage) const {
 	/// handling borders
 	if (stage == 0) {
@@ -80,65 +65,12 @@ handleBorderPoint(Mesh* mesh, const Iterator& borderIter, const Map& values,
 }
 
 
-template<typename TModel, typename TMaterial, int Dimensionality>
-void SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial>::
-applyBorderAfterStage(Mesh* /*mesh*/, const real /*timeStep*/, const int /*stage*/) const {
-//	/// handling inner surfaces
-//	for (const auto& innerSurface : innerSurfaces) {
-//		if (innerSurface.direction == stage) {
-//			HelpMesh* helpMesh = allocateHelpMesh(mesh, stage);
-//			auto sliceIter = mesh->slice(stage, innerSurface.index);
-//			while (sliceIter != sliceIter.end()) {
-//				if (innerSurface.condition.area->contains(mesh->coords(sliceIter))) {
-//					handleInnerSurfacePoint(mesh, helpMesh, timeStep, stage,
-//							sliceIter, innerSurface.condition.values, innerSurface.normal);
-//				}
-//				++sliceIter;
-//			}
-//			delete helpMesh;
-//		}
-//	}
-}
-
-
-//template<typename TModel, typename TMaterial, int Dimensionality>
-//void SpecialBorderConditions<TModel, CubicGrid<Dimensionality>, TMaterial>::
-//handleInnerSurfacePoint(Mesh* mesh, HelpMesh* helpMesh, const real timeStep,
-//		const int direction, const Iterator& iter, const Map& values, 
-//		const int surfaceNormal) {
-//	// copy values to helpMesh
-//	for (int i = 0; i < 2 * mesh->borderSize; i++) {
-//		Iterator tmpIter = iter;
-//		tmpIter(direction) += i * surfaceNormal;
-//		helpMesh->_pde({i}) = mesh->pde(tmpIter);
-//		helpMesh->_matrices({i}) = mesh->_matrices(tmpIter);
-//	}
-	
-//	// apply border conditions before stage on the helpMesh
-//	HelpSpecBorderCond::handleBorderPoint(helpMesh, {0}, values, 0, false);
-
-//	// calculate stage on the helpMesh
-//	GridCharacteristicMethod<TModel, CubicGrid<1>, TMaterial>().stage(
-//			0, timeStep * surfaceNormal, *helpMesh);
-
-//	// copy calculated values to real mesh
-//	for (int i = 0; i < mesh->borderSize; i++) {
-//		Iterator tmpIter = iter;
-//		tmpIter(direction) += i * surfaceNormal;
-//		mesh->_pdeNew(tmpIter) = helpMesh->pdeNew({i});
-//	}
-//}
-
-
-
 template class SpecialBorderConditions<ElasticModel<1>, CubicGrid<1>, IsotropicMaterial>;
 template class SpecialBorderConditions<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial>;
 template class SpecialBorderConditions<ElasticModel<3>, CubicGrid<3>, IsotropicMaterial>;
-//template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, IsotropicMaterial>;
 
 template class SpecialBorderConditions<ElasticModel<2>, CubicGrid<2>, OrthotropicMaterial>;
 template class SpecialBorderConditions<ElasticModel<3>, CubicGrid<3>, OrthotropicMaterial>;
-//template class SpecialBorderConditions<SuperDuperModel, CubicGrid<3>, OrthotropicMaterial>;
 
 template class SpecialBorderConditions<AcousticModel<1>, CubicGrid<1>, IsotropicMaterial>;
 template class SpecialBorderConditions<AcousticModel<2>, CubicGrid<2>, IsotropicMaterial>;

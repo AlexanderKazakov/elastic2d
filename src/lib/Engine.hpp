@@ -49,21 +49,9 @@ public:
 	
 	
 	/**
-	 * Perform calculation of the whole task (it can be several statements)
+	 * Perform all calculations
 	 */
 	void run();
-	
-	
-	/**
-	 * Prepare to run statement
-	 */
-	void beforeStatement(const Statement& statement);
-	
-	
-	/**
-	 * Perform calculation of statement after preparation
-	 */
-	void runStatement();
 	
 	
 	/**
@@ -93,7 +81,7 @@ private:
 	/// Bodies sorted by unique id
 	std::map<GridId, Body> bodies;
 	
-	Task task;
+	
 	real requiredTime = 0;
 	
 	

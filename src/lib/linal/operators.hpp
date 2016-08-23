@@ -266,26 +266,6 @@ operator/(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m,
 
 
 /**
- * Let SLE is A * x = b. So, formally x = b / A.
- * @return solveLinearSystem(A, b)
- */
-template<int TM,
-         typename TMatrixElement,
-         typename TSymmetry,
-         template<int, typename> class TMatrixContainer,
-         typename TVectorElement,
-         template<int, typename> class TVectorContainer>
-MatrixBase<TM, 1,
-           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
-           NonSymmetric, TVectorContainer>
-operator/(const MatrixBase<TM,  1, TVectorElement, NonSymmetric, TVectorContainer>& b,
-          const MatrixBase<TM, TM, TMatrixElement, TSymmetry,    TMatrixContainer>& A) {
-	
-	return solveLinearSystem(A, b);
-}
-
-
-/**
  * Add m2 to m1 modifying m1. 
  */
 template<int TM, int TN,

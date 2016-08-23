@@ -15,29 +15,90 @@
 namespace gcm {
 
 /**
- * @defgroup task Task and statements
- * Properties, conditions, tasks in native format of the program.
- * Used in initialization of the program.
- * @{
+ * Struct to initialize the program.
+ * Properties, conditions, tasks in native format.
+ * @note However almost classes initialized by sending to them (const Task& task),
+ * they must use for initialization only its own components of Task,
+ * because other components may not be initialized or valid.
  */
-
-
-/**
- * Set of all conditions for one statement.
- * Task can contain several statements.
- */
-struct Statement {
+struct Task {
 	typedef std::function<real(real)> TimeDependency;
 	
-	std::string id; ///< name of statement
+	struct Body {
+		Materials::T materialId; ///< body material
+		Models::T modelId;       ///< body rheology
+	};
+	/// Bodies sorted by unique id
+	std::map<size_t, Body> bodies;
 	
 	
 	struct GlobalSettings {
-		real CourantNumber = 0; ///< number in Courant–Friedrichs–Lewy condition
+		/// Space dimensionality
+		int dimensionality;
+		/// Type of grid used in calculations
+		Grids::T gridId;
+		/// If true, independently from number of working processes
+		/// calculation is performed in sequence. Useful for MPI testing.
+		bool forceSequence = false;
+		/// List of snapshotters to use
+		std::vector<Snapshotters::T> snapshottersId;
+		/// Number in Courant–Friedrichs–Lewy condition
+		real CourantNumber = 0;
+		/// Number of snapshots to make in calculations
 		int numberOfSnaps = 0;
+		/// Total number of time steps == numberOfSnaps * stepsPerSnap
 		int stepsPerSnap = 1;
-		real requiredTime = 0;  ///< optional, required time if (numberOfSnaps <= 0)
+		/// Optional, required time if (numberOfSnaps <= 0)
+		real requiredTime = 0;
 	} globalSettings;
+	
+	
+	struct CubicGrid {
+		std::vector<real> lengths;  ///< lengthes of cube in each direction
+		std::vector<real> h;        ///< spatial steps in each direction
+		std::vector<int>  sizes;    ///< number of nodes along each direction
+		std::vector<real> startR;   ///< global coordinates of the first real node
+		int borderSize = 0;         ///< number of virtual border nodes for one border point
+		bool forceSequence = false; ///< behave such as Mpi::Size() == 1
+	} cubicGrid;
+	
+	
+	struct SimplexGrid {
+		
+		enum class Mesher {
+			CGAL_MESHER,
+			INM_MESHER,
+		} mesher = Mesher::CGAL_MESHER;
+		
+		/// effective spatial step for mesher
+		real spatialStep = 0;
+		
+		/// option for Cgal3DMesher only - use true for figures with sharp edges
+		bool detectSharpEdges = false; 
+		
+		/// file with some initial data for mesher
+		std::string fileName;
+		
+		/// denominator to scale the points after meshing
+		real scale = 1;
+		
+		/// On/off deformations and bodies motion
+		bool movable = false;
+		
+		
+		/// for Cgal2DMesher only @{
+		struct Body {
+			typedef std::array<real, 2> Point;
+			typedef std::vector<Point> Border;
+			
+			size_t id;                  ///< body indicator > 0 @see Task::Body
+			Border outer;               ///< outer border of the body
+			std::vector<Border> inner;  ///< borders of the inner cavities
+		};
+		std::vector<Body> bodies; ///< list of bodies contained in the grid
+		/// @}
+		
+	} simplexGrid;
 	
 	
 	struct MaterialCondition {
@@ -110,114 +171,10 @@ struct Statement {
 	struct BorderCondition {
 		std::shared_ptr<Area> area;
 		BorderConditions::T type;
-		std::vector<TimeDependency> values; ///< size must be equal to 
-		///< number of outer characteristics
+		///< size must be equal to number of outer characteristics
+		std::vector<TimeDependency> values;
 	};
 	std::vector<BorderCondition> borderConditions;
-	
-	
-	struct Fracture {
-		int direction; ///< crossing axis
-		int index; ///< index at crossing axis
-		std::shared_ptr<Area> area;
-		std::map<PhysicalQuantities::T, TimeDependency> values;
-	};
-	std::vector<Fracture> fractures;
-	
-	
-	struct VtkSnapshotter {
-		/// in order to not dump big vtk snaps every statement
-		/// but just sometimes for eye-checking
-		bool enableSnapshotting = false;
-		/// list of physical quantities to write to vtk
-		std::vector<PhysicalQuantities::T> quantitiesToSnap;
-	} vtkSnapshotter;
-	
-	
-	struct Detector {
-		std::vector<PhysicalQuantities::T> quantities;
-		std::shared_ptr<Area> area;
-	} detector;
-};
-
-
-/**
- * Struct to initialize the program.
- * 
- * Note: However almost classes initialized by sending to them (const Task& task),
- * they must use for initialization only its own components of Task,
- * because other components may not be initialized.
- * For example, some special snapshotter for CubicGrid must not use task.cubicGrid,
- * because from cubicGrid.lenghts, cubicGrid.h, cubicGrid.sizes only two 
- * can be initialized at time.
- */
-struct Task {
-	
-	struct Body {
-		Materials::T materialId; ///< body material
-		Models::T modelId;       ///< body rheology
-	};
-	/// Bodies sorted by unique id
-	std::map<size_t, Body> bodies;
-	
-	
-	struct GlobalSettings {
-		/// Space dimensionality
-		int dimensionality;
-		/// Type of grid used in calculations
-		Grids::T gridId;
-		/// If true, independently from number of working processes
-		/// calculation of a concrete statement is performed in sequence.
-		/// Useful for inverse problem calculation and MPI testing.
-		bool forceSequence = false;
-		/// On/off deformations and bodies motion
-		bool movable = false;
-		/// List of snapshotters to use
-		std::vector<Snapshotters::T> snapshottersId;		
-	} globalSettings;
-	
-	
-	struct CubicGrid {
-		std::vector<real> lengths;  ///< lengthes of cube in each direction
-		std::vector<real> h;        ///< spatial steps in each direction
-		std::vector<int>  sizes;    ///< number of nodes along each direction
-		std::vector<real> startR;   ///< global coordinates of the first real node
-		int borderSize = 0;         ///< number of virtual border nodes for one border point
-		bool forceSequence = false; ///< behave such as Mpi::Size() == 1
-	} cubicGrid;
-	
-	
-	struct SimplexGrid {
-		
-		enum class Mesher {
-			CGAL_MESHER,
-			INM_MESHER,
-		} mesher = Mesher::CGAL_MESHER;
-		
-		/// effective spatial step for mesher
-		real spatialStep = 0;
-		
-		/// option for Cgal3DMesher only - use true for figures with sharp edges
-		bool detectSharpEdges = false; 
-		
-		/// file with some initial data for mesher
-		std::string fileName;
-		
-		/// denominator to scale the points after meshing
-		real scale = 1;
-		
-		/// for Cgal2DMesher only
-		struct Body {
-			typedef std::array<real, 2> Point;
-			typedef std::vector<Point> Border;
-			
-			size_t id;                  ///< body indicator > 0 @see Task::Body
-			Border outer;               ///< outer border of the body
-			std::vector<Border> inner;  ///< borders of the inner cavities
-		};
-		std::vector<Body> bodies; ///< list of bodies contained in the grid
-	
-	} simplexGrid;
 	
 	
 	struct ContactCondition {
@@ -227,12 +184,19 @@ struct Task {
 	} contactCondition;
 	
 	
-	/// list of statements to calculate on the same geometry
-	std::vector<Statement> statements;
+	struct VtkSnapshotter {
+		/// list of physical quantities to write to vtk
+		std::vector<PhysicalQuantities::T> quantitiesToSnap;
+	} vtkSnapshotter;
+	
+	struct Detector {
+		std::vector<PhysicalQuantities::T> quantities;
+		std::shared_ptr<Area> area;
+	} detector;
 	
 };
 
-/** @} */
+
 }
 
 #endif // LIBGCM_TASK_HPP

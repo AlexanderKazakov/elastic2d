@@ -33,17 +33,17 @@ TEST(Engine, runStatement) {
 		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 	};
 	
-	Statement statement;
+	
 	task.cubicGrid.borderSize = 5;
-	statement.globalSettings.CourantNumber = 4.5;
-	statement.materialConditions.byAreas.defaultMaterial = 
+	task.globalSettings.CourantNumber = 4.5;
+	task.materialConditions.byAreas.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
 	task.cubicGrid.sizes = {20, 40};
 	task.cubicGrid.lengths = {7, 3};
-	statement.globalSettings.numberOfSnaps = 9;
-	statement.globalSettings.requiredTime = 100.0;
+	task.globalSettings.numberOfSnaps = 9;
+	task.globalSettings.requiredTime = 100.0;
 	
-	Statement::InitialCondition::Wave wave;
+	Task::InitialCondition::Wave wave;
 	wave.waveType = Waves::T::S1_FORWARD;
 	wave.direction = 1; // along y
 	wave.quantity = PhysicalQuantities::T::Vx;
@@ -51,16 +51,13 @@ TEST(Engine, runStatement) {
 	Real3 min({ -1, 0.1125, -1});
 	Real3 max({ 8, 0.6375, 1});
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-	statement.initialCondition.waves.push_back(wave);
-	
-	task.statements.push_back(statement);
+	task.initialCondition.waves.push_back(wave);
 	
 	Engine engine(task);
-	engine.beforeStatement(statement);
 	
 	// s-wave
 	auto expected = Wrapper::getMesh(engine)->pde({task.cubicGrid.sizes.at(0) / 2, 3});
-	engine.runStatement();
+	engine.run();
 	auto actual = Wrapper::getMesh(engine)->pde({task.cubicGrid.sizes.at(0) / 2, 22});
 	
 	ASSERT_TRUE(linal::approximatelyEqual(expected, actual)) << expected << actual;
@@ -79,28 +76,28 @@ TEST(Engine, TwoLayersDifferentRho) {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 		};
 		
-		Statement statement;
+		
 		task.cubicGrid.borderSize = 3;
-		statement.globalSettings.CourantNumber = 1.5;
+		task.globalSettings.CourantNumber = 1.5;
 		
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
 		real rho2rho0 = rho2rho0Initial * pow(2, i), lambda2lambda0 = 1, mu2mu0 = 1;
 		real rho = rho2rho0 * rho0, lambda = lambda2lambda0 * lambda0, mu = mu2mu0 * mu0;
 		
-		statement.materialConditions.byAreas.defaultMaterial = 
+		task.materialConditions.byAreas.defaultMaterial = 
 				std::make_shared<IsotropicMaterial>(rho0, lambda0, mu0);
-		Statement::MaterialCondition::ByAreas::Inhomogenity newMaterial;
+		Task::MaterialCondition::ByAreas::Inhomogenity newMaterial;
 		newMaterial.area = std::make_shared<AxisAlignedBoxArea>(
 				Real3({-10, 0.5 - 1e-5,-10}), Real3({10, 10, 10}));
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
-		statement.materialConditions.byAreas.materials.push_back(newMaterial);
+		task.materialConditions.byAreas.materials.push_back(newMaterial);
 		
 		task.cubicGrid.sizes = {50, 100};
 		task.cubicGrid.lengths = {2, 1};
-		statement.globalSettings.numberOfSnaps = 0;
-		statement.globalSettings.requiredTime = 0.24;
+		task.globalSettings.numberOfSnaps = 0;
+		task.globalSettings.requiredTime = 0.24;
 		
-		Statement::InitialCondition::Wave wave;
+		Task::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::Vy;
@@ -108,18 +105,16 @@ TEST(Engine, TwoLayersDifferentRho) {
 		Real3 min({ -1, 0.015, -1});
 		Real3 max({ 4, 0.455, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-		statement.initialCondition.waves.push_back(wave);
+		task.initialCondition.waves.push_back(wave);
 		
-		task.statements.push_back(statement);
 		
 		Engine engine(task);
-		engine.beforeStatement(statement);
 		
 		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
 		auto init = Wrapper::getMesh(engine)->pdeVars(
 				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
 		
-		engine.runStatement();
+		engine.run();
 		
 //		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
 		auto reflect = Wrapper::getMesh(engine)->pdeVars(
@@ -164,29 +159,29 @@ TEST(Engine, TwoLayersDifferentE) {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
 		};
 		
-		Statement statement;
+		
 		task.cubicGrid.borderSize = 3;
-		statement.globalSettings.CourantNumber = 1.5;
+		task.globalSettings.CourantNumber = 1.5;
 		
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
 		real rho2rho0 = 1, lambda2lambda0 = E2E0Initial * pow(2, i), mu2mu0 = E2E0Initial * pow(2, i);
 		real rho = rho2rho0 * rho0, lambda = lambda2lambda0 * lambda0, mu = mu2mu0 * mu0;
 		
-		statement.materialConditions.byAreas.defaultMaterial = 
+		task.materialConditions.byAreas.defaultMaterial = 
 				std::make_shared<IsotropicMaterial>(rho0, lambda0, mu0);
-		Statement::MaterialCondition::ByAreas::Inhomogenity newMaterial;
+		Task::MaterialCondition::ByAreas::Inhomogenity newMaterial;
 		newMaterial.area = std::make_shared<AxisAlignedBoxArea>(
 				Real3({-10, 0.5 - 1e-5, -10}), Real3({10, 10, 10}));
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
-		statement.materialConditions.byAreas.materials.push_back(newMaterial);
+		task.materialConditions.byAreas.materials.push_back(newMaterial);
 		
 		task.cubicGrid.sizes = {50, 100};
 		task.cubicGrid.lengths = {2, 1};
 		
-		statement.globalSettings.numberOfSnaps = 0;
-		statement.globalSettings.requiredTime = 0.24;
+		task.globalSettings.numberOfSnaps = 0;
+		task.globalSettings.requiredTime = 0.24;
 		
-		Statement::InitialCondition::Wave wave;
+		Task::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
 		wave.direction = 1; // along y
 		wave.quantity = PhysicalQuantities::T::Vy;
@@ -194,19 +189,15 @@ TEST(Engine, TwoLayersDifferentE) {
 		Real3 min({ -1, 0.015, -1});
 		Real3 max({ 4, 0.455, 1});
 		wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-		statement.initialCondition.waves.push_back(wave);
+		task.initialCondition.waves.push_back(wave);
 		
-		task.statements.push_back(statement);
 		
 		Engine engine(task);
-		engine.beforeStatement(statement);
-
 		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
 		auto init = Wrapper::getMesh(engine)->pdeVars(
 				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
-
-		engine.runStatement();
-
+		engine.run();
+		
 //		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
 		auto reflect = Wrapper::getMesh(engine)->pdeVars(
 				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
