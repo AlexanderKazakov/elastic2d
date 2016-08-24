@@ -25,7 +25,8 @@ struct OrthotropicMaterial : public AbstractMaterial {
 	
 	real yieldStrength = 0;            ///< plasticity parameters
 	real continualDamageParameter = 0; ///< parameter in continual damage equation
-
+	real tau0 = 0;                     ///< viscosity parameter (decay time
+	
 	/// basis of elastic constants (main axes of material)
 	/// is rotated relative to global basis by this angles
 	Real3 anglesOfRotation = Real3::Zeros();
@@ -36,7 +37,8 @@ struct OrthotropicMaterial : public AbstractMaterial {
 	                    {0, 0, 0, 0, 0, 0, 0, 0, 0},
 	                    const real yieldStrength_ = 0,
 	                    const real continualDamageParameter_ = 0,
-	                    const Real3 phi = Real3::Zeros());
+	                    const Real3 phi = Real3::Zeros(),
+	                    const real tau0_ = 0);
 	
 	/** Return matrix of elastic coefficients in main axes of material */
 	ElasticMatrix getElasticMatrix() const {

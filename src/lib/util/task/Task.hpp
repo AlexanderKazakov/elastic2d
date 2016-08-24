@@ -25,8 +25,12 @@ struct Task {
 	typedef std::function<real(real)> TimeDependency;
 	
 	struct Body {
-		Materials::T materialId; ///< body material
-		Models::T modelId;       ///< body rheology
+		/// Body material
+		Materials::T materialId;
+		/// Body rheology
+		Models::T modelId;
+		/// List of ODE, correctors and other non-wave features to apply
+		std::vector<Odes::T> odes;
 	};
 	/// Bodies sorted by unique id
 	std::map<size_t, Body> bodies;

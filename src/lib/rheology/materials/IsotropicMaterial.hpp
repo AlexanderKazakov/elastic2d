@@ -14,11 +14,12 @@ struct IsotropicMaterial : public AbstractMaterial {
 
 	real yieldStrength = 0;            ///< plasticity parameter
 	real continualDamageParameter = 0; ///< parameter in continual damage equation
+	real tau0 = 0;                     ///< viscosity parameter (decay time)
 
 	IsotropicMaterial(const IsotropicMaterial& other) = default;
 	IsotropicMaterial(const real rho_ = 0, const real lambda_ = 0, const real mu_ = 0,
 			const real yieldStrength_ = 0, const real continualDamageParameter_ = 0,
-			const int materialNumber_ = 0);
+			const int materialNumber_ = 0, const real tau0_ = 0);
 
 	/** For testing purposes */
 	static IsotropicMaterial generateRandomMaterial();

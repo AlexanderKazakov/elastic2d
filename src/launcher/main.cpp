@@ -61,8 +61,8 @@ Task parseTaskContact2D() {
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	
 	task.bodies = {
-		{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-		{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}}
+		{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
+		{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}}
 	};
 	
 	task.simplexGrid.spatialStep = 0.2;
@@ -82,8 +82,8 @@ Task parseTaskContact2D() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	const auto material1 = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
-	const auto material2 = std::make_shared<IsotropicMaterial>(4 * rho, lambda, mu);
+	const auto material1 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 0);
+	const auto material2 = std::make_shared<IsotropicMaterial>(4 * rho, lambda, mu, 0, 0, 0, 1e+9);
 	task.materialConditions.byBodies.bodyMaterialMap = {
 		{0, material1},
 		{1, material2}
@@ -151,7 +151,7 @@ Task parseTaskCgal3d() {
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}};
+	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}}};
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
 	task.simplexGrid.spatialStep = 0.2;
@@ -163,7 +163,7 @@ Task parseTaskCgal3d() {
 	real lambda = 2;
 	real mu = 1;
 	task.materialConditions.byAreas.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1, 1, 1);
 	
 	task.globalSettings.CourantNumber = 1;
 	
@@ -228,10 +228,10 @@ Task parseTaskCgal2d() {
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
 	task.bodies = {
-//			{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-//			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
-//			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
+//			{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+//			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+//			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 	};
 	
 	task.simplexGrid.spatialStep = 0.2;
@@ -325,7 +325,7 @@ Task parseTask2d() {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}};
+	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
 	
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.lengths = {4, 2};
@@ -363,7 +363,7 @@ Task parseTask3d() {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC}}};
+	task.bodies = {{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}}};
 	
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.lengths = {4, 2, 1};
@@ -409,7 +409,7 @@ inline Task parseTaskCubicAcoustic() {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}}};
+	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
 	
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.lengths = {2, 1};//, 1};

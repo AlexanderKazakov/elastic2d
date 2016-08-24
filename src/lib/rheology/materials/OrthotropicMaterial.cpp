@@ -11,6 +11,7 @@ OrthotropicMaterial(const IsotropicMaterial& isotropic) {
 	rho = isotropic.rho;
 	yieldStrength = isotropic.yieldStrength;
 	continualDamageParameter = isotropic.continualDamageParameter;
+	tau0 = isotropic.tau0;
 	c11 = c22 = c33 = isotropic.lambda + 2 * isotropic.mu;
 	c44 = c55 = c66 = isotropic.mu;
 	c12 = c13 = c23 = isotropic.lambda;
@@ -20,10 +21,12 @@ OrthotropicMaterial(const IsotropicMaterial& isotropic) {
 OrthotropicMaterial::
 OrthotropicMaterial(const real rho_, std::initializer_list<real> list,
                     const real yieldStrength_, 
-                    const real continualDamageParameter_, const Real3 phi) :
-	rho(rho_), yieldStrength(yieldStrength_),
-	continualDamageParameter(continualDamageParameter_),
-	anglesOfRotation(phi) {
+                    const real continualDamageParameter_, const Real3 phi,
+                    const real tau0_) :
+		rho(rho_), yieldStrength(yieldStrength_),
+		continualDamageParameter(continualDamageParameter_),
+		tau0(tau0_),
+		anglesOfRotation(phi) {
 	assert_eq(list.size(), 9);
 	std::copy(list.begin(), list.end(), c);
 }

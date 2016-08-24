@@ -257,9 +257,9 @@ virtual void snapshotImpl(const AbstractGrid* _mesh, const int step) override {
 	for (auto& quantity : quantitiesToSnap) {
 		writeQuantity(quantity, &VtkSnapshotter::insertQuantity, 1);
 	}
-	for (auto& quantity : TMesh::Model::InternalOde::QUANTITIES) {
-		writeQuantity(quantity.first, &VtkSnapshotter::insertOdeQuantity, 1);
-	}
+//	for (auto& quantity : TMesh::Model::InternalOde::QUANTITIES) {
+//		writeQuantity(quantity.first, &VtkSnapshotter::insertOdeQuantity, 1);
+//	}
 	
 	writeMaterialNumbers();
 	

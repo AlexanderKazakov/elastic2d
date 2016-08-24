@@ -119,6 +119,7 @@ struct Models {
 	enum class T {
 		ELASTIC,
 		ACOUSTIC,
+		MAXWELL_ACOUSTIC,
 		
 	};
 	/** string names of concepts */
@@ -141,27 +142,22 @@ struct Snapshotters {
 	static const std::map<T, std::string> NAME;
 };
 
-/**
- * For all types of solvers used in the program.
- */
-struct Solvers {
-	/** Type */
-	enum class T {
-		DEFAULT,
-	};
-};
 
 /**
- * For all types of meshes used in the program.
+ * For all types of ODE's and correctors used in the program.
  */
-struct Meshes {
+struct Odes {
 	/** Type */
 	enum class T {
-		DEFAULT,
+		MAXWELL_VISCOSITY,
+		CONTINUAL_DAMAGE,
+		IDEAL_PLASTIC_FLOW,
+		
 	};
+	
+//	/** string names of concepts */
+//	static const std::map<T, std::string> NAME;
 };
-
-enum class DIRECTION {X = 0, Y = 1, Z = 2};
 
 
 }

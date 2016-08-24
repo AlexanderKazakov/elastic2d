@@ -102,7 +102,7 @@ public:
 			borderCondition(bc) { }
 	
 	virtual void apply(AbstractGrid* grid, 
-			std::list<NodeBorder> borderNodes, const RealD& /*direction*/) override {
+			std::list<NodeBorder> borderNodes, const RealD& direction) override {
 		
 		Mesh* mesh = dynamic_cast<Mesh*>(grid);
 		assert_true(mesh);
@@ -110,9 +110,9 @@ public:
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			
-			const RealD outerDirection = nodeBorder.normal;
-					/*direction * Utils::sign(
-					linal::dotProduct(direction, nodeBorder.normal));*/
+			const RealD outerDirection =
+					direction * Utils::sign(
+					linal::dotProduct(direction, nodeBorder.normal));
 			
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),

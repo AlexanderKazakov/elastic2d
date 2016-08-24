@@ -7,9 +7,10 @@ const Materials::T IsotropicMaterial::ID = Materials::T::ISOTROPIC;
 IsotropicMaterial::
 IsotropicMaterial(const real rho_, const real lambda_, const real mu_,
 		const real yieldStrength_, const real continualDamageParameter_,
-		const int materialNumber_) :
+		const int materialNumber_, const real tau0_) :
 	rho(rho_), lambda(lambda_), mu(mu_), yieldStrength(yieldStrength_),
-	continualDamageParameter(continualDamageParameter_) {
+	continualDamageParameter(continualDamageParameter_),
+	tau0(tau0_) {
 	
 	materialNumber = materialNumber_;
 }

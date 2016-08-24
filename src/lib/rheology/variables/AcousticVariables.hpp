@@ -54,18 +54,20 @@ struct AcousticVariables : public linal::Vector<Dimensionality + 1> {
 		return (*this)(i);
 	}
 	///@}
-
-	/** Access to velocity */
-	///@{
-	real pressure() const {
-		return (*this)(DIMENSIONALITY);
-	}
 	
-	real& pressure() {
-		return (*this)(DIMENSIONALITY);
-	}
+	/** Access to pressure */
+	///@{
+	real  pressure() const { return (*this)(DIMENSIONALITY); }
+	real& pressure()       { return (*this)(DIMENSIONALITY); }
 	///@}
-
+	
+	/// Shortcut to unify access to force (not velocity)
+	/// part of variables with ElasticModel
+	///@{
+	real getSigma() const { return pressure(); }
+	void setSigma(const real& orig) { pressure() = orig; }
+	///@}
+	
 	
 	/** 
 	 * @name Getters and Setters

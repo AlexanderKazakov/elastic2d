@@ -30,7 +30,7 @@ TEST(Engine, runStatement) {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	
 	task.bodies = {
-		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
+		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 	};
 	
 	
@@ -73,7 +73,7 @@ TEST(Engine, TwoLayersDifferentRho) {
 		task.globalSettings.gridId = Grids::T::CUBIC;
 		
 		task.bodies = {
-			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 		};
 		
 		
@@ -156,7 +156,7 @@ TEST(Engine, TwoLayersDifferentE) {
 		task.globalSettings.gridId = Grids::T::CUBIC;
 		
 		task.bodies = {
-			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 		};
 		
 		

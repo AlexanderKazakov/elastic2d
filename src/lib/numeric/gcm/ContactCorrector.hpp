@@ -117,7 +117,7 @@ public:
 	
 	virtual void apply(AbstractGrid* a, AbstractGrid* b, 
 			std::list<NodesContact> nodesInContact,
-			const RealD& /*direction*/) override {
+			const RealD& direction) override {
 		
 		MeshA* meshA = dynamic_cast<MeshA*>(a);
 		assert_true(meshA);
@@ -126,9 +126,9 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
-			const RealD directionFromAToB = nodesContact.normal;
-					/*direction * Utils::sign(
-					linal::dotProduct(direction, nodesContact.normal));*/
+			const RealD directionFromAToB =
+					direction * Utils::sign(
+					linal::dotProduct(direction, nodesContact.normal));
 			
 			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),

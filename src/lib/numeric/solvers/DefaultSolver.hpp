@@ -8,7 +8,7 @@
 #include <lib/util/task/Task.hpp>
 #include <lib/mesh/grid/AbstractGrid.hpp>
 #include <lib/mesh/DataBus.hpp>
-#include <lib/rheology/correctors/correctors.hpp>
+#include <lib/rheology/ode/Ode.hpp>
 
 
 namespace gcm {
@@ -25,9 +25,6 @@ public:
 	typedef typename Mesh::Material                         Material;
 	typedef typename Mesh::GridId                           GridId;
 	typedef typename Mesh::GlobalScene                      GlobalScene;
-	
-	typedef typename Model::Corrector                       Corrector;
-	typedef typename Model::InternalOde                     InternalOde;
 	
 	typedef SpecialBorderConditions<Model, Grid, Material>  SpecialBorder;
 	typedef DataBus<Model, Grid, Material>                  DATA_BUS;
@@ -56,8 +53,9 @@ public:
 	virtual void privateStage(const int s, const real timeStep) override;
 	
 	/**
-	 * All necessary solver actions after stages performed
+	 * All necessary solver actions before and after stages performed
 	 */
+	virtual void beforeStages(const real timeStep) override;
 	virtual void afterStages(const real timeStep) override;
 	
 	
@@ -73,16 +71,12 @@ public:
 protected:
 	real CourantNumber = 0; ///< number from Courant–Friedrichs–Lewy condition
 	GcmMethod gridCharacteristicMethod;
-	Corrector* corrector = nullptr;
-	InternalOde* internalOde = nullptr;
 	SpecialBorder* specialBorder = nullptr;
-
 	Mesh* mesh = nullptr;
-
-	void internalOdeNextStep(const real timeStep);
-	void applyCorrectors();
-	void moveMesh(const real timeStep);
-
+	
+	typedef std::shared_ptr<AbstractOde<Mesh>> Ode;
+	std::vector<Ode> odes;
+	
 	USE_AND_INIT_LOGGER("gcm.DefaultSolver")
 };
 
@@ -98,8 +92,10 @@ DefaultSolver(const Task& task, AbstractGlobalScene* abstractGlobalScene,
 	
 	mesh = new Mesh(task, globalScene, gridId_);
 	specialBorder = new SpecialBorder(task);
-	corrector = new Corrector(task);
-	internalOde = new InternalOde(task);
+	
+	for (const Odes::T odeType : task.bodies.at(gridId_).odes) {
+		odes.push_back(OdeFactory<Mesh>::create(odeType));
+	}
 	
 	CourantNumber = task.globalSettings.CourantNumber;
 }
@@ -108,10 +104,14 @@ template<class TMesh>
 DefaultSolver<TMesh>::~DefaultSolver() {
 	delete specialBorder;
 	delete mesh;
-	delete corrector;
-	delete internalOde;
 }
 
+
+template<class TMesh>
+void DefaultSolver<TMesh>::
+beforeStages(const real) {
+//	mesh->pdeVariablesPrev = mesh->pdeVariables;
+}
 
 template<class TMesh>
 void DefaultSolver<TMesh>::
@@ -143,36 +143,10 @@ privateStage(const int s, const real timeStep) {
 template<class TMesh>
 void DefaultSolver<TMesh>::
 afterStages(const real timeStep) {
-	internalOdeNextStep(timeStep);
-	moveMesh(timeStep);
-	applyCorrectors();
-}
-
-
-template<class TMesh>
-void DefaultSolver<TMesh>::
-internalOdeNextStep(const real timeStep) {
-	if (InternalOde::NonTrivial) {
-		assert_eq(mesh->pdeVariables.size(), mesh->odeVariables.size());
-		for (auto it : *mesh) {
-			internalOde->nextStep(mesh->node(it), timeStep);
-		}
+	for (Ode ode : odes) {
+		ode->apply(*mesh, timeStep);
 	}
 }
-
-template<class TMesh>
-void DefaultSolver<TMesh>::
-applyCorrectors() {
-	if (Corrector::NonTrivial) {
-		for (auto it : *mesh) {
-			corrector->apply(mesh->node(it));
-		}
-	}
-}
-
-template<class TMesh>
-void DefaultSolver<TMesh>::
-moveMesh(const real) { }
 
 
 template<class TMesh>

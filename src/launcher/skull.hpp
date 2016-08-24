@@ -12,26 +12,27 @@ inline Task skullAcoustic() {
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
 	task.bodies = {
-			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 	};
 	
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
+	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+//	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
-	auto connectiveTissue = std::make_shared<IsotropicMaterial>(1.008,  2.369, 0, 0, 0, 1);
-	auto muscles          = std::make_shared<IsotropicMaterial>(1.041,  2.648, 0, 0, 0, 2);
-	auto cerebrum         = std::make_shared<IsotropicMaterial>(1.030,  2.475, 0, 0, 0, 3);
-	auto bones            = std::make_shared<IsotropicMaterial>(1.672, 10.552, 0, 0, 0, 4);
-	auto vessels          = std::make_shared<IsotropicMaterial>(1.063,  2.726, 0, 0, 0, 5);
+	auto connectiveTissue = std::make_shared<IsotropicMaterial>(0.916,  1.886, 0, 0, 0, 1, 1.585);
+	auto muscles          = std::make_shared<IsotropicMaterial>(1.041,  2.648, 0, 0, 0, 2, 0.878);
+	auto cerebrum         = std::make_shared<IsotropicMaterial>(1.030,  2.475, 0, 0, 0, 3, 1.293);
+	auto bones            = std::make_shared<IsotropicMaterial>(1.904,  7.854, 0, 0, 0, 4, 0);
+	auto vessels          = std::make_shared<IsotropicMaterial>(1.066,  2.784, 0, 0, 0, 5, 1.288);
 	task.materialConditions.byBodies.bodyMaterialMap = {
 			{1, connectiveTissue},
 			{2, muscles},
@@ -92,11 +93,11 @@ inline Task skull() {
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
 	task.bodies = {
-			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
-			{2, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
-			{4, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{2, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{4, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 	};
 	
 	
@@ -112,11 +113,11 @@ inline Task skull() {
 //			std::make_shared<IsotropicMaterial>(1, 2, 1);
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
-	auto connectiveTissue = std::make_shared<IsotropicMaterial>(1.008, 2.187, 0.0911, 0, 0, 1);
-	auto muscles          = std::make_shared<IsotropicMaterial>(1.041, 1.765, 0.4413, 0, 0, 2);
-	auto cerebrum         = std::make_shared<IsotropicMaterial>(1.030, 2.284, 0.0952, 0, 0, 3);
-	auto bones            = std::make_shared<IsotropicMaterial>(1.672, 5.197, 2.6773, 0, 0, 4);
-	auto vessels          = std::make_shared<IsotropicMaterial>(1.063, 2.517, 0.1049, 0, 0, 5);
+	auto connectiveTissue = std::make_shared<IsotropicMaterial>(0.916,  1.886, 0, 0, 0, 1, 1.585);
+	auto muscles          = std::make_shared<IsotropicMaterial>(1.041,  2.648, 0, 0, 0, 2, 0.878);
+	auto cerebrum         = std::make_shared<IsotropicMaterial>(1.030,  2.475, 0, 0, 0, 3, 1.293);
+	auto bones            = std::make_shared<IsotropicMaterial>(1.904,  7.854, 0, 0, 0, 4, 0);
+	auto vessels          = std::make_shared<IsotropicMaterial>(1.066,  2.784, 0, 0, 0, 5, 1.288);
 	task.materialConditions.byBodies.bodyMaterialMap = {
 			{1, connectiveTissue},
 			{2, muscles},

@@ -77,6 +77,7 @@ TEST(GridCharacteristicMethodCubicGrid, StageYForward) {
 	for (int accuracyOrder = 1; accuracyOrder < 5; accuracyOrder++) {
 		Task task;
 		
+		task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
 		task.cubicGrid.borderSize = accuracyOrder;
 		task.globalSettings.CourantNumber = 1;
 		task.materialConditions.byAreas.defaultMaterial = 

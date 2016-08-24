@@ -16,8 +16,6 @@ public:
 	static const int DIMENSIONALITY = Dimensionality;
 	
 	typedef AcousticVariables<DIMENSIONALITY> PdeVariables;
-	typedef DummyOde                          InternalOde;
-	typedef DummyCorrector                    Corrector;
 	typedef typename PdeVariables::PdeVector  PdeVector;
 	
 	typedef linal::Vector<DIMENSIONALITY>     RealD;
@@ -29,7 +27,7 @@ public:
 	typedef GcmMatrices<PDE_SIZE, DIMENSIONALITY> GCM_MATRICES;
 	typedef typename GCM_MATRICES::GcmMatrix      GcmMatrix;
 	typedef typename GCM_MATRICES::Matrix         Matrix;
-	typedef typename InternalOde::Variables       OdeVariables;
+	typedef void                                  OdeVariables;
 	typedef std::shared_ptr<GCM_MATRICES>         GcmMatricesPtr;
 	typedef std::shared_ptr<const GCM_MATRICES>   ConstGcmMatricesPtr;
 	
@@ -114,7 +112,6 @@ public:
 		
 		return B_;
 	}
-	
 	
 };
 

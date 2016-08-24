@@ -97,7 +97,7 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 
 	task.bodies = {
-		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC}}
+		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 	};
 
 	task.cubicGrid.borderSize = 2;

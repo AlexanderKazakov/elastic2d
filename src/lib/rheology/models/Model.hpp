@@ -1,10 +1,10 @@
 #ifndef LIBGCM_MODEL_HPP
 #define LIBGCM_MODEL_HPP
 
+#include <memory>
+
 #include <lib/rheology/materials/materials.hpp>
 #include <lib/rheology/variables/variables.hpp>
-#include <lib/rheology/ode/ode.hpp>
-#include <lib/rheology/correctors/correctors.hpp>
 #include <lib/numeric/gcm/GcmMatrices.hpp>
 
 

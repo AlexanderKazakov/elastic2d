@@ -55,8 +55,9 @@ const std::map<Grids::T, std::string> Grids::NAME = {
 
 
 const std::map<Models::T, std::string> Models::NAME = {
-		{Models::T::ELASTIC,    "elastic"},
-		{Models::T::ACOUSTIC,   "acoustic"}
+		{Models::T::ELASTIC,             "elastic"},
+		{Models::T::ACOUSTIC,            "acoustic"},
+		{Models::T::MAXWELL_ACOUSTIC,    "Maxwell_acoustic"}
 };
 
 

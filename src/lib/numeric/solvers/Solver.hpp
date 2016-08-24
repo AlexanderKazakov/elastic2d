@@ -31,8 +31,9 @@ public:
 	virtual void privateStage(const int s, const real timeStep) = 0;
 	
 	/**
-	 * All necessary solver actions after stages performed
+	 * All necessary solver actions before and after stages performed
 	 */
+	virtual void beforeStages(const real timeStep) = 0;
 	virtual void afterStages(const real timeStep) = 0;
 	
 	
