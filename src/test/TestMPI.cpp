@@ -1,12 +1,11 @@
 #include <gtest/gtest.h>
 
-#include <lib/Engine.hpp>
-#include <lib/mesh/DefaultMesh.hpp>
-#include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/mesh/grid/CubicGrid.hpp>
+#include <libgcm/engine/cubic/Engine.hpp>
+#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/grid/cubic/CubicGrid.hpp>
 
-#include <lib/util/task/Task.hpp>
-#include <lib/rheology/models/models.hpp>
+#include <libgcm/util/task/Task.hpp>
+#include <libgcm/rheology/models/models.hpp>
 
 
 using namespace gcm;
@@ -114,7 +113,9 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	pressure.value = 2.0;
 	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
 	task.initialCondition.quantities.push_back(pressure);
-
+	
+	typedef cubic::Engine<2> Engine;
+	
 	// calculate in sequence
 	task.globalSettings.forceSequence = true;
 	Engine sequenceEngine(task);
@@ -129,7 +130,7 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	struct Wrapper {
 		typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
 		static const Mesh* getMesh(const Engine& engine) {
-			const AbstractGrid* grid = engine.getSolver()->getAbstractMesh();
+			const AbstractGrid* grid = engine.getAbstractGrid();
 			const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
 			assert_true(mesh);
 			return mesh;
@@ -140,7 +141,7 @@ TEST(MPI, MpiEngineVsSequenceEngine) {
 	auto mpiMesh = Wrapper::getMesh(mpiEngine);
 	auto sequenceMesh = Wrapper::getMesh(sequenceEngine);
 
-	int numberOfNodesAlongXPerOneCore = CubicGrid<2>::
+	int numberOfNodesAlongXPerOneCore = Engine::
 			numberOfNodesAlongXPerOneCore(task.cubicGrid);
 	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	

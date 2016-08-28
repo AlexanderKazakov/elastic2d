@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <lib/util/MultiPrecision.hpp>
+#include <libgcm/util/math/MultiPrecision.hpp>
 
 using namespace gcm;
 

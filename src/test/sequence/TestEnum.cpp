@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/Enum.hpp>
+#include <libgcm/util/Enum.hpp>
 
 using namespace gcm;
 

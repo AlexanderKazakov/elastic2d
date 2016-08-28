@@ -75,13 +75,13 @@ ENDIF()
 
 set(CMAKE_CONFIG_ENABLE_ASSERTIONS    1)
 set(LIBGCM_DOUBLE_PRECISION           1)
-configure_file("${CMAKE_CURRENT_LIST_DIR}/cmake/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/generated_sources/lib/config.hpp")
+configure_file("${CMAKE_CURRENT_LIST_DIR}/cmake/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/generated_sources/libgcm/config.hpp")
 
 # source files
 include_directories("${CMAKE_CURRENT_LIST_DIR}/src/" "${CMAKE_CURRENT_BINARY_DIR}/generated_sources/")
 FILE(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp")
 file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/*.cpp")
-file(GLOB_RECURSE LIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/lib/*.cpp")
+file(GLOB_RECURSE LIBGCM_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/libgcm/*.cpp")
 file(GLOB_RECURSE LIBCGALMESHER_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/libcgalmesher/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
@@ -90,7 +90,7 @@ set(TEST_MPI_FILE src/test/TestMPI.cpp)
 add_library(cgalmesher SHARED ${LIBCGALMESHER_SOURCES})
 
 # libgcm
-add_library(gcm SHARED ${LIB_SOURCES})
+add_library(gcm SHARED ${LIBGCM_SOURCES})
 
 # gcm_exe
 add_executable(gcm_exe ${GCM_EXE_SOURCES} ${HEADERS})
@@ -101,7 +101,7 @@ add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
 target_link_libraries(gcm_tests gcm cgalmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tmp
-add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestCubicGrid.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
+add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestGridCharacteristicMethod.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
 target_link_libraries(tmp gcm cgalmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests on mpi

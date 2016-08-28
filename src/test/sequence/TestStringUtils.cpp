@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/StringUtils.hpp>
+#include <libgcm/util/StringUtils.hpp>
 
 using namespace gcm;
 

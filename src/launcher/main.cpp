@@ -1,5 +1,7 @@
 #include <chrono>
 
+#include <libgcm/engine/EngineFactory.hpp>
+
 #include <launcher/getopt_wrapper.hpp>
 #include <launcher/skull.hpp>
 
@@ -37,7 +39,7 @@ int main(int argc, char** argv) {
 
 	try {
 		auto t1 = std::chrono::high_resolution_clock::now();
-		Engine(task).run();
+		createEngine(task)->run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 		SUPPRESS_WUNUSED(t1); SUPPRESS_WUNUSED(t2);
 

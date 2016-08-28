@@ -1,5 +1,5 @@
-#include <lib/linal/linal.hpp>
-#include <lib/util/GslUtils.hpp>
+#include <libgcm/linal/linal.hpp>
+#include <libgcm/util/math/GslUtils.hpp>
 
 #include <gtest/gtest.h>
 #include <cmath>

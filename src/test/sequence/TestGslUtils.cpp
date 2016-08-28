@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <lib/util/Utils.hpp>
-#include <lib/util/GslUtils.hpp>
-#include <lib/linal/linal.hpp>
+#include <libgcm/util/Utils.hpp>
+#include <libgcm/util/math/GslUtils.hpp>
+#include <libgcm/linal/linal.hpp>
 
 using namespace gcm;
 

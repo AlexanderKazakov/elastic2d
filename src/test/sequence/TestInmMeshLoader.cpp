@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <lib/mesh/mesh_loaders/InmMeshLoader.hpp>
-#include <lib/util/snapshot/VtkSnapshotter.hpp>
+#include <libgcm/grid/simplex/mesh_loaders/InmMeshLoader.hpp>
+#include <libgcm/util/snapshot/VtkSnapshotter.hpp>
 
 using namespace gcm;
 

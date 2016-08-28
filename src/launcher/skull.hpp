@@ -1,5 +1,5 @@
-#include <lib/Engine.hpp>
-#include <lib/util/Area.hpp>
+#include <libgcm/util/task/Task.hpp>
+#include <libgcm/util/math/Area.hpp>
 
 using namespace gcm;
 

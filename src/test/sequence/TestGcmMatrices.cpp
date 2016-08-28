@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <lib/rheology/models/models.hpp>
-#include <lib/rheology/materials/materials.hpp>
+#include <libgcm/rheology/models/models.hpp>
+#include <libgcm/rheology/materials/materials.hpp>
 
 
 using namespace gcm;

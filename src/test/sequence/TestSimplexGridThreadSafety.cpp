@@ -1,6 +1,5 @@
-#include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
-#include <lib/mesh/grid/SimplexGrid.hpp>
-#include <lib/mesh/grid/SimplexGlobalScene.hpp>
+#include <libgcm/grid/simplex/cgal/CgalTriangulation.hpp>
+#include <libgcm/grid/simplex/SimplexGrid.hpp>
 
 #include <gtest/gtest.h>
 
@@ -15,9 +14,9 @@ TEST(SimplexGrid3D, ThreadSafety) {
 	task.simplexGrid.fileName = "meshes/tetrahedron.off";
 	
 	typedef SimplexGrid<3, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid grid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid grid(0, {&triangulation});
 	
 	std::vector<size_t> sequence(grid.sizeOfAllNodes());
 	for (size_t it = 0; it < grid.sizeOfRealNodes(); ++it) {
@@ -53,9 +52,9 @@ TEST(SimplexGrid2D, ThreadSafety) {
 	};
 	
 	typedef SimplexGrid<2, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid grid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid grid(0, {&triangulation});
 	
 	std::vector<size_t> sequence(grid.sizeOfAllNodes());
 	for (size_t it = 0; it < grid.sizeOfRealNodes(); ++it) {

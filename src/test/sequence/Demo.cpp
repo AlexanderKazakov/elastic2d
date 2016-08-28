@@ -2,7 +2,7 @@
 #include <memory>
 #include <cmath>
 
-//#include <lib/rheology/materials/OrthotropicMaterial.hpp>
+//#include <libgcm/rheology/materials/OrthotropicMaterial.hpp>
 //using namespace gcm;
 
 TEST(Demo, sizes) {

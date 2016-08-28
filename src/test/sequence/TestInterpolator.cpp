@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <cmath>
 
-#include <lib/linal/linal.hpp>
-#include <lib/numeric/interpolation/interpolation.hpp>
+#include <libgcm/linal/linal.hpp>
+#include <libgcm/util/math/interpolation/interpolation.hpp>
 
 using namespace gcm;
 using namespace gcm::linal;

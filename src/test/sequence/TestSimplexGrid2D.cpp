@@ -1,7 +1,6 @@
-#include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
-#include <lib/mesh/grid/SimplexGrid.hpp>
-#include <lib/mesh/grid/SimplexGlobalScene.hpp>
-#include <lib/util/snapshot/VtkSnapshotter.hpp>
+#include <libgcm/grid/simplex/cgal/CgalTriangulation.hpp>
+#include <libgcm/grid/simplex/SimplexGrid.hpp>
+#include <libgcm/util/snapshot/VtkSnapshotter.hpp>
 
 #include <gtest/gtest.h>
 
@@ -26,9 +25,9 @@ TEST(SimplexGrid2D, ownerTriangleVsBarycentric) {
 	};
 	
 	typedef SimplexGrid<2, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid grid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid grid(0, {&triangulation});
 	
 	
 //	try {
@@ -112,9 +111,9 @@ TEST(SimplexGrid2D, locateVsFindOwnerTriangle) {
 	};
 	
 	typedef SimplexGrid<2, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid grid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid grid(0, {&triangulation});
 	
 	
 	Utils::seedRand();
@@ -187,9 +186,9 @@ TEST(SimplexGrid2D, findOwnerCellTwoBodies) {
 	};
 	
 	typedef SimplexGrid<2, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid oneBody(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid oneBody(0, {&triangulation});
 	
 	
 	task.simplexGrid.bodies.push_back(
@@ -200,8 +199,8 @@ TEST(SimplexGrid2D, findOwnerCellTwoBodies) {
 			Task::SimplexGrid::Body({ 0, {{-10, -10}, {-10, 10}, {10, 10}, {10, -10}},
 					{ {{-9, -9}, {-9, 9}, {9, 9}, {9, -9}} } }));
 	
-	std::shared_ptr<GS> gs2(new GS(task));
-	Grid twoBodies(task, gs2.get(), 0);
+	Triangulation triangulation2(task);
+	Grid twoBodies(0, {&triangulation2});
 	
 	// fortunately, triangulations of the first bodies are equal in
 	// both triangulations with such parameters
@@ -278,13 +277,13 @@ TEST(SimplexGrid2D, miscellaneous) {
 	};
 	
 	typedef SimplexGrid<2, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid grid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid grid(0, {&triangulation});
 	
 	ASSERT_EQ(21, grid.sizeOfAllNodes());
 	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
-	ASSERT_NEAR(0.2210, grid.getMinimalSpatialStep(), 1e-4);
+	ASSERT_NEAR(0.2210, grid.getAverageHeight(), 1e-4);
 	
 	
 	ASSERT_EQ(Real2::Zeros(), grid.borderNormal(*(grid.innerBegin())));

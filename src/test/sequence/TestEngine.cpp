@@ -1,21 +1,21 @@
 #include <gtest/gtest.h>
 
-#include <lib/Engine.hpp>
-#include <lib/util/Area.hpp>
-#include <lib/rheology/models/models.hpp>
+#include <libgcm/engine/cubic/Engine.hpp>
+#include <libgcm/util/math/Area.hpp>
+#include <libgcm/rheology/models/models.hpp>
 
-#include <lib/mesh/DefaultMesh.hpp>
-#include <lib/numeric/solvers/DefaultSolver.hpp>
-#include <lib/mesh/grid/CubicGrid.hpp>
+#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/grid/cubic/CubicGrid.hpp>
 
 
 using namespace gcm;
+using namespace gcm::cubic;
 
 
 struct Wrapper {
 	typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
-	static const Mesh* getMesh(const Engine& engine) {
-		const AbstractGrid* grid = engine.getSolver()->getAbstractMesh();
+	static const Mesh* getMesh(const Engine<2>& engine) {
+		const AbstractGrid* grid = engine.getAbstractGrid();
 		const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
 		assert_true(mesh);
 		return mesh;
@@ -53,7 +53,7 @@ TEST(Engine, runStatement) {
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	task.initialCondition.waves.push_back(wave);
 	
-	Engine engine(task);
+	Engine<2> engine(task);
 	
 	// s-wave
 	auto expected = Wrapper::getMesh(engine)->pde({task.cubicGrid.sizes.at(0) / 2, 3});
@@ -108,7 +108,7 @@ TEST(Engine, TwoLayersDifferentRho) {
 		task.initialCondition.waves.push_back(wave);
 		
 		
-		Engine engine(task);
+		Engine<2> engine(task);
 		
 		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
 		auto init = Wrapper::getMesh(engine)->pdeVars(
@@ -192,7 +192,7 @@ TEST(Engine, TwoLayersDifferentE) {
 		task.initialCondition.waves.push_back(wave);
 		
 		
-		Engine engine(task);
+		Engine<2> engine(task);
 		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
 		auto init = Wrapper::getMesh(engine)->pdeVars(
 				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});

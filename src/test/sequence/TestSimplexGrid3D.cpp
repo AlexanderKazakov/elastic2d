@@ -1,7 +1,6 @@
-#include <lib/mesh/grid/cgal/CgalTriangulation.hpp>
-#include <lib/mesh/grid/SimplexGrid.hpp>
-#include <lib/mesh/grid/SimplexGlobalScene.hpp>
-#include <lib/util/snapshot/VtkSnapshotter.hpp>
+#include <libgcm/grid/simplex/cgal/CgalTriangulation.hpp>
+#include <libgcm/grid/simplex/SimplexGrid.hpp>
+#include <libgcm/util/snapshot/VtkSnapshotter.hpp>
 
 #include <gtest/gtest.h>
 
@@ -18,14 +17,14 @@ TEST(SimplexGrid3D, miscellaneous) {
 	
 //	try {
 	typedef SimplexGrid<3, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid grid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid grid(0, {&triangulation});
 	
 	
 	ASSERT_EQ(190, grid.sizeOfAllNodes());
 	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
-	ASSERT_NEAR(0.1384, grid.getMinimalSpatialStep(), 1e-4);
+	ASSERT_NEAR(0.1384, grid.getAverageHeight(), 1e-4);
 	
 	ASSERT_EQ(Real3::Zeros(), grid.borderNormal(*(grid.innerBegin())));
 	
@@ -125,9 +124,9 @@ TEST(SimplexGrid3D, ownerTetrahedronVsBarycentric) {
 	task.simplexGrid.fileName = "meshes/tetrahedron.off";
 	
 	typedef SimplexGrid<3, CgalTriangulation> Grid;
-	typedef typename Grid::GlobalScene GS;
-	std::shared_ptr<GS> gs(new GS(task));
-	Grid tetrGrid(task, gs.get(), 0);
+	typedef typename Grid::Triangulation Triangulation;
+	Triangulation triangulation(task);
+	Grid tetrGrid(0, {&triangulation});
 	
 	Utils::seedRand();
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
@@ -144,8 +143,8 @@ TEST(SimplexGrid3D, ownerTetrahedronVsBarycentric) {
 	task.simplexGrid.spatialStep = 0.2;
 	task.simplexGrid.fileName = "meshes/cube.off";
 	
-	std::shared_ptr<GS> gs2(new GS(task));
-	Grid cubeGrid(task, gs2.get(), 0);
+	Triangulation triangulation2(task);
+	Grid cubeGrid(0, {&triangulation2});
 	
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
 //		std::cout << "cube: multiplier == " << multiplier << std::endl;
@@ -161,8 +160,8 @@ TEST(SimplexGrid3D, ownerTetrahedronVsBarycentric) {
 	task.simplexGrid.fileName = "meshes/icosahedron.off";
 	task.simplexGrid.detectSharpEdges = false;
 	
-	std::shared_ptr<GS> gs3(new GS(task));
-	Grid icosGrid(task, gs3.get(), 0);
+	Triangulation triangulation3(task);
+	Grid icosGrid(0, {&triangulation3});
 	
 	for (int multiplier = 1; multiplier < 30; multiplier++) {
 //		std::cout << "icosahedron: multiplier == " << multiplier << std::endl;

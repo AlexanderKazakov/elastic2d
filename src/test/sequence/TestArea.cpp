@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lib/util/Area.hpp>
+#include <libgcm/util/math/Area.hpp>
 
 using namespace gcm;
 
