@@ -2,6 +2,7 @@
 #define LIBGCM_CUBICGRID_HPP
 
 #include <libgcm/linal/linal.hpp>
+#include <libgcm/util/math/AABB.hpp>
 #include <libgcm/engine/GlobalVariables.hpp>
 #include <libgcm/grid/AbstractGrid.hpp>
 
@@ -25,12 +26,13 @@ public:
 	typedef linal::Matrix<DIMENSIONALITY, DIMENSIONALITY>         MatrixDD;
 	typedef linal::Vector<DIMENSIONALITY>                         RealD;
 	typedef linal::VectorInt<DIMENSIONALITY>                      IntD;
+	/// AABB in the space of integer indices, NOT in real space
+	typedef AxesAlignedBoundaryBox<IntD>                          AABB;
 	
 	typedef IntD                                                  Iterator;
 	typedef linal::SlowXFastZ<DIMENSIONALITY>                     ForwardIterator;
 	typedef linal::SlowZFastX<DIMENSIONALITY>                     VtkIterator;
 	typedef linal::BoxIterator<DIMENSIONALITY, linal::SlowXFastZ> PartIterator;
-	
 	
 	/** @name memory efficient (sequential) iteration */
 	/// @{
@@ -59,18 +61,40 @@ public:
 	/**
 	 * Iteration over rectangular box of the grid
 	 * from min INclusive to max EXclusive
+	 * (min and max is local indices)
 	 */
 	PartIterator box(const IntD min, const IntD max) const {
 		return PartIterator(min, min, max);
 	}
 	
+	/**
+	 * Iteration over AABB (in local indices)
+	 */
+	PartIterator box(const AABB& boxForIteration) const {
+		return box(boxForIteration.min, boxForIteration.max + IntD::Ones());
+	}
+	
+	/**
+	 * AABB of the grid in the space of integer indices, NOT in real space
+	 */
+	AABB aabb() const {
+		return { start, start + sizes - IntD::Ones() };
+	}
+	
+	/**
+	 * Translate AABB in global indices into AABB in local indices
+	 */
+	AABB globalToLocal(const AABB& global) const {
+		return AABB::translate(global, -start);
+	}
+	
 	
 	/** Struct for grid constructor */
 	struct ConstructionPack {
-		int borderSize;
-		IntD sizes;
-		RealD h;
-		RealD startR;
+		int borderSize = 0;
+		IntD sizes = IntD::Zeros();
+		IntD start = IntD::Zeros();
+		RealD h = RealD::Zeros();
 	};
 	
 	CubicGrid(const GridId id_, const ConstructionPack& constructionPack);
@@ -79,7 +103,7 @@ public:
 	
 	/** Read-only access to real coordinates */
 	const RealD coordsD(const Iterator& it) const {
-		return startR + linal::plainMultiply(it, h);
+		return startR() + linal::plainMultiply(it, h);
 	}
 	
 	/** Read-only access to real coordinates */
@@ -117,10 +141,10 @@ public:
 	
 	const int borderSize;  ///< number of virtual nodes on border
 	const IntD sizes;      ///< numbers of nodes along each direction
+	const IntD start;      ///< global index of the most left real node
 	const IntD indexMaker; ///< increments of plain array index when corresponding
 	                       ///< dimensional index increases by one
 	const RealD h;         ///< spatial steps along each direction
-	const RealD startR;    ///< global coordinates of the first real node of the grid
 	
 	
 	real getMinimalSpatialStep() const {
@@ -130,6 +154,12 @@ public:
 		}		
 		assert_gt(ans, 0);
 		return ans;
+	}
+	
+	
+	/// coordinate of the most left real node
+	RealD startR() const {
+		return linal::plainMultiply(start, h);
 	}
 	
 	
@@ -147,9 +177,9 @@ CubicGrid(const GridId id_, const ConstructionPack& constructionPack) :
 		AbstractGrid(id_),
 		borderSize(constructionPack.borderSize),
 		sizes(constructionPack.sizes),
+		start(constructionPack.start),
 		indexMaker(calculateIndexMaker()),
-		h(constructionPack.h),
-		startR(constructionPack.startR) {
+		h(constructionPack.h) {
 // note: the order in the initialization list above is important!
 	
 	assert_gt(borderSize, 0);

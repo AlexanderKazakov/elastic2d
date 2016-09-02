@@ -14,6 +14,7 @@ Task parseTask2d();
 Task parseTask3d();
 Task parseTaskCubicAcoustic();
 Task parseTaskContact2D();
+Task parseTaskTmp();
 
 
 int main(int argc, char** argv) {
@@ -32,6 +33,7 @@ int main(int argc, char** argv) {
 	else if (taskId == "skull"     ) { task = skull(); }
 	else if (taskId == "skullAcs"  ) { task = skullAcoustic(); }
 	else if (taskId == "contact"   ) { task = parseTaskContact2D(); }
+	else if (taskId == "tmp"       ) { task = parseTaskTmp(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;
@@ -330,20 +332,20 @@ Task parseTask2d() {
 	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
 	
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.lengths = {4, 2};
-	task.cubicGrid.sizes = {100, 50};
-
+	task.cubicGrid.h = {4.0/99, 2.0/49};
+	task.cubicGrid.cubics = {{0, {{100, 50}, {0, 0}}}};
+	
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
 	task.materialConditions.byAreas.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
-
+	
 	task.globalSettings.CourantNumber = 0.9;
-
+	
 	task.globalSettings.numberOfSnaps = 20;
 	task.globalSettings.stepsPerSnap = 1;
-
+	
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
@@ -368,8 +370,8 @@ Task parseTask3d() {
 	task.bodies = {{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}}};
 	
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.lengths = {4, 2, 1};
-	task.cubicGrid.sizes = {100, 50, 20};
+	task.cubicGrid.h = {4.0/99, 2.0/49, 1.0/19};
+	task.cubicGrid.cubics = {{0, {{100, 50, 20}, {0, 0, 0}}}};
 
 	real rho = 4;
 //	task.materialConditions.byAreas.defaultMaterial =
@@ -414,27 +416,27 @@ inline Task parseTaskCubicAcoustic() {
 	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
 	
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.lengths = {2, 1};//, 1};
-	task.cubicGrid.sizes = {100, 50};//, 50};
-
+	task.cubicGrid.h = {1, 1};
+	task.cubicGrid.cubics = {{0, {{100, 50}, {0, 0}}}};
+	
 	task.materialConditions.byAreas.defaultMaterial =
 		std::make_shared<IsotropicMaterial>(1, 1, 0);
-
+	
 	task.globalSettings.CourantNumber = 1;
-
+	
 	task.globalSettings.numberOfSnaps = 80;
 	task.globalSettings.stepsPerSnap = 1;
-
+	
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
+	pressure.area = std::make_shared<SphereArea>(10, Real3({50, 25, 0}));
 	task.initialCondition.quantities.push_back(pressure);
-
+	
 	
 	Task::CubicGridBorderCondition borderCondition;
 	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
-			(Real3({-10, -10, -10}), Real3({10, 1e-5, 10}));
+			(Real3({-1e+3, -1e+3, -1e+3}), Real3({1e+3, 1e-5, 1e+3}));
 	borderCondition.values = {
 			{PhysicalQuantities::T::PRESSURE, [] (real) {return 0; }},
 	};
@@ -445,6 +447,42 @@ inline Task parseTaskCubicAcoustic() {
 	task.vtkSnapshotter.quantitiesToSnap = {
 			PhysicalQuantities::T::PRESSURE,
 	};
+	
+	return task;
+}
+
+
+inline Task parseTaskTmp() {
+	Task task;
+	task.globalSettings.dimensionality = 2;
+	task.globalSettings.gridId = Grids::T::CUBIC;
+	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
+	task.globalSettings.numberOfSnaps = 70;
+	task.globalSettings.CourantNumber = 0.9;
+	
+	task.bodies = {
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
+	};
+	
+	task.materialConditions.byAreas.defaultMaterial = 
+			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
+	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.h = {1, 0.25};
+	task.cubicGrid.cubics = {
+			{0, {{20, 41}, { 0,  0}}},
+			{1, {{10, 41}, { 5, 40}}}
+	};
+	
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_FORWARD;
+	wave.direction = 1; // along y
+	wave.quantity = PhysicalQuantities::T::PRESSURE;
+	wave.quantityValue = 1;
+	Real3 min({-1000, 2.5, -1000});
+	Real3 max({ 1000, 7.5,  1000});
+	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+	task.initialCondition.waves.push_back(wave);
 	
 	return task;
 }

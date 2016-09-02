@@ -2,7 +2,6 @@
 
 using namespace gcm;
 
-const Materials::T IsotropicMaterial::ID = Materials::T::ISOTROPIC;
 
 IsotropicMaterial::
 IsotropicMaterial(const real rho_, const real lambda_, const real mu_,

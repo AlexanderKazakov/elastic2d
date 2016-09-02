@@ -3,7 +3,6 @@
 
 using namespace gcm;
 
-const Materials::T OrthotropicMaterial::ID = Materials::T::ORTHOTROPIC;
 
 OrthotropicMaterial::
 OrthotropicMaterial(const IsotropicMaterial& isotropic) {

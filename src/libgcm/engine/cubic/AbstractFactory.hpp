@@ -7,6 +7,8 @@
 #include <libgcm/rheology/ode/Ode.hpp>
 #include <libgcm/engine/mesh/AbstractMesh.hpp>
 #include <libgcm/engine/cubic/GridCharacteristicMethod.hpp>
+#include <libgcm/engine/cubic/ContactConditions.hpp>
+#include <libgcm/rheology/materials/materials.hpp>
 
 
 namespace gcm {
@@ -23,8 +25,10 @@ public:
 	typedef std::shared_ptr<GridCharacteristicMethodBase> GcmPtr;
 	typedef std::shared_ptr<AbstractOde>                  OdePtr;
 	typedef std::shared_ptr<Snapshotter>                  SnapPtr;
+	typedef std::shared_ptr<AbstractContactCopier<TGrid>> ContactPtr;
 	
 	typedef typename TGrid::ConstructionPack     GridConstructionPack;
+	typedef typename TGrid::PartIterator         PartIterator;
 	typedef typename AbstractGrid::GridId        GridId;
 	
 	
@@ -35,8 +39,14 @@ public:
 	
 	virtual OdePtr createOde(const Odes::T type) = 0;
 	
-	virtual SnapPtr createSnapshotter(const Task& task, const Snapshotters::T type) = 0;
+	virtual SnapPtr createSnapshotter(
+			const Task& task, const Snapshotters::T type) = 0;
 	
+	virtual ContactPtr createContact(
+			const PartIterator& iterA, const PartIterator& iterB,
+			const ContactConditions::T condition,
+			const Models::T neighborModel,
+			const Materials::T neighborMaterial) = 0;
 };
 
 
@@ -53,11 +63,13 @@ public:
 	typedef typename Base::SnapPtr                 SnapPtr;
 	typedef typename Base::GridId                  GridId;
 	typedef typename Base::GridConstructionPack    GridConstructionPack;
+	typedef typename Base::ContactPtr              ContactPtr;
+	typedef typename Base::PartIterator            PartIterator;
 	
 	
 	virtual MeshPtr createMesh(const Task& task, const GridId gridId,
 			const GridConstructionPack& constructionPack) override {
-		return std::make_shared<Mesh>(task, gridId, constructionPack);
+		return std::make_shared<Mesh>(task, gridId, constructionPack, false);
 	}
 	
 	virtual GcmPtr createGcm(const Task& task) override {
@@ -80,6 +92,29 @@ public:
 				return std::make_shared<SliceSnapshotter<Mesh>>(task);
 			default:
 				THROW_UNSUPPORTED("Unknown or unsupported snapshotter");
+		}
+	}
+	
+	virtual ContactPtr createContact(
+			const PartIterator& iterA, const PartIterator& iterB,
+			const ContactConditions::T condition,
+			const Models::T neighborModel,
+			const Materials::T neighborMaterial) override {
+		assert_true(condition == ContactConditions::T::ADHESION); // TODO
+		assert_true(Mesh::ModelType == neighborModel); // TODO
+		
+		typedef TMesh<TModel, TGrid, IsotropicMaterial>   IsotropicMesh;
+		typedef TMesh<TModel, TGrid, OrthotropicMaterial> OrthotropicMesh;
+		
+		switch (neighborMaterial) {
+			case Materials::T::ISOTROPIC:
+				return std::make_shared<ContactCopier<
+						TGrid, Mesh, IsotropicMesh>>(iterA, iterB);
+			case Materials::T::ORTHOTROPIC:
+				return std::make_shared<ContactCopier<
+						TGrid, Mesh, OrthotropicMesh>>(iterA, iterB);
+			default:
+				THROW_UNSUPPORTED("Unknown material");
 		}
 	}
 	

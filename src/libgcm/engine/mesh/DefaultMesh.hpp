@@ -31,6 +31,7 @@ public:
 	typedef typename Model::GcmMatricesPtr      GcmMatricesPtr;
 	typedef typename Model::ConstGcmMatricesPtr ConstGcmMatricesPtr;
 	typedef typename GCM_MATRICES::Matrix       Matrix;
+	static const Models::T ModelType = Model::Type;
 	
 	typedef AbstractMesh<TGrid>                 Base;
 	typedef typename Base::Grid                 Grid;
@@ -42,20 +43,42 @@ public:
 	typedef TMaterial                           Material;
 	typedef std::shared_ptr<Material>           MaterialPtr;
 	typedef std::shared_ptr<const Material>     ConstMaterialPtr;
+	static const Materials::T MaterialType = Material::Type;
+	
 	
 	/// Dimensionality of rheology model and grid
 	static const int DIMENSIONALITY = Model::DIMENSIONALITY;
 	
 	
+	/**
+	 * Constructor: grid creation and (if setUpPdeValues)
+	 * setting up the part connected with PDE: storages, matrices, etc.
+	 * The opportunity to delay with PDE setup can be useful
+	 * for MPI, when not all meshes initialized on the one core.
+	 */
 	DefaultMesh(const Task& task, const GridId gridId_,
-			const ConstructionPack& constructionPack) :
+			const ConstructionPack& constructionPack,
+			const bool setUpPdeValues = true) :
 					Base(gridId_, constructionPack) {
 		static_assert(Grid::DIMENSIONALITY == Model::DIMENSIONALITY, "");
+		if (setUpPdeValues) {
+			setUpPde(task);
+		}
+	}
+	virtual ~DefaultMesh() { }
+	
+	/** Setting up the part connected with PDE: storages, matrices, etc */
+	virtual void setUpPde(const Task& task) override {
+		assert_false(pdeIsSetUp);
+		pdeIsSetUp = true;
 		allocate();
 		MaterialsCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
 		InitialCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
 	}
-	virtual ~DefaultMesh() { }
+	
+	
+	virtual Models::T getModelType() const override { return ModelType; }
+	virtual Materials::T getMaterialType() const override { return MaterialType; }
 	
 	
 	/** Read-only access to actual PDE variables */
@@ -165,15 +188,13 @@ protected:
 	
 	MatrixDD calculationBasis = MatrixDD::Identity();
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
-	
+	bool pdeIsSetUp = false;
 	
 private:
-	
 	void allocate();
 	
 	friend class cubic::DataBus<DefaultMesh<Model, Grid, Material>>;
 	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
-	
 };
 
 

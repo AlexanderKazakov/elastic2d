@@ -3,6 +3,7 @@
 
 #include <libgcm/linal/linal.hpp>
 
+
 namespace gcm {
 struct Area {
 	/**
@@ -122,3 +123,4 @@ private:
 }
 
 #endif // LIBGCM_AREA_HPP
+

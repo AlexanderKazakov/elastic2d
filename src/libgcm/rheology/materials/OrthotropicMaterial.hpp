@@ -7,10 +7,10 @@ namespace gcm {
 struct IsotropicMaterial;
 
 struct OrthotropicMaterial : public AbstractMaterial {
-	static const Materials::T ID;
-
+	static const Materials::T Type = Materials::T::ORTHOTROPIC;
+	
 	real rho = 0;          ///< density
-
+	
 	union {
 		real c[9];         ///< elastic coefficients
 			struct {

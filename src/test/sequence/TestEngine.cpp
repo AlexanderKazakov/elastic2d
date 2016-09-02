@@ -14,13 +14,76 @@ using namespace gcm::cubic;
 
 struct Wrapper {
 	typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
-	static const Mesh* getMesh(const Engine<2>& engine) {
-		const AbstractGrid* grid = engine.getAbstractGrid();
-		const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
+	static std::shared_ptr<const Mesh> getMesh(
+			const Engine<2>& engine, const size_t id = 0) {
+		auto grid = engine.getMesh(id);
+		auto mesh = std::dynamic_pointer_cast<const Mesh>(grid);
 		assert_true(mesh);
 		return mesh;
 	}
 };
+
+
+TEST(Engine, AdhesionContact) {
+	int Y = 41, X = 21;
+	
+	Task task;
+	task.globalSettings.dimensionality = 2;
+	task.globalSettings.gridId = Grids::T::CUBIC;
+	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
+	task.globalSettings.numberOfSnaps = 70;
+	task.globalSettings.CourantNumber = 0.9;
+	
+	task.bodies = {
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
+	};
+	
+	task.materialConditions.byAreas.defaultMaterial = 
+			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
+	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.h = {1, 0.25};
+	task.cubicGrid.cubics = {
+			{0, {{X, Y}, { 0,  0}}},
+			{1, {{X, Y}, { 0, Y-1}}}
+	};
+	
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_FORWARD;
+	wave.direction = 1; // along y
+	wave.quantity = PhysicalQuantities::T::PRESSURE;
+	wave.quantityValue = 1;
+	Real3 min({-1000, 2.5, -1000});
+	Real3 max({ 1000, 7.5,  1000});
+	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
+	task.initialCondition.waves.push_back(wave);
+	
+	Engine<2> two(task);
+	two.run();
+	auto first  = Wrapper::getMesh(two, 0);
+	auto second = Wrapper::getMesh(two, 1);
+	
+	
+	task.bodies = {
+			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+	};
+	task.cubicGrid.cubics = {
+			{0, {{X, 2*Y-1}, { 0,  0}}},
+	};
+	Engine<2> one(task);
+	one.run();
+	auto all = Wrapper::getMesh(one, 0);
+	
+	
+	for (int x = 0; x < X; x++) {
+		for (int y = 0; y < Y; y++) {
+			ASSERT_EQ(all->coords({x, y}), first->coords({x, y}));
+			ASSERT_EQ(all->coords({x, Y + y - 1}), second->coords({x, y}));
+			ASSERT_EQ(all->pde({x, y}), first->pde({x, y}));
+			ASSERT_EQ(all->pde({x, Y + y - 1}), second->pde({x, y}));
+		}
+	}
+}
 
 
 
@@ -34,12 +97,13 @@ TEST(Engine, runStatement) {
 	};
 	
 	
-	task.cubicGrid.borderSize = 5;
 	task.globalSettings.CourantNumber = 4.5;
 	task.materialConditions.byAreas.defaultMaterial = 
 			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-	task.cubicGrid.sizes = {20, 40};
-	task.cubicGrid.lengths = {7, 3};
+	task.cubicGrid.borderSize = 5;
+	task.cubicGrid.h = {7.0/19, 3.0/39};
+	task.cubicGrid.cubics = {{0, {{20, 40}, {0, 0}}}};
+	
 	task.globalSettings.numberOfSnaps = 9;
 	task.globalSettings.requiredTime = 100.0;
 	
@@ -53,14 +117,20 @@ TEST(Engine, runStatement) {
 	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
 	task.initialCondition.waves.push_back(wave);
 	
+//	try {
 	Engine<2> engine(task);
 	
 	// s-wave
-	auto expected = Wrapper::getMesh(engine)->pde({task.cubicGrid.sizes.at(0) / 2, 3});
+	auto expected = Wrapper::getMesh(engine)->pde({10, 3});
+	ASSERT_NE(linal::zeros(expected), expected);
 	engine.run();
-	auto actual = Wrapper::getMesh(engine)->pde({task.cubicGrid.sizes.at(0) / 2, 22});
+	auto actual = Wrapper::getMesh(engine)->pde({10, 22});
 	
 	ASSERT_TRUE(linal::approximatelyEqual(expected, actual)) << expected << actual;
+	
+//	} catch (Exception e) {
+//		std::cout << e.what();
+//	}
 }
 
 
@@ -76,9 +146,9 @@ TEST(Engine, TwoLayersDifferentRho) {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 		};
 		
-		
-		task.cubicGrid.borderSize = 3;
 		task.globalSettings.CourantNumber = 1.5;
+		task.globalSettings.numberOfSnaps = 0;
+		task.globalSettings.requiredTime = 0.24;
 		
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
 		real rho2rho0 = rho2rho0Initial * pow(2, i), lambda2lambda0 = 1, mu2mu0 = 1;
@@ -92,10 +162,10 @@ TEST(Engine, TwoLayersDifferentRho) {
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		task.materialConditions.byAreas.materials.push_back(newMaterial);
 		
-		task.cubicGrid.sizes = {50, 100};
-		task.cubicGrid.lengths = {2, 1};
-		task.globalSettings.numberOfSnaps = 0;
-		task.globalSettings.requiredTime = 0.24;
+		task.cubicGrid.borderSize = 3;
+		task.cubicGrid.h = {2.0/49, 1.0/99};
+		task.cubicGrid.cubics = {{0, {{50, 100}, {0, 0}}}};
+		
 		
 		Task::InitialCondition::Wave wave;
 		wave.waveType = Waves::T::P_FORWARD;
@@ -109,16 +179,13 @@ TEST(Engine, TwoLayersDifferentRho) {
 		
 		
 		Engine<2> engine(task);
-		
-		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
-		auto init = Wrapper::getMesh(engine)->pdeVars(
-				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
+		auto init = Wrapper::getMesh(engine)->pdeVars({25, 25});
+		ASSERT_NE(linal::zeros(init), init);
 		
 		engine.run();
 		
 //		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
-		auto reflect = Wrapper::getMesh(engine)->pdeVars(
-				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
+		auto reflect = Wrapper::getMesh(engine)->pdeVars({25, 25});
 				
 //		auto transfer = Wrapper::getMesh(engine)->pdeVars(
 //				{task.cubicGrid.sizes(0) / 2, rightNodeIndex});
@@ -154,14 +221,12 @@ TEST(Engine, TwoLayersDifferentE) {
 		Task task;
 		task.globalSettings.dimensionality = 2;
 		task.globalSettings.gridId = Grids::T::CUBIC;
+		task.globalSettings.CourantNumber = 1.5;
 		
 		task.bodies = {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 		};
 		
-		
-		task.cubicGrid.borderSize = 3;
-		task.globalSettings.CourantNumber = 1.5;
 		
 		real rho0 = 1, lambda0 = 2, mu0 = 0.8;
 		real rho2rho0 = 1, lambda2lambda0 = E2E0Initial * pow(2, i), mu2mu0 = E2E0Initial * pow(2, i);
@@ -175,8 +240,9 @@ TEST(Engine, TwoLayersDifferentE) {
 		newMaterial.material = std::make_shared<IsotropicMaterial>(rho, lambda, mu);
 		task.materialConditions.byAreas.materials.push_back(newMaterial);
 		
-		task.cubicGrid.sizes = {50, 100};
-		task.cubicGrid.lengths = {2, 1};
+		task.cubicGrid.borderSize = 3;
+		task.cubicGrid.h = {2.0/49, 1.0/99};
+		task.cubicGrid.cubics = {{0, {{50, 100}, {0, 0}}}};
 		
 		task.globalSettings.numberOfSnaps = 0;
 		task.globalSettings.requiredTime = 0.24;
@@ -193,14 +259,12 @@ TEST(Engine, TwoLayersDifferentE) {
 		
 		
 		Engine<2> engine(task);
-		int leftNodeIndex = (int) (task.cubicGrid.sizes.at(1) * 0.25);
-		auto init = Wrapper::getMesh(engine)->pdeVars(
-				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
+		auto init = Wrapper::getMesh(engine)->pdeVars({25, 25});
+		ASSERT_NE(linal::zeros(init), init);
 		engine.run();
 		
 //		int rightNodeIndex = (int) (task.cubicGrid.sizes(1) * 0.7);
-		auto reflect = Wrapper::getMesh(engine)->pdeVars(
-				{task.cubicGrid.sizes.at(0) / 2, leftNodeIndex});
+		auto reflect = Wrapper::getMesh(engine)->pdeVars({25, 25});
 //		auto transfer = Wrapper::getMesh(engine)->pdeVars(
 //		{task.cubicGrid.sizes(0) / 2, rightNodeIndex});
 

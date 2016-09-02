@@ -51,12 +51,16 @@ TEST(CubicGrid, PartIterator) {
 		counter++;
 	}
 	ASSERT_EQ(X * Y, counter);
+	ASSERT_EQ(grid.slice(2, 3).size(), counter);
+	
 	counter = 0;
 	Int3 min = {2, 2, 3}, max = {4, 3, 6};
 	for (auto it = grid.box(min, max); it != it.end(); ++it) {
 		counter++;
 	}
 	ASSERT_EQ(linal::directProduct(max - min), counter);
+	ASSERT_EQ(grid.box(min, max).size(), counter);
+	
 	auto partIter = grid.box({0, 0, 0}, grid.sizes);
 	for (auto it : grid) {
 		ASSERT_EQ(it, partIter);

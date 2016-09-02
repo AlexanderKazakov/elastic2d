@@ -58,11 +58,18 @@ struct Task {
 	
 	
 	struct CubicGrid {
-		std::vector<real> lengths;  ///< lengthes of cube in each direction
-		std::vector<real> h;        ///< spatial steps in each direction
-		std::vector<int>  sizes;    ///< number of nodes along each direction
-		std::vector<real> startR;   ///< global coordinates of the first real node
-		int borderSize = 0;         ///< number of virtual border nodes for one border point
+		struct Cube {
+			/// number of nodes along each direction
+			std::vector<int> sizes;
+			/// global index of the most left real node
+			std::vector<int> start;
+		};
+		/// spatial steps in each coordinate direction
+		std::vector<real> h;
+		/// number of ghost border nodes used for border and contact calculation
+		int borderSize;
+		/// list of cubic bodies sorted by unique id @see Task::Body
+		std::map<size_t, Cube> cubics;
 	} cubicGrid;
 	
 	

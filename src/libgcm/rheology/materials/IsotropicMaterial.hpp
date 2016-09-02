@@ -5,7 +5,7 @@
 
 namespace gcm {
 struct IsotropicMaterial : public AbstractMaterial {
-	static const Materials::T ID;
+	static const Materials::T Type = Materials::T::ISOTROPIC;
 
 	real rho = 0;                      ///< density
 

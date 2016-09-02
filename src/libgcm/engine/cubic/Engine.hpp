@@ -3,6 +3,7 @@
 
 #include <libgcm/engine/AbstractEngine.hpp>
 #include <libgcm/engine/cubic/AbstractFactory.hpp>
+#include <libgcm/engine/cubic/ContactConditions.hpp>
 
 
 namespace gcm {
@@ -21,6 +22,7 @@ public:
 	typedef AbstractMesh<Grid>                   Mesh;
 	typedef typename Grid::IntD                  IntD;
 	typedef typename Grid::RealD                 RealD;
+	typedef typename Grid::AABB                  AABB;
 	typedef typename Grid::GridId                GridId;
 	typedef typename Grid::ConstructionPack      GridConstructionPack;
 	
@@ -28,15 +30,8 @@ public:
 	virtual ~Engine() { }
 	
 	
-	static int numberOfNodesAlongXPerOneCore(const Task::CubicGrid& task) {
-		return (int) std::round((real) task.sizes.at(0) / Mpi::Size());
-	}
-	
-	
-	/// for tests TODO replace
-	const AbstractGrid* getAbstractGrid() const {
-		assert_eq(bodies.size(), 1);
-		return bodies.front().grid.get();
+	std::shared_ptr<const Mesh> getMesh(const GridId gridId) const {
+		return getBody(gridId).grid;
 	}
 	
 	
@@ -48,6 +43,9 @@ protected:
 	
 private:
 	struct Body {
+		/// For creation of all entities listed below
+		std::shared_ptr<AbstractFactoryBase<Grid>> factory;
+		
 		std::shared_ptr<Mesh> grid;
 		
 		std::shared_ptr<GridCharacteristicMethodBase> gcm;
@@ -57,10 +55,37 @@ private:
 		
 		typedef std::shared_ptr<Snapshotter> SnapPtr;
 		std::vector<SnapPtr> snapshotters;
+		
+		struct Contact {
+			GridId neighborId;
+			int direction;
+			std::shared_ptr<AbstractContactCopier<Grid>> copier;
+		};
+		std::vector<Contact> contacts;
+		
+		bool operator==(const Body& other) const {
+			return grid->id == other.grid->id;
+		}
+		bool operator!=(const Body& other) const {
+			return !(*this == other);
+		}
 	};
 	
 	/// list of all bodies
 	std::vector<Body> bodies;
+	
+	Body& getBody(const GridId gridId) {
+		for (Body& body : bodies) {
+			if (body.grid->id == gridId) { return body; }
+		}
+		THROW_INVALID_ARG("There isn't a body with given id");
+	}
+	const Body& getBody(const GridId gridId) const {
+		for (const Body& body : bodies) {
+			if (body.grid->id == gridId) { return body; }
+		}
+		THROW_INVALID_ARG("There isn't a body with given id");
+	}
 	
 	
 	/** 
@@ -71,13 +96,11 @@ private:
 	createAbstractFactory(const Task::Body& body);
 	
 	
-	/// Functions for GridConstructionPack creation @{
+	void createGridsAndContacts(const Task& task);
+	
+	
 	static GridConstructionPack createGridConstructionPack(
-			const Task& task, const GridId gridId);
-	static IntD calculateSizes(const Task::CubicGrid& task);
-	static RealD calculateH(const Task::CubicGrid& task);
-	static RealD calculateStartR(const Task::CubicGrid& task);
-	///@}
+			const Task::CubicGrid& task, const GridId gridId);
 	
 	
 };

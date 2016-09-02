@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <libgcm/util/math/Area.hpp>
+#include <libgcm/util/math/AABB.hpp>
 
 using namespace gcm;
 
@@ -72,3 +73,35 @@ TEST(Area, StraightBoundedCylinderArea) {
 	ASSERT_ANY_THROW(new StraightBoundedCylinderArea(-1.0, {-3, 2, 4}, {-10, 1, 3}));
 	ASSERT_ANY_THROW(new StraightBoundedCylinderArea(1.0, {-3, 2, 4}, {-3, 2, 4}));
 }
+
+
+TEST(AxesAlignedBoundaryBox, intersection) {
+	typedef AxesAlignedBoundaryBox<Int2> AABB2;
+	AABB2 a;
+	a.min = {0, 1};
+	a.max = {2, 3};
+	AABB2 b = {Int2({1, 1}), Int2({3, 3})};
+	AABB2 ab = AABB2::intersection(a, b);
+	ASSERT_EQ(Int2({1, 1}), ab.min);
+	ASSERT_EQ(Int2({2, 3}), ab.max);
+	ASSERT_EQ(Int2({1, 2}), ab.sizes());
+	ASSERT_TRUE(ab.valid());
+	ASSERT_THROW(ab.sliceDirection(), Exception);
+	
+	typedef AxesAlignedBoundaryBox<Int3> AABB3;
+	AABB3 c = {Int3({ 1, 2, 3}), Int3({5, 6, 7})};
+	AABB3 d = {Int3({-1, 1, 1}), Int3({0, 2, 2})};
+	AABB3 cd = AABB3::intersection(c, d);
+	ASSERT_EQ(Int3({1, 2, 3}), cd.min);
+	ASSERT_EQ(Int3({0, 2, 2}), cd.max);
+	ASSERT_EQ(Int3({-1, 0, -1}), cd.sizes());
+	ASSERT_FALSE(cd.valid());
+	
+	AABB3 slice = {Int3({1, 5, 1}), Int3({5, 5, 5})};
+	ASSERT_EQ(1, slice.sliceDirection());
+	AABB3 slice2 = AABB3::translate(slice, {1, 2, 3});
+	ASSERT_EQ(Int3({2, 7, 4}), slice2.min);
+	ASSERT_EQ(Int3({6, 7, 8}), slice2.max);
+}
+
+

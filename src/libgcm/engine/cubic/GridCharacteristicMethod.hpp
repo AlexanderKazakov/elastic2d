@@ -5,7 +5,7 @@
 #include <libgcm/grid/AbstractGrid.hpp>
 #include <libgcm/util/math/GridCharacteristicMethod.hpp>
 #include <libgcm/util/math/interpolation/interpolation.hpp>
-#include <libgcm/engine/cubic/CubicBorderConditions.hpp>
+#include <libgcm/engine/cubic/BorderConditions.hpp>
 #include <libgcm/engine/cubic/DataBus.hpp>
 
 

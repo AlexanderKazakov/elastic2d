@@ -13,6 +13,7 @@ namespace gcm {
 template<int Dimensionality>
 class AcousticModel {
 public:
+	static const Models::T Type = Models::T::ACOUSTIC;
 	static const int DIMENSIONALITY = Dimensionality;
 	
 	typedef AcousticVariables<DIMENSIONALITY> PdeVariables;

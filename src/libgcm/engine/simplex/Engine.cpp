@@ -44,7 +44,7 @@ Engine(const Task& task) :
 		}
 	}
 	
-	afterGridsConstruction(task);
+	afterConstruction(task);
 }
 
 

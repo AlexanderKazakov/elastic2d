@@ -2,11 +2,12 @@
 #define LIBGCM_LINAL_MULTIINDEX_HPP
 
 #include <libgcm/linal/Matrix.hpp>
+#include <libgcm/linal/functions.hpp>
 
 namespace gcm {
 namespace linal {
 
-/// @name Multiindex iterators 
+/// @name Multiindex iterators
 /// @{
 
 
@@ -14,15 +15,17 @@ namespace linal {
 template<int D>
 struct Multiindex : public VectorInt<D> {
 	typedef VectorInt<D> IntD;
-		
+	
 	Multiindex(const IntD& start, const IntD& bounds_) :
 			IntD(start), bounds(bounds_) { }
-
+	
 	const Multiindex& operator*() const { return (*this); }
-
+	
+	int size() const { return directProduct(bounds); }
+	
 protected:
 	const IntD bounds;
-
+	
 	/**
 	 * Increase index at position i.
 	 * @return is bound at position i reached
@@ -190,7 +193,8 @@ struct SlowZFastX<3> : public Multiindex<3> {
  */
 template<int D, template<int> class RelativeIteratorType>
 struct BoxIterator : public VectorInt<D> {
-	typedef VectorInt<D> IntD;
+	typedef VectorInt<D>               IntD;
+	typedef RelativeIteratorType<D>    RelativeIterator;
 	
 	/**
 	 * Iterator from min INclusive to max EXclusive.
@@ -202,12 +206,14 @@ struct BoxIterator : public VectorInt<D> {
 	BoxIterator(const RelativeIteratorType<D>& relIter, const IntD shift_) :
 			IntD(relIter + shift_), shift(shift_), relativeIterator(relIter) { }
 	
+	
 	BoxIterator& operator++() {
 		++relativeIterator;
 		this->copyFrom(relativeIterator + shift);
 		return (*this);
 	}
-
+	
+	
 	BoxIterator begin() const {
 		return BoxIterator(relativeIterator.begin(), shift);
 	}
@@ -215,9 +221,14 @@ struct BoxIterator : public VectorInt<D> {
 		return BoxIterator(relativeIterator.end(), shift);
 	}
 	
+	
+	int size() const { return relativeIterator.size(); }
+	
+	
 protected:
 	const IntD shift;
-	RelativeIteratorType<D> relativeIterator;
+	RelativeIterator relativeIterator;
+	
 };
 
 

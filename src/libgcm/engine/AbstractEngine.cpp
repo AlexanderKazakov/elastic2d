@@ -14,7 +14,7 @@ AbstractEngine::AbstractEngine(const Task& task) :
 }
 
 
-void AbstractEngine::afterGridsConstruction(const Task& task) {
+void AbstractEngine::afterConstruction(const Task& task) {
 	Clock::timeStep = estimateTimeStep();
 	requiredTime = Clock::TimeStep() *
 			task.globalSettings.numberOfSnaps *
@@ -23,14 +23,12 @@ void AbstractEngine::afterGridsConstruction(const Task& task) {
 		requiredTime = task.globalSettings.requiredTime;
 	}
 	assert_gt(requiredTime, 0);
-	
-	writeSnapshots(0);
 }
 
 
 void AbstractEngine::run() {
-	
 	int step = 0;
+	writeSnapshots(step);
 	Utils::seedRand();
 	
 	while (Clock::Time() < requiredTime) {

@@ -69,7 +69,8 @@ private:
 			assert_lt(wave.direction, TModel::DIMENSIONALITY);
 			
 			auto A = (*gcmMatricesPtr)(wave.direction);
-			int columnNumber = TModel::MATERIALS_WAVES_MAP.at(TMaterial::ID).at(wave.waveType);
+			int columnNumber = TModel::MATERIALS_WAVES_MAP.at(
+					(Materials::T)TMaterial::Type).at(wave.waveType);
 			
 			PdeVector tmp = A.U1.getColumn(columnNumber);
 			real currentValue = PdeVariables::QUANTITIES.at(wave.quantity).Get(tmp);

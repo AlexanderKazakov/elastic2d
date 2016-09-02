@@ -47,7 +47,7 @@ protected:
 	const real CourantNumber = 0;
 	real requiredTime = 0;
 	
-	void afterGridsConstruction(const Task& task);
+	void afterConstruction(const Task& task);
 	virtual void nextTimeStep() = 0;
 	virtual real estimateTimeStep() = 0;
 	virtual void writeSnapshots(const int step) = 0;

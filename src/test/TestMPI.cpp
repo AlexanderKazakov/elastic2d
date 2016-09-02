@@ -89,71 +89,71 @@ INSTANTIATE_TYPED_TEST_CASE_P(AllNodeTypes, TestMpiConnection, AllImplementation
 #endif // GTEST_HAS_TYPED_TEST_P
 
 
-TEST(MPI, MpiEngineVsSequenceEngine) {
-	Task task;
+//TEST(MPI, MpiEngineVsSequenceEngine) {
+//	Task task;
 
-	task.globalSettings.dimensionality = 2;
-	task.globalSettings.gridId = Grids::T::CUBIC;
+//	task.globalSettings.dimensionality = 2;
+//	task.globalSettings.gridId = Grids::T::CUBIC;
 
-	task.bodies = {
-		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
-	};
+//	task.bodies = {
+//		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
+//	};
 
-	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.sizes = {20, 10};
-	task.cubicGrid.lengths = {2, 1};
+//	task.cubicGrid.borderSize = 2;
+//	task.cubicGrid.sizes = {20, 10};
+//	task.cubicGrid.lengths = {2, 1};
 
-	task.globalSettings.CourantNumber = 1.8;
-	task.materialConditions.byAreas.defaultMaterial = 
-			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
-	task.globalSettings.numberOfSnaps = 5;
+//	task.globalSettings.CourantNumber = 1.8;
+//	task.materialConditions.byAreas.defaultMaterial = 
+//			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
+//	task.globalSettings.numberOfSnaps = 5;
 
-	Task::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 2.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
-	task.initialCondition.quantities.push_back(pressure);
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 2.0;
+//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({1, 0.5, 0}));
+//	task.initialCondition.quantities.push_back(pressure);
 	
-	typedef cubic::Engine<2> Engine;
+//	typedef cubic::Engine<2> Engine;
 	
-	// calculate in sequence
-	task.globalSettings.forceSequence = true;
-	Engine sequenceEngine(task);
-	sequenceEngine.run();
+//	// calculate in sequence
+//	task.globalSettings.forceSequence = true;
+//	Engine sequenceEngine(task);
+//	sequenceEngine.run();
 
-	// calculate in parallel
-	task.globalSettings.forceSequence = false;
-	Engine mpiEngine(task);
-	mpiEngine.run();
+//	// calculate in parallel
+//	task.globalSettings.forceSequence = false;
+//	Engine mpiEngine(task);
+//	mpiEngine.run();
 	
 	
-	struct Wrapper {
-		typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
-		static const Mesh* getMesh(const Engine& engine) {
-			const AbstractGrid* grid = engine.getAbstractGrid();
-			const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
-			assert_true(mesh);
-			return mesh;
-		}
-	};
+//	struct Wrapper {
+//		typedef DefaultMesh<ElasticModel<2>, CubicGrid<2>, IsotropicMaterial> Mesh;
+//		static const Mesh* getMesh(const Engine& engine) {
+//			const AbstractGrid* grid = engine.getMesh();
+//			const Mesh* mesh = dynamic_cast<const Mesh*>(grid);
+//			assert_true(mesh);
+//			return mesh;
+//		}
+//	};
 	
-	// check that parallel result is equal to sequence result
-	auto mpiMesh = Wrapper::getMesh(mpiEngine);
-	auto sequenceMesh = Wrapper::getMesh(sequenceEngine);
+//	// check that parallel result is equal to sequence result
+//	auto mpiMesh = Wrapper::getMesh(mpiEngine);
+//	auto sequenceMesh = Wrapper::getMesh(sequenceEngine);
 
-	int numberOfNodesAlongXPerOneCore = Engine::
-			numberOfNodesAlongXPerOneCore(task.cubicGrid);
-	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
+//	int numberOfNodesAlongXPerOneCore = Engine::
+//			numberOfNodesAlongXPerOneCore(task.cubicGrid);
+//	int startX = Mpi::Rank() * numberOfNodesAlongXPerOneCore;
 	
-	for (int x = 0; x < mpiMesh->sizes(0); x++) {
-		for (int y = 0; y < mpiMesh->sizes(1); y++) {
-			ASSERT_EQ(mpiMesh->pde({x, y}), sequenceMesh->pde({x + startX, y})) 
-					<< "x = " << x << " global x = " << x + startX << " y = " << y
-					<< "\nMPI:\n" << mpiMesh->pde({x, y}) 
-					<< "\nsequence:\n" << sequenceMesh->pde({x + startX, y});
-		}
-	}
-}
+//	for (int x = 0; x < mpiMesh->sizes(0); x++) {
+//		for (int y = 0; y < mpiMesh->sizes(1); y++) {
+//			ASSERT_EQ(mpiMesh->pde({x, y}), sequenceMesh->pde({x + startX, y})) 
+//					<< "x = " << x << " global x = " << x + startX << " y = " << y
+//					<< "\nMPI:\n" << mpiMesh->pde({x, y}) 
+//					<< "\nsequence:\n" << sequenceMesh->pde({x + startX, y});
+//		}
+//	}
+//}
 
 
 int main(int argc, char** argv) {

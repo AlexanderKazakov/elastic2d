@@ -14,43 +14,95 @@ template<int Dimensionality>
 Engine<Dimensionality>::Engine(const Task& task) :
 		AbstractEngine(task) {
 	
-	assert_eq(1, task.bodies.size()); // TODO
+	createGridsAndContacts(task);
 	
 	for (const auto& taskBody : task.bodies) {
-		Body body;
-		const GridId gridId = taskBody.first;
-		auto factory = createAbstractFactory(taskBody.second);
-		
-		body.grid = factory->createMesh(task, gridId,
-				createGridConstructionPack(task, gridId));
-		
-		body.gcm = factory->createGcm(task);
+		Body& body = getBody(taskBody.first);
+		body.grid->setUpPde(task);
+		body.gcm = body.factory->createGcm(task);
 		
 		for (const Snapshotters::T snapType : task.globalSettings.snapshottersId) {
 			body.snapshotters.push_back(
-					factory->createSnapshotter(task, snapType));
+					body.factory->createSnapshotter(task, snapType));
 		}
 		
 		for (const Odes::T odeType : taskBody.second.odes) {
-			body.odes.push_back(factory->createOde(odeType));
+			body.odes.push_back(body.factory->createOde(odeType));
 		}
-		
+	}
+	
+	afterConstruction(task);
+}
+
+
+template<int Dimensionality>
+void Engine<Dimensionality>::
+createGridsAndContacts(const Task& task) {
+	assert_eq(task.bodies.size(), task.cubicGrid.cubics.size());
+	for (const auto& taskBody: task.bodies) {
+		Body body;
+		const GridId gridId = taskBody.first;
+		body.factory = createAbstractFactory(taskBody.second);
+		body.grid = body.factory->createMesh(task, gridId,
+				createGridConstructionPack(task.cubicGrid, gridId));
 		bodies.push_back(body);
 	}
 	
-	afterGridsConstruction(task);
+	for (Body& body : bodies) {
+		for (const Body& other : bodies) if (other != body) {
+			AABB intersection = AABB::intersection(
+					body.grid->aabb(), other.grid->aabb());
+			if ( !intersection.valid() ) { continue; } // no intersection
+			
+			typename Body::Contact contact;
+			contact.neighborId = other.grid->id;
+			contact.direction = intersection.sliceDirection();
+			
+			// create box for contact copying
+			AABB buffer = intersection;
+			if (body.grid->start(contact.direction) >
+			   other.grid->start(contact.direction)) {
+			// copy from the bottom
+				buffer.min(contact.direction) -= body.grid->borderSize;
+				buffer.max(contact.direction) -= 1;
+			} else {
+			// copy from the top
+				buffer.min(contact.direction) += 1;
+				buffer.max(contact.direction) += body.grid->borderSize;
+			}
+			contact.copier = body.factory->createContact(
+					 body.grid->box( body.grid->globalToLocal(buffer)),
+					other.grid->box(other.grid->globalToLocal(buffer)),
+					ContactConditions::T::ADHESION,
+					other.grid->getModelType(),
+					other.grid->getMaterialType());
+			
+			body.contacts.push_back(contact);
+		}
+	}
 }
 
 
 template<int Dimensionality>
 void Engine<Dimensionality>::
 nextTimeStep() {
-	
 	for (int stage = 0; stage < Dimensionality; stage++) {
+		
+		for (Body& body : bodies) {
+			for (typename Body::Contact& contact : body.contacts) {
+				if (contact.direction == stage) {
+					contact.copier->apply(
+							*body.grid,
+							*getBody(contact.neighborId).grid);
+				}
+			}
+		}
+		
 		for (Body& body : bodies) {
 			body.gcm->stage(stage, Clock::TimeStep(), *body.grid);
 			body.grid->swapPdeTimeLayers();
 		}
+		
 	}
 	
 	for (Body& body : bodies) {
@@ -127,105 +179,20 @@ createAbstractFactory(const Task::Body& body) {
 template<int Dimensionality>
 typename Engine<Dimensionality>::GridConstructionPack
 Engine<Dimensionality>::
-createGridConstructionPack(const Task& task, const GridId) {
-	assert_eq(1, task.bodies.size()); // TODO
+createGridConstructionPack(const Task::CubicGrid& task, const GridId gridId) {
 	
 	GridConstructionPack pack;
-	pack.borderSize = task.cubicGrid.borderSize;
-	pack.sizes = calculateSizes(task.cubicGrid);
-	pack.h = calculateH(task.cubicGrid);
-	pack.startR = calculateStartR(task.cubicGrid);
+	pack.borderSize = task.borderSize;
+	assert_eq(task.h.size(), DIMENSIONALITY);
+	pack.h.copyFrom(task.h);
+	
+	Task::CubicGrid::Cube cube = task.cubics.at(gridId);
+	assert_eq(cube.sizes.size(), DIMENSIONALITY);
+	pack.sizes.copyFrom(cube.sizes);
+	assert_eq(cube.start.size(), DIMENSIONALITY);
+	pack.start.copyFrom(cube.start);
 	
 	return pack;
-}
-
-
-template<int Dimensionality>
-typename Engine<Dimensionality>::IntD
-Engine<Dimensionality>::
-calculateSizes(const Task::CubicGrid& task) {
-	
-	IntD _sizes;
-	if (!task.h.empty() && !task.lengths.empty()) {
-		assert_true(task.sizes.empty());
-		assert_eq(task.h.size(), DIMENSIONALITY);
-		assert_eq(task.lengths.size(), DIMENSIONALITY);
-		
-		RealD taskLength;
-		taskLength.copyFrom(task.lengths);
-		RealD taskH;
-		taskH.copyFrom(task.h);
-	
-		_sizes = linal::plainDivision(taskLength, taskH) + IntD::Ones();
-	
-	} else {
-		assert_eq(task.sizes.size(), DIMENSIONALITY);
-		_sizes.copyFrom(task.sizes);
-	}
-	
-	if (Mpi::ForceSequence()) {
-		return _sizes;
-	}
-	
-	// MPI - we divide the grid among processes equally along x-axis
-	_sizes(0) = numberOfNodesAlongXPerOneCore(task);
-	if (Mpi::Rank() == Mpi::Size() - 1) {
-	// in order to keep specified in task number of nodes
-		_sizes(0) = task.sizes.at(0) -
-		            numberOfNodesAlongXPerOneCore(task) * (Mpi::Size() - 1);
-	}
-	
-	return _sizes;
-}
-
-
-template<int Dimensionality>
-typename Engine<Dimensionality>::RealD
-Engine<Dimensionality>::
-calculateH(const Task::CubicGrid& task) {
-	
-	RealD _h;
-	if (!task.lengths.empty() && !task.sizes.empty()) {
-		assert_true(task.h.empty());
-		assert_eq(task.sizes.size(), DIMENSIONALITY);
-		assert_eq(task.lengths.size(), DIMENSIONALITY);
-		
-		RealD taskLength; 
-		taskLength.copyFrom(task.lengths);
-		IntD taskSizes; 
-		taskSizes.copyFrom(task.sizes);
-		
-		_h = linal::plainDivision(taskLength, taskSizes - IntD::Ones());
-	
-	} else {
-		assert_eq(task.h.size(), DIMENSIONALITY);
-		_h.copyFrom(task.h);
-	}
-	
-	return _h;
-}
-
-
-template<int Dimensionality>
-typename Engine<Dimensionality>::RealD
-Engine<Dimensionality>::
-calculateStartR(const Task::CubicGrid &task) {
-	RealD _startR = RealD::Zeros();
-	
-	if (!task.startR.empty()) {
-		assert_eq(task.startR.size(), DIMENSIONALITY);
-		_startR.copyFrom(task.startR);
-	}
-	
-	if (Mpi::ForceSequence()) {
-		return _startR;
-	}
-	
-	// MPI - divide the grid among processes equally along x-axis
-	_startR(0) += Mpi::Rank() * numberOfNodesAlongXPerOneCore(task) *
-			calculateH(task)(0);
-	
-	return _startR;
 }
 
 

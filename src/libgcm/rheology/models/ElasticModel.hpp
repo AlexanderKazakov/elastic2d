@@ -10,7 +10,9 @@ namespace gcm {
 template<int Dimensionality>
 class ElasticModel {
 public:
+	static const Models::T Type = Models::T::ELASTIC;
 	static const int DIMENSIONALITY = Dimensionality;
+	
 	typedef VelocitySigmaVariables<DIMENSIONALITY> PdeVariables;
 	typedef typename PdeVariables::PdeVector       PdeVector;
 	
