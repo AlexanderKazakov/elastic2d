@@ -1,12 +1,9 @@
 #ifndef LIBGCM_CUBIC_GRIDCHARACTERISTICMETHOD_HPP
 #define LIBGCM_CUBIC_GRIDCHARACTERISTICMETHOD_HPP
 
-#include <libgcm/util/task/Task.hpp>
 #include <libgcm/grid/AbstractGrid.hpp>
 #include <libgcm/util/math/GridCharacteristicMethod.hpp>
 #include <libgcm/util/math/interpolation/interpolation.hpp>
-#include <libgcm/engine/cubic/BorderConditions.hpp>
-#include <libgcm/engine/cubic/DataBus.hpp>
 
 
 namespace gcm {
@@ -19,7 +16,7 @@ public:
 			const int s, const real& timeStep, AbstractGrid& mesh_) const = 0;
 	
 	virtual real calculateTimeStep(
-			AbstractGrid& mesh_, const real CourantNumber) = 0;
+			AbstractGrid& mesh_, const real CourantNumber) const = 0;
 };
 
 
@@ -35,7 +32,7 @@ public:
 	typedef typename Mesh::Iterator              Iterator;
 	
 	
-	GridCharacteristicMethod(const Task& task) : borderConditions(task) { }
+	GridCharacteristicMethod(const Task&) { }
 	
 	
 	/**
@@ -48,10 +45,6 @@ public:
 	virtual void stage(
 			const int s, const real& timeStep, AbstractGrid& mesh_) const override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		
-		DataBus<Mesh>::exchangeNodesWithNeighbors(&mesh);
-		borderConditions.apply(&mesh, s);
-		
 		for (auto it : mesh) {
 			mesh._pdeNew(it) = localGcmStep(
 					mesh.matrices(it)->m[s].U1,
@@ -59,12 +52,11 @@ public:
 					interpolateValuesAround(mesh, s, it,
 							crossingPoints(it, s, timeStep, mesh)));
 		}
-		
 	}
 	
 	
 	virtual real calculateTimeStep(
-			AbstractGrid& mesh_, const real CourantNumber) override {
+			AbstractGrid& mesh_, const real CourantNumber) const override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		return CourantNumber *
 				mesh.getMinimalSpatialStep() / mesh.getMaximalEigenvalue();
@@ -105,9 +97,6 @@ public:
 		return ans;
 	}
 	
-	
-private:
-	const BorderConditions<Mesh> borderConditions;
 	
 };
 

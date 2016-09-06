@@ -25,6 +25,7 @@ public:
 		quantityToWrite = task.detector.quantities[0];
 		detectionArea = task.detector.area;
 		seismo.clear();
+		gridId = task.detector.gridId;
 		assert_eq(Mpi::Size() % 2, 1);
 	}
 	
@@ -33,12 +34,29 @@ public:
 		if (Mpi::Rank() != Mpi::Size() / 2) { return; }
 		const TMesh* mesh = dynamic_cast<const TMesh*>(mesh_);
 		assert_true(mesh);
+		int direction = DIMENSIONALITY - 1;
+		
+		
+		// along Z-axis
+		IntD min = mesh->sizes / 2;
+		min(direction) = 0;
+		IntD max = min + IntD::Ones();
+		max(direction) = mesh->sizes(direction);
+		
+		std::vector<real> Vz, /*Szz,*/ coordZ;
+		for (auto it = mesh->box(min, max); it != it.end(); ++it) {
+			coordZ.push_back(mesh->coords(it)(direction));
+			Vz.push_back(mesh->pdeVars(it).velocity(direction));
+		}
+		FileUtils::writeStdVectorsToTextFile(makeFileNameForSnapshot(
+						std::to_string(mesh->id),
+						step, FILE_EXTENSION, "zaxis"), 
+				std::vector<Values>({coordZ, Vz/*, Szz*/}));
+		
 		
 		// upper detector
-		int direction = DIMENSIONALITY - 1;
-		int indexOfDetectingSide = mesh->sizes(direction) - 1;
-		
-		for (auto it = mesh->slice(direction, indexOfDetectingSide);
+		if (mesh_->id != gridId) { return; }
+		for (auto it = mesh->rightBorder(direction);
 				it != it.end(); ++it) {
 			auto coords = mesh->coords(it);
 			if (detectionArea->contains(coords)) {
@@ -57,27 +75,12 @@ public:
 				step, FILE_EXTENSION, "detector"), 
 				std::vector<Values>({seismo}));
 		
-		// along Z-axis
-		IntD min = mesh->sizes / 2;
-		min(0) = 0;
-		IntD max = mesh->sizes / 2 + IntD::Ones();
-		max(DIMENSIONALITY) = mesh->sizes(DIMENSIONALITY);
-		
-		std::vector<real> Vz, Szz, coordZ;
-		for (auto it = mesh->box(min, max); it != it.end(); ++it) {
-			coordZ.push_back(mesh->coords(it)(DIMENSIONALITY));
-			Vz.push_back(mesh->pdeVars(it).velocity(DIMENSIONALITY));
-//			Szz.push_back(mesh->pdeVars(it).sigma(DIMENSIONALITY, DIMENSIONALITY));
-		}
-		FileUtils::writeStdVectorsToTextFile(makeFileNameForSnapshot(
-						std::to_string(mesh->id),
-						step, FILE_EXTENSION, "zaxis"), 
-				std::vector<Values>({coordZ, Vz, Szz}));
 	}
 	
 	
 private:
 	typedef std::vector<real> Values;
+	size_t gridId;
 	Values seismo;
 	Values valuesInArea;
 	

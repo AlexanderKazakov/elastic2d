@@ -4,12 +4,13 @@ set grid
 unset key
 
 set xlabel "z"
-list = system('ls snapshots/zaxis')
+list = system('ls snapshots/zaxis/all')
 
+set yrange [-0.1 : 0.1]
 do for [file in list] {
     set ylabel "Vz"
-    set output sprintf('snapshots/zaxis/Vz%s.png', file)
-    plot sprintf('snapshots/zaxis/%s', file) using 1:2 with lines
+    set output sprintf('snapshots/zaxis/all/%s.png', file)
+    plot sprintf('snapshots/zaxis/all/%s', file) using 1:2 with lines
 }
 
 
@@ -17,6 +18,7 @@ set xlabel "t"
 set ylabel "Vz"
 list2 = system('ls snapshots/detector')
 
+set yrange [-0.02 : 0.02]
 do for [file in list2] {
     set output sprintf('snapshots/detector/%s.png', file)
     plot sprintf('snapshots/detector/%s', file) using 0:1 with lines

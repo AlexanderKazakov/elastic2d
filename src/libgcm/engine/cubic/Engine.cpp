@@ -18,8 +18,9 @@ Engine<Dimensionality>::Engine(const Task& task) :
 	
 	for (const auto& taskBody : task.bodies) {
 		Body& body = getBody(taskBody.first);
-		body.grid->setUpPde(task);
+		body.mesh->setUpPde(task);
 		body.gcm = body.factory->createGcm(task);
+		body.border = body.factory->createBorder(task, body.mesh);
 		
 		for (const Snapshotters::T snapType : task.globalSettings.snapshottersId) {
 			body.snapshotters.push_back(
@@ -43,7 +44,7 @@ createGridsAndContacts(const Task& task) {
 		Body body;
 		const GridId gridId = taskBody.first;
 		body.factory = createAbstractFactory(taskBody.second);
-		body.grid = body.factory->createMesh(task, gridId,
+		body.mesh = body.factory->createMesh(task, gridId,
 				createGridConstructionPack(task.cubicGrid, gridId));
 		bodies.push_back(body);
 	}
@@ -51,31 +52,31 @@ createGridsAndContacts(const Task& task) {
 	for (Body& body : bodies) {
 		for (const Body& other : bodies) if (other != body) {
 			AABB intersection = AABB::intersection(
-					body.grid->aabb(), other.grid->aabb());
+					body.mesh->aabb(), other.mesh->aabb());
 			if ( !intersection.valid() ) { continue; } // no intersection
 			
 			typename Body::Contact contact;
-			contact.neighborId = other.grid->id;
+			contact.neighborId = other.mesh->id;
 			contact.direction = intersection.sliceDirection();
 			
 			// create box for contact copying
 			AABB buffer = intersection;
-			if (body.grid->start(contact.direction) >
-			   other.grid->start(contact.direction)) {
+			if (body.mesh->start(contact.direction) >
+			   other.mesh->start(contact.direction)) {
 			// copy from the bottom
-				buffer.min(contact.direction) -= body.grid->borderSize;
+				buffer.min(contact.direction) -= body.mesh->borderSize;
 				buffer.max(contact.direction) -= 1;
 			} else {
 			// copy from the top
 				buffer.min(contact.direction) += 1;
-				buffer.max(contact.direction) += body.grid->borderSize;
+				buffer.max(contact.direction) += body.mesh->borderSize;
 			}
 			contact.copier = body.factory->createContact(
-					 body.grid->box( body.grid->globalToLocal(buffer)),
-					other.grid->box(other.grid->globalToLocal(buffer)),
+					 body.mesh->box( body.mesh->globalToLocal(buffer)),
+					other.mesh->box(other.mesh->globalToLocal(buffer)),
 					ContactConditions::T::ADHESION,
-					other.grid->getModelType(),
-					other.grid->getMaterialType());
+					other.mesh->getModelType(),
+					other.mesh->getMaterialType());
 			
 			body.contacts.push_back(contact);
 		}
@@ -89,25 +90,29 @@ nextTimeStep() {
 	for (int stage = 0; stage < Dimensionality; stage++) {
 		
 		for (Body& body : bodies) {
+			body.border->apply(*body.mesh, stage);
+		}
+		
+		for (Body& body : bodies) {
 			for (typename Body::Contact& contact : body.contacts) {
 				if (contact.direction == stage) {
 					contact.copier->apply(
-							*body.grid,
-							*getBody(contact.neighborId).grid);
+							*body.mesh,
+							*getBody(contact.neighborId).mesh);
 				}
 			}
 		}
 		
 		for (Body& body : bodies) {
-			body.gcm->stage(stage, Clock::TimeStep(), *body.grid);
-			body.grid->swapPdeTimeLayers();
+			body.gcm->stage(stage, Clock::TimeStep(), *body.mesh);
+			body.mesh->swapPdeTimeLayers();
 		}
 		
 	}
 	
 	for (Body& body : bodies) {
 		for (typename Body::OdePtr ode : body.odes) {
-			ode->apply(*body.grid, Clock::TimeStep());
+			ode->apply(*body.mesh, Clock::TimeStep());
 		}
 	}
 }
@@ -119,7 +124,7 @@ estimateTimeStep() {
 	/// minimal among all bodies
 	real minimalTimeStep = std::numeric_limits<real>::max();
 	for (const Body& body : bodies) {
-		real bodyTimeStep = body.gcm->calculateTimeStep(*body.grid, CourantNumber);
+		real bodyTimeStep = body.gcm->calculateTimeStep(*body.mesh, CourantNumber);
 		if (bodyTimeStep < minimalTimeStep) {
 			minimalTimeStep = bodyTimeStep;
 		}
@@ -133,7 +138,7 @@ void Engine<Dimensionality>::
 writeSnapshots(const int step) {
 	for (Body& body : bodies) {
 		for (typename Body::SnapPtr snapshotter : body.snapshotters) {
-			snapshotter->snapshot(body.grid.get(), step);
+			snapshotter->snapshot(body.mesh.get(), step);
 		}
 	}
 }

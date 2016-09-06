@@ -4,6 +4,7 @@
 
 #include <launcher/getopt_wrapper.hpp>
 #include <launcher/skull.hpp>
+#include <launcher/ndi.hpp>
 
 
 using namespace gcm;
@@ -34,11 +35,12 @@ int main(int argc, char** argv) {
 	else if (taskId == "skullAcs"  ) { task = skullAcoustic(); }
 	else if (taskId == "contact"   ) { task = parseTaskContact2D(); }
 	else if (taskId == "tmp"       ) { task = parseTaskTmp(); }
+	else if (taskId == "ndi"       ) { task = ndi(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;
 	}
-
+	
 	try {
 		auto t1 = std::chrono::high_resolution_clock::now();
 		createEngine(task)->run();
@@ -434,14 +436,16 @@ inline Task parseTaskCubicAcoustic() {
 	task.initialCondition.quantities.push_back(pressure);
 	
 	
-	Task::CubicGridBorderCondition borderCondition;
-	borderCondition.area = std::make_shared<AxisAlignedBoxArea>
+	auto area = std::make_shared<AxisAlignedBoxArea>
 			(Real3({-1e+3, -1e+3, -1e+3}), Real3({1e+3, 1e-5, 1e+3}));
-	borderCondition.values = {
-			{PhysicalQuantities::T::PRESSURE, [] (real) {return 0; }},
+	Task::CubicBorderCondition::Values freeBorder = {
+		{PhysicalQuantities::T::PRESSURE, [] (real) {return 0; }},
 	};
-	task.cubicGridBorderConditions.push_back(borderCondition);
-	
+	task.cubicBorderConditions = {
+		{0, {
+			 {1, area, freeBorder},
+		 }},
+	};
 	
 	
 	task.vtkSnapshotter.quantitiesToSnap = {
@@ -454,35 +458,78 @@ inline Task parseTaskCubicAcoustic() {
 
 inline Task parseTaskTmp() {
 	Task task;
-	task.globalSettings.dimensionality = 2;
+	int m = 2; //< multiplier
+	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::CUBIC;
-	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
-	task.globalSettings.numberOfSnaps = 70;
-	task.globalSettings.CourantNumber = 0.9;
+	task.globalSettings.numberOfSnaps = 180;
+	task.globalSettings.stepsPerSnap = m;
+	task.globalSettings.CourantNumber = 1;
+	
+	
+	task.globalSettings.snapshottersId = {
+			Snapshotters::T::VTK,
+			Snapshotters::T::SLICESNAP
+	};
+	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
+	task.detector.quantities = { PhysicalQuantities::T::Vz };
+	task.detector.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-1e+3, -1e+3, 12}), Real3({1e+3, 1e+3, 1e+3}));
+	task.detector.gridId = 1;
 	
 	task.bodies = {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 	};
 	
-	task.materialConditions.byAreas.defaultMaterial = 
-			std::make_shared<IsotropicMaterial>(4, 2, 0.5);
+	
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
+	task.materialConditions.byBodies.bodyMaterialMap = {
+		{0, std::make_shared<IsotropicMaterial>(2, 10, 2)},
+		{1, std::make_shared<IsotropicMaterial>(6,  6, 2)},
+	};
 	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.h = {1, 0.25};
+	task.cubicGrid.h = {1.0 / m, 1.0 / m, 0.5 / m};
 	task.cubicGrid.cubics = {
-			{0, {{20, 41}, { 0,  0}}},
-			{1, {{10, 41}, { 5, 40}}}
+			{0, {{40 * m + 1, 40 * m + 1, 20 * m + 1}, { 0,  0,  0}}},
+			{1, {{10 * m + 1, 10 * m + 1, 20 * m + 1}, { 15 * m, 15 * m, 20 * m}}}
 	};
 	
-	Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::T::P_FORWARD;
-	wave.direction = 1; // along y
-	wave.quantity = PhysicalQuantities::T::PRESSURE;
-	wave.quantityValue = 1;
-	Real3 min({-1000, 2.5, -1000});
-	Real3 max({ 1000, 7.5,  1000});
-	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-	task.initialCondition.waves.push_back(wave);
+	
+	Task::CubicBorderCondition::Values freeBorderZ = {
+		{PhysicalQuantities::T::Szz, [](real) {return 0;} },
+		{PhysicalQuantities::T::Sxz, [](real) {return 0;} },
+		{PhysicalQuantities::T::Syz, [](real) {return 0;} },
+	};
+	Task::CubicBorderCondition::Values freeBorderX = {
+		{PhysicalQuantities::T::Sxx, [](real) {return 0;} },
+		{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
+		{PhysicalQuantities::T::Sxz, [](real) {return 0;} },
+	};
+	Task::CubicBorderCondition::Values freeBorderY = {
+		{PhysicalQuantities::T::Syy, [](real) {return 0;} },
+		{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
+		{PhysicalQuantities::T::Syz, [](real) {return 0;} },
+	};
+	Task::CubicBorderCondition::Values forceZ = {
+		{PhysicalQuantities::T::Szz, [](real t) {return (t < 1) ? -1 : 0;} },
+		{PhysicalQuantities::T::Sxz, [](real) {return 0;} },
+		{PhysicalQuantities::T::Syz, [](real) {return 0;} },
+	};
+	auto area = std::make_shared<InfiniteArea>();
+	auto up   = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-1e+3, -1e+3, 12}), Real3({1e+3, 1e+3, 1e+3}));
+	task.cubicBorderConditions = {
+		{0, {
+			 {2, area, freeBorderZ},
+		 }},
+		{1, {
+			 {0, area, freeBorderX},
+			 {1, area, freeBorderY},
+			 {2, area, freeBorderZ},
+			 {2, up,   forceZ},
+		 }},
+	};
+	
 	
 	return task;
 }

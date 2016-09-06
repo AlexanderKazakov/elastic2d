@@ -171,11 +171,16 @@ struct Task {
 	} initialCondition;
 	
 	
-	struct CubicGridBorderCondition {
+	struct CubicBorderCondition {
+		int direction;
 		std::shared_ptr<Area> area;
-		std::map<PhysicalQuantities::T, TimeDependency> values;
+		typedef std::map<PhysicalQuantities::T, TimeDependency> Values;
+		Values values;
 	};
-	std::vector<CubicGridBorderCondition> cubicGridBorderConditions;
+	/// lists of conditions for all bodies;
+	/// conditions in lists are applied in sequence overwriting each other,
+	/// i.e if two conditions share some node, the last one will be applied
+	std::map<size_t, std::vector<CubicBorderCondition>> cubicBorderConditions;
 	
 	
 	struct BorderCondition {
@@ -202,6 +207,7 @@ struct Task {
 	struct Detector {
 		std::vector<PhysicalQuantities::T> quantities;
 		std::shared_ptr<Area> area;
+		size_t gridId;
 	} detector;
 	
 };

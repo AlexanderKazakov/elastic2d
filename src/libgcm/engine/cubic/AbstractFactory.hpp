@@ -8,6 +8,7 @@
 #include <libgcm/engine/mesh/AbstractMesh.hpp>
 #include <libgcm/engine/cubic/GridCharacteristicMethod.hpp>
 #include <libgcm/engine/cubic/ContactConditions.hpp>
+#include <libgcm/engine/cubic/BorderConditions.hpp>
 #include <libgcm/rheology/materials/materials.hpp>
 
 
@@ -26,6 +27,7 @@ public:
 	typedef std::shared_ptr<AbstractOde>                  OdePtr;
 	typedef std::shared_ptr<Snapshotter>                  SnapPtr;
 	typedef std::shared_ptr<AbstractContactCopier<TGrid>> ContactPtr;
+	typedef std::shared_ptr<AbstractBorderConditions>     BorderPtr;
 	
 	typedef typename TGrid::ConstructionPack     GridConstructionPack;
 	typedef typename TGrid::PartIterator         PartIterator;
@@ -36,6 +38,8 @@ public:
 			const GridConstructionPack& constructionPack) = 0;
 	
 	virtual GcmPtr createGcm(const Task& task) = 0;
+	
+	virtual BorderPtr createBorder(const Task& task, const MeshPtr mesh) = 0;
 	
 	virtual OdePtr createOde(const Odes::T type) = 0;
 	
@@ -64,6 +68,7 @@ public:
 	typedef typename Base::GridId                  GridId;
 	typedef typename Base::GridConstructionPack    GridConstructionPack;
 	typedef typename Base::ContactPtr              ContactPtr;
+	typedef typename Base::BorderPtr               BorderPtr;
 	typedef typename Base::PartIterator            PartIterator;
 	
 	
@@ -76,6 +81,11 @@ public:
 		return std::make_shared<GridCharacteristicMethod<Mesh>>(task);
 	}
 	
+	virtual BorderPtr createBorder(
+			const Task& task, const MeshPtr mesh) override {
+		return std::make_shared<BorderConditions<Mesh>>(task, *mesh);
+	}
+	
 	virtual OdePtr createOde(const Odes::T type) override {
 		assert_true(Odes::T::MAXWELL_VISCOSITY == type); // TODO
 		return std::make_shared<MaxwellViscosityOde<Mesh>>();
@@ -86,8 +96,6 @@ public:
 		switch (type) {
 			case Snapshotters::T::VTK:
 				return std::make_shared<VtkSnapshotter<Mesh>>(task);
-			case Snapshotters::T::DETECTOR:
-				return std::make_shared<Detector<Mesh>>(task);
 			case Snapshotters::T::SLICESNAP:
 				return std::make_shared<SliceSnapshotter<Mesh>>(task);
 			default:

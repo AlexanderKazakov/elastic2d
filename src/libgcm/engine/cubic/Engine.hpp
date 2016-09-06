@@ -4,6 +4,7 @@
 #include <libgcm/engine/AbstractEngine.hpp>
 #include <libgcm/engine/cubic/AbstractFactory.hpp>
 #include <libgcm/engine/cubic/ContactConditions.hpp>
+#include <libgcm/engine/cubic/BorderConditions.hpp>
 
 
 namespace gcm {
@@ -31,7 +32,7 @@ public:
 	
 	
 	std::shared_ptr<const Mesh> getMesh(const GridId gridId) const {
-		return getBody(gridId).grid;
+		return getBody(gridId).mesh;
 	}
 	
 	
@@ -46,15 +47,11 @@ private:
 		/// For creation of all entities listed below
 		std::shared_ptr<AbstractFactoryBase<Grid>> factory;
 		
-		std::shared_ptr<Mesh> grid;
+		std::shared_ptr<Mesh> mesh;
 		
 		std::shared_ptr<GridCharacteristicMethodBase> gcm;
 		
-		typedef std::shared_ptr<AbstractOde> OdePtr;
-		std::vector<OdePtr> odes;
-		
-		typedef std::shared_ptr<Snapshotter> SnapPtr;
-		std::vector<SnapPtr> snapshotters;
+		std::shared_ptr<AbstractBorderConditions> border;
 		
 		struct Contact {
 			GridId neighborId;
@@ -63,8 +60,14 @@ private:
 		};
 		std::vector<Contact> contacts;
 		
+		typedef std::shared_ptr<AbstractOde> OdePtr;
+		std::vector<OdePtr> odes;
+		
+		typedef std::shared_ptr<Snapshotter> SnapPtr;
+		std::vector<SnapPtr> snapshotters;
+		
 		bool operator==(const Body& other) const {
-			return grid->id == other.grid->id;
+			return mesh->id == other.mesh->id;
 		}
 		bool operator!=(const Body& other) const {
 			return !(*this == other);
@@ -76,13 +79,13 @@ private:
 	
 	Body& getBody(const GridId gridId) {
 		for (Body& body : bodies) {
-			if (body.grid->id == gridId) { return body; }
+			if (body.mesh->id == gridId) { return body; }
 		}
 		THROW_INVALID_ARG("There isn't a body with given id");
 	}
 	const Body& getBody(const GridId gridId) const {
 		for (const Body& body : bodies) {
-			if (body.grid->id == gridId) { return body; }
+			if (body.mesh->id == gridId) { return body; }
 		}
 		THROW_INVALID_ARG("There isn't a body with given id");
 	}

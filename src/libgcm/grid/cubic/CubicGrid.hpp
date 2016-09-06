@@ -58,6 +58,15 @@ public:
 		return PartIterator(min, min, max);
 	}
 	
+	/** @name Iteration over borders normal to direction @{ */
+	PartIterator leftBorder(const int direction) const {
+		return slice(direction, 0);
+	}
+	PartIterator rightBorder(const int direction) const {
+		return slice(direction, sizes(direction) - 1);
+	}
+	/** @} */
+	
 	/**
 	 * Iteration over rectangular box of the grid
 	 * from min INclusive to max EXclusive
