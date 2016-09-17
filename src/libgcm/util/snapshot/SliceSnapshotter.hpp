@@ -4,6 +4,7 @@
 #include <libgcm/util/snapshot/Snapshotter.hpp>
 
 namespace gcm {
+
 /**
  * Write Szz and Vz along Z-axis into one text file
  * and mean detector value from the top of cube (along Z) into another one.
@@ -68,12 +69,13 @@ public:
 				std::accumulate(valuesInArea.begin(), valuesInArea.end(), 0.0) /
 				(real) valuesInArea.size();
 		valuesInArea.clear();
+		times.push_back(Clock::Time());
 		seismo.push_back((precision)valueToWrite);
 		
 		FileUtils::writeStdVectorsToTextFile(makeFileNameForSnapshot(
 				std::to_string(mesh->id),
 				step, FILE_EXTENSION, "detector"), 
-				std::vector<Values>({seismo}));
+				std::vector<Values>({times, seismo}));
 		
 	}
 	
@@ -81,8 +83,9 @@ public:
 private:
 	typedef std::vector<real> Values;
 	size_t gridId;
-	Values seismo;
-	Values valuesInArea;
+	Values times; //< array of time moments
+	Values seismo; //< array of values at time moments
+	Values valuesInArea; //< helper
 	
 	std::shared_ptr<Area> detectionArea;
 	

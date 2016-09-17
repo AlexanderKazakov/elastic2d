@@ -45,8 +45,8 @@ struct OrthotropicMaterial : public AbstractMaterial {
 		auto ans = ElasticMatrix::Zeros();
 		
 		ans(0, 0) = c11; ans(0, 1) = c12; ans(0, 2) = c13;
-		                 ans(1, 1) = c22; ans(1, 2) = c23;
-		                                  ans(2, 2) = c33;
+		ans(1, 0) = c12; ans(1, 1) = c22; ans(1, 2) = c23;
+		ans(2, 0) = c13; ans(2, 1) = c23; ans(2, 2) = c33;
 		
 		ans(3, 3) = c44; ans(4, 4) = c55; ans(5, 5) = c66;
 		

@@ -85,9 +85,9 @@ createCompositeMaterial(const real phi) {
 inline std::shared_ptr<IsotropicMaterial>
 createNdiMaterial() {
 /// create "lead metaniobate" material for ndi prism
-	real E = 68e+9; // Young
+	real E = 68e+9/2; // Young
 	real nu = 0.19; // Puasson
-	real rho = 6e+3;
+	real rho = 8e+3;
 	return std::make_shared<IsotropicMaterial>(rho, lambda(E, nu), mu(E, nu));
 }
 
@@ -113,7 +113,7 @@ inline Task ndiCommon() {
 inline Task ndiEmpty() {
 	Task task = ndiCommon();
 	task.globalSettings.numberOfSnaps = 100;
-	task.globalSettings.stepsPerSnap = 5;
+	task.globalSettings.stepsPerSnap = 7;
 	
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC,   Models::T::ELASTIC, {}}}
@@ -125,7 +125,7 @@ inline Task ndiEmpty() {
 	};
 	
 	real prismDiameter = 6.35e-3;
-	real prismLength = 10e-3;
+	real prismLength = 6e-3;
 	int prismSizeY = 41, prismSizeX = 11;
 	real hX = prismDiameter / prismSizeX, hY = prismLength / prismSizeY;
 	task.cubicGrid.h = {hX, hY};
@@ -164,11 +164,11 @@ inline Task ndi() {
 	task.materialConditions.byBodies.bodyMaterialMap.insert(
 //			{0, createCompositeMaterial(0)});
 			{0, std::make_shared<OrthotropicMaterial>(
-					IsotropicMaterial(1.6e+3, 7e+9, 1.5e+9)) });
+					IsotropicMaterial(1e+3, 12e+9, 3e+9)) });
 	
-	int sampleSizeY = 31;
+	int sampleSizeY = 41;
 	task.cubicGrid.cubics.insert(
-			{0, {{21, sampleSizeY}, { 0, 1 - sampleSizeY}}});
+			{0, {{21, sampleSizeY}, { 0, 1 - sampleSizeY - 100}}});
 	
 	task.cubicBorderConditions.insert(
 		{0, {

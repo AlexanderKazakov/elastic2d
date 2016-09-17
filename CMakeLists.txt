@@ -84,6 +84,7 @@ file(GLOB_RECURSE GCM_EXE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/launcher/*.cpp"
 file(GLOB_RECURSE LIBGCM_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/libgcm/*.cpp")
 file(GLOB_RECURSE LIBCGALMESHER_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/libcgalmesher/*.cpp")
 file(GLOB_RECURSE SEQUENCE_TEST_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/*.cpp")
+file(GLOB_RECURSE NDI_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/ndi/*.cpp")
 set(TEST_MPI_FILE src/test/TestMPI.cpp)
 
 #libcgalmesher
@@ -95,6 +96,11 @@ add_library(gcm SHARED ${LIBGCM_SOURCES})
 # gcm_exe
 add_executable(gcm_exe ${GCM_EXE_SOURCES} ${HEADERS})
 target_link_libraries(gcm_exe gcm cgalmesher ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
+
+# ndi
+add_executable(ndi ${NDI_SOURCES} ${HEADERS})
+target_link_libraries(ndi gcm cgalmesher ${CGAL_LIBRARIES} ${MPI_CXX_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${VTK_LIBRARIES})
+
 
 # tests
 add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})

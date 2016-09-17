@@ -121,15 +121,19 @@ nextTimeStep() {
 template<int Dimensionality>
 real Engine<Dimensionality>::
 estimateTimeStep() {
-	/// minimal among all bodies
-	real minimalTimeStep = std::numeric_limits<real>::max();
+	real maxEigenvalue = 0;
+	RealD h = bodies.front().mesh->h;
 	for (const Body& body : bodies) {
-		real bodyTimeStep = body.gcm->calculateTimeStep(*body.mesh, CourantNumber);
-		if (bodyTimeStep < minimalTimeStep) {
-			minimalTimeStep = bodyTimeStep;
+		assert_true(h == body.mesh->h);
+		real eigenvalue = body.mesh->getMaximalEigenvalue();
+		if (eigenvalue > maxEigenvalue) {
+			maxEigenvalue = eigenvalue;
 		}
 	}
-	return minimalTimeStep;
+	
+	return CourantNumber * 
+			bodies.front().mesh->getMinimalSpatialStep() /
+			maxEigenvalue;
 }
 
 
