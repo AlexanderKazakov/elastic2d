@@ -11,6 +11,7 @@ namespace gcm {
  */
 template<typename Point>
 struct AxesAlignedBoundaryBox {
+	typedef typename Point::ElementType Coordinate;
 	static const int D = Point::SIZE;
 	
 	/// the most left point of the box
@@ -39,6 +40,22 @@ struct AxesAlignedBoundaryBox {
 			if (sizes()(i) == 0) { return i; }
 		}
 		THROW_INVALID_ARG("The AABB has non-zero lengthes along all directions");
+	}
+	
+	
+	/**
+	 * Minimal AABB width (length) and index of its axis
+	 */
+	std::pair<Coordinate, int> minimalWidth() const {
+		int axis = 0;
+		Coordinate minWidth = sizes()(axis);
+		for (int i = 1; i < D; i++) {
+			if (sizes()(i) < minWidth) {
+				axis = i;
+				minWidth = sizes()(axis);
+			}
+		}
+		return {minWidth, axis};
 	}
 	
 	

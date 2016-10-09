@@ -99,12 +99,12 @@ inline Task ndiCommon() {
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	task.globalSettings.snapshottersId = {
 			Snapshotters::T::VTK,
-			Snapshotters::T::SLICESNAP
+//			Snapshotters::T::SLICESNAP
 	};
 	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
-	task.detector.quantities = { PhysicalQuantities::T::Vy };
-	task.detector.gridId = 1;
-	task.globalSettings.CourantNumber = 0.5;
+//	task.detector.quantities = { PhysicalQuantities::T::Vy };
+//	task.detector.gridId = 1;
+	task.globalSettings.CourantNumber = 0.9;
 	
 	return task;
 }
@@ -113,10 +113,10 @@ inline Task ndiCommon() {
 inline Task ndiEmpty() {
 	Task task = ndiCommon();
 	task.globalSettings.numberOfSnaps = 100;
-	task.globalSettings.stepsPerSnap = 7;
+	task.globalSettings.stepsPerSnap = 3;
 	
 	task.bodies = {
-			{1, {Materials::T::ISOTROPIC,   Models::T::ELASTIC, {}}}
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
 	};
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
@@ -126,11 +126,15 @@ inline Task ndiEmpty() {
 	
 	real prismDiameter = 6.35e-3;
 	real prismLength = 6e-3;
-	int prismSizeY = 41, prismSizeX = 11;
+	int prismSizeY = 41;
+	int prismSizeX = 11;
+//	int prismSizeX = 21;
+	int prismStartX = 5;
+//	int prismStartX = 0;
 	real hX = prismDiameter / prismSizeX, hY = prismLength / prismSizeY;
 	task.cubicGrid.h = {hX, hY};
 	task.cubicGrid.cubics = {
-			{1, {{prismSizeX, prismSizeY}, { 5, 0}}}
+			{1, {{prismSizeX, prismSizeY}, { prismStartX, 0}}}
 	};
 	real upperY = (prismSizeY - 1) * hY;
 	real big = 1e+5, eps = 1e-5;
@@ -162,13 +166,11 @@ inline Task ndi() {
 			{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}});
 	
 	task.materialConditions.byBodies.bodyMaterialMap.insert(
-//			{0, createCompositeMaterial(0)});
-			{0, std::make_shared<OrthotropicMaterial>(
-					IsotropicMaterial(1e+3, 12e+9, 3e+9)) });
+			{0, createCompositeMaterial(0)});
 	
 	int sampleSizeY = 41;
 	task.cubicGrid.cubics.insert(
-			{0, {{21, sampleSizeY}, { 0, 1 - sampleSizeY - 100}}});
+			{0, {{21, sampleSizeY}, { 0, - sampleSizeY}}});
 	
 	task.cubicBorderConditions.insert(
 		{0, {
@@ -180,6 +182,65 @@ inline Task ndi() {
 //	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 //	pressure.value = 0.5;
 //	pressure.area = std::make_shared<SphereArea>(1e-3, Real3({6e-3, -3e-3, 0}));
+//	task.initialCondition.quantities.push_back(pressure);
+	
+	return task;
+}
+
+
+
+inline Task test() {
+	Task task = ndiCommon();
+	task.globalSettings.numberOfSnaps = 100;
+	task.globalSettings.stepsPerSnap = 3;
+	
+	task.bodies = {
+			{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}}
+	};
+	
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_AREAS;
+	task.materialConditions.byAreas.defaultMaterial = 
+			std::make_shared<OrthotropicMaterial>(*createNdiMaterial());
+	task.materialConditions.byAreas.materials = {
+		{ std::make_shared<AxisAlignedBoxArea>(
+		  Real3({-1e+3, -1e+3, -1e+3}), Real3({1e+3, 0, 1e+3})),
+		  createCompositeMaterial(0) }
+	};
+	
+	real prismDiameter = 6.35e-3;
+	real prismLength = 2 * 6e-3;
+	int prismSizeY = 81;
+//	int prismSizeX = 11;
+	int prismSizeX = 21;
+//	int prismStartX = 5;
+	int prismStartX = 0;
+	int prismStartY = - prismSizeY / 2;
+	real hX = prismDiameter / prismSizeX, hY = prismLength / prismSizeY;
+	task.cubicGrid.h = {hX, hY};
+	task.cubicGrid.cubics = {
+			{0, {{prismSizeX, prismSizeY}, { prismStartX, prismStartY}}}
+	};
+	
+	real tau = 0.55e-6 / 4;
+	auto src = [=](real t) {
+		t -= 2 * tau;
+		return /*sin(omega * t) **/ -exp(-t*t / ( 2 * tau*tau));
+	};
+	task.cubicBorderConditions = {
+		{0, {
+			 {0, std::make_shared<InfiniteArea>(), freeBorder2D(0)},
+			 {1, std::make_shared<InfiniteArea>(), freeBorder2D(1)},
+			 {1, std::make_shared<AxisAlignedBoxArea>(
+					Real3({-1e+3, 0.005, -1e+3}), Real3({1e+3, 1e+3, 1e+3})), 
+			  fixedNormalForce2D(1, src)},
+		 }},
+	};
+	
+	
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 0.5;
+//	pressure.area = std::make_shared<SphereArea>(1e-3, Real3({0.003, 0.003, 0}));
 //	task.initialCondition.quantities.push_back(pressure);
 	
 	return task;
