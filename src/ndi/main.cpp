@@ -11,7 +11,6 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	USE_AND_INIT_LOGGER("gcm.main");
 	
-//	Task task = test(); 
 	Task task = ndi();
 	try {
 		auto t1 = std::chrono::high_resolution_clock::now();

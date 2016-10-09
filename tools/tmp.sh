@@ -5,5 +5,6 @@ rm -rf snapshots/vtk snapshots/detector snapshots/zaxis
 rm -f *.log
 mkdir -p snapshots/vtk snapshots/detector snapshots/zaxis
 ./build/ndi
-gnuplot tools/gnuplot/gpltmp
+gnuplot tools/gnuplot/gpltmp \
+&& eog res.png
 
