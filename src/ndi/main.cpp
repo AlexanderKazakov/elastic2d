@@ -12,6 +12,7 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 	
 	Task task = ndi();
+//	Task task = ndiEmpty();
 	try {
 		auto t1 = std::chrono::high_resolution_clock::now();
 		createEngine(task)->run();
