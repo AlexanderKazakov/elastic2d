@@ -23,6 +23,8 @@ public:
 	
 	AbstractContactCopier(const PartIterator& boxA_, const PartIterator& boxB_) :
 			boxA(boxA_), boxB(boxB_) {
+		boxA.assertBoundsValid();
+		boxB.assertBoundsValid();
 		assert_eq(boxA.size(), boxB.size());
 	}
 	

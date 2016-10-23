@@ -23,6 +23,13 @@ struct Multiindex : public VectorInt<D> {
 	
 	int size() const { return directProduct(bounds); }
 	
+	/** If some bound less or equal to zero, all next operations are invalid */
+	void assertBoundsValid() const {
+		for (int i = 0; i < D; i++) {
+			assert_gt(bounds(i), 0);
+		}
+	}
+	
 protected:
 	const IntD bounds;
 	
@@ -224,6 +231,9 @@ struct BoxIterator : public VectorInt<D> {
 	
 	int size() const { return relativeIterator.size(); }
 	
+	void assertBoundsValid() const {
+		relativeIterator.assertBoundsValid();
+	}
 	
 protected:
 	const IntD shift;
