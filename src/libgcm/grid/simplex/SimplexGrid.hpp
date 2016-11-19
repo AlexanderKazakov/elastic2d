@@ -257,6 +257,14 @@ public:
 	}
 	
 	
+	/** Debugging helper */
+	void printCell(const Cell& c) const {
+		std::cout << "Cell n == " << c.n << ":" << std::endl;
+		for (int i = 0; i < c.n; i++) {
+			std::cout << "iter: " << getIndex(c(i)) << " coords: " << coordsD(c(i));
+		}
+	}
+	
 	
 private:
 	/// Data
@@ -351,19 +359,17 @@ private:
 	
 	
 	enum class BorderState {
+		MULTICONTACT,
 		CONTACT,
 		BORDER,
 		INNER
 	};
 	BorderState borderState(const LocalVertexIndex it) const {
 		std::set<GridId> incidentGrids = gridsAroundVertex(it);
-		
-		incidentGrids.erase(id);
+		assert_true(incidentGrids.erase(id));
 		if (incidentGrids.empty()) { return BorderState::INNER; }
-		
-		incidentGrids.erase((GridId)EmptySpaceFlag);
-		if (incidentGrids.empty()) { return BorderState::BORDER; }
-		
+		if (incidentGrids.size() > 1) { return BorderState::MULTICONTACT; }
+		if (*incidentGrids.begin() == EmptySpaceFlag) { return BorderState::BORDER; }
 		return BorderState::CONTACT;
 	}
 	

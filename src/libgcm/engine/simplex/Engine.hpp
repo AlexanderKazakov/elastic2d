@@ -65,6 +65,9 @@ public:
 	Engine(const Task& task);
 	virtual ~Engine() { }
 	
+	std::shared_ptr<const Mesh> getMesh(const GridId gridId) const {
+		return getBody(gridId).grid;
+	}
 	
 protected:
 	
@@ -127,6 +130,12 @@ private:
 	
 	Body& getBody(const GridId gridId) {
 		for (Body& body : bodies) {
+			if (body.grid->id == gridId) { return body; }
+		}
+		THROW_INVALID_ARG("There isn't a body with given id");
+	}
+	const Body& getBody(const GridId gridId) const {
+		for (const Body& body : bodies) {
 			if (body.grid->id == gridId) { return body; }
 		}
 		THROW_INVALID_ARG("There isn't a body with given id");

@@ -56,7 +56,7 @@ public:
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
 		
 		/// calculate inner waves of contact nodes
-		#pragma omp parallel for
+//		#pragma omp parallel for
 		for (auto contactIter = mesh.contactBegin(); 
 		          contactIter < mesh.contactEnd(); ++contactIter) {
 			mesh._pdeNew(*contactIter) = localGcmStep(
@@ -67,7 +67,7 @@ public:
 		}
 		
 		/// calculate inner waves of border nodes
-		#pragma omp parallel for
+//		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
 			mesh._pdeNew(*borderIter) = localGcmStep(
@@ -76,7 +76,6 @@ public:
 					interpolateValuesAround(mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh), false));
 		}
-		
 	}
 	
 	
@@ -93,7 +92,7 @@ public:
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
 		
 		/// calculate inner nodes
-		#pragma omp parallel for
+//		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(*innerIter) = localGcmStep(
@@ -132,7 +131,7 @@ private:
 	                               const Iterator& it, const PdeVector& dx,
 	                               const bool canInterpolateInSpaceTime) {
 		outerInvariants.clear();
-		Matrix ans;
+		Matrix ans = Matrix::Zeros();
 		
 		for (int k = 0; k < PdeVector::M; k++) {
 			
@@ -156,15 +155,11 @@ private:
 			// outer characteristic from border/contact node
 				outerInvariants.push_back(k);
 				
-			} else if (!canInterpolateInSpaceTime) {
-			// TODO - we cannot interpolate in space-time without guarantee
-				continue;
-				
-			} else if (t.n == t.N - 1) {
+			} else if (t.n == t.N - 1 && canInterpolateInSpaceTime) {
 			// characteristic hits out of body going throughout border face
 				u = interpolateInSpaceTime(mesh, it, shift, t);
 				
-			} else if (t.n == t.N - 2) {
+			} else if (t.n == t.N - 2 && canInterpolateInSpaceTime) {
 			// exact hit to border edge(point)
 				u = interpolateInSpaceTime1D(mesh, it, shift, t);
 				

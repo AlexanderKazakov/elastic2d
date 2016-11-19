@@ -163,7 +163,7 @@ markInnersAndBorders() {
 	contactIndices.clear();
 	borderIndices.clear();
 	innerIndices.clear();
-	
+	size_t multicontactCounter = 0;
 	
 	for (const auto it : *this) {
 		switch (borderState(it)) {
@@ -179,14 +179,20 @@ markInnersAndBorders() {
 				innerIndices.push_back(it);
 				break;
 				
+			case BorderState::MULTICONTACT:
+				++multicontactCounter;
+				LOG_INFO("Multicontact node found at: " << coordsD(it)
+						<< " number = " << it.iter);
+				break;
+				
 			default:
 				THROW_BAD_MESH("Unknown border state");
 				break;
 		}
 	}
 	
-	assert_eq(contactIndices.size() + borderIndices.size() +
-			innerIndices.size(), sizeOfAllNodes());
+	assert_eq(contactIndices.size() + borderIndices.size() + innerIndices.size() +
+			multicontactCounter, sizeOfAllNodes());
 	
 	LOG_DEBUG("Number of contact vertices: " << contactIndices.size());
 	LOG_DEBUG("Number of border vertices: " << borderIndices.size());

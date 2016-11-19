@@ -65,6 +65,9 @@ Task parseTaskContact2D() {
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
+	task.globalSettings.CourantNumber = 1;
+	task.globalSettings.numberOfSnaps = 150;
+	task.globalSettings.stepsPerSnap = 1;
 	
 	task.bodies = {
 		{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
@@ -79,6 +82,9 @@ Task parseTaskContact2D() {
 	Task::SimplexGrid::Body::Border body2border = {
 		{3, 3}, {9, 3}, {9, -3}, {3, -3}
 	};
+//	Task::SimplexGrid::Body::Border body2border = {
+//		{-4, 4}, {0, 6}, {4, 4}
+//	};
 	task.simplexGrid.bodies = {
 		Task::SimplexGrid::Body({0, body1border, {} }),
 		Task::SimplexGrid::Body({1, body2border, {} })
@@ -89,24 +95,11 @@ Task parseTaskContact2D() {
 	real lambda = 2;
 	real mu = 1;
 	const auto material1 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 0);
-	const auto material2 = std::make_shared<IsotropicMaterial>(4 * rho, lambda, mu, 0, 0, 0, 1e+9);
+	const auto material2 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 1e+9);
 	task.materialConditions.byBodies.bodyMaterialMap = {
 		{0, material1},
 		{1, material2}
 	};
-	
-	task.globalSettings.CourantNumber = 1;
-	task.globalSettings.numberOfSnaps = 50;
-	task.globalSettings.stepsPerSnap = 3;
-	
-	Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::T::P_BACKWARD;
-	wave.direction = 0;
-	wave.quantity = PhysicalQuantities::T::PRESSURE;
-	wave.quantityValue = 1;
-	wave.area = std::make_shared<AxisAlignedBoxArea>(
-				Real3({5, -10, -10}), Real3({7, 10, 10}));
-	task.initialCondition.waves.push_back(wave);
 	
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
@@ -138,6 +131,14 @@ Task parseTaskContact2D() {
 	                              /*borderConditionLeft,
 	                              borderConditionMid*/};
 	
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_BACKWARD;
+	wave.direction = 0;
+	wave.quantity = PhysicalQuantities::T::PRESSURE;
+	wave.quantityValue = 1;
+	wave.area = std::make_shared<AxisAlignedBoxArea>(
+				Real3({5, -10, -10}), Real3({7, 10, 10}));
+	task.initialCondition.waves.push_back(wave);
 	
 	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
