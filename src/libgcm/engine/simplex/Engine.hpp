@@ -120,9 +120,12 @@ private:
 	/// on/off points motion
 	bool movable = false;
 	
-	/// Current basis of calculations
-	MatrixDD calculationBasis = linal::randomBasis(MatrixDD());
-	
+	struct CalculationBasis {
+	/// Current basis of calculations --
+	/// i'th gcm stage is performed along i'th column of the matrix
+		MatrixDD basis = MatrixDD::Zeros();
+		bool createNewRandomAtEachTimeStep = false;
+	} calculationBasis;
 	
 	friend class SimplexGrid<Dimensionality, TriangulationT>;
 	USE_AND_INIT_LOGGER("gcm.Engine")
@@ -142,7 +145,29 @@ private:
 	}
 	
 	
-	void createNewCalculationBasis();
+	void initializeCalculationBasis(const Task& task) {
+		std::vector<real> taskBasis = task.calculationBasis;
+		calculationBasis.createNewRandomAtEachTimeStep = taskBasis.empty();
+		if (calculationBasis.createNewRandomAtEachTimeStep) {
+			LOG_INFO("Use new random calculation basis at each time step");
+		} else {
+			assert_eq(taskBasis.size(), Dimensionality * Dimensionality);
+			calculationBasis.basis.copyFrom(taskBasis);
+			LOG_INFO("Use constant calculation basis:" << calculationBasis.basis);
+			for (const Body& body : bodies) {
+				body.grid->changeCalculationBasis(calculationBasis.basis);
+			}
+		}
+	}
+	void createNewCalculationBasis() {
+		if (!calculationBasis.createNewRandomAtEachTimeStep) { return; }
+		calculationBasis.basis = linal::randomBasis(calculationBasis.basis);
+		LOG_INFO("New calculation basis:" << calculationBasis.basis);
+		for (const Body& body : bodies) {
+			body.grid->changeCalculationBasis(calculationBasis.basis);
+		}
+	}
+	
 	void correctContactsAndBorders(const int stage);
 	
 	void createMeshes(const Task& task);

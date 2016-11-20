@@ -111,6 +111,13 @@ struct Task {
 	} simplexGrid;
 	
 	
+	/// Calculation basis to use (for simplex engine only).
+	/// If not specified, new random basis is used at every time step.
+	/// The components of matrix are stored in C-style (string-by-string).
+	/// The direction of calculation on i'th stage is i'th column of the matrix.
+	std::vector<real> calculationBasis;
+	
+	
 	struct MaterialCondition {
 		typedef std::shared_ptr<AbstractMaterial> Material;
 		

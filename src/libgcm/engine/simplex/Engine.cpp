@@ -44,6 +44,7 @@ Engine(const Task& task) :
 		}
 	}
 	
+	initializeCalculationBasis(task);
 	afterConstruction(task);
 }
 
@@ -122,19 +123,6 @@ nextTimeStep() {
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
-createNewCalculationBasis() {
-	calculationBasis = linal::randomBasis(calculationBasis);
-	LOG_INFO("New calculation basis:" << calculationBasis);
-	
-	for (const Body& body : bodies) {
-		body.grid->changeCalculationBasis(calculationBasis);
-	}
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
-void Engine<Dimensionality, TriangulationT>::
 correctContactsAndBorders(const int stage) {
 	
 	for (const auto& contact : contacts) {
@@ -142,7 +130,7 @@ correctContactsAndBorders(const int stage) {
 				getBody(contact.first.first).grid,
 				getBody(contact.first.second).grid,
 				contact.second.nodesInContact,
-				calculationBasis.getColumn(stage));
+				calculationBasis.basis.getColumn(stage));
 	}
 	
 	for (const Body& body : bodies) {
@@ -150,7 +138,7 @@ correctContactsAndBorders(const int stage) {
 			border.borderCorrector->apply(
 					body.grid,
 					border.borderNodes,
-					calculationBasis.getColumn(stage));
+					calculationBasis.basis.getColumn(stage));
 		}
 	}
 	
