@@ -181,8 +181,6 @@ markInnersAndBorders() {
 				
 			case BorderState::MULTICONTACT:
 				++multicontactCounter;
-				LOG_INFO("Multicontact node found at: " << coordsD(it)
-						<< " number = " << it.iter);
 				break;
 				
 			default:
@@ -194,6 +192,7 @@ markInnersAndBorders() {
 	assert_eq(contactIndices.size() + borderIndices.size() + innerIndices.size() +
 			multicontactCounter, sizeOfAllNodes());
 	
+	LOG_DEBUG("Number of multicontact vertices: " << multicontactCounter);
 	LOG_DEBUG("Number of contact vertices: " << contactIndices.size());
 	LOG_DEBUG("Number of border vertices: " << borderIndices.size());
 	LOG_DEBUG("Number of inner vertices: " << innerIndices.size());

@@ -43,6 +43,10 @@ public:
 	/// Matrix of outer eigenvectors
 	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterMatrix;
 	
+	/// Indices of non-zero invariants @{
+	static const std::vector<int>  LEFT_INVARIANTS;
+	static const std::vector<int> RIGHT_INVARIANTS;
+	/// @}
 	
 	/**
 	 * Construct gcm matrices for calculation in given basis

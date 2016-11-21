@@ -56,17 +56,18 @@ protected:
 	 * Given with inner-calculated pde vector, we correct them
 	 * with outer waves combination (Omega) in order to satisfy border condition.
 	 * @see BorderCondition
+	 * @return correction outer wave
 	 */
 	template<typename PdeVector,
 			typename MatrixOmega, typename MatrixB, typename VectorB>
-	void
-	correctBorder(PdeVector& u,
+	PdeVector
+	calculateOuterWaveCorrection(const PdeVector& u,
 			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
 		
 		const auto M = B * Omega;
-//		checkConditionNumber(M, maxConditionNumber);
+		//checkConditionNumber(M, maxConditionNumber);
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
-		u += Omega * alpha;
+		return Omega * alpha;
 	}
 	
 	
@@ -83,7 +84,7 @@ private:
 	}
 	
 	
-	USE_AND_INIT_LOGGER("gcm.BorderCorrector")
+	USE_AND_INIT_LOGGER("gcm.simplex.BorderCorrector")
 };
 
 
@@ -111,17 +112,17 @@ public:
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			
-			const RealD outerDirection =
-					direction * Utils::sign(
-					linal::dotProduct(direction, nodeBorder.normal));
+			const real projection = linal::dotProduct(direction, nodeBorder.normal);
+			if (std::fabs(projection) < EQUALITY_TOLERANCE) { continue; }
 			
+			const RealD outerDirection = direction * Utils::sign(projection);
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),
 					linal::createLocalBasis(outerDirection));
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			auto& u = mesh->_pdeNew(nodeBorder.iterator);
 			
-			this->correctBorder(u, Omega, B, b);
+			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
 		}
 		
 	}

@@ -128,7 +128,7 @@ private:
 	} calculationBasis;
 	
 	friend class SimplexGrid<Dimensionality, TriangulationT>;
-	USE_AND_INIT_LOGGER("gcm.Engine")
+	USE_AND_INIT_LOGGER("gcm.simplex.Engine")
 	
 	
 	Body& getBody(const GridId gridId) {

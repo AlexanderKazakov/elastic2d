@@ -166,9 +166,9 @@ Task parseTaskCgal3d() {
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
 	task.simplexGrid.spatialStep = 0.2;
-	task.simplexGrid.fileName = "meshes/icosahedron.off";
-//	task.simplexGrid.detectSharpEdges = true;
-//	task.simplexGrid.polyhedronFileName = "meshes/cube.off";
+//	task.simplexGrid.fileName = "meshes/icosahedron.off";
+	task.simplexGrid.detectSharpEdges = true;
+	task.simplexGrid.fileName = "meshes/cube.off";
 	
 	real rho = 4;
 	real lambda = 2;
@@ -184,13 +184,13 @@ Task parseTaskCgal3d() {
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 0.5;
-	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
-//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
+//	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
 	task.initialCondition.quantities.push_back(pressure);
 
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
-	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionAll.type = BorderConditions::T::FIXED_VELOCITY;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
 		[] (real) { return 0; },
@@ -270,7 +270,7 @@ Task parseTaskCgal2d() {
 	task.globalSettings.CourantNumber = 1;
 	
 	task.globalSettings.numberOfSnaps = 50;
-	task.globalSettings.stepsPerSnap = 3;
+	task.globalSettings.stepsPerSnap = 1;
 	
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -319,11 +319,10 @@ Task parseTaskCgal2d() {
 	
 	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
-//		PhysicalQuantities::T::Sxx,
-//		PhysicalQuantities::T::Sxy,
-//		PhysicalQuantities::T::Syy
+		PhysicalQuantities::T::Sxx,
+		PhysicalQuantities::T::Sxy,
+		PhysicalQuantities::T::Syy
 	};
-
 	
 	return task;
 }
@@ -469,14 +468,13 @@ inline Task parseTaskTmp() {
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	task.globalSettings.CourantNumber = 1;
-	task.globalSettings.numberOfSnaps = 5;
+	task.globalSettings.numberOfSnaps = 50;
 	task.globalSettings.stepsPerSnap = 1;
 	
-	real phi = M_PI / 4 + 0.1;
+	real phi = 0.1; //M_PI / 2 + 0.1;
 	task.calculationBasis = {
-			cos(phi), -sin(phi), // 0,
-			sin(phi),  cos(phi), // 0,
-			//0, 0, 1
+			cos(phi), -sin(phi),
+			sin(phi),  cos(phi),
 	};
 	
 	task.bodies = {
@@ -484,7 +482,7 @@ inline Task parseTaskTmp() {
 //		{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}
 	};
 	
-	task.simplexGrid.spatialStep = 1;
+	task.simplexGrid.spatialStep = 0.2;
 	
 	Task::SimplexGrid::Body::Border body1border = {
 		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}
@@ -517,8 +515,8 @@ inline Task parseTaskTmp() {
 	
 	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
-	borderConditionLeft.type = BorderConditions::T::FIXED_VELOCITY;
+			Real3({-10, -2.99999, -10}), Real3({-2.99999, 2.99999, 10}));
+	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionLeft.values = {
 		[] (real t) { return (t < 1) ? 1 : 0; }
 	};

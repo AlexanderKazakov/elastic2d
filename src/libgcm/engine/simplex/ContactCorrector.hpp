@@ -99,7 +99,7 @@ private:
 	}
 	
 	
-	USE_AND_INIT_LOGGER("gcm.ContactCorrector")
+	USE_AND_INIT_LOGGER("gcm.simplex.ContactCorrector")
 };
 
 
@@ -131,10 +131,10 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
-			const RealD directionFromAToB =
-					direction * Utils::sign(
-					linal::dotProduct(direction, nodesContact.normal));
+			const real projection = linal::dotProduct(direction, nodesContact.normal);
+			if (std::fabs(projection) < EQUALITY_TOLERANCE) { continue; }
 			
+			const RealD directionFromAToB = direction * Utils::sign(projection);
 			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),
 					linal::createLocalBasis(  directionFromAToB));
