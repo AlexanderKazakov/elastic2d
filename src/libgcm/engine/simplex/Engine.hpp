@@ -170,6 +170,7 @@ private:
 	
 	void gcmStage(const int stage, const real currentTime, const real timeStep);
 	void correctContactsAndBorders(const int stage, const real timeAtNextLayer);
+	void sumNewPdesToOld();
 	
 	void createMeshes(const Task& task);
 	void createContacts(const Task& task);

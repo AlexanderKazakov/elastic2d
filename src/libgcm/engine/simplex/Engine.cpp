@@ -99,13 +99,33 @@ nextTimeStep() {
 	for (int stage = 0; stage < Dimensionality; stage++) {
 		gcmStage(stage, Clock::Time(), Clock::TimeStep());
 	}
-	for (const Body& body : bodies) {
-		body.grid->sumNewPdesToOld();
-	}
+	sumNewPdesToOld();
 	
 	for (const Body& body : bodies) {
 		for (typename Body::OdePtr ode : body.odes) {
 			ode->apply(*body.grid, Clock::TimeStep());
+		}
+	}
+}
+
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+void Engine<Dimensionality, TriangulationT>::
+sumNewPdesToOld() {
+	for (const Body& body : bodies) {
+		body.gcm->sumInnerNewPdesToOld(*body.grid);
+	}
+	for (const auto& contact : contacts) {
+		contact.second.contactCorrector->sumNewPdesToOld(
+				getBody(contact.first.first).grid,
+				getBody(contact.first.second).grid,
+				contact.second.nodesInContact);
+	}
+	for (const Body& body : bodies) {
+		for (const Border& border : body.borders) {
+			border.borderCorrector->sumNewPdesToOld(
+					body.grid, border.borderNodes);
 		}
 	}
 }

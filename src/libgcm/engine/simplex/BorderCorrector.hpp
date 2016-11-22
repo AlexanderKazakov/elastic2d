@@ -27,6 +27,7 @@ public:
 	
 	typedef typename TGrid::Iterator    Iterator;
 	typedef typename TGrid::RealD       RealD;
+	typedef typename TGrid::MatrixDD    MatrixDD;	
 	
 	struct NodeBorder {
 		/// iterator of the node in grid
@@ -43,6 +44,10 @@ public:
 	virtual void apply(const int s, std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes, const RealD& direction,
 			const real timeAtNextLayer) = 0;
+	
+	
+	virtual void sumNewPdesToOld(std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes) = 0;
 	
 	
 protected:
@@ -96,10 +101,13 @@ class ConcreteBorderCorrector : public AbstractBorderCorrector<TGrid> {
 public:
 	
 	typedef DefaultMesh<Model, TGrid, Material> Mesh;
+	typedef typename Mesh::PdeVector            PdeVector;
+	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	
 	typedef AbstractBorderCorrector<TGrid>      Base;
 	typedef typename Base::NodeBorder           NodeBorder;
 	typedef typename Base::RealD                RealD;
+	typedef typename Base::MatrixDD             MatrixDD;
 	
 	ConcreteBorderCorrector(const Task::BorderCondition& bc) :
 			borderCondition(bc) { }
@@ -127,6 +135,30 @@ public:
 			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
 		}
 		
+	}
+	
+	
+	virtual void sumNewPdesToOld(std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes) override {
+		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
+		assert_true(mesh);
+		MatrixDD basis = mesh->getCalculationBasis();
+		std::cout << "basis:" << basis << std::endl;
+		
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			mesh->_pde(nodeBorder.iterator) = PdeVector::Zeros();
+			for (int s = 0; s < DIMENSIONALITY; s++) {
+				RealD direction = basis.getColumn(s);
+				real projection = linal::dotProduct(direction, nodeBorder.normal);
+				real weight = std::fabs(projection);
+				std::cout << "s: " << s << " pr: " << projection
+						<< "\nmesh->_pde(nodeBorder.iterator) = " << mesh->_pde(nodeBorder.iterator)
+						<< "\nmesh->pdeNew(s, nodeBorder.iterator) = " << mesh->pdeNew(s, nodeBorder.iterator)
+						<< std::endl;
+				mesh->_pde(nodeBorder.iterator) =
+						weight * mesh->pdeNew(s, nodeBorder.iterator);
+			}
+		}
 	}
 	
 	

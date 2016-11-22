@@ -534,7 +534,7 @@ inline Task parseTaskTmp() {
 	borderConditionMid.values = {
 		[] (real) { return 0; }
 	};
-	task.borderConditions = {borderConditionAll,
+	task.borderConditions = {/*borderConditionAll,*/
 	                         borderConditionLeft,
 	                       /*borderConditionMid*/};
 	

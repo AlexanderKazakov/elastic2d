@@ -238,7 +238,7 @@ sumNewPdesToOld() {
 	}
 	for (int s = 0; s < DIMENSIONALITY; s++) {
 		for (Iterator it : *this) {
-			_pde(it) += pdeNew(s, it) / DIMENSIONALITY;
+			_pde(it) += pdeNew(s, it) / (int)DIMENSIONALITY;
 		}
 	}
 }
