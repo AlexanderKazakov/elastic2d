@@ -41,7 +41,8 @@ public:
 	 * along given direction
 	 */
 	virtual void apply(std::shared_ptr<AbstractMesh<TGrid>> grid,
-			std::list<NodeBorder> borderNodes, const RealD& direction) = 0;
+			std::list<NodeBorder> borderNodes, const RealD& direction,
+			const real timeAtNextLayer) = 0;
 	
 	
 protected:
@@ -104,11 +105,12 @@ public:
 			borderCondition(bc) { }
 	
 	virtual void apply(std::shared_ptr<AbstractMesh<TGrid>> grid,
-			std::list<NodeBorder> borderNodes, const RealD& direction) override {
+			std::list<NodeBorder> borderNodes, const RealD& direction,
+			const real timeAtNextLayer) override {
 		
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
-		const auto b = borderCondition.b();
+		const auto b = borderCondition.b(timeAtNextLayer);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			

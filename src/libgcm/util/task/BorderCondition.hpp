@@ -44,10 +44,11 @@ public:
 	/**
 	 * General expression of linear border conditions is
 	 * \f$ B \vec{u}_{n+1} = \vec{b}(t_{n+1}) \f$.
+	 * @param time time at (n+1)'th layer (not at n'th!)
 	 * @return \vec{b} in local (connected with border) basis
 	 */
-	BorderVector b() const {
-		return b_(Clock::TimeAtNextTimeLayer());
+	BorderVector b(const real time) const {
+		return b_(time);
 	}
 	
 	

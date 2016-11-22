@@ -93,24 +93,21 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
 nextTimeStep() {
-	
 	createNewCalculationBasis();
 	
+	/// double-cycle splitting according to G.I.Marchuk
+	const real halfTau = Clock::TimeStep() / 2;
 	for (int stage = 0; stage < Dimensionality; stage++) {
-		for (const Body& body : bodies) {
-			body.gcm->beforeStage(*body.grid);
-		}
-		for (const Body& body : bodies) {
-			body.gcm->contactStage(stage, Clock::TimeStep(), *body.grid);
-		}
-		correctContactsAndBorders(stage);
-		for (const Body& body : bodies) {
-			body.gcm->stage(stage, Clock::TimeStep(), *body.grid);
-		}
-		for (const Body& body : bodies) {
-			body.grid->swapPdeTimeLayers();
-		}
+		gcmStage(stage, Clock::Time(), halfTau);
 	}
+	for (int stage = Dimensionality - 1; stage >= 0; stage--) {
+		gcmStage(stage, Clock::Time() + halfTau, halfTau);
+	}
+	
+	/// simple splitting
+//	for (int stage = 0; stage < Dimensionality; stage++) {
+//		gcmStage(stage, Clock::Time(), Clock::TimeStep());
+//	}
 	
 	for (const Body& body : bodies) {
 		for (typename Body::OdePtr ode : body.odes) {
@@ -123,7 +120,27 @@ nextTimeStep() {
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
-correctContactsAndBorders(const int stage) {
+gcmStage(const int stage, const real currentTime, const real timeStep) {
+	for (const Body& body : bodies) {
+		body.gcm->beforeStage(*body.grid);
+	}
+	for (const Body& body : bodies) {
+		body.gcm->contactStage(stage, timeStep, *body.grid);
+	}
+	correctContactsAndBorders(stage, currentTime + timeStep);
+	for (const Body& body : bodies) {
+		body.gcm->stage(stage, timeStep, *body.grid);
+	}
+	for (const Body& body : bodies) {
+		body.grid->swapPdeTimeLayers();
+	}
+}
+
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+void Engine<Dimensionality, TriangulationT>::
+correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 	
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->apply(
@@ -138,7 +155,8 @@ correctContactsAndBorders(const int stage) {
 			border.borderCorrector->apply(
 					body.grid,
 					border.borderNodes,
-					calculationBasis.basis.getColumn(stage));
+					calculationBasis.basis.getColumn(stage),
+					timeAtNextLayer);
 		}
 	}
 	

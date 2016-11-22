@@ -166,9 +166,10 @@ Task parseTaskCgal3d() {
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
 	task.simplexGrid.spatialStep = 0.2;
-//	task.simplexGrid.fileName = "meshes/icosahedron.off";
-	task.simplexGrid.detectSharpEdges = true;
-	task.simplexGrid.fileName = "meshes/cube.off";
+	task.simplexGrid.fileName = "meshes/icosahedron.off";
+//	task.simplexGrid.spatialStep = 0.1;
+//	task.simplexGrid.detectSharpEdges = true;
+//	task.simplexGrid.fileName = "meshes/cube.off";
 	
 	real rho = 4;
 	real lambda = 2;
@@ -184,13 +185,13 @@ Task parseTaskCgal3d() {
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 0.5;
-//	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
+	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
+//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
 	task.initialCondition.quantities.push_back(pressure);
 
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
-	borderConditionAll.type = BorderConditions::T::FIXED_VELOCITY;
+	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
 		[] (real) { return 0; },
@@ -471,7 +472,7 @@ inline Task parseTaskTmp() {
 	task.globalSettings.numberOfSnaps = 50;
 	task.globalSettings.stepsPerSnap = 1;
 	
-	real phi = 0.1; //M_PI / 2 + 0.1;
+	real phi = M_PI / 4 + 0.1;
 	task.calculationBasis = {
 			cos(phi), -sin(phi),
 			sin(phi),  cos(phi),

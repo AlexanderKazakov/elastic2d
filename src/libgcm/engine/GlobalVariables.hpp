@@ -11,6 +11,7 @@ class AbstractEngine;
 
 /**
  * Current physical time and time step used by the program.
+ * TODO - replace it to the AbstractEngine, don't use global vars
  */
 struct Clock {
 	/** Current physical time in the calculated statement */
@@ -23,25 +24,20 @@ struct Clock {
 		return timeStep;
 	}
 	
-	/** Physical time in the calculated statement at next time layer */
-	static real TimeAtNextTimeLayer() {
-		return Time() + TimeStep();
+private:
+	static real time;
+	static real timeStep;
+	
+	static void setZero() {
+		time = timeStep = 0;
 	}
 	
-	private:
-		static real time;
-		static real timeStep;
-		
-		static void setZero() {
-			time = timeStep = 0;
-		}
-		
-		static void tickTack() {
-			time += timeStep;
-		}
-		
-		/// DO NOT put another "friends" here!
-		friend class AbstractEngine;
+	static void tickTack() {
+		time += timeStep;
+	}
+	
+	/// DO NOT put another "friends" here!
+	friend class AbstractEngine;
 };
 
 
@@ -65,19 +61,19 @@ struct Mpi {
 		return forceSequence;
 	}
 	
-	private:
-		static int rank;
-		static int size;
-		static bool forceSequence;
+private:
+	static int rank;
+	static int size;
+	static bool forceSequence;
 
-		static void initialize(const bool forceSequence_) {
-			rank = MPI::COMM_WORLD.Get_rank();
-			size = MPI::COMM_WORLD.Get_size();
-			forceSequence = forceSequence_;
-		}
-		
-		/// DO NOT put another "friends" here!
-		friend class AbstractEngine;
+	static void initialize(const bool forceSequence_) {
+		rank = MPI::COMM_WORLD.Get_rank();
+		size = MPI::COMM_WORLD.Get_size();
+		forceSequence = forceSequence_;
+	}
+	
+	/// DO NOT put another "friends" here!
+	friend class AbstractEngine;
 };
 
 
