@@ -30,7 +30,8 @@ public:
 	virtual void setUpPde(const Task& task) = 0;
 	virtual real getMaximalEigenvalue() const = 0;
 	virtual void changeCalculationBasis(const MatrixDD& basis) = 0;
-	virtual void swapPdeTimeLayers() = 0;
+//	virtual void swapPdeTimeLayers() = 0;
+	virtual void sumNewPdesToOld() = 0;
 };
 
 

@@ -38,7 +38,7 @@ public:
 	 * Apply contact corrector for all nodes from the list
 	 * along given direction
 	 */
-	virtual void apply(
+	virtual void apply(const int s,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact,
@@ -118,7 +118,7 @@ public:
 	typedef typename Base::NodesContact     NodesContact;
 	typedef typename Base::RealD            RealD;
 	
-	virtual void apply(
+	virtual void apply(const int s,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact,
@@ -147,8 +147,8 @@ public:
 			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
 			const auto B2B = ContactMatrixCreator::createB2B(nodesContact.normal);
 			
-			auto& uA = meshA->_pdeNew(nodesContact.first);
-			auto& uB = meshB->_pdeNew(nodesContact.second);
+			auto& uA = meshA->_pdeNew(s, nodesContact.first);
+			auto& uB = meshB->_pdeNew(s, nodesContact.second);
 			
 			this->correctNodesContact(uA, OmegaA, B1A, B2A,
 			                          uB, OmegaB, B1B, B2B);

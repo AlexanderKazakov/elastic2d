@@ -105,9 +105,12 @@ nextTimeStep() {
 		
 		for (Body& body : bodies) {
 			body.gcm->stage(stage, Clock::TimeStep(), *body.mesh);
-			body.mesh->swapPdeTimeLayers();
+//			body.mesh->swapPdeTimeLayers();
 		}
 		
+	}
+	for (const Body& body : bodies) {
+		body.mesh->sumNewPdesToOld();
 	}
 	
 	for (Body& body : bodies) {

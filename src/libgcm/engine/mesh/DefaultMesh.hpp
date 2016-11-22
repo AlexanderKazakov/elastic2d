@@ -8,11 +8,6 @@
 
 namespace gcm {
 
-namespace cubic {
-template<typename> class DataBus;
-}
-
-
 /**
  * Mesh implements the approach when data are stored in separate vectors.
  * All nodes have the same type of rheology model and material.
@@ -100,9 +95,12 @@ public:
 //		return this->odeVariables[this->getIndex(it)];
 //	}
 	
-	/** Read-only access to PDE vectors on next time layer */
-	const PdeVector& pdeNew(const Iterator& it) const {
-		return this->pdeVariablesNew[this->getIndex(it)];
+	/**
+	 * Read-only access to PDE vectors on next time layer.
+	 * @param s -- stage -- we have individual next time layer for each stage
+	 */
+	const PdeVector& pdeNew(const int s, const Iterator& it) const {
+		return this->pdeVariablesNew[(size_t)s][this->getIndex(it)];
 	}
 	
 //	/** Read-only access to PDE vectors on current time layer */
@@ -126,10 +124,11 @@ public:
 	}
 	
 	virtual void changeCalculationBasis(const MatrixDD& basis) override;
+	virtual void sumNewPdesToOld() override;
 	
-	virtual void swapPdeTimeLayers() override {
-		std::swap(pdeVariables, pdeVariablesNew);
-	}
+//	virtual void swapPdeTimeLayers() override {
+//		std::swap(pdeVariables, pdeVariablesNew);
+//	}
 	
 	MatrixDD getCalculationBasis() const {
 		return calculationBasis;
@@ -156,9 +155,12 @@ public:
 //		return this->odeVariables[this->getIndex(it)];
 //	}
 	
-	/** Read / write access to PDE vectors in auxiliary "on next time layer" storage */
-	PdeVector& _pdeNew(const Iterator& it) {
-		return this->pdeVariablesNew[this->getIndex(it)];
+	/**
+	 * Read / write access to PDE vectors on next time layer.
+	 * @param s -- stage -- we have individual next time layer for each stage
+	 */
+	PdeVector& _pdeNew(const int s, const Iterator& it) {
+		return this->pdeVariablesNew[(size_t)s][this->getIndex(it)];
 	}
 	
 	/** Read / write access to actual GCM matrices */
@@ -179,21 +181,20 @@ protected:
 	 */
 	///@{
 	std::vector<PdeVariables> pdeVariables;
-	std::vector<PdeVariables> pdeVariablesNew;
+	std::vector<std::vector<PdeVariables>> pdeVariablesNew;
 //	std::vector<PdeVariables> pdeVariablesPrev;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
 //	std::vector<OdeVariables> odeVariables;
 	///@}
 	
-	MatrixDD calculationBasis = MatrixDD::Identity();
+	MatrixDD calculationBasis = MatrixDD::Zeros();
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
 	bool pdeIsSetUp = false;
 	
 private:
 	void allocate();
 	
-	friend class cubic::DataBus<DefaultMesh<Model, Grid, Material>>;
 	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
 };
 
@@ -202,7 +203,10 @@ template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
 allocate() {
 	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
-	pdeVariablesNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
+	pdeVariablesNew.resize(DIMENSIONALITY);
+	for (auto& pdeNew : pdeVariablesNew) {
+		pdeNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
+	}
 //	pdeVariablesPrev.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
 	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
@@ -223,6 +227,20 @@ changeCalculationBasis(const MatrixDD& basis) {
 	
 	Model::constructGcmMatrices(this->_matrices(someNode),
 			this->material(someNode), calculationBasis);
+}
+
+
+template<typename TModel, typename TGrid, typename TMaterial>
+void DefaultMesh<TModel, TGrid, TMaterial>::
+sumNewPdesToOld() {
+	for (Iterator it : *this) {
+		_pde(it) = PdeVector::Zeros();
+	}
+	for (int s = 0; s < DIMENSIONALITY; s++) {
+		for (Iterator it : *this) {
+			_pde(it) += pdeNew(s, it) / DIMENSIONALITY;
+		}
+	}
 }
 
 

@@ -40,7 +40,7 @@ public:
 	 * Apply border corrector for all nodes from the list 
 	 * along given direction
 	 */
-	virtual void apply(std::shared_ptr<AbstractMesh<TGrid>> grid,
+	virtual void apply(const int s, std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes, const RealD& direction,
 			const real timeAtNextLayer) = 0;
 	
@@ -104,7 +104,7 @@ public:
 	ConcreteBorderCorrector(const Task::BorderCondition& bc) :
 			borderCondition(bc) { }
 	
-	virtual void apply(std::shared_ptr<AbstractMesh<TGrid>> grid,
+	virtual void apply(const int s, std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes, const RealD& direction,
 			const real timeAtNextLayer) override {
 		
@@ -122,7 +122,7 @@ public:
 					mesh->material(nodeBorder.iterator),
 					linal::createLocalBasis(outerDirection));
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
-			auto& u = mesh->_pdeNew(nodeBorder.iterator);
+			auto& u = mesh->_pdeNew(s, nodeBorder.iterator);
 			
 			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
 		}

@@ -95,19 +95,13 @@ void Engine<Dimensionality, TriangulationT>::
 nextTimeStep() {
 	createNewCalculationBasis();
 	
-	/// double-cycle splitting according to G.I.Marchuk
-	const real halfTau = Clock::TimeStep() / 2;
+	/// simple first order splitting by summ solutions from all directions
 	for (int stage = 0; stage < Dimensionality; stage++) {
-		gcmStage(stage, Clock::Time(), halfTau);
+		gcmStage(stage, Clock::Time(), Clock::TimeStep());
 	}
-	for (int stage = Dimensionality - 1; stage >= 0; stage--) {
-		gcmStage(stage, Clock::Time() + halfTau, halfTau);
+	for (const Body& body : bodies) {
+		body.grid->sumNewPdesToOld();
 	}
-	
-	/// simple splitting
-//	for (int stage = 0; stage < Dimensionality; stage++) {
-//		gcmStage(stage, Clock::Time(), Clock::TimeStep());
-//	}
 	
 	for (const Body& body : bodies) {
 		for (typename Body::OdePtr ode : body.odes) {
@@ -131,9 +125,9 @@ gcmStage(const int stage, const real currentTime, const real timeStep) {
 	for (const Body& body : bodies) {
 		body.gcm->stage(stage, timeStep, *body.grid);
 	}
-	for (const Body& body : bodies) {
-		body.grid->swapPdeTimeLayers();
-	}
+//	for (const Body& body : bodies) {
+//		body.grid->swapPdeTimeLayers();
+//	}
 }
 
 
@@ -144,6 +138,7 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 	
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->apply(
+				stage,
 				getBody(contact.first.first).grid,
 				getBody(contact.first.second).grid,
 				contact.second.nodesInContact,
@@ -153,6 +148,7 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 	for (const Body& body : bodies) {
 		for (const Border& border : body.borders) {
 			border.borderCorrector->apply(
+					stage,
 					body.grid,
 					border.borderNodes,
 					calculationBasis.basis.getColumn(stage),
@@ -161,7 +157,7 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 	}
 	
 	for (const Body& body : bodies) {
-		body.gcm->returnBackDoubleOuterCases(*body.grid);
+		body.gcm->returnBackBadOuterCases(stage, *body.grid);
 	}
 }
 

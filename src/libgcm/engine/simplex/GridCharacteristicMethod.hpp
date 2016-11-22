@@ -19,7 +19,8 @@ public:
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	virtual void stage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void returnBackDoubleOuterCases(AbstractGrid& mesh_) const = 0;
+	virtual void returnBackBadOuterCases(
+			const int s, AbstractGrid& mesh_) const = 0;
 };
 
 
@@ -64,24 +65,24 @@ public:
 //		#pragma omp parallel for
 		for (auto contactIter = mesh.contactBegin(); 
 		          contactIter < mesh.contactEnd(); ++contactIter) {
-			mesh._pdeNew(*contactIter) = localGcmStep(
+			mesh._pdeNew(s, *contactIter) = localGcmStep(
 					mesh.matrices(*contactIter)->m[s].U1,
 					mesh.matrices(*contactIter)->m[s].U,
-					interpolateValuesAround(mesh, direction, *contactIter,
+					interpolateValuesAround(s, mesh, direction, *contactIter,
 							crossingPoints(*contactIter, s, timeStep, mesh), false));
-			checkOuterCases(*contactIter, mesh);
+			checkOuterCases(s, *contactIter, mesh);
 		}
 		
 		/// calculate inner waves of border nodes
 //		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
-			mesh._pdeNew(*borderIter) = localGcmStep(
+			mesh._pdeNew(s, *borderIter) = localGcmStep(
 					mesh.matrices(*borderIter)->m[s].U1,
 					mesh.matrices(*borderIter)->m[s].U,
-					interpolateValuesAround(mesh, direction, *borderIter,
+					interpolateValuesAround(s, mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh), false));
-			checkOuterCases(*borderIter, mesh);
+			checkOuterCases(s, *borderIter, mesh);
 		}
 	}
 	
@@ -102,10 +103,10 @@ public:
 //		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
-			mesh._pdeNew(*innerIter) = localGcmStep(
+			mesh._pdeNew(s, *innerIter) = localGcmStep(
 					mesh.matrices(*innerIter)->m[s].U1,
 					mesh.matrices(*innerIter)->m[s].U,
-					interpolateValuesAround(mesh, direction, *innerIter,
+					interpolateValuesAround(s, mesh, direction, *innerIter,
 							crossingPoints(*innerIter, s, timeStep, mesh), true));
 			assert_eq(outerInvariants.size(), 0);
 		}
@@ -116,10 +117,11 @@ public:
 	 * Rewrite back pdeNew values, corrected by border and contact correctors,
 	 * because for double-outer cases such correction is invalid.
 	 */
-	virtual void returnBackDoubleOuterCases(AbstractGrid& mesh_) const override {
+	virtual void returnBackBadOuterCases(
+			const int s, AbstractGrid& mesh_) const override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		for (std::pair<Iterator, PdeVector> p : outerCasesToReturnBack) {
-			mesh._pdeNew(p.first) = p.second;
+			mesh._pdeNew(s, p.first) = p.second;
 		}
 	}
 	
@@ -139,6 +141,7 @@ private:
 	 * If specified point appears to be out of body
 	 * AND it is really border case, matrix column is set to zeros
 	 * and outerInvariants is added with the index.
+	 * @param s stage
 	 * @param mesh mesh to perform interpolation on
 	 * @param direction direction of line to find values along
 	 * @param it index-iterator of node
@@ -147,7 +150,8 @@ private:
 	 * @param canInterpolateInSpaceTime is base of interpolation calculated
 	 * @return Matrix with interpolated nodal values in columns
 	 */
-	Matrix interpolateValuesAround(const Mesh& mesh, const RealD direction,
+	Matrix interpolateValuesAround(const int s, 
+	                               const Mesh& mesh, const RealD direction,
 	                               const Iterator& it, const PdeVector& dx,
 	                               const bool canInterpolateInSpaceTime) {
 		outerInvariants.clear();
@@ -177,11 +181,11 @@ private:
 				
 			} else if (t.n == t.N - 1 && canInterpolateInSpaceTime) {
 			// characteristic hits out of body going throughout border face
-				u = interpolateInSpaceTime(mesh, it, shift, t);
+				u = interpolateInSpaceTime(s, mesh, it, shift, t);
 				
 			} else if (t.n == t.N - 2 && canInterpolateInSpaceTime) {
 			// exact hit to border edge(point)
-				u = interpolateInSpaceTime1D(mesh, it, shift, t);
+				u = interpolateInSpaceTime1D(s, mesh, it, shift, t);
 				
 			}
 			
@@ -218,7 +222,7 @@ private:
 	 * border in some point. It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime(const Mesh& mesh, 
+	PdeVector interpolateInSpaceTime(const int s, const Mesh& mesh, 
 			const Iterator& it, const Real2& shift, const Cell& borderEdge) const {
 		/// 2D case
 		/// first order interpolate in triangle formed by border points from
@@ -235,8 +239,8 @@ private:
 				{0, 0}, mesh.pde(borderEdge(0)),
 				{1, 0}, mesh.pde(borderEdge(1)),
 				// next time layer
-				{0, 1}, mesh.pdeNew(borderEdge(0)),
-				{1, 1}, mesh.pdeNew(borderEdge(1)),
+				{0, 1}, mesh.pdeNew(s, borderEdge(0)),
+				{1, 1}, mesh.pdeNew(s, borderEdge(1)),
 				// query in space-time
 				{    linal::length(rc - r1) / linal::length(r2 - r1),
 				 1 - linal::length(rc - r0) / linal::length(shift)});
@@ -248,7 +252,7 @@ private:
 	 * border in some point. It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime(const Mesh& mesh, 
+	PdeVector interpolateInSpaceTime(const int s, const Mesh& mesh, 
 			const Iterator& it, const Real3& shift, const Cell& borderFace) const {
 		/// 3D case
 		/// first order interpolate in tetrahedron formed by border points from
@@ -267,9 +271,9 @@ private:
 				{1, 0, 0}, mesh.pde(borderFace(1)),
 				{0, 1, 0}, mesh.pde(borderFace(2)),
 				// next time layer
-				{0, 0, 1}, mesh.pdeNew(borderFace(0)),
-				{1, 0, 1}, mesh.pdeNew(borderFace(1)),
-				{0, 1, 1}, mesh.pdeNew(borderFace(2)),
+				{0, 0, 1}, mesh.pdeNew(s, borderFace(0)),
+				{1, 0, 1}, mesh.pdeNew(s, borderFace(1)),
+				{0, 1, 1}, mesh.pdeNew(s, borderFace(2)),
 				// query in space-time
 				{    linal::length(rc - r1) / linal::length(r2 - r1),
 					 linal::length(rc - r1) / linal::length(r3 - r1),
@@ -283,7 +287,7 @@ private:
 	 * It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime1D(const Mesh& mesh, 
+	PdeVector interpolateInSpaceTime1D(const int s, const Mesh& mesh, 
 			const Iterator& it, const Real2& shift, const Cell& borderVertex) const {
 		/// 2D case
 		/// first order interpolate in the line formed by crossed point
@@ -293,7 +297,7 @@ private:
 		Real2 rv = mesh.coordsD(bv);
 		Real2 r0 = mesh.coordsD(it);
 		real w = linal::length(rv - r0) / linal::length(shift);
-		return mesh.pde(bv) * w + mesh.pdeNew(it) * (1 - w);
+		return mesh.pde(bv) * w + mesh.pdeNew(s, it) * (1 - w);
 	}
 	
 	
@@ -303,7 +307,7 @@ private:
 	 * It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime1D(const Mesh& /*mesh*/, 
+	PdeVector interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
 			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/) const {
 		THROW_UNSUPPORTED("TODO");
 		return PdeVector::Zeros(); // FIXME
@@ -313,7 +317,7 @@ private:
 	/**
 	 * Check and remember cases with "illegal" outer characteristics
 	 */
-	void checkOuterCases(const Iterator it, const Mesh& mesh) {
+	void checkOuterCases(const int s, const Iterator it, const Mesh& mesh) {
 		
 		if (outerInvariants == Model::LEFT_INVARIANTS ||
 			outerInvariants == Model::RIGHT_INVARIANTS) {
@@ -323,7 +327,7 @@ private:
 		
 		if (outerInvariants.size() == 0) {
 		/// No outers. Nothing to do for border corrector
-			outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
+			outerCasesToReturnBack.push_back({it, mesh.pdeNew(s, it)});
 			return;
 		}
 		
@@ -340,7 +344,7 @@ private:
 //		std::cout << outerInvariants.size() << " outer characteristics: ";
 //		for (int k : outerInvariants) { std::cout << k << " "; }
 //		std::cout << " at:" << mesh.coordsD(it);
-		outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
+		outerCasesToReturnBack.push_back({it, mesh.pdeNew(s, it)});
 	}
 	
 	
