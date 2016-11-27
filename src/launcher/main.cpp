@@ -478,7 +478,7 @@ inline Task parseTaskTmp() {
 	task.globalSettings.numberOfSnaps = 50;
 	task.globalSettings.stepsPerSnap = 1;
 	
-	real phi = M_PI / 6;
+	real phi = M_PI / 4;
 	task.calculationBasis = {
 			cos(phi), -sin(phi),
 			sin(phi),  cos(phi),

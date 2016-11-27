@@ -46,12 +46,6 @@ public:
 			const RealD& direction) = 0;
 	
 	
-	virtual void sumNewPdesToOld(
-			std::shared_ptr<AbstractMesh<TGrid>> a,
-			std::shared_ptr<AbstractMesh<TGrid>> b,
-			std::list<NodesContact> nodesInContact) = 0;
-	
-	
 protected:
 	/// maximal found condition numbers of correctors matrices
 	real maxConditionR = 0;
@@ -164,34 +158,6 @@ public:
 			                          uB, OmegaB, B1B, B2B);
 		}
 	}
-	
-	
-	virtual void sumNewPdesToOld(
-			std::shared_ptr<AbstractMesh<TGrid>> a,
-			std::shared_ptr<AbstractMesh<TGrid>> b,
-			std::list<NodesContact> nodesInContact) override {
-		std::shared_ptr<MeshA> meshA = std::dynamic_pointer_cast<MeshA>(a);
-		assert_true(meshA);
-		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
-		assert_true(meshB);
-		MatrixDD basis = meshA->getCalculationBasis();
-		assert_true(basis == meshB->getCalculationBasis());
-		
-		for (const NodesContact& nodesContact : nodesInContact) {
-			meshA->_pde(nodesContact.first) = PdeVector::Zeros();
-			meshB->_pde(nodesContact.second) = PdeVector::Zeros();
-			for (int s = 0; s < DIMENSIONALITY; s++) {
-				RealD direction = basis.getColumn(s);
-				real projection = linal::dotProduct(direction, nodesContact.normal);
-				real weight = std::fabs(projection);
-				meshA->_pde(nodesContact.first) =
-						weight * meshA->pdeNew(s, nodesContact.first);
-				meshB->_pde(nodesContact.second) =
-						weight * meshB->pdeNew(s, nodesContact.second);
-			}
-		}
-	}
-	
 };
 
 

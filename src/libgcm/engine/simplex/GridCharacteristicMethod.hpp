@@ -21,7 +21,6 @@ public:
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	virtual void returnBackBadOuterCases(
 			const int s, AbstractGrid& mesh_) const = 0;
-	virtual void sumInnerNewPdesToOld(AbstractGrid& mesh_) const = 0;
 };
 
 
@@ -346,22 +345,6 @@ private:
 //		for (int k : outerInvariants) { std::cout << k << " "; }
 //		std::cout << " at:" << mesh.coordsD(it);
 		outerCasesToReturnBack.push_back({it, mesh.pdeNew(s, it)});
-	}
-	
-	
-	virtual void sumInnerNewPdesToOld(AbstractGrid& mesh_) const override {
-		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		for (auto innerIter = mesh.innerBegin();
-		          innerIter < mesh.innerEnd(); ++innerIter) {
-			mesh._pde(*innerIter) = PdeVector::Zeros();
-		}
-		for (int s = 0; s < DIMENSIONALITY; s++) {
-			for (auto innerIter = mesh.innerBegin();
-			          innerIter < mesh.innerEnd(); ++innerIter) {
-				mesh._pde(*innerIter) +=
-						mesh.pdeNew(s, *innerIter) / (int)DIMENSIONALITY;
-			}
-		}
 	}
 	
 	
