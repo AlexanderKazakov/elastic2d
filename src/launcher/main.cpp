@@ -162,16 +162,16 @@ Task parseTaskCgal3d() {
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}}};
+	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}}};
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
 	task.simplexGrid.spatialStep = 0.2;
-//	task.simplexGrid.fileName = "meshes/icosahedron.off";
-	task.simplexGrid.detectSharpEdges = true;
-	task.simplexGrid.fileName = "meshes/cube.off";
+	task.simplexGrid.fileName = "meshes/icosahedron.off";
+//	task.simplexGrid.detectSharpEdges = true;
+//	task.simplexGrid.fileName = "meshes/cube.off";
 	
 	real rho = 4;
-	real lambda = 2;
+	real lambda = 4;
 	real mu = 1;
 	task.materialConditions.byAreas.defaultMaterial =
 	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1, 1, 1);
@@ -184,17 +184,17 @@ Task parseTaskCgal3d() {
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 0.5;
-//	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
+	pressure.area = std::make_shared<SphereArea>(0.5, Real3({0, 0, 0}));
+//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5})); // for cube
 	task.initialCondition.quantities.push_back(pressure);
 
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
-	borderConditionAll.type = BorderConditions::T::FIXED_VELOCITY;
+	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
+//		[] (real) { return 0; },
+//		[] (real) { return 0; }
 	};
 	
 	Task::BorderCondition borderConditionLeft;
@@ -288,7 +288,7 @@ Task parseTaskCgal2d() {
 	
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
-	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionAll.type = BorderConditions::T::FIXED_VELOCITY;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
 		[] (real) { return 0; }
@@ -297,7 +297,7 @@ Task parseTaskCgal2d() {
 	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({-2.999, 10, 10}));
-	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionLeft.type = BorderConditions::T::FIXED_VELOCITY;
 	borderConditionLeft.values = {
 		[] (real) { return 0; },
 		[] (real t) { return (t < 1) ? -1 : 0; }
@@ -471,7 +471,7 @@ inline Task parseTaskTmp() {
 	task.globalSettings.numberOfSnaps = 50;
 	task.globalSettings.stepsPerSnap = 1;
 	
-	real phi = 0.1; //M_PI / 2 + 0.1;
+	real phi = M_PI / 4; //M_PI / 2 + 0.1;
 	task.calculationBasis = {
 			cos(phi), -sin(phi),
 			sin(phi),  cos(phi),

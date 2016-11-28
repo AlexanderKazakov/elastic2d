@@ -335,12 +335,11 @@ private:
 		
 		/// Some geometrical inexactness. Most likely that the calculation
 		/// direction is almost parallel to the border. 
-		/// So disable border correction
 		/// TODO - make special for such cases more precise search?
 //		std::cout << outerInvariants.size() << " outer characteristics: ";
 //		for (int k : outerInvariants) { std::cout << k << " "; }
 //		std::cout << " at:" << mesh.coordsD(it);
-		outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
+		outerCasesToReturnBack.push_back({it, mesh.pde(it).Zeros()});
 	}
 	
 	

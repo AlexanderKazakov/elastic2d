@@ -112,10 +112,13 @@ public:
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			
-			const real projection = linal::dotProduct(direction, nodeBorder.normal);
+			const RealD reflectionDirection = direction;
+//					linal::reflectionDirection(nodeBorder.normal, direction);
+			
+			const real projection = linal::dotProduct(reflectionDirection, nodeBorder.normal);
 			if (std::fabs(projection) < EQUALITY_TOLERANCE) { continue; }
 			
-			const RealD outerDirection = direction * Utils::sign(projection);
+			const RealD outerDirection = reflectionDirection * Utils::sign(projection);
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),
 					linal::createLocalBasis(outerDirection));

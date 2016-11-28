@@ -131,16 +131,20 @@ public:
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
-			const real projection = linal::dotProduct(direction, nodesContact.normal);
+			const RealD reflectionDirection = direction;
+//					linal::reflectionDirection(nodesContact.normal, direction);
+			
+			const real projection = linal::dotProduct(reflectionDirection, nodesContact.normal);
 			if (std::fabs(projection) < EQUALITY_TOLERANCE) { continue; }
 			
-			const RealD directionFromAToB = direction * Utils::sign(projection);
+			const RealD reflectionDirectionFromAToB =
+					reflectionDirection * Utils::sign(projection);
 			const auto OmegaA = ModelA::constructOuterEigenvectors(
 					meshA->material(nodesContact.first),
-					linal::createLocalBasis(  directionFromAToB));
+					linal::createLocalBasis(  reflectionDirectionFromAToB));
 			const auto OmegaB = ModelB::constructOuterEigenvectors(
 					meshB->material(nodesContact.second),
-					linal::createLocalBasis( -directionFromAToB));
+					linal::createLocalBasis( -reflectionDirectionFromAToB));
 			
 			const auto B1A = ContactMatrixCreator::createB1A(nodesContact.normal);
 			const auto B1B = ContactMatrixCreator::createB1B(nodesContact.normal);
