@@ -16,7 +16,8 @@ inline Task skullCommon() {
 	task.globalSettings.stepsPerSnap = 5;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
+//	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
@@ -38,11 +39,11 @@ inline Task skullAcoustic() {
 	Task task = skullCommon();
 	
 	task.bodies = {
-			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
-			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 	};
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
@@ -68,7 +69,7 @@ inline Task skullAcoustic() {
 		[] (real) { return 0; },
 	};
 	Task::BorderCondition source;
-	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
+	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
 	real tau = 0.5;
 	real omega = 2 * M_PI / tau;
