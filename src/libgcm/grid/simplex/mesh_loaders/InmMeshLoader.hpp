@@ -77,7 +77,9 @@ public:
 			const auto material = materials.find(inmCell);
 			if (material != materials.end()) {
 				++matchCounter;
-				cell->info().setGridId((size_t)(*material).second);
+				size_t materialId = (size_t)(*material).second;
+				if (materialId == 6) { materialId = EmptyMaterialFlag; }
+				cell->info().setGridId(materialId);
 			}
 			
 			if (++counter % 500000 == 0) { LOG_INFO(counter << " cells have been loaded"); }
