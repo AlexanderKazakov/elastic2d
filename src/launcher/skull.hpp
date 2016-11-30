@@ -23,11 +23,11 @@ inline Task skullCommon() {
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
 	
-	Task::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 1;
-	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
-	task.initialCondition.quantities.push_back(pressure);
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 1;
+//	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
+//	task.initialCondition.quantities.push_back(pressure);
 	
 	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
 	return task;
