@@ -468,10 +468,11 @@ inline Task parseTaskTmp() {
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	task.globalSettings.CourantNumber = 1;
-	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.requiredTime = 14;
+//	task.globalSettings.numberOfSnaps = 100;
 	task.globalSettings.stepsPerSnap = 1;
 	
-	real phi = M_PI / 4; //M_PI / 2 + 0.1;
+	real phi = M_PI / 2;
 	task.calculationBasis = {
 			cos(phi), -sin(phi),
 			sin(phi),  cos(phi),
@@ -482,10 +483,10 @@ inline Task parseTaskTmp() {
 //		{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}
 	};
 	
-	task.simplexGrid.spatialStep = 0.2;
+	task.simplexGrid.spatialStep = 0.1;
 	
 	Task::SimplexGrid::Body::Border body1border = {
-		{3, 3}, {-3, 3}, {-3, -3}, {3, -3}
+		{0, 3}, {-3, 3}, {-3, -3}, {3, -3}
 	};
 //	Task::SimplexGrid::Body::Border body2border = {
 //		{3, 3}, {9, 3}, {9, -3}, {3, -3}
@@ -512,7 +513,6 @@ inline Task parseTaskTmp() {
 	borderConditionAll.values = {
 		[] (real) { return 0; },
 	};
-	
 	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -2.99999, -10}), Real3({-2.99999, 2.99999, 10}));
@@ -520,16 +520,8 @@ inline Task parseTaskTmp() {
 	borderConditionLeft.values = {
 		[] (real t) { return (t < 1) ? 1 : 0; }
 	};
-	Task::BorderCondition borderConditionMid;
-	borderConditionMid.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({-2.5, -2.5, -10}), Real3({0.5, 0.5, 10}));
-	borderConditionMid.type = BorderConditions::T::FIXED_VELOCITY;
-	borderConditionMid.values = {
-		[] (real) { return 0; }
-	};
 	task.borderConditions = {borderConditionAll,
-	                         borderConditionLeft,
-	                       /*borderConditionMid*/};
+	                         borderConditionLeft};
 	
 	
 	task.vtkSnapshotter.quantitiesToSnap = {

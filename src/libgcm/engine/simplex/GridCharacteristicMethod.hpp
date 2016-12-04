@@ -69,7 +69,7 @@ public:
 					mesh.matrices(*contactIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *contactIter,
 							crossingPoints(*contactIter, s, timeStep, mesh), false));
-//			checkOuterCases(*contactIter, mesh);
+			checkOuterCases(*contactIter, mesh);
 		}
 		
 		/// calculate inner waves of border nodes
@@ -81,7 +81,7 @@ public:
 					mesh.matrices(*borderIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh), false));
-//			checkOuterCases(*borderIter, mesh);
+			checkOuterCases(*borderIter, mesh);
 		}
 	}
 	
@@ -107,7 +107,12 @@ public:
 					mesh.matrices(*innerIter)->m[s].U,
 					interpolateValuesAround(mesh, direction, *innerIter,
 							crossingPoints(*innerIter, s, timeStep, mesh), true));
-//			assert_eq(outerInvariants.size(), 0);
+			if (outerInvariants.size() != 0) {
+				std::cout << outerInvariants.size() << " outer characteristics: ";
+				for (int k : outerInvariants) { std::cout << k << " "; }
+				std::cout << " at:" << mesh.coordsD(*innerIter);
+			}
+			assert_eq(outerInvariants.size(), 0);
 		}
 	}
 	
@@ -117,10 +122,10 @@ public:
 	 * because for double-outer cases such correction is invalid.
 	 */
 	virtual void returnBackDoubleOuterCases(AbstractGrid& mesh_) const override {
-//		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-//		for (std::pair<Iterator, PdeVector> p : outerCasesToReturnBack) {
-//			mesh._pdeNew(p.first) = p.second;
-//		}
+		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
+		for (std::pair<Iterator, PdeVector> p : outerCasesToReturnBack) {
+			mesh._pdeNew(p.first) = p.second;
+		}
 	}
 	
 	
@@ -315,31 +320,31 @@ private:
 	 */
 	void checkOuterCases(const Iterator it, const Mesh& mesh) {
 		
-//		if (outerInvariants == Model::LEFT_INVARIANTS ||
-//			outerInvariants == Model::RIGHT_INVARIANTS) {
-//		/// The normal case for border corrector
-//			return;
-//		}
+		if (outerInvariants == Model::LEFT_INVARIANTS ||
+			outerInvariants == Model::RIGHT_INVARIANTS) {
+		/// The normal case for border corrector
+			return;
+		}
 		
-//		if (outerInvariants.size() == 0) {
-//		/// No outers. Nothing to do for border corrector
-//			outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
-//			return;
-//		}
+		if (outerInvariants.size() == 0) {
+		/// No outers. Nothing to do for border corrector
+			outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
+			return;
+		}
 		
-//		if (outerInvariants.size() == 2 * OUTER_NUMBER) {
-//		/// All outers. No space -- no waves. Set to old value
-//			outerCasesToReturnBack.push_back({it, mesh.pde(it)});
-//			return;
-//		}
+		if (outerInvariants.size() == 2 * OUTER_NUMBER) {
+		/// All outers. No space -- no waves. Set to old value
+			outerCasesToReturnBack.push_back({it, mesh.pde(it)});
+			return;
+		}
 		
-//		/// Some geometrical inexactness. Most likely that the calculation
-//		/// direction is almost parallel to the border. 
-//		/// TODO - make special for such cases more precise search?
-////		std::cout << outerInvariants.size() << " outer characteristics: ";
-////		for (int k : outerInvariants) { std::cout << k << " "; }
-////		std::cout << " at:" << mesh.coordsD(it);
-//		outerCasesToReturnBack.push_back({it, mesh.pde(it).Zeros()});
+		/// Some geometrical inexactness. Most likely that the calculation
+		/// direction is almost parallel to the border. 
+		/// TODO - make special for such cases more precise search?
+		std::cout << outerInvariants.size() << " outer characteristics: ";
+		for (int k : outerInvariants) { std::cout << k << " "; }
+		std::cout << " at:" << mesh.coordsD(it);
+		outerCasesToReturnBack.push_back({it, mesh.pde(it).Zeros()});
 	}
 	
 	

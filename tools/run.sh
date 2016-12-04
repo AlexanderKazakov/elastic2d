@@ -3,20 +3,25 @@
 usage() { echo "Usage: $0
     [-n] number_of_processes (currently ignored)
     [-t] task_name
+    [-s] do not show output to stdout
     [-p] (to open Paraview after calculation)"
     1>&2; exit 1; }
 
 np=1 #`cat /proc/cpuinfo | grep processor | wc -l`
 task="cgal2d"
 run_paraview=0
+silent=0
 
-while getopts ":n:t:p" o; do
+while getopts ":n:t:sp" o; do
     case "${o}" in
         n)
 #            np=${OPTARG}
             ;;
         t)
             task=${OPTARG}
+            ;;
+        s)
+            silent=1
             ;;
         p)
             run_paraview=1
@@ -31,7 +36,11 @@ rm -rf snapshots/vtk snapshots/detector snapshots/zaxis
 rm -f *.log
 mkdir -p snapshots/vtk snapshots/detector snapshots/zaxis
 echo "Start ./build/gcm_exe with $np processes ..."
-mpirun -np $np ./build/gcm_exe --task ${task} > /dev/null &
+if ((silent)); then
+	mpirun -np $np ./build/gcm_exe --task ${task} > /dev/null &
+else
+	mpirun -np $np ./build/gcm_exe --task ${task}
+fi
 
 if ((run_paraview)); then
     echo "Run Paraview ..."

@@ -135,7 +135,6 @@ public:
 //					linal::reflectionDirection(nodesContact.normal, direction);
 			
 			const real projection = linal::dotProduct(reflectionDirection, nodesContact.normal);
-//			if (std::fabs(projection) < EQUALITY_TOLERANCE) { continue; }
 			
 			const RealD reflectionDirectionFromAToB =
 					reflectionDirection * Utils::sign(projection);

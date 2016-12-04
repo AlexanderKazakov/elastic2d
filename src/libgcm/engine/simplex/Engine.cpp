@@ -142,9 +142,9 @@ correctContactsAndBorders(const int stage) {
 		}
 	}
 	
-//	for (const Body& body : bodies) {
-//		body.gcm->returnBackDoubleOuterCases(*body.grid);
-//	}
+	for (const Body& body : bodies) {
+		body.gcm->returnBackDoubleOuterCases(*body.grid);
+	}
 }
 
 
