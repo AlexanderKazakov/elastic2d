@@ -26,11 +26,11 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 			// check on mesher artifacts
 			if (Triangulation::minimalCellHeight(cellIter) < EQUALITY_TOLERANCE) {
 				// FIXME - EQUALITY_TOLERANCE is bad solution, move to mesher?
-				cellIter->info().setGridId(EmptySpaceFlag);
-//				triangulation->printCell(cellIter, std::string(
-//						"replaced as degenerate with minimalHeight == ") +
-//						std::to_string(Triangulation::minimalCellHeight(cellIter)));
-				continue;
+//				cellIter->info().setGridId(EmptySpaceFlag);
+				triangulation->printCell(cellIter, std::string(
+						"replaced as degenerate with minimalHeight == ") +
+						std::to_string(Triangulation::minimalCellHeight(cellIter)));
+				THROW_BAD_MESH("Fix degenerate cells");
 			}
 			
 			cellHandles.push_back(cellIter);

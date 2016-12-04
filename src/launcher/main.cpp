@@ -477,6 +477,10 @@ inline Task parseTaskTmp() {
 			cos(phi), -sin(phi),
 			sin(phi),  cos(phi),
 	};
+	task.calculationBasis = {
+			1, 0,
+			0, 1
+	};
 	
 	task.bodies = {
 		{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},

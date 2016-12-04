@@ -135,7 +135,7 @@ public:
 //					linal::reflectionDirection(nodesContact.normal, direction);
 			
 			const real projection = linal::dotProduct(reflectionDirection, nodesContact.normal);
-			
+			if (projection == 0) { continue; }
 			const RealD reflectionDirectionFromAToB =
 					reflectionDirection * Utils::sign(projection);
 			const auto OmegaA = ModelA::constructOuterEigenvectors(
