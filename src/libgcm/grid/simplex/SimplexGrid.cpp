@@ -26,11 +26,12 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 			// check on mesher artifacts
 			if (Triangulation::minimalCellHeight(cellIter) < EQUALITY_TOLERANCE) {
 				// FIXME - EQUALITY_TOLERANCE is bad solution, move to mesher?
-//				cellIter->info().setGridId(EmptySpaceFlag);
+				cellIter->info().setGridId(EmptySpaceFlag);
 				triangulation->printCell(cellIter, std::string(
 						"replaced as degenerate with minimalHeight == ") +
 						std::to_string(Triangulation::minimalCellHeight(cellIter)));
-				THROW_BAD_MESH("Fix degenerate cells");
+//				THROW_BAD_MESH("Fix degenerate cells");
+				continue;
 			}
 			
 			cellHandles.push_back(cellIter);
@@ -101,33 +102,24 @@ typename SimplexGrid<Dimensionality, TriangulationT>::Cell
 SimplexGrid<Dimensionality, TriangulationT>::
 findOwnerCell(const Iterator& it, const RealD& shift) const {
 	
-	/// Struct allows to go along the line cell-by-cell in triangulation
-	typedef LineWalker<Triangulation, DIMENSIONALITY>      LINE_WALKER;
-	LINE_WALKER lineWalker(triangulation, vertexHandle(it), shift, id);
 	RealD query = coordsD(it) + shift;
+	// go along the line cell-by-cell in triangulation
+	std::vector<CellHandle> cellsAlong = 
+			LineWalker<Triangulation, DIMENSIONALITY>::cellsAlongSegment(
+					triangulation,
+					[=](const CellHandle c) {return belongsToTheGrid(c);},
+					vertexHandle(it), query, coordsD(it), query);
 	
-	CellHandle current = lineWalker.currentCell();
-	CellHandle previous = current;
-	if (current == NULL) { return createCell(); }
+	if (cellsAlong.empty()) { return createCell(); }
 	
-	while ( belongsToTheGrid(current) &&
-	        !Triangulation::contains(current, query) ) {
-	// along the line until found or go outside the grid
-		previous = current;
-		current = lineWalker.next();
-	}
+	CellHandle last = cellsAlong.back();
+	if (belongsToTheGrid(last)) { return createCell(last); }
 	
-	
-	if ( belongsToTheGrid(current) ) {
-	// cell found inside the grid
-		assert_true(belongsToTheGrid(previous));
-		return createCell(current);
-	}
-	
-	if ( belongsToTheGrid(previous) ) {
+	assert_gt(cellsAlong.size(), 1);
+	CellHandle prev = *(std::next(cellsAlong.rbegin()));
+	if (belongsToTheGrid(prev)) {
 	// seems to go outside the grid through the border
-		Cell ans = createCell(
-				Triangulation::commonVertices(current, previous), previous);
+		Cell ans = createCell(Triangulation::commonVertices(last, prev), prev);
 		if ( isInner(it) || !ans.has(it) ) {
 		// it is not immediate outgoing from a border node
 			return ans;

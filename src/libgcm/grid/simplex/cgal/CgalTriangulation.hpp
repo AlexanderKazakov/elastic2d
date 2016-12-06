@@ -7,7 +7,7 @@
 
 namespace gcm {
 
-template<typename, int> class LineWalker;
+//template<typename, int> class LineWalker;
 
 
 template<int Dimensionality, typename VertexInfo, typename CellInfo>
@@ -137,6 +137,16 @@ public:
 	}
 	
 	
+	/** 
+	 * "Infinite" -- fixture cells on the triangulation borders. They needed
+	 * in order to keep the same topology inside triangulation and on borders.
+	 * In such cell, one vertex is "infinite" -- has no coordinates.
+	 */
+	bool isInfinite(const CellHandle c) const {
+		return this->triangulation.is_infinite(c);
+	}
+	
+	
 	/** Debugging helper */
 	void printCell(const CellHandle f, const std::string name) const {
 		SUPPRESS_WUNUSED(name);
@@ -153,7 +163,7 @@ public:
 	
 private:
 	USE_AND_INIT_LOGGER("gcm.CgalTriangulation")
-	friend class LineWalker<CgalTriangulation, DIMENSIONALITY>;
+//	friend class LineWalker<CgalTriangulation, DIMENSIONALITY>;
 	
 	
 	/** Scale the triangulation in space */

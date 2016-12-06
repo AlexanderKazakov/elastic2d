@@ -137,8 +137,16 @@ public:
 		return CgalPointD(p(0), p(1));
 	}
 	
+	static RealD realD(const VertexHandle vh) {
+		return realD(vh->point());
+	}
+	
 	static RealD realD(const CgalPointD& p) {
 		return {p.x(), p.y()};
+	}
+	
+	static RealD realD(const Real2 r) {
+		return r;
 	}
 	
 	static CgalVectorD cgalVectorD(const RealD& p) {
