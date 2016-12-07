@@ -1158,52 +1158,19 @@ TEST(Linal, isDegenerate) {
 	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({1, 1})));
 	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({1, 0}), Real2({0, 1})));
 	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7})));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7}), 2e-7));
 	
 	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2})));
 	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2})));
 	ASSERT_FALSE(isDegenerate(Real3({0, 5, 0}), Real3({0, 0, 1}), Real3({0, 0, 2})));
+	ASSERT_FALSE(isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2 + 1e-7})));
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2 + 1e-7}), 2e-7));
 	
 	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3})));
 	ASSERT_TRUE (isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 1})));
 	ASSERT_FALSE(isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 5})));
-}
-
-
-TEST(Linal, positionRelativeToAngle) {
-	ASSERT_EQ(POSITION::INSIDE, positionRelativeToAngle(
-			Real2({1, 0}), Real2({0, 0}), Real2({0, 1}), Real2({1, 1})));
-	
-	ASSERT_EQ(POSITION::OUTSIDE, positionRelativeToAngle(
-			Real2({1, 0}), Real2({0, 0}), Real2({0, 1}), Real2({-1, 1})));
-	
-	ASSERT_EQ(POSITION::OUTSIDE, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({1, 0}), Real2({1, 1})));
-	
-	ASSERT_EQ(POSITION::INSIDE, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({1, 0}), Real2({-1, 1})));
-
-	ASSERT_EQ(POSITION::FIRST_BORDER, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({1, 0}), Real2({0, 2})));
-
-	ASSERT_EQ(POSITION::SECOND_BORDER, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({1, 0}), Real2({2, 0})));
-	
-	
-	ASSERT_EQ(POSITION::SECOND_BORDER, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({0, -1}), Real2({0, -2})));
-	
-	ASSERT_EQ(POSITION::FIRST_BORDER, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({0, -1}), Real2({0, 2})));
-	
-	ASSERT_EQ(POSITION::INSIDE, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({0, -1}), Real2({-1, 0})));
-
-	ASSERT_EQ(POSITION::OUTSIDE, positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({0, -1}), Real2({1, 0})));
-	
-	
-	ASSERT_THROW(positionRelativeToAngle(
-			Real2({0, 1}), Real2({0, 0}), Real2({0, 2}), Real2({2, 1})), Exception);
+	ASSERT_FALSE(isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3})));
+	ASSERT_TRUE (isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3}), 2e-7));
 }
 
 
@@ -1239,14 +1206,6 @@ TEST(Linal, minimalHeight) {
 	
 	ASSERT_NEAR(1.0 / sqrt(3), minimalHeight({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}), EQUALITY_TOLERANCE);
 	ASSERT_NEAR(2, minimalHeight({0, 0, 0}, {5, 0, 0}, {0, 8, 0}, {2, 2, 2}), EQUALITY_TOLERANCE);
-}
-
-
-TEST(Linal, center) {
-	ASSERT_EQ(Real2({0, 1}), center({Real2({0, 0}), Real2({0, 1}), Real2({0, 2})}));
-	ASSERT_EQ(Real2({0, 2}), center({Real2({0, 2})}));
-	ASSERT_EQ(Real3({1, 1, 1}), center({Real3({0, 0, 0}), Real3({2, 2, 2}),
-			Real3({0, 2, 2}), Real3({2, 0, 0})}));
 }
 
 

@@ -6,14 +6,6 @@
 namespace gcm {
 namespace linal {
 
-enum class POSITION {
-	INSIDE,
-	OUTSIDE,
-	BORDER,
-	FIRST_BORDER,
-	SECOND_BORDER
-};
-
 
 /**
  * Cross (aka vector) product
@@ -154,39 +146,38 @@ inline Real3 lineWithFlatIntersection(const Real3 f1, const Real3 f2, const Real
 
 
 /**
- * Is triangle on given points degenerate.
- * 
- * TODO - this comparison with zero is non-stable shit.
- * However, comparison with EQUALITY_TOLERANCE is double shit.
- * As a variant - replace all functions that test such cases
- * and move decisions to user code, specific for concrete problems.
+ * Is triangle on given points degenerate with tolerance eps
  */
-inline bool isDegenerate(const Real2 a, const Real2 b, const Real2 c) {
+inline bool isDegenerate(
+		const Real2 a, const Real2 b, const Real2 c, const real eps = 0) {
 	Real2 l = a - b;
 	Real2 m = c - b;
-	return determinant(l(0), l(1), m(0), m(1)) == 0;
+	return std::fabs(determinant(l(0), l(1), m(0), m(1))) <= eps;
 }
 
 
 /**
- * Is tetrahedron on given points degenerate
+ * Is tetrahedron on given points degenerate with tolerance eps
  */
-inline bool isDegenerate(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+inline bool isDegenerate(
+		const Real3 a, const Real3 b, const Real3 c, const Real3 d, const real eps = 0) {
 	Real3 l = a - b;
 	Real3 m = c - b;
 	Real3 n = d - b;
-	return determinant(l(0), l(1), l(2), m(0), m(1), m(2), n(0), n(1), n(2)) == 0;
+	return std::fabs(determinant(
+			l(0), l(1), l(2), m(0), m(1), m(2), n(0), n(1), n(2))) <= eps;
 }
 
 
 /**
- * Is triangle on given points degenerate
+ * Is triangle on given points degenerate with tolerance eps
  */
-inline bool isDegenerate(const Real3 a, const Real3 b, const Real3 c) {
+inline bool isDegenerate(
+		const Real3 a, const Real3 b, const Real3 c, const real eps = 0) {
 	Real3 l = a - b;
 	Real3 m = c - b;
 	real lm = dotProduct(l, m);
-	return lm * lm == dotProduct(l, l) * dotProduct(m, m);
+	return std::fabs(lm * lm - dotProduct(l, l) * dotProduct(m, m)) <= eps;
 }
 
 
@@ -269,7 +260,6 @@ inline bool tetrahedronContains(
 /**
  * Does angle b-a-c (a is in the middle) contain point q inside 
  * (i.e in its minimal sector) with tolerance eps.
- * Function "positionRelativeToAngle" below is obsolete
  *           b/
  *  outside  /
  *          /
@@ -304,78 +294,6 @@ inline bool solidAngleContains(
 	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
 	return lambda(0) < 1 + eps && 
 			lambda(1) > -eps && lambda(2) > -eps && lambda(3) > -eps;
-}
-
-
-/**
- * Returns position of point q relative to the angle {a, b, c}.
- * b is the vertex of the triangle.
- * "inside" means that going from side b-a to side b-c counterclockwise,
- * we meet the point q.
- * "FIRST_BORDER" means ray b-a, "SECOND_BORDER" means ray b-c.
- * 
- *       c                          a          
- *        /                          /         
- *       /                          /          
- *      /                          /           
- *     /  inside                  /  outside    
- *    /___________               /___________ 
- *   b             a            b             c
- */
-inline POSITION positionRelativeToAngle(
-		const Real2& a, const Real2& b, const Real2& c, const Real2& q) {
-
-	if (fabs(orientedArea(a, b, c)) < EQUALITY_TOLERANCE) {
-		assert_lt(dotProduct(a - b, c - b), 0); // 180 degrees angle
-		
-		if (isDegenerate(a, b, q)) {
-			return (length(q - a) < length(q - c)) ? POSITION::FIRST_BORDER
-												   : POSITION::SECOND_BORDER;
-		} else {
-			return (crossProduct(a - b, q - b) > 0) ? POSITION::INSIDE
-													: POSITION::OUTSIDE;
-		}
-		
-	} else {
-		Real3 lambda = barycentricCoordinates(a, b, c, q);
-		
-		if        (lambda(0) == 0 && lambda(2) > 0) {
-			return POSITION::SECOND_BORDER;
-			
-		} else if (lambda(2) == 0 && lambda(0) > 0) {
-			return POSITION::FIRST_BORDER;
-			
-		} else {
-			bool isInsideTheLeastAngle = lambda(0) > 0 && lambda(2) > 0;			
-			bool isAngleRight = crossProduct(a - b, c - b) > 0;
-			
-			if ( ( isAngleRight &&  isInsideTheLeastAngle) ||
-			     (!isAngleRight && !isInsideTheLeastAngle) ) {
-				return POSITION::INSIDE;
-				
-			} else {
-				return POSITION::OUTSIDE;
-			}
-			
-		}
-	}
-}
-
-
-/** @return center of given list of points */
-template<int TM, int TN,
-         typename TElement,
-         typename TSymmetry,
-         template<int, typename> class TContainer>
-MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
-center(const std::initializer_list<
-		MatrixBase<TM, TN, TElement, TSymmetry, TContainer>>& points) {
-	assert_gt(points.size(), 0);
-	auto summ = MatrixBase<TM, TN, TElement, TSymmetry, TContainer>::Zeros();
-	for (const auto& p : points) {
-		summ += p;
-	}
-	return summ / (TElement) points.size();
 }
 
 
