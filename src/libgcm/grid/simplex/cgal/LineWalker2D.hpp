@@ -31,57 +31,21 @@ public:
 				Triangulation::realD(b), Triangulation::realD(d));
 	}
 	
-	static int otherVertexIndex(
-			const CellHandle cell, const VertexHandle a, const VertexHandle b) {
-	/// return index of that vertex of cell, which is not a, b
-		for (int i = 0; i < CELL_SIZE; i++) {
-			VertexHandle d = cell->vertex(i);
-			if ( (d != a) && (d != b) ) { return i; }
-		}
-		THROW_BAD_MESH("Cell contains equal vertices");
-	}
-	
-	static CellHandle neighborThrough(
-			const CellHandle cell, const VertexHandle a, const VertexHandle b) {
-	/// return neighbor cell that shares with given cell vertices a, b
-		return cell->neighbor(otherVertexIndex(cell, a, b));
-	}
-	
-	static VertexHandle otherVertex(
-			const CellHandle cell, const VertexHandle a, const VertexHandle b) {
-	/// return that vertex of cell, which is not a, b
-		return cell->vertex(otherVertexIndex(cell, a, b));
-	}
-	
-	/**
-	 * Collect cells along the line from q to p.
-	 * The most useful values for q1 and p1 is: q1 = q->point(), p1 = p,
-	 * but to handle numerical inexactness along edges and facets,
-	 * sometimes it is useful to shift slightly q1 from q or/and p1 from p.
-	 * The search accepts only "valid" cells in terms of given predicate:
-	 * if meet a not "valid" cell, the search is terminated.
-	 */
 	template<typename Predicate>
-	static std::vector<CellHandle> cellsAlongSegment(
-			const Triangulation* triangulation, const Predicate isValid,
-			const VertexHandle q, const Real2 p, const Real2 q1, const Real2 p1) {
-		
+	static std::vector<CellHandle> collectCells(
+			const Predicate isValid, const Real2 q, const Real2 p,
+			CellHandle t, VertexHandle r, VertexHandle l) {
+	/// given with start parameters, collect "valid" cells along the segment qp;
+	/// if found not "valid" cell, end the search
 		std::vector<CellHandle> ans;
-		CellHandle t = findCrossedCell(triangulation, isValid, q, p);
-		if (t == NULL) { return ans; }
-		
-		VertexHandle l = otherVertex(t, q, q);
-		VertexHandle r = otherVertex(t, q, l);
-		if (orientation(r, l, q1) < 0) { std::swap(l, r); }
-		
 		ans.push_back(t);
-		while (orientation(p1, r, l) < 0) {
-			t = neighborThrough(t, r, l);
+		while (orientation(p, r, l) < 0) {
+			t = Triangulation::neighborThrough(t, r, l);
 			ans.push_back(t);
 			if (!isValid(t)) { break; }
 			
-			VertexHandle s = otherVertex(t, r, l);
-			if (orientation(s, q1, p1) < 0) {
+			VertexHandle s = Triangulation::otherVertex(t, r, l);
+			if (orientation(s, q, p) < 0) {
 				r = s;
 			} else {
 				l = s;
@@ -90,28 +54,49 @@ public:
 		return ans;
 	}
 	
+	/**
+	 * Collect cells along the line from the vertex q to point p.
+	 * The search accepts only "valid" cells in terms of given predicate:
+	 * if meet a not "valid" cell, the search is stopped.
+	 * This method is unstable to numerical inexactness, 
+	 * like going along borders and very long lines qp
+	 */
 	template<typename Predicate>
-	static CellHandle findCrossedCell(
+	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
 			const VertexHandle q, const Real2 p) {
-	/// return incident to q "valid" cell which is crossed by the ray (q, p)
-	/// or NULL if there isn't such (i.e. crossed cell is not "valid")
-		std::list<CellHandle> cells = triangulation->allIncidentCells(q);
-		for (CellHandle candidate : cells) {
-			if (!isValid(candidate)) { continue; }
-			
-			VertexHandle a = otherVertex(candidate, q, q);
-			VertexHandle b = otherVertex(candidate, q, a);
-			Real3 lambda = linal::barycentricCoordinates(
-					Triangulation::realD(q), Triangulation::realD(a),
-					Triangulation::realD(b), Triangulation::realD(p));
-			
-			if (lambda(0) <= 1 &&
-					lambda(1) >= 0 && lambda(2) >= 0) {
-				return candidate;
-			}
-		}
-		return NULL;
+		
+		CellHandle t = triangulation->findCrossedIncidentCell(isValid, q, p, 0);
+		if (t == NULL) { return std::vector<CellHandle>(); }
+		
+		VertexHandle l = Triangulation::otherVertex(t, q, q);
+		VertexHandle r = Triangulation::otherVertex(t, q, l);
+		if (orientation(r, l, q) < 0) { std::swap(l, r); }
+		
+		return collectCells(isValid, Triangulation::realD(q), p, t, r, l);
+	}
+	
+	/**
+	 * Collect cells along the line from q1 == (q + delta) to p.
+	 * This is a generalization of the usual algo for the case delta = 0.
+	 * In order to handle numerical inexactness along edges and facets,
+	 * sometimes it is useful to *slightly* shift q1 from q.
+	 * The search accepts only "valid" cells in terms of given predicate:
+	 * if meet a not "valid" cell, the search is stopped.
+	 */
+	template<typename Predicate>
+	static std::vector<CellHandle> cellsAlongSegment(
+			const Triangulation* triangulation, const Predicate isValid,
+			const VertexHandle q, const Real2 p, const Real2 q1) {
+		
+		CellHandle t = triangulation->findContainingIncidentCell(isValid, q, q1, 0);
+		if (t == NULL) { return std::vector<CellHandle>(); }
+		
+		VertexHandle l = NULL, r = NULL;
+		triangulation->findCrossedInsideOutFacet(t, q1, p, l, r);
+		if (orientation(r, l, q1) < 0) { std::swap(l, r); }
+		
+		return collectCells(isValid, q1, p, t, r, l);
 	}
 	
 };

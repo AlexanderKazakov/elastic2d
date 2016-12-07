@@ -43,6 +43,7 @@ public:
 	
 	/// Space dimensionality
 	static const int DIMENSIONALITY = 3;
+	static const int CELL_SIZE = DIMENSIONALITY + 1;
 	/// Number of verices in tetrahedra
 	static const int TETR_SIZE = DIMENSIONALITY + 1;
 	/// Point (Vector) in DIMENSIONALITY space
@@ -155,17 +156,80 @@ public:
 	/// @}
 	
 	
-	/** Is tetrahedron with a small layer around contains the point */
-	static bool contains(const CellHandle cell, const RealD& q) {
-		RealD a = realD(cell->vertex(0)->point());
-		RealD b = realD(cell->vertex(1)->point());
-		RealD c = realD(cell->vertex(2)->point());
-		RealD d = realD(cell->vertex(3)->point());
-		auto lambda = linal::barycentricCoordinates(a, b, c, d, q);
-		return (lambda(0) > -EQUALITY_TOLERANCE) &&
-		       (lambda(1) > -EQUALITY_TOLERANCE) &&
-		       (lambda(2) > -EQUALITY_TOLERANCE) &&
-		       (lambda(3) > -EQUALITY_TOLERANCE);
+	/** Is the cell with a small layer around contains the point */
+	static bool contains(const CellHandle cell, const RealD& q,
+			const real eps = EQUALITY_TOLERANCE) {
+		RealD a = realD(cell->vertex(0));
+		RealD b = realD(cell->vertex(1));
+		RealD c = realD(cell->vertex(2));
+		RealD d = realD(cell->vertex(3));
+		return linal::tetrahedronContains(a, b, c, d, q, eps);
+	}
+	
+	
+	/**
+	 * Returns incident to vh "valid" cell which is crossed by the ray 
+	 * from vh to query or NULL if there isn't such 
+	 * (i.e. crossed cell is not "valid")
+	 */
+	template<typename Predicate>
+	CellHandle findCrossedIncidentCell(const Predicate isValid,
+			const VertexHandle vh, const Real3 query, const real eps) const {
+		std::list<CellHandle> cells = allIncidentCells(vh);
+		for (CellHandle candidate : cells) {
+			if (!isValid(candidate)) { continue; }
+			
+			VertexHandle a = otherVertex(candidate, vh, vh, vh);
+			VertexHandle b = otherVertex(candidate, vh, vh, a);
+			VertexHandle c = otherVertex(candidate, vh, a, b);
+			
+			if (linal::solidAngleContains(
+					realD(vh), realD(a), realD(b), realD(c), query, eps)) {
+				return candidate;
+			}
+		}
+		return NULL;
+	}
+	
+	
+	/**
+	 * The point q must lie inside the tetrahedron t.
+	 * Find the face of t which is crossed by the ray qp.
+	 * Write the result as a triple of vertices to a,b,c.
+	 */
+	static void findCrossedInsideOutFacet(
+			const CellHandle t, const Real3 q, const Real3 p,
+			VertexHandle& a, VertexHandle& b, VertexHandle& c) {
+		for (int i = 0; i < CELL_SIZE; i++) {
+			a = t->vertex((i + 1) % CELL_SIZE);
+			b = t->vertex((i + 2) % CELL_SIZE);
+			c = t->vertex((i + 3) % CELL_SIZE);
+			if (linal::solidAngleContains(
+					q, realD(a), realD(b), realD(c), p, 0)) { return; }
+		}
+	}
+	
+	
+	static int otherVertexIndex(const CellHandle cell,
+			const VertexHandle a, const VertexHandle b, const VertexHandle c) {
+	/// return index of that vertex of cell, which is not a, b, c
+		for (int i = 0; i < CELL_SIZE; i++) {
+			VertexHandle d = cell->vertex(i);
+			if ( (d != a) && (d != b) && (d != c) ) { return i; }
+		}
+		THROW_BAD_MESH("Cell contains equal vertices");
+	}
+	
+	static CellHandle neighborThrough(const CellHandle cell,
+			const VertexHandle a, const VertexHandle b, const VertexHandle c) {
+	/// return neighbor cell that shares with given cell vertices a, b, c
+		return cell->neighbor(otherVertexIndex(cell, a, b, c));
+	}
+	
+	static VertexHandle otherVertex(const CellHandle cell,
+			const VertexHandle a, const VertexHandle b, const VertexHandle c) {
+	/// return that vertex of cell, which is not a, b, c
+		return cell->vertex(otherVertexIndex(cell, a, b, c));
 	}
 	
 	

@@ -43,6 +43,7 @@ public:
 	
 	/// Space dimensionality
 	static const int DIMENSIONALITY = 2;
+	static const int CELL_SIZE = DIMENSIONALITY + 1;
 	/// Point (Vector) in DIMENSIONALITY space
 	typedef linal::Vector<DIMENSIONALITY> RealD;
 	/// An *estimation* of maximal possible number of vertices connected 
@@ -155,15 +156,77 @@ public:
 	/// @}
 	
 	
-	/** Is triangle with a small layer around contains the point */
-	static bool contains(const CellHandle ch, const RealD& q) {
+	/** Is the cell with a small layer around contains the point */
+	static bool contains(const CellHandle ch, const RealD& q,
+			const real eps = EQUALITY_TOLERANCE) {
 		RealD a = realD(ch->vertex(0)->point());
 		RealD b = realD(ch->vertex(1)->point());
 		RealD c = realD(ch->vertex(2)->point());
-		auto lambda = linal::barycentricCoordinates(a, b, c, q);
-		return (lambda(0) > -EQUALITY_TOLERANCE) &&
-		       (lambda(1) > -EQUALITY_TOLERANCE) &&
-		       (lambda(2) > -EQUALITY_TOLERANCE);
+		return linal::triangleContains(a, b, c, q, eps);
+	}
+	
+	
+	/**
+	 * Returns incident to vh "valid" cell which is crossed by the ray 
+	 * from vh to query or NULL if there isn't such 
+	 * (i.e. crossed cell is not "valid")
+	 */
+	template<typename Predicate>
+	CellHandle findCrossedIncidentCell(const Predicate isValid,
+			const VertexHandle vh, const Real2 query, const real eps) const {
+		std::list<CellHandle> cells = allIncidentCells(vh);
+		for (CellHandle candidate : cells) {
+			if (!isValid(candidate)) { continue; }
+			
+			VertexHandle a = otherVertex(candidate, vh, vh);
+			VertexHandle b = otherVertex(candidate, vh, a);
+			
+			if (linal::angleContains(
+					realD(vh), realD(a), realD(b), query, eps)) {
+				return candidate;
+			}
+		}
+		return NULL;
+	}
+	
+	
+	/**
+	 * The point q must lie inside the triangle t.
+	 * Find the edge of t which is crossed by the ray qp.
+	 * Write the result as a pair of vertices to a,b.
+	 */
+	static void findCrossedInsideOutFacet(
+			const CellHandle t, const Real2 q, const Real2 p,
+			VertexHandle& a, VertexHandle& b) {
+		for (int i = 0; i < CELL_SIZE; i++) {
+			a = t->vertex((i + 1) % CELL_SIZE);
+			b = t->vertex((i + 2) % CELL_SIZE);
+			if (linal::angleContains(
+					q, realD(a), realD(b), p, 0)) { return; }
+		}
+	}
+	
+	
+	static int otherVertexIndex(
+			const CellHandle cell, const VertexHandle a, const VertexHandle b) {
+	/// return index of that vertex of cell, which is not a, b
+		for (int i = 0; i < CELL_SIZE; i++) {
+			VertexHandle d = cell->vertex(i);
+			if ( (d != a) && (d != b) ) { return i; }
+		}
+		THROW_BAD_MESH("Cell contains equal vertices");
+	}
+	
+	static CellHandle neighborThrough(
+			const CellHandle cell, const VertexHandle a, const VertexHandle b) {
+	/// return neighbor cell that shares with given cell vertices a, b
+		return cell->neighbor(otherVertexIndex(cell, a, b));
+	}
+	
+	static VertexHandle otherVertex(
+			const CellHandle cell, const VertexHandle a, const VertexHandle b) {
+	/// return that vertex of cell, which is not a, b
+		return cell->vertex(otherVertexIndex(cell, a, b));
 	}
 	
 	

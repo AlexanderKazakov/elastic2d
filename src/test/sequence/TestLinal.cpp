@@ -11,6 +11,61 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, contains2d) {
+	Real2 a = {0, 0}, b = {0, 3}, c = {3, 0}, d = {3, 3};
+	Real2 q = {1, 1}, p = {2, 2}, r = {0, -1};
+	ASSERT_TRUE (triangleContains(a, b, c, q));
+	ASSERT_FALSE(triangleContains(a, b, c,-q));
+	ASSERT_TRUE (triangleContains(d, b, c, p));
+	ASSERT_FALSE(triangleContains(a, b, c, p));
+	ASSERT_FALSE(triangleContains(d, b, c, q));
+	ASSERT_TRUE (triangleContains(a, b, c, a, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (triangleContains(a, b, d, p, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (triangleContains(a, b, d, q, EQUALITY_TOLERANCE));
+	
+	ASSERT_TRUE (angleContains(a, b, c, q));
+	ASSERT_FALSE(angleContains(a, b, c,-q));
+	ASSERT_FALSE(angleContains(a, b, c, r));
+	ASSERT_TRUE (angleContains(a, b, c, p));
+	ASSERT_TRUE (angleContains(b, a, c, q));
+	ASSERT_FALSE(angleContains(b, a, c, p));
+	ASSERT_TRUE (angleContains(b, d, c, p));
+	ASSERT_FALSE(angleContains(b, d, c, q));
+	ASSERT_TRUE (angleContains(b, a, c, b, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (angleContains(b, a, c, a, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (angleContains(a, b, d, q, EQUALITY_TOLERANCE));
+}
+
+
+TEST(Linal, contains3d) {
+	Real3 a = {0, 0, 0}, b = {0, 0, 5}, c = {0, 5, 0}, d = {5, 0, 0}, e = {5, 5, 5};
+	Real3 q = {1, 1, 1}, p = {4, 4, 4}, r = {0, 0, -1}, s = {-1, 0, -1};
+	ASSERT_TRUE (tetrahedronContains(a, b, c, d, q));
+	ASSERT_FALSE(tetrahedronContains(a, b, c, d,-q));
+	ASSERT_TRUE (tetrahedronContains(e, b, c, d, p));
+	ASSERT_FALSE(tetrahedronContains(a, b, c, d, p));
+	ASSERT_FALSE(tetrahedronContains(e, b, c, d, q));
+	ASSERT_TRUE (tetrahedronContains(a, b, c, d, a, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (tetrahedronContains(a, b, e, d, p, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (tetrahedronContains(a, b, e, d, q, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (tetrahedronContains(a, b, e, d, (a + b + d) / 3, EQUALITY_TOLERANCE));
+	
+	ASSERT_TRUE (solidAngleContains(a, b, c, d, q));
+	ASSERT_FALSE(solidAngleContains(a, b, c, d,-q));
+	ASSERT_FALSE(solidAngleContains(a, b, c, d, r));
+	ASSERT_FALSE(solidAngleContains(a, b, c, d, s));
+	ASSERT_TRUE (solidAngleContains(a, b, c, d, p));
+	ASSERT_TRUE (solidAngleContains(b, a, c, d, q));
+	ASSERT_FALSE(solidAngleContains(b, a, c, d, p));
+	ASSERT_TRUE (solidAngleContains(b, e, c, d, p));
+	ASSERT_FALSE(solidAngleContains(b, e, c, d, q));
+	ASSERT_TRUE (solidAngleContains(b, a, c, d, b, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (solidAngleContains(b, a, c, d, a, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (solidAngleContains(a, b, e, d, q, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (solidAngleContains(a, b, e, d, (a + b + d) / 3, EQUALITY_TOLERANCE));
+}
+
+
 TEST(Linal, reflectionDirection) {
 	ASSERT_TRUE(linal::approximatelyEqual(
 			Real2({0, -1}),

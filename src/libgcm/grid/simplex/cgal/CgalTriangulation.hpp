@@ -7,9 +7,6 @@
 
 namespace gcm {
 
-//template<typename, int> class LineWalker;
-
-
 template<int Dimensionality, typename VertexInfo, typename CellInfo>
 struct CgalTriangulationBase;
 
@@ -74,6 +71,8 @@ public:
 	
 	
 	CgalTriangulation(const Task& task) : Base(task) {
+		static_assert(CELL_POINTS_NUMBER == Base::CELL_SIZE, "");
+		static_assert(DIMENSIONALITY == Base::DIMENSIONALITY, "");
 		rescale(task.simplexGrid.scale);
 	}
 	virtual ~CgalTriangulation() { }
@@ -127,6 +126,24 @@ public:
 	}
 	
 	
+	/**
+	 * Returns incident to vh "valid" cell which contains point query
+	 * with given tolerance or NULL if there isn't such 
+	 * (i.e. containing cell is not "valid" or is not incident to vh)
+	 */
+	template<typename Predicate>
+	CellHandle findContainingIncidentCell(const Predicate isValid,
+			const VertexHandle vh, const RealD query, const real eps) const {
+		std::list<CellHandle> cells = this->allIncidentCells(vh);
+		for (CellHandle candidate : cells) {
+			if (isValid(candidate) && contains(candidate, query, eps)) {
+				return candidate;
+			}
+		}
+		return NULL;
+	}
+	
+	
 	/** 
 	 * Move specified point on specified distance
 	 * without any triangulation reconstruction
@@ -163,7 +180,6 @@ public:
 	
 private:
 	USE_AND_INIT_LOGGER("gcm.CgalTriangulation")
-//	friend class LineWalker<CgalTriangulation, DIMENSIONALITY>;
 	
 	
 	/** Scale the triangulation in space */

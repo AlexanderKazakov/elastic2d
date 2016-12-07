@@ -244,6 +244,70 @@ bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
 
 
 /**
+ * Does triangle abc contain point q inside with tolerance eps
+ */
+inline bool triangleContains(
+		const Real2& a, const Real2& b, const Real2& c,
+		const Real2& q, const real eps = 0) {
+	Real3 lambda = barycentricCoordinates(a, b, c, q);
+	return lambda(0) > -eps && lambda(1) > -eps && lambda(2) > -eps;
+}
+
+
+/**
+ * Does tetrahedron abcd contain point q inside with tolerance eps
+ */
+inline bool tetrahedronContains(
+		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
+		const Real3& q, const real eps = 0) {
+	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
+	return lambda(0) > -eps && lambda(1) > -eps &&
+	       lambda(2) > -eps && lambda(3) > -eps;
+}
+
+
+/**
+ * Does angle b-a-c (a is in the middle) contain point q inside 
+ * (i.e in its minimal sector) with tolerance eps.
+ * Function "positionRelativeToAngle" below is obsolete
+ *           b/
+ *  outside  /
+ *          /
+ *         /  inside
+ *        /__________
+ *       a           c
+ */
+inline bool angleContains(const Real2& a, const Real2& b, const Real2& c,
+		const Real2& q, const real eps = 0) {
+	Real3 lambda = barycentricCoordinates(a, b, c, q);
+	return lambda(0) < 1 + eps && 
+			lambda(1) > -eps && lambda(2) > -eps;
+}
+
+
+/**
+ * Does solid angle a-{b-c-d} (a is in the center) contain point q inside
+ * (i.e in its minimal sector) with tolerance eps.
+ *           b/
+ *  outside  /
+ *          /
+ *         /  inside
+ *        /__________
+ *       a\           c
+ *         \
+ *          \
+ *          d
+ */
+inline bool solidAngleContains(
+		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
+		const Real3& q, const real eps = 0) {
+	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
+	return lambda(0) < 1 + eps && 
+			lambda(1) > -eps && lambda(2) > -eps && lambda(3) > -eps;
+}
+
+
+/**
  * Returns position of point q relative to the angle {a, b, c}.
  * b is the vertex of the triangle.
  * "inside" means that going from side b-a to side b-c counterclockwise,

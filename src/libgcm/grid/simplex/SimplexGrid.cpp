@@ -108,7 +108,7 @@ findOwnerCell(const Iterator& it, const RealD& shift) const {
 			LineWalker<Triangulation, DIMENSIONALITY>::cellsAlongSegment(
 					triangulation,
 					[=](const CellHandle c) {return belongsToTheGrid(c);},
-					vertexHandle(it), query, coordsD(it), query);
+					vertexHandle(it), query);
 	
 	if (cellsAlong.empty()) { return createCell(); }
 	
