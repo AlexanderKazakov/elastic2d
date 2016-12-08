@@ -174,7 +174,8 @@ public:
 	 */
 	template<typename Predicate>
 	CellHandle findCrossedIncidentCell(const Predicate isValid,
-			const VertexHandle vh, const Real3 query, const real eps) const {
+			const VertexHandle vh, const Real3 query,
+			const real eps = EQUALITY_TOLERANCE) const {
 		std::list<CellHandle> cells = allIncidentCells(vh);
 		for (CellHandle candidate : cells) {
 			if (!isValid(candidate)) { continue; }
@@ -199,13 +200,19 @@ public:
 	 */
 	static void findCrossedInsideOutFacet(
 			const CellHandle t, const Real3 q, const Real3 p,
-			VertexHandle& a, VertexHandle& b, VertexHandle& c) {
+			VertexHandle& a, VertexHandle& b, VertexHandle& c,
+			const real eps = EQUALITY_TOLERANCE) {
+		a = NULL; b = NULL; c = NULL;
 		for (int i = 0; i < CELL_SIZE; i++) {
-			a = t->vertex((i + 1) % CELL_SIZE);
-			b = t->vertex((i + 2) % CELL_SIZE);
-			c = t->vertex((i + 3) % CELL_SIZE);
-			if (linal::solidAngleContains(
-					q, realD(a), realD(b), realD(c), p, 0)) { return; }
+			VertexHandle a1 = t->vertex((i + 1) % CELL_SIZE);
+			VertexHandle b1 = t->vertex((i + 2) % CELL_SIZE);
+			VertexHandle c1 = t->vertex((i + 3) % CELL_SIZE);
+			if (linal::isDegenerate(q, realD(a1), realD(b1), realD(c1), EQUALITY_TOLERANCE)) {
+				continue;
+			}
+			if (linal::solidAngleContains(q, realD(a1), realD(b1), realD(c1), p, eps)) {
+				a = a1; b = b1; c = c1; break;
+			}
 		}
 	}
 	

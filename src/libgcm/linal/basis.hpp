@@ -57,7 +57,7 @@ inline Matrix22 createLocalBasis(const Real2& n) {
 }
 
 inline Matrix33 createLocalBasis(const Real3& n) {
-	const Real3 tau_1 = normalize(perpendicularClockwise(n));
+	const Real3 tau_1 = perpendicularClockwise(n);
 	const Real3 tau_2 = crossProduct(n, tau_1);
 	return Matrix33({tau_1(0), tau_2(0), n(0),
 	                 tau_1(1), tau_2(1), n(1),
@@ -76,7 +76,7 @@ inline Matrix22 createLocalBasisTranspose(const Real2& n) {
 }
 
 inline Matrix33 createLocalBasisTranspose(const Real3& n) {
-	const Real3 tau_1 = normalize(perpendicularClockwise(n));
+	const Real3 tau_1 = perpendicularClockwise(n);
 	const Real3 tau_2 = crossProduct(n, tau_1);
 	return Matrix33({tau_1(0), tau_1(1), tau_1(2),
 	                 tau_2(0), tau_2(1), tau_2(2),

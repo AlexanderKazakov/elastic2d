@@ -136,7 +136,7 @@ public:
 			const VertexHandle vh, const RealD query, const real eps) const {
 		std::list<CellHandle> cells = this->allIncidentCells(vh);
 		for (CellHandle candidate : cells) {
-			if (isValid(candidate) && contains(candidate, query, eps)) {
+			if (isValid(candidate) && Base::contains(candidate, query, eps)) {
 				return candidate;
 			}
 		}

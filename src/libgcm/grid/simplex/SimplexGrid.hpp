@@ -149,14 +149,23 @@ public:
 	/** 
 	 * Normal to the contact surface between this and neighbor grids.
 	 * Direction of normal is OUTside this grid.
-	 * Grid with neighborId must have contact with this one in that point (it).
+	 * If grid with neighborId have no contact with this one 
+	 * in that point, RealD::Zeros() is returned.
 	 */
-	RealD contactNormal(const Iterator& it, const GridId neighborId) const;
-	
+	RealD contactNormal(const Iterator& it, const GridId neighborId) const {
+		return normal(it, [=](const CellHandle outerCell) {
+				return outerCell->info().getGridId() == neighborId;});
+	}
 	
 	/** Normal to the free border surface of this grid */
 	RealD borderNormal(const Iterator& it) const {
 		return contactNormal(it, EmptySpaceFlag);
+	}
+	
+	/** Normal to all connected neighbors and free border of this grid */
+	RealD commonNormal(const Iterator& it) const {
+		return normal(it, [=](const CellHandle outerCell) {
+				return outerCell->info().getGridId() != id;});
 	}
 	
 	
@@ -185,14 +194,14 @@ public:
 	 * @note for convex grids and answer case 4
 	 * result is the same with locateOwnerCell
 	 */
-	Cell findOwnerCell(const Iterator& it, const RealD& shift) const;
+	Cell findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const;
 	
 	
 	/**
 	 * Locate cell contains point on specified distance (shift)
 	 * from specified vertex (it) by triangulation->locate function.
-	 * It uses different algorithm than findOwnerCell.
-	 * @see findOwnerCell
+	 * It uses different algorithm than findCellCrossedByTheRay.
+	 * @see findCellCrossedByTheRay
 	 */
 	Cell locateOwnerCell(const Iterator& it, const RealD& shift) const {
 		CellHandle ch = triangulation->locateOwnerCell(vertexHandle(it), shift);
@@ -233,14 +242,12 @@ public:
 	/** Returns all nodes from this grid connected with given node */
 	std::set<Iterator> findNeighborVertices(const Iterator& it) const {
 		const auto cells = localIncidentCells(it);
-		
 		std::set<Iterator> ans;
 		for (const auto cell : cells) {
 			for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
 				ans.insert(iterator(cell, i));
 			}
 		}
-		
 		ans.erase(it);
 		return ans;
 	}
@@ -378,7 +385,6 @@ private:
 	std::list<CellHandle> localIncidentCells(const LocalVertexIndex it) const {
 		VertexHandle vh = vertexHandle(it);
 		std::list<CellHandle> ans = triangulation->allIncidentCells(vh);
-		
 		auto listIter = ans.begin();
 		while (listIter != ans.end()) {
 			if (belongsToTheGrid(*listIter)) {
@@ -387,7 +393,6 @@ private:
 				listIter = ans.erase(listIter);
 			}
 		}
-		
 		return ans;
 	}
 	
@@ -396,18 +401,80 @@ private:
 	std::set<GridId> gridsAroundVertex(const Iterator it) const {
 		VertexHandle vh = vertexHandle(it);
 		std::list<CellHandle> cells = triangulation->allIncidentCells(vh);
-		
 		std::set<GridId> ans;
 		for (const auto cell : cells) {
 			ans.insert(cell->info().getGridId());
 		}
-		
 		return ans;
 	}
 	
 	
-	void calculateMinimalSpatialStep();
+	/** 
+	 * Helper for findCellCrossedByTheRay function to reduce code duplication.
+	 * Handle cases when the ray seems to hit into the inner space of the grid
+	 */
+	Cell checkInnerHitCases(const Iterator& it,
+			const std::vector<CellHandle>& cellsAlong, const RealD& query) const {
+		if (!cellsAlong.empty() &&
+				belongsToTheGrid(cellsAlong.back())) {
+		/// usual case
+			if(!Triangulation::contains(cellsAlong.back(), query)) { // TODO - replace
+				std::cout << "Error at:" << coordsD(it) << "query: " << query << std::endl;
+				triangulation->printCell(cellsAlong.back(), "missed");
+				THROW_BAD_MESH("Search error");
+			}
+			return createCell(cellsAlong.back());
+		}
+		if (cellsAlong.size() > 1 &&
+				Triangulation::contains(*std::next(cellsAlong.rbegin()), query)) {
+		/// possible inexactness on border
+			return createCell(*std::next(cellsAlong.rbegin()));
+		}
+		return createCell();
+	}
 	
+	
+	/** 
+	 * Helper for findCellCrossedByTheRay function to reduce code duplication.
+	 * Handle cases when the ray seems to hit outside the grid 
+	 * going from an inner node through a border facet
+	 */
+	Cell checkBorderHitFromInnerNodeCases(const Iterator& it,
+			const std::vector<CellHandle>& cellsAlong, const RealD& /*query*/) const {
+		if (isInner(it) && !cellsAlong.empty()) {
+			assert_gt(cellsAlong.size(), 1);
+			CellHandle last = cellsAlong.back();
+			assert_false(belongsToTheGrid(last));
+			CellHandle prev = *(std::next(cellsAlong.rbegin()));
+			assert_true(belongsToTheGrid(prev));
+			return createCell(Triangulation::commonVertices(last, prev), prev);
+		}
+		return createCell();
+	}
+	
+	
+	template<typename Predicate>
+	RealD normal(const Iterator& it, const Predicate isOuterCellToUse) const {
+		std::list<RealD> facesNormals;
+		const std::list<CellHandle> localCells = localIncidentCells(it);
+		for (const CellHandle localCell : localCells) {
+			for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
+				CellHandle outerCell = localCell->neighbor(i);
+				if(isOuterCellToUse(outerCell) &&
+					Utils::has(Triangulation::commonVertices(
+							localCell, outerCell), vertexHandle(it))) {
+					facesNormals.push_back(
+							Triangulation::contactNormal(localCell, outerCell));
+				}
+			}
+		}
+		if (facesNormals.empty()) { return RealD::Zeros(); };
+		return linal::normalize(std::accumulate(
+				facesNormals.begin(), facesNormals.end(), RealD::Zeros()));
+	}
+	
+	
+	void calculateMinimalSpatialStep();
 };
 
 

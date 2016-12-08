@@ -39,7 +39,7 @@ TEST(SimplexGrid2D, ownerTriangleVsBarycentric) {
 			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
 				auto checkInnerTriangle = [&](int& counter) {
-					auto triangleF = grid.findOwnerCell(it, shift);
+					auto triangleF = grid.findCellCrossedByTheRay(it, shift);
 					auto triangleL = grid.locateOwnerCell(it, shift);
 					
 					if (triangleF.n == 3) {
@@ -124,7 +124,7 @@ TEST(SimplexGrid2D, locateVsFindOwnerTriangle) {
 			
 				Real2 shift;
 				auto checkTriangles = [&]() {
-					auto triangleF = grid.findOwnerCell(it, shift);
+					auto triangleF = grid.findCellCrossedByTheRay(it, shift);
 					auto triangleL = grid.locateOwnerCell(it, shift);
 					
 					if (triangleF.n == 3 && triangleL.n == 3) {
@@ -176,7 +176,7 @@ TEST(SimplexGrid2D, locateVsFindOwnerTriangle) {
 }
 
 
-TEST(SimplexGrid2D, findOwnerCellTwoBodies) {
+TEST(SimplexGrid2D, findCellCrossedByTheRayTwoBodies) {
 	Task task;
 	real h = 5;
 	task.simplexGrid.spatialStep = h;
@@ -213,8 +213,8 @@ TEST(SimplexGrid2D, findOwnerCellTwoBodies) {
 			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
 				auto checkTriangles = [&]() {
-					auto triangle1 = oneBody.findOwnerCell(it1, shift);
-					auto triangle2 = twoBodies.findOwnerCell(it2, shift);
+					auto triangle1 = oneBody.findCellCrossedByTheRay(it1, shift);
+					auto triangle2 = twoBodies.findCellCrossedByTheRay(it2, shift);
 					
 					if (triangle1.n == 3 && triangle2.n == 3) {
 					// both are inner

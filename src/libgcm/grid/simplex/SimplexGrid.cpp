@@ -64,68 +64,57 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
-typename SimplexGrid<Dimensionality, TriangulationT>::RealD
-SimplexGrid<Dimensionality, TriangulationT>::
-contactNormal(const Iterator& it, const GridId neighborId) const {
-
-	std::list<RealD> facesNormals;
-	
-	const std::list<CellHandle> localCells = localIncidentCells(it);
-	for (const CellHandle localCell : localCells) {
-		
-		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
-			CellHandle outerCell = localCell->neighbor(i);
-			
-			if (
-			/// localCell's neighbor with neighborId ..
-				outerCell->info().getGridId() == neighborId &&
-			/// .. which also has our vertex
-				Utils::has(Triangulation::commonVertices(localCell, outerCell),
-						vertexHandle(it)) ) {
-				
-				facesNormals.push_back(
-						Triangulation::contactNormal(localCell, outerCell));
-			}
-		}
-	}
-	
-	if (facesNormals.empty()) { return RealD::Zeros(); };
-	
-	return linal::normalize(std::accumulate(
-			facesNormals.begin(), facesNormals.end(), RealD::Zeros()));
-}
-
-
-template<int Dimensionality,
-         template<int, typename, typename> class TriangulationT>
 typename SimplexGrid<Dimensionality, TriangulationT>::Cell
 SimplexGrid<Dimensionality, TriangulationT>::
-findOwnerCell(const Iterator& it, const RealD& shift) const {
+findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
+	/// A magic number to deal with degenerate numerical inexact cases
+	const real DELTA_RATIO = 100;
+	/// Crucial requirements for LineWalker:
+	/// possible return values of LineWalker::cellsAlongSegment:
+	/// - empty (no cells found)
+	/// - all cells belong to the grid (needed cell is found)
+	/// - the number of cells greater than 1 and 
+	///   the last one is outside the grid -- the ray crosses the border
+	typedef LineWalker<Triangulation, DIMENSIONALITY> LINE_WALKER;
+	RealD start = coordsD(it);
+	RealD query = start + shift;
 	
-	RealD query = coordsD(it) + shift;
-	// go along the line cell-by-cell in triangulation
-	std::vector<CellHandle> cellsAlong = 
-			LineWalker<Triangulation, DIMENSIONALITY>::cellsAlongSegment(
-					triangulation,
-					[=](const CellHandle c) {return belongsToTheGrid(c);},
-					vertexHandle(it), query);
+	/// Try to go along the ray from it to it+shift cell-by-cell
+	std::vector<CellHandle> cellsAlong = LINE_WALKER::cellsAlongSegment(
+			triangulation,
+			[=](const CellHandle c) {return belongsToTheGrid(c);},
+			vertexHandle(it), query);
+	Cell innerCell = checkInnerHitCases(it, cellsAlong, query);
+	if (innerCell.n == innerCell.N) { return innerCell; }
+	Cell borderCell = checkBorderHitFromInnerNodeCases(it, cellsAlong, query);
+	if (borderCell.n > 0) { return borderCell; }
 	
-	if (cellsAlong.empty()) { return createCell(); }
-	
-	CellHandle last = cellsAlong.back();
-	if (belongsToTheGrid(last)) { return createCell(last); }
-	
-	assert_gt(cellsAlong.size(), 1);
-	CellHandle prev = *(std::next(cellsAlong.rbegin()));
-	if (belongsToTheGrid(prev)) {
-	// seems to go outside the grid through the border
-		Cell ans = createCell(Triangulation::commonVertices(last, prev), prev);
-		if ( isInner(it) || !ans.has(it) ) {
-		// it is not immediate outgoing from a border node
-			return ans;
-		}
+	/// Now, two situations are possible:
+	/// - the ray is going out of the grid from a border (contact) node,
+	/// - we have some numerical inexactness in geometrical operations.
+	/// In order to avoid inexactness try to shift the start point slightly 
+	RealD delta = -commonNormal(it) * averageSpatialStep / DELTA_RATIO;
+	if (isInner(it)) {
+		delta = linal::perpendicularClockwise(shift) / DELTA_RATIO;
 	}
+	delta += linal::perpendicularClockwise(delta) / DELTA_RATIO;
+	cellsAlong = LINE_WALKER::cellsAlongSegment(
+			triangulation,
+			[=](const CellHandle c) {return belongsToTheGrid(c);},
+			vertexHandle(it), query,
+			start + delta);
+	innerCell = checkInnerHitCases(it, cellsAlong, query);
+	if (innerCell.n == innerCell.N) { return innerCell; }
+	borderCell = checkBorderHitFromInnerNodeCases(it, cellsAlong, query);
+	if (borderCell.n > 0) { return borderCell; }
 	
+	/// Now, the majority (unlikely all) of inexactness cases are handled.
+	/// Also, the case when the ray starts from the border node and 
+	/// then goes outside the grid through another border 
+	/// (firstly going through the inner cells) is not handled.
+	/// However, by now, it's not handled by the gcm-method too.
+	/// If somewhen fix it, remember the false cases -- immediate outgoing 
+	/// from a border node (see old commits before 01.12.2016 for algo).
 	return createCell();
 }
 

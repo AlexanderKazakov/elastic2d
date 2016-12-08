@@ -13,6 +13,7 @@ public:
 	typedef typename Triangulation::VertexHandle  VertexHandle;
 	typedef typename Triangulation::CellHandle    CellHandle;
 	static const int CELL_SIZE = Triangulation::CELL_POINTS_NUMBER;
+	LineWalker() {}
 	
 	template<typename TA, typename TB, typename TC, typename TD>
 	static real orientation(const TA a, const TB b, const TC c, const TD d) {
@@ -54,6 +55,7 @@ public:
 	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
 			const VertexHandle q, const Real3 p) {
+		static_assert(Triangulation::DIMENSIONALITY == 3, "");
 		
 		CellHandle t = triangulation->findCrossedIncidentCell(isValid, q, p, 0);
 		if (t == NULL) { return std::vector<CellHandle>(); }
@@ -69,13 +71,14 @@ public:
 	template<typename Predicate>
 	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
-			const VertexHandle q, const Real2 p, const Real2 q1) {
+			const VertexHandle q, const Real3 p, const Real3 q1) {
 		
 		CellHandle t = triangulation->findContainingIncidentCell(isValid, q, q1, 0);
 		if (t == NULL) { return std::vector<CellHandle>(); }
 		
 		VertexHandle u = NULL, v = NULL, w = NULL;
 		triangulation->findCrossedInsideOutFacet(t, q1, p, u, v, w);
+		if (u == NULL) { return std::vector<CellHandle>(); }
 		if (orientation(u, v, w, q1) < 0) { std::swap(u, v); }
 		
 		return collectCells(isValid, q1, p, t, u, v, w);

@@ -65,7 +65,7 @@ inline void checkOwnerCellVsBarycentric(
 			
 			typename SimplexGrid<3, CgalTriangulation>::Cell tetrF;
 			typename SimplexGrid<3, CgalTriangulation>::Cell tetrL;
-			tetrF = grid->findOwnerCell(it, shift);
+			tetrF = grid->findCellCrossedByTheRay(it, shift);
 			tetrL = grid->locateOwnerCell(it, shift);
 			
 			if (tetrF.n == 4) {

@@ -173,7 +173,8 @@ public:
 	 */
 	template<typename Predicate>
 	CellHandle findCrossedIncidentCell(const Predicate isValid,
-			const VertexHandle vh, const Real2 query, const real eps) const {
+			const VertexHandle vh, const Real2 query,
+			const real eps = EQUALITY_TOLERANCE) const {
 		std::list<CellHandle> cells = allIncidentCells(vh);
 		for (CellHandle candidate : cells) {
 			if (!isValid(candidate)) { continue; }
@@ -193,16 +194,22 @@ public:
 	/**
 	 * The point q must lie inside the triangle t.
 	 * Find the edge of t which is crossed by the ray qp.
-	 * Write the result as a pair of vertices to a,b.
+	 * Write the result as a pair of vertices to a,b (or NULLs if not found).
 	 */
 	static void findCrossedInsideOutFacet(
 			const CellHandle t, const Real2 q, const Real2 p,
-			VertexHandle& a, VertexHandle& b) {
+			VertexHandle& a, VertexHandle& b,
+			const real eps = EQUALITY_TOLERANCE) {
+		a = NULL; b = NULL;
 		for (int i = 0; i < CELL_SIZE; i++) {
-			a = t->vertex((i + 1) % CELL_SIZE);
-			b = t->vertex((i + 2) % CELL_SIZE);
-			if (linal::angleContains(
-					q, realD(a), realD(b), p, 0)) { return; }
+			VertexHandle a1 = t->vertex((i + 1) % CELL_SIZE);
+			VertexHandle b1 = t->vertex((i + 2) % CELL_SIZE);
+			if (linal::isDegenerate(q, realD(a1), realD(b1), EQUALITY_TOLERANCE)) {
+				continue;
+			}
+			if (linal::angleContains(q, realD(a1), realD(b1), p, eps)) {
+				a = a1; b = b1; break;
+			}
 		}
 	}
 	

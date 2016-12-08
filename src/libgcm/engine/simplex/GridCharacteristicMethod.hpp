@@ -168,7 +168,7 @@ private:
 			
 			// point to interpolate respectively to point by given iterator
 			RealD shift = direction * dx(k);
-			Cell t = mesh.findOwnerCell(it, shift);
+			Cell t = mesh.findCellCrossedByTheRay(it, shift);
 			PdeVector u = PdeVector::Zeros();
 			
 			if (t.n == t.N) {

@@ -65,6 +65,7 @@ public:
 	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
 			const VertexHandle q, const Real2 p) {
+		static_assert(Triangulation::DIMENSIONALITY == 2, "");
 		
 		CellHandle t = triangulation->findCrossedIncidentCell(isValid, q, p, 0);
 		if (t == NULL) { return std::vector<CellHandle>(); }
@@ -93,7 +94,8 @@ public:
 		if (t == NULL) { return std::vector<CellHandle>(); }
 		
 		VertexHandle l = NULL, r = NULL;
-		triangulation->findCrossedInsideOutFacet(t, q1, p, l, r);
+		triangulation->findCrossedInsideOutFacet(t, q1, p, l, r, 0);
+		if (l == NULL) { return std::vector<CellHandle>(); }
 		if (orientation(r, l, q1) < 0) { std::swap(l, r); }
 		
 		return collectCells(isValid, q1, p, t, r, l);
