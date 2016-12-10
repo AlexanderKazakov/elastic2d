@@ -264,6 +264,12 @@ public:
 	}
 	
 	
+	/** Equality tolerance specific for this grid average spatial step */
+	real localEqualityTolerance() const {
+		return averageSpatialStep * EQUALITY_TOLERANCE;
+	}
+	
+	
 	/** Debugging helper */
 	void printCell(const Cell& c) const {
 		std::cout << "Cell n == " << c.n << ":" << std::endl;
@@ -418,7 +424,8 @@ private:
 		if (!cellsAlong.empty() &&
 				belongsToTheGrid(cellsAlong.back())) {
 		/// usual case
-			if(!Triangulation::contains(cellsAlong.back(), query)) { // TODO - replace
+			if(!Triangulation::contains(cellsAlong.back(), query,
+					localEqualityTolerance())) { // TODO - replace
 				std::cout << "Error at:" << coordsD(it) << "query: " << query << std::endl;
 				triangulation->printCell(cellsAlong.back(), "missed");
 				THROW_BAD_MESH("Search error");
@@ -426,7 +433,8 @@ private:
 			return createCell(cellsAlong.back());
 		}
 		if (cellsAlong.size() > 1 &&
-				Triangulation::contains(*std::next(cellsAlong.rbegin()), query)) {
+				Triangulation::contains(*std::next(cellsAlong.rbegin()), query,
+						localEqualityTolerance())) {
 		/// possible inexactness on border
 			return createCell(*std::next(cellsAlong.rbegin()));
 		}

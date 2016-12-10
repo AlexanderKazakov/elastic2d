@@ -14,23 +14,23 @@ using namespace gcm::linal;
 TEST(Linal, contains2d) {
 	Real2 a = {0, 0}, b = {0, 3}, c = {3, 0}, d = {3, 3};
 	Real2 q = {1, 1}, p = {2, 2}, r = {0, -1};
-	ASSERT_TRUE (triangleContains(a, b, c, q));
-	ASSERT_FALSE(triangleContains(a, b, c,-q));
-	ASSERT_TRUE (triangleContains(d, b, c, p));
-	ASSERT_FALSE(triangleContains(a, b, c, p));
-	ASSERT_FALSE(triangleContains(d, b, c, q));
+	ASSERT_TRUE (triangleContains(a, b, c, q, 0));
+	ASSERT_FALSE(triangleContains(a, b, c,-q, 0));
+	ASSERT_TRUE (triangleContains(d, b, c, p, 0));
+	ASSERT_FALSE(triangleContains(a, b, c, p, 0));
+	ASSERT_FALSE(triangleContains(d, b, c, q, 0));
 	ASSERT_TRUE (triangleContains(a, b, c, a, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (triangleContains(a, b, d, p, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (triangleContains(a, b, d, q, EQUALITY_TOLERANCE));
 	
-	ASSERT_TRUE (angleContains(a, b, c, q));
-	ASSERT_FALSE(angleContains(a, b, c,-q));
-	ASSERT_FALSE(angleContains(a, b, c, r));
-	ASSERT_TRUE (angleContains(a, b, c, p));
-	ASSERT_TRUE (angleContains(b, a, c, q));
-	ASSERT_FALSE(angleContains(b, a, c, p));
-	ASSERT_TRUE (angleContains(b, d, c, p));
-	ASSERT_FALSE(angleContains(b, d, c, q));
+	ASSERT_TRUE (angleContains(a, b, c, q, 0));
+	ASSERT_FALSE(angleContains(a, b, c,-q, 0));
+	ASSERT_FALSE(angleContains(a, b, c, r, 0));
+	ASSERT_TRUE (angleContains(a, b, c, p, 0));
+	ASSERT_TRUE (angleContains(b, a, c, q, 0));
+	ASSERT_FALSE(angleContains(b, a, c, p, 0));
+	ASSERT_TRUE (angleContains(b, d, c, p, 0));
+	ASSERT_FALSE(angleContains(b, d, c, q, 0));
 	ASSERT_TRUE (angleContains(b, a, c, b, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (angleContains(b, a, c, a, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (angleContains(a, b, d, q, EQUALITY_TOLERANCE));
@@ -40,25 +40,25 @@ TEST(Linal, contains2d) {
 TEST(Linal, contains3d) {
 	Real3 a = {0, 0, 0}, b = {0, 0, 5}, c = {0, 5, 0}, d = {5, 0, 0}, e = {5, 5, 5};
 	Real3 q = {1, 1, 1}, p = {4, 4, 4}, r = {0, 0, -1}, s = {-1, 0, -1};
-	ASSERT_TRUE (tetrahedronContains(a, b, c, d, q));
-	ASSERT_FALSE(tetrahedronContains(a, b, c, d,-q));
-	ASSERT_TRUE (tetrahedronContains(e, b, c, d, p));
-	ASSERT_FALSE(tetrahedronContains(a, b, c, d, p));
-	ASSERT_FALSE(tetrahedronContains(e, b, c, d, q));
+	ASSERT_TRUE (tetrahedronContains(a, b, c, d, q, 0));
+	ASSERT_FALSE(tetrahedronContains(a, b, c, d,-q, 0));
+	ASSERT_TRUE (tetrahedronContains(e, b, c, d, p, 0));
+	ASSERT_FALSE(tetrahedronContains(a, b, c, d, p, 0));
+	ASSERT_FALSE(tetrahedronContains(e, b, c, d, q, 0));
 	ASSERT_TRUE (tetrahedronContains(a, b, c, d, a, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (tetrahedronContains(a, b, e, d, p, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (tetrahedronContains(a, b, e, d, q, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (tetrahedronContains(a, b, e, d, (a + b + d) / 3, EQUALITY_TOLERANCE));
 	
-	ASSERT_TRUE (solidAngleContains(a, b, c, d, q));
-	ASSERT_FALSE(solidAngleContains(a, b, c, d,-q));
-	ASSERT_FALSE(solidAngleContains(a, b, c, d, r));
-	ASSERT_FALSE(solidAngleContains(a, b, c, d, s));
-	ASSERT_TRUE (solidAngleContains(a, b, c, d, p));
-	ASSERT_TRUE (solidAngleContains(b, a, c, d, q));
-	ASSERT_FALSE(solidAngleContains(b, a, c, d, p));
-	ASSERT_TRUE (solidAngleContains(b, e, c, d, p));
-	ASSERT_FALSE(solidAngleContains(b, e, c, d, q));
+	ASSERT_TRUE (solidAngleContains(a, b, c, d, q, 0));
+	ASSERT_FALSE(solidAngleContains(a, b, c, d,-q, 0));
+	ASSERT_FALSE(solidAngleContains(a, b, c, d, r, 0));
+	ASSERT_FALSE(solidAngleContains(a, b, c, d, s, 0));
+	ASSERT_TRUE (solidAngleContains(a, b, c, d, p, 0));
+	ASSERT_TRUE (solidAngleContains(b, a, c, d, q, 0));
+	ASSERT_FALSE(solidAngleContains(b, a, c, d, p, 0));
+	ASSERT_TRUE (solidAngleContains(b, e, c, d, p, 0));
+	ASSERT_FALSE(solidAngleContains(b, e, c, d, q, 0));
 	ASSERT_TRUE (solidAngleContains(b, a, c, d, b, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (solidAngleContains(b, a, c, d, a, EQUALITY_TOLERANCE));
 	ASSERT_TRUE (solidAngleContains(a, b, e, d, q, EQUALITY_TOLERANCE));
@@ -1152,24 +1152,24 @@ TEST(Linal, isPerpendicular) {
 
 
 TEST(Linal, isDegenerate) {
-	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({0, 0})));
-	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 1}), Real2({0, 2})));
-	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({1, 1}), Real2({2, 2})));
-	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({1, 1})));
-	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({1, 0}), Real2({0, 1})));
-	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7})));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({0, 0}), 0));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 1}), Real2({0, 2}), 0));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({1, 1}), Real2({2, 2}), 0));
+	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({1, 1}), 0));
+	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({1, 0}), Real2({0, 1}), 0));
+	ASSERT_FALSE(isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7}), 0));
 	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({-1, 1e-7}), Real2({1, 1e-7}), 2e-7));
 	
-	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2})));
-	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2})));
-	ASSERT_FALSE(isDegenerate(Real3({0, 5, 0}), Real3({0, 0, 1}), Real3({0, 0, 2})));
-	ASSERT_FALSE(isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2 + 1e-7})));
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), 0));
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2}), 0));
+	ASSERT_FALSE(isDegenerate(Real3({0, 5, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), 0));
+	ASSERT_FALSE(isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2 + 1e-7}), 0));
 	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({1, 1, 1}), Real3({2, 2, 2 + 1e-7}), 2e-7));
 	
-	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3})));
-	ASSERT_TRUE (isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 1})));
-	ASSERT_FALSE(isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 5})));
-	ASSERT_FALSE(isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3})));
+	ASSERT_TRUE (isDegenerate(Real3({0, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3}), 0));
+	ASSERT_TRUE (isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 1}), 0));
+	ASSERT_FALSE(isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 5}), 0));
+	ASSERT_FALSE(isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3}), 0));
 	ASSERT_TRUE (isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3}), 2e-7));
 }
 

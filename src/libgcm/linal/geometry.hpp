@@ -150,7 +150,7 @@ inline Real3 lineWithFlatIntersection(const Real3 f1, const Real3 f2, const Real
  * Is triangle on given points degenerate with tolerance eps
  */
 inline bool isDegenerate(
-		const Real2 a, const Real2 b, const Real2 c, const real eps = 0) {
+		const Real2 a, const Real2 b, const Real2 c, const real eps) {
 	Real2 l = a - b;
 	Real2 m = c - b;
 	return std::fabs(determinant(l(0), l(1), m(0), m(1))) <= eps;
@@ -161,7 +161,7 @@ inline bool isDegenerate(
  * Is tetrahedron on given points degenerate with tolerance eps
  */
 inline bool isDegenerate(
-		const Real3 a, const Real3 b, const Real3 c, const Real3 d, const real eps = 0) {
+		const Real3 a, const Real3 b, const Real3 c, const Real3 d, const real eps) {
 	Real3 l = a - b;
 	Real3 m = c - b;
 	Real3 n = d - b;
@@ -174,7 +174,7 @@ inline bool isDegenerate(
  * Is triangle on given points degenerate with tolerance eps
  */
 inline bool isDegenerate(
-		const Real3 a, const Real3 b, const Real3 c, const real eps = 0) {
+		const Real3 a, const Real3 b, const Real3 c, const real eps) {
 	Real3 l = a - b;
 	Real3 m = c - b;
 	real lm = dotProduct(l, m);
@@ -240,7 +240,7 @@ bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
  */
 inline bool triangleContains(
 		const Real2& a, const Real2& b, const Real2& c,
-		const Real2& q, const real eps = 0) {
+		const Real2& q, const real eps) {
 	Real3 lambda = barycentricCoordinates(a, b, c, q);
 	return lambda(0) > -eps && lambda(1) > -eps && lambda(2) > -eps;
 }
@@ -251,7 +251,7 @@ inline bool triangleContains(
  */
 inline bool tetrahedronContains(
 		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
-		const Real3& q, const real eps = 0) {
+		const Real3& q, const real eps) {
 	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
 	return lambda(0) > -eps && lambda(1) > -eps &&
 	       lambda(2) > -eps && lambda(3) > -eps;
@@ -269,7 +269,7 @@ inline bool tetrahedronContains(
  *       a           c
  */
 inline bool angleContains(const Real2& a, const Real2& b, const Real2& c,
-		const Real2& q, const real eps = 0) {
+		const Real2& q, const real eps) {
 	Real3 lambda = barycentricCoordinates(a, b, c, q);
 	return lambda(0) < 1 + eps && 
 			lambda(1) > -eps && lambda(2) > -eps;
@@ -291,7 +291,7 @@ inline bool angleContains(const Real2& a, const Real2& b, const Real2& c,
  */
 inline bool solidAngleContains(
 		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
-		const Real3& q, const real eps = 0) {
+		const Real3& q, const real eps) {
 	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
 	return lambda(0) < 1 + eps && 
 			lambda(1) > -eps && lambda(2) > -eps && lambda(3) > -eps;

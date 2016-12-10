@@ -157,8 +157,7 @@ public:
 	
 	
 	/** Is the cell with a small layer around contains the point */
-	static bool contains(const CellHandle ch, const RealD& q,
-			const real eps = EQUALITY_TOLERANCE) {
+	static bool contains(const CellHandle ch, const RealD& q, const real eps) {
 		RealD a = realD(ch->vertex(0)->point());
 		RealD b = realD(ch->vertex(1)->point());
 		RealD c = realD(ch->vertex(2)->point());
@@ -173,8 +172,7 @@ public:
 	 */
 	template<typename Predicate>
 	CellHandle findCrossedIncidentCell(const Predicate isValid,
-			const VertexHandle vh, const Real2 query,
-			const real eps = EQUALITY_TOLERANCE) const {
+			const VertexHandle vh, const Real2 query, const real eps) const {
 		std::list<CellHandle> cells = allIncidentCells(vh);
 		for (CellHandle candidate : cells) {
 			if (!isValid(candidate)) { continue; }
@@ -198,16 +196,13 @@ public:
 	 */
 	static void findCrossedInsideOutFacet(
 			const CellHandle t, const Real2 q, const Real2 p,
-			VertexHandle& a, VertexHandle& b,
-			const real eps = EQUALITY_TOLERANCE) {
+			VertexHandle& a, VertexHandle& b, const real eps) {
 		a = NULL; b = NULL;
 		for (int i = 0; i < CELL_SIZE; i++) {
 			VertexHandle a1 = t->vertex((i + 1) % CELL_SIZE);
 			VertexHandle b1 = t->vertex((i + 2) % CELL_SIZE);
-			if (linal::isDegenerate(q, realD(a1), realD(b1), EQUALITY_TOLERANCE)) {
-				continue;
-			}
-			if (linal::angleContains(q, realD(a1), realD(b1), p, eps)) {
+			if (!linal::isDegenerate(q, realD(a1), realD(b1), EQUALITY_TOLERANCE)
+					&& linal::angleContains(q, realD(a1), realD(b1), p, eps)) {
 				a = a1; b = b1; break;
 			}
 		}

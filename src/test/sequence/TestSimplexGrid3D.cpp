@@ -15,7 +15,7 @@ TEST(SimplexGrid3D, miscellaneous) {
 	task.simplexGrid.detectSharpEdges = true;
 	task.simplexGrid.fileName = "meshes/cube.off";
 	
-	try {
+//	try {
 	typedef SimplexGrid<3, CgalTriangulation> Grid;
 	typedef typename Grid::Triangulation Triangulation;
 	Triangulation triangulation(task);
@@ -46,9 +46,9 @@ TEST(SimplexGrid3D, miscellaneous) {
 				<< "actual normal:" << grid.borderNormal(*borderIt);
 	}
 	
-	} catch (Exception e) {
-		std::cout << e.what();
-	}
+//	} catch (Exception e) {
+//		std::cout << e.what();
+//	}
 }
 
 

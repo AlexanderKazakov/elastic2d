@@ -56,7 +56,8 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 			(*cell)->info().localVertexIndices[i] = (*cell)->vertex(i)->info();
 		}
 	}
-	
+	// TODO - write border/contact/inner state into vertices info 
+	// because this information is equal for all grids in contact
 	markInnersAndBorders();
 	calculateMinimalSpatialStep();
 }
@@ -84,6 +85,10 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 			triangulation,
 			[=](const CellHandle c) {return belongsToTheGrid(c);},
 			vertexHandle(it), query);
+//	int i = 0;
+//	for (CellHandle ch : cellsAlong) {
+//		triangulation->printCell(ch, std::to_string(i++));
+//	}
 	Cell innerCell = checkInnerHitCases(it, cellsAlong, query);
 	if (innerCell.n == innerCell.N) { return innerCell; }
 	Cell borderCell = checkBorderHitFromInnerNodeCases(it, cellsAlong, query);
@@ -103,6 +108,10 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 			[=](const CellHandle c) {return belongsToTheGrid(c);},
 			vertexHandle(it), query,
 			start + delta);
+//	i = 0;
+//	for (CellHandle ch : cellsAlong) {
+//		triangulation->printCell(ch, std::to_string(i++));
+//	}
 	innerCell = checkInnerHitCases(it, cellsAlong, query);
 	if (innerCell.n == innerCell.N) { return innerCell; }
 	borderCell = checkBorderHitFromInnerNodeCases(it, cellsAlong, query);
