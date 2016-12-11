@@ -35,19 +35,19 @@ TEST(SimplexGrid2D, ownerTriangleVsBarycentric) {
 		int cntXY = 0/*, cntX = 0, cntY = 0*/;
 		real step = h / 3 * multiplier;
 		for (auto& it : grid) {
-			if (linal::length(grid.coordsD(it) - Real2({1.93934, 3})) > 0.01) { continue; } //!
+//			if (linal::length(grid.coordsD(it) - Real2({1.93934, 3})) > 0.01) { continue; } //!
 			for (int test_counter = 0; test_counter < 8; test_counter++) {
 				Real2 shift;
 				auto checkInnerTriangle = [&](int& counter) {
 					typename Grid::Cell triangleF;
 					typename Grid::Cell triangleL;
-					try {
+//					try {
 						triangleF = grid.findCellCrossedByTheRay(it, shift);
 						triangleL = grid.locateOwnerCell(it, shift);
-					} catch (Exception e) {
-						std::cout << "shift == " << shift << "step = " << step << std::endl
-								<< e.what() << std::endl;
-					}
+//					} catch (Exception e) {
+//						std::cout << "shift == " << shift << "step = " << step << std::endl
+//								<< e.what() << std::endl;
+//					}
 					if (triangleF.n == 3) {
 						auto lambda = linal::barycentricCoordinates(
 								grid.coordsD(triangleF(0)), 
@@ -84,7 +84,7 @@ TEST(SimplexGrid2D, ownerTriangleVsBarycentric) {
 				};
 				
 				shift = {Utils::randomReal(-step, step), Utils::randomReal(-step, step)};
-				shift = { 0.499485, -0.586246 }; //!
+//				shift = { 0.499485, -0.586246 }; //!
 				checkInnerTriangle(cntXY);
 				
 //				shift = {Utils::randomReal(-step, step), 0};

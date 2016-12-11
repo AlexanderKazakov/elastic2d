@@ -11,6 +11,31 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, segmentContains) {
+	Real2 a = {0, 0}, c = {4, 4}, d = {3, 3};
+	ASSERT_TRUE (segmentContains(a, d, a, 0));
+	ASSERT_TRUE (segmentContains(a, d, d, 0));
+	ASSERT_TRUE (segmentContains(a, d, (a + d)/2, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(a, d,  c, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(a, d, -c, EQUALITY_TOLERANCE));
+	
+	ASSERT_TRUE (segmentContains(Real1({5}), Real1({6}), Real1({5}), 0));
+	ASSERT_FALSE(segmentContains(Real1({5}), Real1({6}), Real1({7}), EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(Real1({5}), Real1({6}), Real1(Real1({4})), EQUALITY_TOLERANCE));
+}
+
+
+TEST(Linal, containsTriangleIn3D) {
+	Real3 b = {0, 0, 5}, c = {0, 5, 0}, d = {5, 0, 0}, e = {-1, 6, 0}, m = {0, 6, -1};
+	ASSERT_TRUE (triangleContains(d, b, c, d, 0));
+	ASSERT_TRUE (triangleContains(d, b, c, c, 0));
+	ASSERT_TRUE (triangleContains(d, b, c, (d + b) / 2, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (triangleContains(d, b, c, d/2 + b/4 + c/4, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(triangleContains(d, b, c, e, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(triangleContains(d, b, c, m, EQUALITY_TOLERANCE));
+}
+
+
 TEST(Linal, contains2d) {
 	Real2 a = {0, 0}, b = {0, 3}, c = {3, 0}, d = {3, 3};
 	Real2 q = {1, 1}, p = {2, 2}, r = {0, -1};
@@ -1062,6 +1087,26 @@ TEST(Linal, lineWithFlatIntersection) {
 }
 
 
+TEST(Linal, barycentric1D) {
+	ASSERT_EQ(Real2({ 1,  0}), barycentricCoordinates(Real1({3}), Real1({4}), Real1({3})));
+	ASSERT_EQ(Real2({ 0,  1}), barycentricCoordinates(Real1({3}), Real1({4}), Real1({4})));
+	ASSERT_EQ(Real2({-1,  2}), barycentricCoordinates(Real1({3}), Real1({4}), Real1({5})));
+	ASSERT_EQ(Real2({ 2, -1}), barycentricCoordinates(Real1({3}), Real1({4}), Real1({2})));
+	ASSERT_TRUE(linal::approximatelyEqual(Real2({ 0.3, 0.7 }), 
+			barycentricCoordinates(Real1({3}), Real1({4}), Real1({3.7}))));
+}
+
+
+TEST(Linal, barycentricSegmentIn2D) {
+	Real2 a = {0, 0}, b = {0, 1}, c = {4, 7};
+	ASSERT_EQ(Real2({ 1,  0}), barycentricCoordinates(a, b, a));
+	ASSERT_EQ(Real2({ 0,  1}), barycentricCoordinates(a, b, b));
+	ASSERT_EQ(Real2({ 0.5, 0.5}), barycentricCoordinates(a, b, (a + b) / 2));
+	ASSERT_EQ(Real2({ 0.5, 0.5}), barycentricCoordinates(c, b, (c + b) / 2));
+	ASSERT_EQ(Real2({ -2, 3}), barycentricCoordinates(a, c, 3 * c));
+}
+
+
 TEST(Linal, barycentric2D) {
 	Real2 a = {0, 0};
 	Real2 b = {1, 0};
@@ -1099,10 +1144,14 @@ TEST(Linal, barycentricTriangleIn3D) {
 	Real3 b = {1, 0, 0};
 	Real3 c = {0, 1, 0};
 	
-	ASSERT_EQ(Real3({0, 1, 0}), barycentricCoordinates(a, b, c, b));
-	ASSERT_EQ(Real3({0, 0, 1}), barycentricCoordinates(a, b, c, c));
-	ASSERT_EQ(Real3({1, 0, 0}), barycentricCoordinates(a, b, c, a));
-	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b + c) / 2.0));
+	ASSERT_TRUE(approximatelyEqual(Real3({0, 1, 0}),
+			barycentricCoordinates(a, b, c, b)));
+	ASSERT_TRUE(approximatelyEqual(Real3({0, 0, 1}),
+			barycentricCoordinates(a, b, c, c)));
+	ASSERT_TRUE(approximatelyEqual(Real3({1, 0, 0}),
+			barycentricCoordinates(a, b, c, a)));
+	ASSERT_TRUE(approximatelyEqual(Real3({0, 0.5, 0.5}),
+			barycentricCoordinates(a, b, c, (b + c) / 2.0)));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
 			barycentricCoordinates(a, b, c, (a + b + c) / 3.0)));
 }

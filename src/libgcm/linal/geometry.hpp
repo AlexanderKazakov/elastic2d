@@ -53,35 +53,66 @@ inline Real3 perpendicularClockwise(const Real3& v) {
 
 
 /**
+ * Computes barycentric coordinates of point q in segment {a, b} in 1D.
+ * The order is {lambda_a, lambda_b}
+ */
+inline Real2 barycentricCoordinates(
+		const Real1& a, const Real1& b,
+		const Real1& q) {
+	real w = (q(0) - b(0)) / (a(0) - b(0));
+	return {w, 1 - w};
+}
+
+
+/**
+ * Computes barycentric coordinates of point q in segment {a, b} in 2D.
+ * The order is {lambda_a, lambda_b}.
+ * For correctness of the result point q must lie on the line {a, b}
+ */
+inline Real2 barycentricCoordinates(
+		const Real2& a, const Real2& b,
+		const Real2& q) {
+	/// if q is on the line {a, b}, one of the lines of T is linearly dependent
+	Matrix<3, 2> T = {   1,    1,
+	                  a(0), b(0),
+	                  a(1), b(1) };
+	Real3 f = {1, q(0), q(1)};
+	Real2 lambda = linearLeastSquares(T, f);
+	return lambda / (lambda(0) + lambda(1));
+}
+
+
+/**
  * Computes barycentric coordinates of point q in triangle {a, b, c}
  * The order is {lambda_a, lambda_b, lambda_c}
  */
-inline Real3 barycentricCoordinates(const Real2& a, const Real2& b, const Real2& c,
-                                    const Real2& q) {					
+inline Real3 barycentricCoordinates(
+		const Real2& a, const Real2& b, const Real2& c,
+		const Real2& q) {
 	/// @see https://en.wikipedia.org/wiki/Barycentric_coordinate_system 
 	Matrix22 T = {a(0) - c(0), b(0) - c(0),
 	              a(1) - c(1), b(1) - c(1)};
 	Real2 lambda = solveLinearSystem(T, q - c);
-	
 	return {lambda(0), lambda(1), 1 - lambda(0) - lambda(1)};
 }
 
 
 /**
- * Computes barycentric coordinates of point q in triangle {a, b, c} in R^3
+ * Computes barycentric coordinates of point q in triangle {a, b, c} in 3D
  * The order is {lambda_a, lambda_b, lambda_c}
  * For correctness of the result point q must lie in the flat {a, b, c}
  */
-inline Real3 barycentricCoordinates(const Real3& a, const Real3& b, const Real3& c,
-                                    const Real3& q) {
-	/// if q in the flat {a, b, c}, one of the lines of A is linearly dependent
+inline Real3 barycentricCoordinates(
+		const Real3& a, const Real3& b, const Real3& c,
+		const Real3& q) {
+	/// if q is in the flat {a, b, c}, one of the lines of A is linearly dependent
 	Matrix<4, 3> T = {   1,    1,    1,
 	                  a(0), b(0), c(0), 
 	                  a(1), b(1), c(1),
 	                  a(2), b(2), c(2) };
 	Real4 f = {1, q(0), q(1), q(2)};
-	
-	return linearLeastSquares(T, f);
+	Real3 lambda = linearLeastSquares(T, f);
+	return lambda / (lambda(0) + lambda(1) + lambda(2));
 }
 
 
@@ -91,13 +122,12 @@ inline Real3 barycentricCoordinates(const Real3& a, const Real3& b, const Real3&
  */
 inline Real4 barycentricCoordinates(
 		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
-		const Real3& q) {					
+		const Real3& q) {
 	/// @see https://en.wikipedia.org/wiki/Barycentric_coordinate_system 
 	Matrix33 T = {a(0) - d(0), b(0) - d(0), c(0) - d(0), 
 	              a(1) - d(1), b(1) - d(1), c(1) - d(1),
 	              a(2) - d(2), b(2) - d(2), c(2) - d(2),};
 	Real3 lambda = solveLinearSystem(T, q - d);
-	
 	return {lambda(0), lambda(1), lambda(2), 1 - lambda(0) - lambda(1) - lambda(2)};
 }
 
@@ -235,14 +265,50 @@ bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
 }
 
 
-/**
- * Does triangle abc contain point q inside with tolerance eps
- */
-inline bool triangleContains(
-		const Real2& a, const Real2& b, const Real2& c,
-		const Real2& q, const real eps) {
+namespace inner {
+
+template<typename RealD>
+bool segmentContains(RealD a, RealD b, RealD q, const real eps) {
+	Real2 lambda = barycentricCoordinates(a, b, q);
+	return lambda(0) >= -eps && lambda(1) >= -eps;
+}
+
+template<typename RealD>
+bool triangleContains(RealD a, RealD b, RealD c, RealD q, const real eps) {
 	Real3 lambda = barycentricCoordinates(a, b, c, q);
-	return lambda(0) > -eps && lambda(1) > -eps && lambda(2) > -eps;
+	return lambda(0) >= -eps && lambda(1) >= -eps && lambda(2) >= -eps;
+}
+
+}
+
+/**
+ * Does segment ab in 2D contain point q inside with tolerance eps
+ * Point q must lie on the line ab for correctness.
+ */
+inline bool segmentContains(Real2 a, Real2 b, Real2 q, real eps) {
+	return inner::segmentContains(a, b, q, eps);
+}
+
+/**
+ * Does segment ab in 1D contain point q inside with tolerance eps
+ */
+inline bool segmentContains(Real1 a, Real1 b, Real1 q, real eps) {
+	return inner::segmentContains(a, b, q, eps);
+}
+
+/**
+ * Does triangle abc in 3D contain point q inside with tolerance eps
+ * Point q must lie in the flat abc for correctness.
+ */
+inline bool triangleContains(Real3 a, Real3 b, Real3 c, Real3 q, real eps) {
+	return inner::triangleContains(a, b, c, q, eps);
+}
+
+/**
+ * Does triangle abc in 2D contain point q inside with tolerance eps
+ */
+inline bool triangleContains(Real2 a, Real2 b, Real2 c, Real2 q, real eps) {
+	return inner::triangleContains(a, b, c, q, eps);
 }
 
 
@@ -253,8 +319,8 @@ inline bool tetrahedronContains(
 		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
 		const Real3& q, const real eps) {
 	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
-	return lambda(0) > -eps && lambda(1) > -eps &&
-	       lambda(2) > -eps && lambda(3) > -eps;
+	return lambda(0) >= -eps && lambda(1) >= -eps &&
+	       lambda(2) >= -eps && lambda(3) >= -eps;
 }
 
 
@@ -272,7 +338,7 @@ inline bool angleContains(const Real2& a, const Real2& b, const Real2& c,
 		const Real2& q, const real eps) {
 	Real3 lambda = barycentricCoordinates(a, b, c, q);
 	return lambda(0) < 1 + eps && 
-			lambda(1) > -eps && lambda(2) > -eps;
+			lambda(1) >= -eps && lambda(2) >= -eps;
 }
 
 
@@ -294,7 +360,7 @@ inline bool solidAngleContains(
 		const Real3& q, const real eps) {
 	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
 	return lambda(0) < 1 + eps && 
-			lambda(1) > -eps && lambda(2) > -eps && lambda(3) > -eps;
+			lambda(1) >= -eps && lambda(2) >= -eps && lambda(3) >= -eps;
 }
 
 
