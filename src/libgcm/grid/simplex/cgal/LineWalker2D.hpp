@@ -9,8 +9,6 @@ namespace gcm {
  * Struct to go along the line cell-by-cell between two points 
  * through a triangulation in order to find cell that contains second point.
  * Implements "line walk in triangulation" strategy.
- * For some degenerate cases points shifting can be implemented
- * to avoid line misses when go exactly along edges and facets.
  * Partially specialized for 2D and 3D cases.
  */
 template<typename Triangulation, int Dimensionality>
@@ -78,27 +76,24 @@ public:
 	}
 	
 	/**
-	 * Collect cells along the line from q1 == (q + delta) to p.
-	 * This is a generalization of the usual algo for the case delta = 0.
-	 * In order to handle numerical inexactness along edges and facets,
-	 * sometimes it is useful to *slightly* shift q1 from q.
+	 * Collect cells along the line from the center of cell t to point p.
 	 * The search accepts only "valid" cells in terms of given predicate:
 	 * if meet a not "valid" cell, the search is stopped.
+	 * This method is more stable to numerical inexactness,
+	 * because it starts from the center of cell not from a vertex
 	 */
 	template<typename Predicate>
 	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
-			const VertexHandle q, const Real2 p, const Real2 q1) {
-		
-		CellHandle t = triangulation->findContainingIncidentCell(isValid, q, q1, 0);
-		if (t == NULL) { return std::vector<CellHandle>(); }
+			const CellHandle t, const Real2 p) {
+		const Real2 q = Triangulation::center(t);
 		
 		VertexHandle l = NULL, r = NULL;
-		triangulation->findCrossedInsideOutFacet(t, q1, p, l, r, 0);
+		triangulation->findCrossedInsideOutFacet(t, q, p, l, r, 0);
 		if (l == NULL) { return std::vector<CellHandle>(); }
-		if (orientation(r, l, q1) < 0) { std::swap(l, r); }
+		if (orientation(r, l, q) < 0) { std::swap(l, r); }
 		
-		return collectCells(isValid, q1, p, t, r, l);
+		return collectCells(isValid, q, p, t, r, l);
 	}
 	
 };

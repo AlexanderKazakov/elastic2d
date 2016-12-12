@@ -195,6 +195,7 @@ public:
 	 * The point q must lie inside the tetrahedron t.
 	 * Find the face of t which is crossed by the ray qp.
 	 * Write the result as a triple of vertices to a,b,c.
+	 * Degenerate cases are not handled.
 	 */
 	static void findCrossedInsideOutFacet(
 			const CellHandle t, const Real3 q, const Real3 p,
@@ -204,11 +205,20 @@ public:
 			VertexHandle a1 = t->vertex((i + 1) % CELL_SIZE);
 			VertexHandle b1 = t->vertex((i + 2) % CELL_SIZE);
 			VertexHandle c1 = t->vertex((i + 3) % CELL_SIZE);
-			if (!linal::isDegenerate(q, realD(a1), realD(b1), realD(c1), EQUALITY_TOLERANCE) &&
-					linal::solidAngleContains(q, realD(a1), realD(b1), realD(c1), p, eps)) {
+			if (linal::solidAngleContains(q, realD(a1), realD(b1), realD(c1), p, eps)) {
 				a = a1; b = b1; c = c1; break;
 			}
 		}
+	}
+	
+	
+	/** The center of the given cell */
+	static RealD center(const CellHandle t) {
+		RealD a = realD(t->vertex(0));
+		RealD b = realD(t->vertex(1));
+		RealD c = realD(t->vertex(2));
+		RealD d = realD(t->vertex(3));
+		return (a + b + c + d) / 4;
 	}
 	
 	

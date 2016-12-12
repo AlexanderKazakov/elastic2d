@@ -68,14 +68,12 @@ template<int Dimensionality,
 typename SimplexGrid<Dimensionality, TriangulationT>::Cell
 SimplexGrid<Dimensionality, TriangulationT>::
 findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
-	/// A magic number to deal with degenerate numerical inexact cases
-	const real DELTA_RATIO = 100;
 	/// Crucial requirements for LineWalker:
 	/// possible return values of LineWalker::cellsAlongSegment:
 	/// - empty (no cells found)
-	/// - all cells belong to the grid (needed cell is found)
-	/// - the number of cells greater than 1 and 
-	///   the last one is outside the grid -- the ray crosses the border
+	/// - all cells belong to the grid (needed cell seem to be found)
+	/// - the number of cells greater than 1 and (only!) the last one
+	///   is outside the grid -- the ray seems to cross the border
 	typedef LineWalker<Triangulation, DIMENSIONALITY> LINE_WALKER;
 	RealD start = coordsD(it);
 	RealD query = start + shift;
@@ -86,36 +84,31 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 			[=](const CellHandle c) {return belongsToTheGrid(c);},
 			vertexHandle(it), query);
 //	int i = 0;
+//	LOG_INFO("Start search from vertex");
 //	for (CellHandle ch : cellsAlong) {
 //		triangulation->printCell(ch, std::to_string(i++));
 //	}
-	Cell innerCell = checkInnerHitCases(it, cellsAlong, query);
-	if (innerCell.n == innerCell.N) { return innerCell; }
-	Cell borderCell = checkBorderHitFromInnerNodeCases(it, cellsAlong, query);
-	if (borderCell.n > 0) { return borderCell; }
+	Cell foundCell = checkLineWalkFoundCell(it, cellsAlong, query);
+	if (foundCell.n > 0) { return foundCell; }
 	
 	/// Now, two situations are possible:
 	/// - the ray is going out of the grid from a border (contact) node,
 	/// - we have some numerical inexactness in geometrical operations.
-	/// In order to avoid inexactness try to shift the start point slightly 
-	RealD delta = -commonNormal(it) * averageSpatialStep / DELTA_RATIO;
-	if (isInner(it)) {
-		delta = linal::perpendicularClockwise(shift) / DELTA_RATIO;
-	}
-	delta += linal::perpendicularClockwise(delta) / DELTA_RATIO;
+	/// In order to avoid inexactness try to start from the center of
+	/// some cell incident to vertexHandle(it) instead of the vertex itself
+	std::list<CellHandle> lics = localIncidentCells(it);
+	assert_false(lics.empty());
 	cellsAlong = LINE_WALKER::cellsAlongSegment(
 			triangulation,
 			[=](const CellHandle c) {return belongsToTheGrid(c);},
-			vertexHandle(it), query,
-			start + delta);
+			lics.front(), query);
 //	i = 0;
+//	LOG_INFO("Start search from cell center");
 //	for (CellHandle ch : cellsAlong) {
 //		triangulation->printCell(ch, std::to_string(i++));
 //	}
-	innerCell = checkInnerHitCases(it, cellsAlong, query);
-	if (innerCell.n == innerCell.N) { return innerCell; }
-	borderCell = checkBorderHitFromInnerNodeCases(it, cellsAlong, query);
-	if (borderCell.n > 0) { return borderCell; }
+	foundCell = checkLineWalkFoundCell(it, cellsAlong, query);
+	if (foundCell.n > 0) { return foundCell; }
 	
 	/// Now, the majority (unlikely all) of inexactness cases are handled.
 	/// Also, the case when the ray starts from the border node and 

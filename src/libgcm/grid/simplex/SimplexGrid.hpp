@@ -415,41 +415,29 @@ private:
 	}
 	
 	
-	/** 
-	 * Helper for findCellCrossedByTheRay function to reduce code duplication.
-	 * Handle cases when the ray seems to hit into the inner space of the grid
-	 */
-	Cell checkInnerHitCases(const Iterator& it,
+	/** Helper for findCellCrossedByTheRay function to reduce code duplication */
+	Cell checkLineWalkFoundCell(const Iterator& it,
 			const std::vector<CellHandle>& cellsAlong, const RealD& query) const {
-		if (!cellsAlong.empty() &&
-				belongsToTheGrid(cellsAlong.back())) {
+		if (cellsAlong.empty()) { return createCell(); }
+		
+		/// Handle cases when the ray seems to hit into the inner space of the grid.
+		/// Even when some cell belongs to the grid we have to check if that cell
+		/// contains query point (due to numerical inexactness in line walk search)
+		if (belongsToTheGrid(cellsAlong.back()) && Triangulation::contains(
+					cellsAlong.back(), query, localEqualityTolerance())) {
 		/// usual case
-			if(!Triangulation::contains(cellsAlong.back(), query,
-					localEqualityTolerance())) { // TODO - replace
-				std::cout << "Error at:" << coordsD(it) << "query: " << query << std::endl;
-				triangulation->printCell(cellsAlong.back(), "missed");
-				THROW_BAD_MESH("Search error");
-			}
 			return createCell(cellsAlong.back());
 		}
-		if (cellsAlong.size() > 1 &&
-				Triangulation::contains(*std::next(cellsAlong.rbegin()), query,
-						localEqualityTolerance())) {
-		/// possible inexactness on border
+		if (cellsAlong.size() > 1 && Triangulation::contains(
+					*std::next(cellsAlong.rbegin()), query, localEqualityTolerance())) {
+		/// possible inexactness
+			assert_true(belongsToTheGrid(*std::next(cellsAlong.rbegin())));
 			return createCell(*std::next(cellsAlong.rbegin()));
 		}
-		return createCell();
-	}
-	
-	
-	/** 
-	 * Helper for findCellCrossedByTheRay function to reduce code duplication.
-	 * Handle cases when the ray seems to hit outside the grid 
-	 * going from an inner node through a border facet
-	 */
-	Cell checkBorderHitFromInnerNodeCases(const Iterator& it,
-			const std::vector<CellHandle>& cellsAlong, const RealD& /*query*/) const {
-		if (isInner(it) && !cellsAlong.empty()) {
+		
+		/// Handle cases when the ray seems to hit outside the grid 
+		/// going from an inner node through a border facet
+		if (isInner(it)) {
 			assert_gt(cellsAlong.size(), 1);
 			CellHandle last = cellsAlong.back();
 			assert_false(belongsToTheGrid(last));
@@ -457,6 +445,7 @@ private:
 			assert_true(belongsToTheGrid(prev));
 			return createCell(Triangulation::commonVertices(last, prev), prev);
 		}
+		
 		return createCell();
 	}
 	

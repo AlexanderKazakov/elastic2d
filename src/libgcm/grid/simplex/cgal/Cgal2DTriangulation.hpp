@@ -193,6 +193,7 @@ public:
 	 * The point q must lie inside the triangle t.
 	 * Find the edge of t which is crossed by the ray qp.
 	 * Write the result as a pair of vertices to a,b (or NULLs if not found).
+	 * Degenerate cases are not handled.
 	 */
 	static void findCrossedInsideOutFacet(
 			const CellHandle t, const Real2 q, const Real2 p,
@@ -201,11 +202,19 @@ public:
 		for (int i = 0; i < CELL_SIZE; i++) {
 			VertexHandle a1 = t->vertex((i + 1) % CELL_SIZE);
 			VertexHandle b1 = t->vertex((i + 2) % CELL_SIZE);
-			if (!linal::isDegenerate(q, realD(a1), realD(b1), EQUALITY_TOLERANCE)
-					&& linal::angleContains(q, realD(a1), realD(b1), p, eps)) {
+			if (linal::angleContains(q, realD(a1), realD(b1), p, eps)) {
 				a = a1; b = b1; break;
 			}
 		}
+	}
+	
+	
+	/** The center of the given cell */
+	static RealD center(const CellHandle t) {
+		RealD a = realD(t->vertex(0));
+		RealD b = realD(t->vertex(1));
+		RealD c = realD(t->vertex(2));
+		return (a + b + c) / 3;
 	}
 	
 	
