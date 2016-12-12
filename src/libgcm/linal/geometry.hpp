@@ -265,50 +265,41 @@ bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
 }
 
 
-namespace inner {
-
-template<typename RealD>
-bool segmentContains(RealD a, RealD b, RealD q, const real eps) {
-	Real2 lambda = barycentricCoordinates(a, b, q);
-	return lambda(0) >= -eps && lambda(1) >= -eps;
-}
-
-template<typename RealD>
-bool triangleContains(RealD a, RealD b, RealD c, RealD q, const real eps) {
-	Real3 lambda = barycentricCoordinates(a, b, c, q);
-	return lambda(0) >= -eps && lambda(1) >= -eps && lambda(2) >= -eps;
-}
-
-}
-
-/**
- * Does segment ab in 2D contain point q inside with tolerance eps
- * Point q must lie on the line ab for correctness.
- */
-inline bool segmentContains(Real2 a, Real2 b, Real2 q, real eps) {
-	return inner::segmentContains(a, b, q, eps);
-}
-
 /**
  * Does segment ab in 1D contain point q inside with tolerance eps
  */
 inline bool segmentContains(Real1 a, Real1 b, Real1 q, real eps) {
-	return inner::segmentContains(a, b, q, eps);
+	Real2 lambda = barycentricCoordinates(a, b, q);
+	return lambda(0) >= -eps && lambda(1) >= -eps;
 }
 
+
 /**
- * Does triangle abc in 3D contain point q inside with tolerance eps
- * Point q must lie in the flat abc for correctness.
+ * Does segment ab in 2D contain point q inside with tolerance eps
  */
-inline bool triangleContains(Real3 a, Real3 b, Real3 c, Real3 q, real eps) {
-	return inner::triangleContains(a, b, c, q, eps);
+inline bool segmentContains(Real2 a, Real2 b, Real2 q, real eps) {
+	if (!isDegenerate(a, b, q, eps)) { return false; }
+	Real2 lambda = barycentricCoordinates(a, b, q);
+	return lambda(0) >= -eps && lambda(1) >= -eps;
 }
+
 
 /**
  * Does triangle abc in 2D contain point q inside with tolerance eps
  */
 inline bool triangleContains(Real2 a, Real2 b, Real2 c, Real2 q, real eps) {
-	return inner::triangleContains(a, b, c, q, eps);
+	Real3 lambda = barycentricCoordinates(a, b, c, q);
+	return lambda(0) >= -eps && lambda(1) >= -eps && lambda(2) >= -eps;
+}
+
+
+/**
+ * Does triangle abc in 3D contain point q inside with tolerance eps
+ */
+inline bool triangleContains(Real3 a, Real3 b, Real3 c, Real3 q, real eps) {
+	if (!isDegenerate(a, b, c, q, eps)) { return false; }
+	Real3 lambda = barycentricCoordinates(a, b, c, q);
+	return lambda(0) >= -eps && lambda(1) >= -eps && lambda(2) >= -eps;
 }
 
 

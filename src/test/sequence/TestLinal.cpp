@@ -12,12 +12,13 @@ using namespace gcm::linal;
 
 
 TEST(Linal, segmentContains) {
-	Real2 a = {0, 0}, c = {4, 4}, d = {3, 3};
-	ASSERT_TRUE (segmentContains(a, d, a, 0));
-	ASSERT_TRUE (segmentContains(a, d, d, 0));
-	ASSERT_TRUE (segmentContains(a, d, (a + d)/2, EQUALITY_TOLERANCE));
+	Real2 a = {0, 0}, b = {0, 1}, c = {4, 4}, d = {3, 3};
+	ASSERT_TRUE (segmentContains(a, d,  a, 0));
+	ASSERT_TRUE (segmentContains(a, d,  d, 0));
+	ASSERT_TRUE (segmentContains(a, d,  (a + d)/2, EQUALITY_TOLERANCE));
 	ASSERT_FALSE(segmentContains(a, d,  c, EQUALITY_TOLERANCE));
 	ASSERT_FALSE(segmentContains(a, d, -c, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(a, d,  b, EQUALITY_TOLERANCE));
 	
 	ASSERT_TRUE (segmentContains(Real1({5}), Real1({6}), Real1({5}), 0));
 	ASSERT_FALSE(segmentContains(Real1({5}), Real1({6}), Real1({7}), EQUALITY_TOLERANCE));
@@ -33,6 +34,7 @@ TEST(Linal, containsTriangleIn3D) {
 	ASSERT_TRUE (triangleContains(d, b, c, d/2 + b/4 + c/4, EQUALITY_TOLERANCE));
 	ASSERT_FALSE(triangleContains(d, b, c, e, EQUALITY_TOLERANCE));
 	ASSERT_FALSE(triangleContains(d, b, c, m, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(triangleContains(d, b, c, Real3({1, 1, 1}), EQUALITY_TOLERANCE));
 }
 
 

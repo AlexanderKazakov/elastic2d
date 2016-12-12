@@ -2,9 +2,9 @@
 #define LIBGCM_ELEMENTS_HPP
 
 #include <set>
-#include <functional>
 
 #include <libgcm/linal/linal.hpp>
+
 
 namespace gcm {
 namespace elements {
@@ -28,9 +28,9 @@ struct Element {
 		std::copy(list.begin(), list.end(), p);
 	}
 	
-	template<typename OtherPointType>
+	template<typename OtherPointType, typename Predicate>
 	Element(const Element<OtherPointType, N>& other,
-			std::function<Point(const OtherPointType&)> transformFunc) {
+			const Predicate transformFunc) {
 		this->n = other.n;
 		for (int i = 0; i < n; i++) {
 			this->p[i] = transformFunc(other(i));
@@ -61,7 +61,7 @@ struct Element {
 	 * Return all points owned by both elements.
 	 * Elements must have equal number of set points.
 	 */
-	std::set<Point> equalPoints(const Element& other) {
+	std::set<Point> equalPoints(const Element& other) const {
 		assert_eq(this->n, other.n);
 		std::set<Point> ans;
 		
