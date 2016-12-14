@@ -23,17 +23,17 @@ inline void testContains(const Grid& grid, const RealCell& cell,
 	const RealD q = start + shift;
 	if (cell.n == 3) {
 		ASSERT_TRUE(linal::triangleContains(
-				cell(0), cell(1), cell(2), q, grid.localEqualityTolerance()));
+				cell(0), cell(1), cell(2), q, EQUALITY_TOLERANCE));
 		++hitCounter;
 	} else if (!grid.isInner(it)) {
 		ASSERT_EQ(0, cell.n);
 	} else if (cell.n == 2) {
 		RealD intersection = linal::linesIntersection(start, q, cell(0), cell(1));
-		ASSERT_TRUE(linal::segmentContains(
-				cell(0), cell(1), intersection, grid.localEqualityTolerance()));
+		ASSERT_TRUE(linal::segmentContains(cell(0), cell(1), intersection,
+				EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
 		++hitCounter;
 	} else if (cell.n == 1) {
-		ASSERT_TRUE(linal::segmentContains(start, q, cell(0), grid.localEqualityTolerance()));
+		ASSERT_TRUE(linal::segmentContains(start, q, cell(0), EQUALITY_TOLERANCE));
 		++hitCounter;
 	}
 }
@@ -51,11 +51,12 @@ inline void checkBothCellsContainQueryPoint(
 	ASSERT_EQ(a.n, b.n);
 	std::set<RealD> common = a.equalPoints(b);
 	if (common.size() == 3) {
-		ASSERT_TRUE(linal::triangleContains(a(0), a(1), a(2), q, eps));
+		ASSERT_TRUE(linal::triangleContains(a(0), a(1), a(2), q, EQUALITY_TOLERANCE));
 	} else if (common.size() == 2) {
-		ASSERT_TRUE(linal::segmentContains(*common.begin(), *common.rbegin(), q, eps));
+		ASSERT_TRUE(linal::segmentContains(
+				*common.begin(), *common.rbegin(), q, EQUALITY_TOLERANCE, eps));
 	} else if (common.size() == 1) {
-		ASSERT_TRUE(linal::length(*common.begin() - q) < eps);
+		ASSERT_LT(linal::length(*common.begin() - q), eps);
 	}
 }
 
@@ -90,7 +91,7 @@ inline void testWholeGridOneDirection(
 }
 
 
-TEST(LineWalkSearch2D, General) {
+TEST(LineWalkSearch2D, VersusLinal) {
 	Task task;
 	real h = 0.5;
 	task.simplexGrid.spatialStep = h;
@@ -206,15 +207,16 @@ TEST(LineWalkSearch2D, CasesAlongBorder) {
 	task.simplexGrid.bodies = {Task::SimplexGrid::Body({0, border, {}})};
 	Triangulation triangulation(task);
 	Grid grid(0, {&triangulation});
-	real eps = grid.localEqualityTolerance();
 	
 	auto check = [&](RealD a, RealD b, RealD shift, int& hitCounter) {
 		for (Iterator it : grid) {
 			RealD start = grid.coordsD(it);
-			if (!linal::segmentContains(a, b, start, eps)) { continue; }
+			if (!linal::segmentContains(a, b, start,
+					EQUALITY_TOLERANCE, grid.localEqualityTolerance())) { continue; }
 			RealD query = start + shift;
 			Cell c = grid.findCellCrossedByTheRay(it, shift);
-			if (linal::segmentContains(a, b, query, eps)) {
+			if (linal::segmentContains(a, b, query,
+					EQUALITY_TOLERANCE, grid.localEqualityTolerance())) {
 				ASSERT_EQ(3, c.n);
 				testContains(grid, c, it, shift, hitCounter);
 			} else {
@@ -242,3 +244,4 @@ TEST(LineWalkSearch2D, CasesAlongBorder) {
 }
 
 
+#undef CellIterToCellRealD

@@ -167,6 +167,30 @@ public:
 	
 	
 	/**
+	 * The face represented as a set of vertices. If the face is not crossed by
+	 * the line from start to query, return empty set, else return back given set
+	 */
+	static std::vector<VertexHandle> filterFaceNotCrossedByTheRay(
+			const std::vector<VertexHandle>& face,
+			const RealD& start, const RealD& query, const real eps) {
+		if (face.size() == 3) {
+			RealD a = realD(face[0]);
+			RealD b = realD(face[1]);
+			RealD c = realD(face[2]);
+			RealD intersection = linal::lineWithFlatIntersection(
+					a, b, c, start, query);
+			if (linal::triangleContains(
+					a, b, c, intersection, EQUALITY_TOLERANCE, eps)) {
+				return face;
+			}
+		} else if (face.size() != 0) {
+			THROW_UNSUPPORTED("TODO");
+		}
+		return std::vector<VertexHandle>();
+	}
+	
+	
+	/**
 	 * Returns incident to vh "valid" cell which is crossed by the ray 
 	 * from vh to query or NULL if there isn't such 
 	 * (i.e. crossed cell is not "valid")

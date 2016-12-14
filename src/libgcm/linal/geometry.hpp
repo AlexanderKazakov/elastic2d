@@ -83,6 +83,25 @@ inline Real2 barycentricCoordinates(
 
 
 /**
+ * Computes barycentric coordinates of point q in segment {a, b} in 3D.
+ * The order is {lambda_a, lambda_b}.
+ * For correctness of the result point q must lie on the line {a, b}
+ */
+inline Real2 barycentricCoordinates(
+		const Real3& a, const Real3& b,
+		const Real3& q) {
+	/// if q is on the line {a, b}, two of the lines of T is linearly dependent
+	Matrix<4, 2> T = {   1,    1,
+	                  a(0), b(0),
+	                  a(1), b(1),
+	                  a(2), b(2) };
+	Real4 f = {1, q(0), q(1), q(2)};
+	Real2 lambda = linearLeastSquares(T, f);
+	return lambda / (lambda(0) + lambda(1));
+}
+
+
+/**
  * Computes barycentric coordinates of point q in triangle {a, b, c}
  * The order is {lambda_a, lambda_b, lambda_c}
  */
@@ -275,10 +294,24 @@ inline bool segmentContains(Real1 a, Real1 b, Real1 q, real eps) {
 
 
 /**
- * Does segment ab in 2D contain point q inside with tolerance eps
+ * Does segment ab in 2D contain point q inside with given tolerance.
+ * Tolerance for degeneration test and for barycentric test can be different
  */
-inline bool segmentContains(Real2 a, Real2 b, Real2 q, real eps) {
-	if (!isDegenerate(a, b, q, eps)) { return false; }
+inline bool segmentContains(
+		Real2 a, Real2 b, Real2 q, real eps, real degenerationEps) {
+	if (!isDegenerate(a, b, q, degenerationEps)) { return false; }
+	Real2 lambda = barycentricCoordinates(a, b, q);
+	return lambda(0) >= -eps && lambda(1) >= -eps;
+}
+
+
+/**
+ * Does segment ab in 3D contain point q inside with given tolerance.
+ * Tolerance for degeneration test and for barycentric test can be different
+ */
+inline bool segmentContains(
+		Real3 a, Real3 b, Real3 q, real eps, real degenerationEps) {
+	if (!isDegenerate(a, b, q, degenerationEps)) { return false; }
 	Real2 lambda = barycentricCoordinates(a, b, q);
 	return lambda(0) >= -eps && lambda(1) >= -eps;
 }
@@ -294,10 +327,12 @@ inline bool triangleContains(Real2 a, Real2 b, Real2 c, Real2 q, real eps) {
 
 
 /**
- * Does triangle abc in 3D contain point q inside with tolerance eps
+ * Does triangle abc in 3D contain point q inside with given tolerance.
+ * Tolerance for degeneration test and for barycentric test can be different
  */
-inline bool triangleContains(Real3 a, Real3 b, Real3 c, Real3 q, real eps) {
-	if (!isDegenerate(a, b, c, q, eps)) { return false; }
+inline bool triangleContains(
+		Real3 a, Real3 b, Real3 c, Real3 q, real eps, real degenerationEps) {
+	if (!isDegenerate(a, b, c, q, degenerationEps)) { return false; }
 	Real3 lambda = barycentricCoordinates(a, b, c, q);
 	return lambda(0) >= -eps && lambda(1) >= -eps && lambda(2) >= -eps;
 }
@@ -328,7 +363,7 @@ inline bool tetrahedronContains(
 inline bool angleContains(const Real2& a, const Real2& b, const Real2& c,
 		const Real2& q, const real eps) {
 	Real3 lambda = barycentricCoordinates(a, b, c, q);
-	return lambda(0) < 1 + eps && 
+	return lambda(0) <= 1 + eps && 
 			lambda(1) >= -eps && lambda(2) >= -eps;
 }
 
@@ -350,7 +385,7 @@ inline bool solidAngleContains(
 		const Real3& a, const Real3& b, const Real3& c, const Real3& d,
 		const Real3& q, const real eps) {
 	Real4 lambda = barycentricCoordinates(a, b, c, d, q);
-	return lambda(0) < 1 + eps && 
+	return lambda(0) <= 1 + eps && 
 			lambda(1) >= -eps && lambda(2) >= -eps && lambda(3) >= -eps;
 }
 

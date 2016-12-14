@@ -22,11 +22,17 @@ struct Element {
 	
 	Element() = default;
 	
-	Element(std::initializer_list<Point> list) {
-		assert_le(list.size(), N);
-		n = (int)(list.size());
-		std::copy(list.begin(), list.end(), p);
+	template<typename ForwIter, typename Predicate>
+	Element(ForwIter begin, const ForwIter end, const Predicate transformFunc) {
+		n = 0;
+		for (; begin != end; ++begin) {
+			assert_lt(n, N);
+			(*this)(n++) = transformFunc(*begin);
+		}
 	}
+	
+	Element(std::initializer_list<Point> list) :
+			Element(list.begin(), list.end()) { }
 	
 	template<typename OtherPointType, typename Predicate>
 	Element(const Element<OtherPointType, N>& other,

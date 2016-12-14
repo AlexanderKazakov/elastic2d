@@ -12,13 +12,20 @@ using namespace gcm::linal;
 
 
 TEST(Linal, segmentContains) {
+	Real3 p = {0, 0, 0}, q = {1, 0, 0}, r = {1, 1, 1}, m = {2, 2, 2};
+	ASSERT_TRUE (segmentContains(q, p, q, 0, 0));
+	ASSERT_TRUE (segmentContains(q, p, p, 0, 0));
+	ASSERT_TRUE (segmentContains(p, m, r, 0, 0));
+	ASSERT_FALSE(segmentContains(p, r, m, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(p, m, q, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	
 	Real2 a = {0, 0}, b = {0, 1}, c = {4, 4}, d = {3, 3};
-	ASSERT_TRUE (segmentContains(a, d,  a, 0));
-	ASSERT_TRUE (segmentContains(a, d,  d, 0));
-	ASSERT_TRUE (segmentContains(a, d,  (a + d)/2, EQUALITY_TOLERANCE));
-	ASSERT_FALSE(segmentContains(a, d,  c, EQUALITY_TOLERANCE));
-	ASSERT_FALSE(segmentContains(a, d, -c, EQUALITY_TOLERANCE));
-	ASSERT_FALSE(segmentContains(a, d,  b, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (segmentContains(a, d,  a, 0, 0));
+	ASSERT_TRUE (segmentContains(a, d,  d, 0, 0));
+	ASSERT_TRUE (segmentContains(a, d,  (a + d)/2, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(a, d,  c, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(a, d, -c, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(segmentContains(a, d,  b, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 	
 	ASSERT_TRUE (segmentContains(Real1({5}), Real1({6}), Real1({5}), 0));
 	ASSERT_FALSE(segmentContains(Real1({5}), Real1({6}), Real1({7}), EQUALITY_TOLERANCE));
@@ -28,13 +35,13 @@ TEST(Linal, segmentContains) {
 
 TEST(Linal, containsTriangleIn3D) {
 	Real3 b = {0, 0, 5}, c = {0, 5, 0}, d = {5, 0, 0}, e = {-1, 6, 0}, m = {0, 6, -1};
-	ASSERT_TRUE (triangleContains(d, b, c, d, 0));
-	ASSERT_TRUE (triangleContains(d, b, c, c, 0));
-	ASSERT_TRUE (triangleContains(d, b, c, (d + b) / 2, EQUALITY_TOLERANCE));
-	ASSERT_TRUE (triangleContains(d, b, c, d/2 + b/4 + c/4, EQUALITY_TOLERANCE));
-	ASSERT_FALSE(triangleContains(d, b, c, e, EQUALITY_TOLERANCE));
-	ASSERT_FALSE(triangleContains(d, b, c, m, EQUALITY_TOLERANCE));
-	ASSERT_FALSE(triangleContains(d, b, c, Real3({1, 1, 1}), EQUALITY_TOLERANCE));
+	ASSERT_TRUE (triangleContains(d, b, c, d, 0, 0));
+	ASSERT_TRUE (triangleContains(d, b, c, c, 0, 0));
+	ASSERT_TRUE (triangleContains(d, b, c, (d + b) / 2, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_TRUE (triangleContains(d, b, c, d/2 + b/4 + c/4, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(triangleContains(d, b, c, e, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(triangleContains(d, b, c, m, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
+	ASSERT_FALSE(triangleContains(d, b, c, Real3({1, 1, 1}), EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 }
 
 

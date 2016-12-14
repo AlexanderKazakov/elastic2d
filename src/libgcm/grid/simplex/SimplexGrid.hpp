@@ -345,20 +345,6 @@ private:
 	}
 	
 	
-	/** Create Cell with all given verices from given ch */
-	Cell createCell(const std::vector<VertexHandle> vertices,
-			const CellHandle ch) const {
-		Cell ans;
-		ans.n = (int) vertices.size();
-		assert_le(ans.n, ans.N);
-		int i = 0;
-		for (const auto vh : vertices) {
-			ans(i++) = localVertexIndex(vh, ch);
-		}
-		return ans;
-	}
-	
-	
 	/** Create Cell without vertices */
 	Cell createCell() const {
 		Cell ans;
@@ -415,41 +401,6 @@ private:
 	}
 	
 	
-	/** Helper for findCellCrossedByTheRay function to reduce code duplication */
-	Cell checkLineWalkFoundCell(const Iterator& it,
-			const std::vector<CellHandle>& cellsAlong, const RealD& query) const {
-		if (cellsAlong.empty()) { return createCell(); }
-		
-		/// Handle cases when the ray seems to hit into the inner space of the grid.
-		/// Even when some cell belongs to the grid we have to check if that cell
-		/// contains query point (due to numerical inexactness in line walk search)
-		if (belongsToTheGrid(cellsAlong.back()) && Triangulation::contains(
-					cellsAlong.back(), query, localEqualityTolerance())) {
-		/// usual case
-			return createCell(cellsAlong.back());
-		}
-		if (cellsAlong.size() > 1 && Triangulation::contains(
-					*std::next(cellsAlong.rbegin()), query, localEqualityTolerance())) {
-		/// possible inexactness
-			assert_true(belongsToTheGrid(*std::next(cellsAlong.rbegin())));
-			return createCell(*std::next(cellsAlong.rbegin()));
-		}
-		
-		/// Handle cases when the ray seems to hit outside the grid 
-		/// going from an inner node through a border facet
-		if (isInner(it)) {
-			assert_gt(cellsAlong.size(), 1);
-			CellHandle last = cellsAlong.back();
-			assert_false(belongsToTheGrid(last));
-			CellHandle prev = *(std::next(cellsAlong.rbegin()));
-			assert_true(belongsToTheGrid(prev));
-			return createCell(Triangulation::commonVertices(last, prev), prev);
-		}
-		
-		return createCell();
-	}
-	
-	
 	template<typename Predicate>
 	RealD normal(const Iterator& it, const Predicate isOuterCellToUse) const {
 		std::list<RealD> facesNormals;
@@ -469,6 +420,12 @@ private:
 		return linal::normalize(std::accumulate(
 				facesNormals.begin(), facesNormals.end(), RealD::Zeros()));
 	}
+	
+	
+	/** Helper for findCellCrossedByTheRay function to reduce code duplication */
+	inline Cell checkLineWalkFoundCell(const Iterator& it,
+			const std::vector<CellHandle>& cellsAlong,
+			const RealD& start, const RealD& query) const;
 	
 	
 	void calculateMinimalSpatialStep();

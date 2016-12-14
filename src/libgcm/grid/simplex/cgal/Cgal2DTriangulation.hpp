@@ -158,10 +158,35 @@ public:
 	
 	/** Is the cell with a small layer around contains the point */
 	static bool contains(const CellHandle ch, const RealD& q, const real eps) {
-		RealD a = realD(ch->vertex(0)->point());
-		RealD b = realD(ch->vertex(1)->point());
-		RealD c = realD(ch->vertex(2)->point());
+		RealD a = realD(ch->vertex(0));
+		RealD b = realD(ch->vertex(1));
+		RealD c = realD(ch->vertex(2));
 		return linal::triangleContains(a, b, c, q, eps);
+	}
+	
+	
+	/**
+	 * The face represented as a set of vertices. If the face is not crossed by
+	 * the line from start to query, return empty set, else return back given set
+	 */
+	static std::vector<VertexHandle> filterFaceNotCrossedByTheRay(
+			const std::vector<VertexHandle>& face,
+			const RealD& start, const RealD& query, const real eps) {
+		if (face.size() == 2) {
+			RealD a = realD(face[0]);
+			RealD b = realD(face[1]);
+			RealD intersection = linal::linesIntersection(a, b, start, query);
+			if (linal::segmentContains(
+					a, b, intersection, EQUALITY_TOLERANCE, eps)) {
+				return face;
+			}
+		} else if (face.size() == 1) {
+			if (linal::segmentContains(
+					start, query, realD(face[0]), EQUALITY_TOLERANCE, eps)) {
+				return face;
+			}
+		}
+		return std::vector<VertexHandle>();
 	}
 	
 	
