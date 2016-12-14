@@ -14,7 +14,7 @@ typedef typename Grid::BorderIterator     BorderIter;
 typedef typename Grid::RealD              RealD;
 typedef elements::Element<Real3, 4>       RealCell;
 
-#define CellIterToCellRealD(gridName) [&](Iterator iter) {return  gridName.coordsD(iter);}
+#define CellIterToCellReal(gridName) [&](Iterator iter) {return  gridName.coordsD(iter);}
 
 
 inline void testContains(const Grid& grid, const RealCell& cell,
@@ -42,7 +42,7 @@ inline void testContains(const Grid& grid, const RealCell& cell,
 
 inline void testContains(const Grid& grid, const Cell& cell,
 		const Iterator& it, const RealD& shift, int& hitCounter) {
-	RealCell rc(cell, CellIterToCellRealD(grid));
+	RealCell rc(cell, CellIterToCellReal(grid));
 	testContains(grid, rc, it, shift, hitCounter);
 }
 
@@ -74,8 +74,8 @@ inline void matchSearchResults(const Grid& grid,
 	const RealD start = grid.coordsD(it);
 	const RealD q = start + shift;
 	if (byLineWalk.n == 4 && byCgal.n == 4) {
-		RealCell a(byLineWalk, CellIterToCellRealD(grid));
-		RealCell b(byCgal,     CellIterToCellRealD(grid));
+		RealCell a(byLineWalk, CellIterToCellReal(grid));
+		RealCell b(byCgal,     CellIterToCellReal(grid));
 		checkBothCellsContainQueryPoint(a, b, q, grid.localEqualityTolerance());
 	}
 }
@@ -114,7 +114,6 @@ inline void test3DFigure(
 	task.simplexGrid.fileName = filename;
 	Triangulation triangulation(task);
 	Grid grid(0, {&triangulation});
-	VtkUtils::dumpGridToVtk(grid);
 	real step = task.simplexGrid.spatialStep / 3;
 	for (int i = 0; i < 16; i++) {
 		real phi = i * M_PI / 8;
@@ -167,29 +166,35 @@ TEST(LineWalkSearch3D, CasesAlongBorder) {
 	task.simplexGrid.spatialStep = h;
 	task.simplexGrid.detectSharpEdges = true;
 	task.simplexGrid.fileName = "meshes/cube.off";
+	
+	try {
+	
 	Triangulation triangulation(task);
 	Grid grid(0, {&triangulation});
 	// check that cube geometry is not changed in the file
 	ASSERT_NO_THROW(grid.findVertexByCoordinates({0, 0, 0}));
 	ASSERT_NO_THROW(grid.findVertexByCoordinates({1, 1, 1}));
 	
-	auto check = [&](RealD a, RealD b, RealD c, RealD d, RealD shift, int& hitCounter) {
-		for (BorderIter it = grid.borderBegin(); it != grid.borderEnd(); ++it) {
-			RealD start = grid.coordsD(*it);
-			if (!quadrateContains(
-					a, b, c, d, start, grid.localEqualityTolerance())) { continue; }
-			RealD query = start + shift;
-			Cell cell = grid.findCellCrossedByTheRay(*it, shift);
-			if (quadrateContains(a, b, c, d, query, grid.localEqualityTolerance())) {
-				if (4 != cell.n) {
-					std::cout << "start == " << start << "query == " << query << std::endl;
-					grid.printCell(cell);
-				}
-				ASSERT_EQ(4, cell.n);
-				testContains(grid, cell, *it, shift, hitCounter);
-			} else {
-				ASSERT_EQ(0, cell.n);
-			}
+	auto check = [&](RealD a, RealD b, RealD c, RealD d,
+			Iterator it, RealD shift, int& hitCounter) {
+		RealD start = grid.coordsD(it);
+		RealD query = start + shift;
+		Cell iterCell;
+		if (!quadrateContains(
+				a, b, c, d, start, grid.localEqualityTolerance())) { return; }
+		try {
+			iterCell = grid.findCellCrossedByTheRay(it, shift);
+		} catch (Exception& e) {
+			std::cout << e.what(); throw;
+		}
+		RealCell cell(iterCell, CellIterToCellReal(grid));
+		if (quadrateContains(a, b, c, d, query, grid.localEqualityTolerance())) {
+			ASSERT_EQ(4, cell.n) << "start == " << start << "query == " << query << std::endl;
+			ASSERT_TRUE(linal::tetrahedronContains(
+					cell(0), cell(1), cell(2), cell(3), query, EQUALITY_TOLERANCE));
+			++hitCounter;
+		} else {
+			ASSERT_EQ(0, cell.n);
 		}
 	};
 	
@@ -202,7 +207,6 @@ TEST(LineWalkSearch3D, CasesAlongBorder) {
 		{RealD({1,1,1}), RealD({1,1,0}), RealD({0,1,1}), RealD({0,1,0})},
 	};
 	
-//	int hitCountPrev = 0;
 	for (std::vector<RealD> facet : facets) {
 		RealD a = facet[0], b = facet[1], c = facet[2], d = facet[3];
 		int hitCount = 0;
@@ -211,16 +215,54 @@ TEST(LineWalkSearch3D, CasesAlongBorder) {
 				RealD direction = linal::normalize(facet[i] - facet[j]);
 				for (int m = 0; m < 10; m++) {
 					RealD shift = direction * step * m;
-					check(a, b, c, d, shift, hitCount);
+					for (BorderIter it = grid.borderBegin(); it != grid.borderEnd(); ++it) {
+						check(a, b, c, d, *it, shift, hitCount);
+					}
 				}
 			}
 		}
-		std::cout << "hitCount  == " << hitCount << std::endl;
-//			if (i == 0) { hitCountPrev = hitCount; }
-//			else { ASSERT_EQ(hitCountPrev, hitCount); }
+		ASSERT_GT(hitCount, 10000);
 	}
-//	ASSERT_NEAR(600, hitCountPrev, 10);
+	
+	} catch (Exception& e) {
+		std::cout << e.what(); throw;
+	}
 }
 
+/*
+TEST(LineWalkSearch3D, Skull) {
+	Task task;
+	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
+	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
+	task.simplexGrid.scale = 10;
+	try {
+	
+	Triangulation triangulation(task);
+	Grid grid(1, {&triangulation});
+	VtkUtils::dumpGridToVtk(grid);
+	real h = grid.getAverageHeight(), step = h / 3;
+	
+	for (int i = 0; i < 16; i++) {
+		real phi = i * M_PI / 8;
+		for (int j = 0; j < 16; j++) {
+			real teta = j * M_PI / 8;
+			RealD direction = step * RealD({
+					cos(phi) * cos(teta), sin(phi) * cos(teta), sin(teta)});
+			int hitCount = 0;
+			testWholeGridOneDirection(grid, direction, 10,
+					[&](Iterator it, RealD shift, int& hitCounter) {
+						Cell c = grid.findCellCrossedByTheRay(it, shift);
+						testContains(grid, c, it, shift, hitCounter);
+					}, hitCount);
+			std::cout << "hitCount == " << hitCount << std::endl;
+//			ASSERT_GT(hitCount, hitCountMin);
+		}
+	}
+	
+	} catch (Exception& e) {
+		std::cout << e.what(); throw;
+	}
+}
+*/
 
-#undef CellIterToCellRealD
+#undef CellIterToCellReal

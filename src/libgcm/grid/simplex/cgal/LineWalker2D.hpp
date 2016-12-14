@@ -90,9 +90,15 @@ public:
 		
 		VertexHandle l = NULL, r = NULL;
 		triangulation->findCrossedInsideOutFacet(t, q, p, l, r, 0);
-		if (l == NULL) { return std::vector<CellHandle>(); }
-		if (orientation(r, l, q) < 0) { std::swap(l, r); }
+		if (l == NULL) {
+			triangulation->findCrossedInsideOutFacet(
+					t, q, p, l, r, EQUALITY_TOLERANCE);
+		}
+		if (l == NULL) {
+			return std::vector<CellHandle>();
+		}
 		
+		if (orientation(r, l, q) < 0) { std::swap(l, r); }
 		return collectCells(isValid, q, p, t, r, l);
 	}
 	

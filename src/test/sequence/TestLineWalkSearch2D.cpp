@@ -33,7 +33,8 @@ inline void testContains(const Grid& grid, const RealCell& cell,
 				EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
 		++hitCounter;
 	} else if (cell.n == 1) {
-		ASSERT_TRUE(linal::segmentContains(start, q, cell(0), EQUALITY_TOLERANCE));
+		ASSERT_TRUE(linal::segmentContains(start, q, cell(0),
+				EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
 		++hitCounter;
 	}
 }

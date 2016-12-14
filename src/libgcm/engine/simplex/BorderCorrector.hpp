@@ -116,7 +116,7 @@ public:
 //					linal::reflectionDirection(nodeBorder.normal, direction);
 			
 			const real projection = linal::dotProduct(reflectionDirection, nodeBorder.normal);
-			if (projection == 0) { continue; }
+			if (projection < EQUALITY_TOLERANCE) { continue; }
 			const RealD outerDirection = reflectionDirection * Utils::sign(projection);
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),

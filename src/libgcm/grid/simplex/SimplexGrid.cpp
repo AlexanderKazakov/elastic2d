@@ -26,12 +26,12 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 			// check on mesher artifacts
 			if (Triangulation::minimalCellHeight(cellIter) < EQUALITY_TOLERANCE) {
 				// FIXME - EQUALITY_TOLERANCE is bad solution, move to mesher?
-				cellIter->info().setGridId(EmptySpaceFlag);
-				triangulation->printCell(cellIter, std::string(
-						"replaced as degenerate with minimalHeight == ") +
-						std::to_string(Triangulation::minimalCellHeight(cellIter)));
+//				cellIter->info().setGridId(EmptySpaceFlag);
 //				THROW_BAD_MESH("Fix degenerate cells");
-				continue;
+//				continue;
+				triangulation->printCell(cellIter, std::string(
+						"is degenerate with minimalHeight == ") +
+						std::to_string(Triangulation::minimalCellHeight(cellIter)));
 			}
 			
 			cellHandles.push_back(cellIter);
@@ -81,20 +81,25 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 		return belongsToTheGrid(c);
 	};
 	
-//	if (linal::length(start - RealD({0.87696,0.172084,0.87696})) < 0.01 &&
-//			linal::length(query - RealD({1.11266,0.172084,1.11266})) < 0.01) {
-//		std::cout << "Here!";
-//	}
+	bool here = false; /*linal::length(start - RealD({0.116976, 0.116976, 1})) < 0.0001 &&
+			linal::length(query - RealD({0.0934055, 0.0934055, 1})) < 0.0001;*/
+	if (here) {
+		std::cout << "Here!" << std::endl;
+	}
 	
 	/// Try to go along the ray from it to it+shift cell-by-cell
 	std::vector<CellHandle> cellsAlong = LINE_WALKER::cellsAlongSegment(
 			triangulation, isLocalCell, vertexHandle(it), query);
-//	int i = 0;
-//	LOG_INFO("Start search from vertex");
-//	for (CellHandle ch : cellsAlong) {
-//		triangulation->printCell(ch, std::to_string(i++));
-//	}
 	Cell foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
+	if (here) {
+		int i = 0;
+		LOG_INFO("Start search from vertex");
+		for (CellHandle ch : cellsAlong) {
+			triangulation->printCell(ch, std::to_string(i++));
+			std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
+		}
+	}
+	
 	if (foundCell.n > 0) { return foundCell; }
 	
 	/// Now, two situations are possible:
@@ -113,11 +118,16 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	}
 	cellsAlong = LINE_WALKER::cellsAlongSegment(
 			triangulation, isLocalCell, startCell, query);
-//	i = 0;
-//	LOG_INFO("Start search from cell center");
-//	for (CellHandle ch : cellsAlong) {
-//		triangulation->printCell(ch, std::to_string(i++));
-//	}
+	
+	if (here) {
+		int i = 0;
+		LOG_INFO("Continue search from vertex");
+		for (CellHandle ch : cellsAlong) {
+			triangulation->printCell(ch, std::to_string(i++));
+			std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
+		}
+	}
+	
 	foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
 	if (foundCell.n > 0) { return foundCell; }
 	
@@ -260,10 +270,10 @@ calculateMinimalSpatialStep() {
 		if (minimalSpatialStep > h) {
 			minimalSpatialStep = h;
 		}
-		
-		real summPrevious = summHeight;
+//		real summPrevious = summHeight;
 		summHeight += h;
-		assert_ne(summPrevious, summHeight); // check overflow and zero
+		// by now, zero cells are allowed
+//		assert_ne(summPrevious, summHeight); // check overflow and zero cells
 		++cellsNumber;
 	}
 	
