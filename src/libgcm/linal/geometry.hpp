@@ -152,7 +152,7 @@ inline Real4 barycentricCoordinates(
 
 
 /**
- * Find intersection of two lines (a1, a2) and (b1, b2).
+ * Find intersection of two lines (a1, a2) and (b1, b2) in 2D.
  * Lines are infinite. Degenerate cases are not handled.
  */
 inline Real2 linesIntersection(const Real2 a1, const Real2 a2,
@@ -166,6 +166,28 @@ inline Real2 linesIntersection(const Real2 a1, const Real2 a2,
 	              tau1(1), -tau2(1)};
 	Real2 b = b1 - a1;
 	Real2 t = solveLinearSystem(A, b);
+	
+	return a1 + t(0) * tau1;
+}
+
+
+/**
+ * Find intersection of two lines (a1, a2) and (b1, b2) in 3D.
+ * For correctness of the result, lines should intersect really (not checked)
+ * Lines are infinite. Degenerate cases are not handled.
+ */
+inline Real3 linesIntersection(const Real3 a1, const Real3 a2,
+                               const Real3 b1, const Real3 b2) {
+	/// if use line representation \f$ \vec{r} = \vec{r_0} + t * \vec{tau} \f$,
+	/// we can write SLE on parameters t
+	Real3 tau1 = a1 - a2;
+	Real3 tau2 = b1 - b2;
+	
+	Matrix<3, 2> A = {tau1(0), -tau2(0),
+	                  tau1(1), -tau2(1),
+	                  tau1(2), -tau2(2)};
+	Real3 b = b1 - a1;
+	Real2 t = linearLeastSquares(A, b);
 	
 	return a1 + t(0) * tau1;
 }

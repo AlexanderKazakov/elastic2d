@@ -1079,10 +1079,26 @@ TEST(Linal, linearLeastSquares) {
 }
 
 
-TEST(Linal, linesIntersection) {
-	ASSERT_EQ(Real2({1, 1}), linesIntersection({1, 0}, {1, 2}, {0, 1}, {2, 1}));
-	ASSERT_EQ(Real2({0, 0}), linesIntersection({-1, -1}, {1, 1}, {-1, 1}, {1, -1}));
-	ASSERT_EQ(Real2({1, 1}), linesIntersection({-1, -1}, {-2, -2}, {1, 0}, {1, -3}));
+TEST(Linal, linesIntersection2D) {
+	ASSERT_EQ(Real2({1, 1}), 
+			linesIntersection(Real2({1, 0}),  Real2({1, 2}), Real2({0, 1}), Real2({2, 1})));
+	ASSERT_EQ(Real2({0, 0}), 
+			linesIntersection(Real2({-1, -1}), Real2({1, 1}), Real2({-1, 1}), Real2({1, -1})));
+	ASSERT_EQ(Real2({1, 1}), 
+			linesIntersection(Real2({-1, -1}), Real2({-2, -2}), Real2({1, 0}), Real2({1, -3})));
+}
+
+
+TEST(Linal, linesIntersection3D) {
+	ASSERT_EQ(Real3({1, 1, 0}), 
+			linesIntersection(Real3({1, 0, 0}),  Real3({1, 2, 0}),
+					Real3({0, 1, 0}), Real3({2, 1, 0})));
+	ASSERT_EQ(Real3({0, 0, 5}), 
+			linesIntersection(Real3({-1, -1, 5}), Real3({1, 1, 5}),
+					Real3({-1, 1, 5}), Real3({1, -1, 5})));
+	ASSERT_EQ(Real3({0, 0, 0}), 
+			linesIntersection(Real3({-1, -1, -1}), Real3({1, 1, 1}),
+					Real3({-1, 0, 0}), Real3({1, 0, 0})));
 }
 
 

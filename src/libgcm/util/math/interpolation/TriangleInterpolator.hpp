@@ -10,14 +10,14 @@ class TriangleInterpolator {
 public:
 	typedef linal::VECTOR<2, TValue>              Gradient;
 	typedef linal::SYMMETRIC_MATRIX<2, TValue>    Hessian;
-
+	
 	/** Interpolation or extrapolation */
 	static bool isInterpolation(const Real3 lambda) {
 		return lambda(0) > -EQUALITY_TOLERANCE &&
 		       lambda(1) > -EQUALITY_TOLERANCE &&
 		       lambda(2) > -EQUALITY_TOLERANCE;
 	}
-
+	
 	/**
 	 * Linear interpolation in plain triangle
 	 * @param c_i and v_i - points and values
@@ -27,12 +27,12 @@ public:
 	                          const Real2& c1, const TValue v1,
 	                          const Real2& c2, const TValue v2,
 	                          const Real2& q) {
-
+		
 		Real3 lambda = linal::barycentricCoordinates(c0, c1, c2, q);
 		assert_true(isInterpolation(lambda));
 		return lambda(0) * v0 + 
 		       lambda(1) * v1 + 
-		       lambda(2) * v2;		
+		       lambda(2) * v2;
 	}
 	
 	
@@ -48,7 +48,7 @@ public:
 			const Real2& c1, const TValue v1, const Gradient g1,
 			const Real2& c2, const TValue v2, const Gradient g2,
 			const Real2& q) {
-
+		
 		Real3 lambda = linal::barycentricCoordinates(c0, c1, c2, q);
 		assert_true(isInterpolation(lambda));
 		return lambda(0) * (v0 + linal::dotProduct(g0, q - c0) / 2.0) +
@@ -85,7 +85,7 @@ public:
 		
 		THROW_INVALID_ARG("Containing triangle is not found");
 }
-	
+
 };
 
 

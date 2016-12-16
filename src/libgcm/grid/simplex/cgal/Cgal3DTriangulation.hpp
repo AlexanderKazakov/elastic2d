@@ -174,17 +174,30 @@ public:
 			const std::vector<VertexHandle>& face,
 			const RealD& start, const RealD& query, const real eps) {
 		if (face.size() == 3) {
-			RealD a = realD(face[0]);
-			RealD b = realD(face[1]);
-			RealD c = realD(face[2]);
+			std::vector<RealD> p = {
+				realD(face[0]), realD(face[1]), realD(face[2])
+			};
 			RealD intersection = linal::lineWithFlatIntersection(
-					a, b, c, start, query);
+					p[0], p[1], p[2], start, query);
 			if (linal::triangleContains(
-					a, b, c, intersection, EQUALITY_TOLERANCE, eps)) {
+					p[0], p[1], p[2], intersection, EQUALITY_TOLERANCE, eps)) {
 				return face;
 			}
+			for (size_t i = 0; i < 3; i++) {
+				for (size_t j = i + 1; j < 3; j++) {
+					if (linal::segmentContains(
+							p[i], p[j], intersection, EQUALITY_TOLERANCE, eps)) {
+						return std::vector<VertexHandle>({face[i], face[j]});
+					}
+				}
+			}
+			for (size_t i = 0; i < 3; i++) {
+				if (linal::segmentContains(start, query, p[i], EQUALITY_TOLERANCE, eps)) {
+					return std::vector<VertexHandle>({face[i]});
+				}
+			}
 		} else if (face.size() != 0) {
-			THROW_UNSUPPORTED("TODO");
+			THROW_UNSUPPORTED("Unexpected variant");
 		}
 		return std::vector<VertexHandle>();
 	}

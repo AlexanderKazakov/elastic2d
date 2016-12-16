@@ -10,7 +10,7 @@ class TetrahedronInterpolator {
 public:
 	typedef linal::VECTOR<3, TValue>              Gradient;
 	typedef linal::SYMMETRIC_MATRIX<3, TValue>    Hessian;
-
+	
 	/** Interpolation or extrapolation */
 	static bool isInterpolation(const Real4 lambda) {
 		return lambda(0) > -EQUALITY_TOLERANCE &&
@@ -52,7 +52,7 @@ public:
 			const Real3& c2, const TValue v2, const Gradient g2,
 			const Real3& c3, const TValue v3, const Gradient g3,
 			const Real3& q) {
-
+		
 		Real4 lambda = linal::barycentricCoordinates(c0, c1, c2, c3, q);
 		assert_true(isInterpolation(lambda));
 		return lambda(0) * (v0 + linal::dotProduct(g0, q - c0) / 2.0) +
@@ -109,9 +109,9 @@ public:
 		
 		#undef TRY_TETRAHEDRON
 		
-		return linal::zeros(TValue());
+		THROW_INVALID_ARG("Containing tetrahedron is not found");
 }
-	
+
 };
 
 

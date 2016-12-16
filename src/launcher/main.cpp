@@ -198,36 +198,12 @@ Task parseTaskCgal3d() {
 		[] (real) { return 0; }
 	};
 	
-	Task::BorderCondition borderConditionLeft;
-	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({-10, -10, -10}), Real3({0.01, 10, 10}));
-	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
-	borderConditionLeft.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real t) { return (t < 0.5) ? -1 : 0; }
-	};
-	
-	Task::BorderCondition borderConditionRight;
-	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({0.99, -10, -10}), Real3({10, 10, 10}));
-	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
-	borderConditionRight.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
-	};
-	
 	task.borderConditions = {borderConditionAll,
 	                              /*borderConditionLeft,
 	                              borderConditionRight*/};
-
-	
 	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,
 	};
-
-	
 	return task;
 }
 
@@ -551,10 +527,11 @@ Task parseTaskCube() {
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}}};
+//	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
+	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
-	task.simplexGrid.spatialStep = 0.1;
+	task.simplexGrid.spatialStep = 0.025;
 	task.simplexGrid.detectSharpEdges = true;
 	task.simplexGrid.fileName = "meshes/cube.off";
 	
@@ -566,21 +543,21 @@ Task parseTaskCube() {
 	
 	task.globalSettings.CourantNumber = 1;
 	task.globalSettings.numberOfSnaps = 100;
-	task.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.stepsPerSnap = 2;
 	
-	Task::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 0.5;
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5}));
-	task.initialCondition.quantities.push_back(pressure);
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 0.5;
+//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5}));
+//	task.initialCondition.quantities.push_back(pressure);
 
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
 	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
+//		[] (real) { return 0; },
+//		[] (real) { return 0; }
 	};
 	
 	Task::BorderCondition borderConditionLeft;
@@ -588,8 +565,8 @@ Task parseTaskCube() {
 			Real3({-10, -10, -10}), Real3({0.01, 10, 10}));
 	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionLeft.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
+//		[] (real) { return 0; },
+//		[] (real) { return 0; },
 		[] (real t) { return (t < 0.5) ? -1 : 0; }
 	};
 	
@@ -599,13 +576,13 @@ Task parseTaskCube() {
 	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
 	borderConditionRight.values = {
 		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
+//		[] (real) { return 0; },
+//		[] (real) { return 0; }
 	};
 	
 	task.borderConditions = {borderConditionAll,
-	                              /*borderConditionLeft,
-	                              borderConditionRight*/};
+	                         borderConditionLeft,
+	                       /*borderConditionRight*/};
 	
 	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,

@@ -33,9 +33,17 @@ inline void testContains(const Grid& grid, const RealCell& cell,
 		ASSERT_TRUE(linal::triangleContains(cell(0), cell(1), cell(2),
 				intersection, EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
 		++hitCounter;
+	} else if (cell.n == 2) {
+		RealD intersection = linal::linesIntersection(cell(0), cell(1), start, q);
+		ASSERT_TRUE(linal::segmentContains(cell(0), cell(1),
+				intersection, EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+	} else if (cell.n == 1) {
+		ASSERT_TRUE(linal::segmentContains(
+				start, q, cell(0), EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+	} else if (cell.n == 0) {
+		ASSERT_FALSE(grid.isInner(it));
 	} else {
-		ASSERT_TRUE(false) << "Unexpected search answer for inner node: "
-				<< "cell.n == " << cell.n;
+		FAIL() << "Impossible value for cell.n: " << cell.n;
 	}
 }
 
@@ -51,19 +59,25 @@ inline void checkBothCellsContainQueryPoint(
 		const RealCell a, const RealCell b, const RealD q, const real eps) {
 	ASSERT_EQ(a.n, b.n);
 	std::set<RealD> common = a.equalPoints(b);
-	ASSERT_GT(common.size(), 0);
-	if (common.size() == 4) {
+	std::vector<RealD> p(common.begin(), common.end());
+	ASSERT_GT(p.size(), 0);
+	if (p.size() == 4) {
 		ASSERT_TRUE(linal::tetrahedronContains(
-				a(0), a(1), a(2), a(3), q, EQUALITY_TOLERANCE));
-	} else if (common.size() == 3) {
-		ASSERT_TRUE(linal::triangleContains(
-				*common.begin(), *std::next(common.begin()), *common.rbegin(),
-						q, EQUALITY_TOLERANCE, eps));
-	} else if (common.size() == 2) {
+				p[0], p[1], p[2], p[3], q, EQUALITY_TOLERANCE));
+	} else if (p.size() == 3) {
+		if (linal::triangleContains(
+				p[0], p[1], p[2], q, EQUALITY_TOLERANCE, eps)) { return; }
+		if (linal::segmentContains(
+				p[0], p[1], q, EQUALITY_TOLERANCE, eps)) { return; }
+		if (linal::segmentContains(
+				p[0], p[2], q, EQUALITY_TOLERANCE, eps)) { return; }
 		ASSERT_TRUE(linal::segmentContains(
-				*common.begin(), *common.rbegin(), q, EQUALITY_TOLERANCE, eps));
-	} else if (common.size() == 1) {
-		ASSERT_LT(linal::length(q - *common.begin()), eps);
+				p[1], p[2], q, EQUALITY_TOLERANCE, eps));
+	} else if (p.size() == 2) {
+		ASSERT_TRUE(linal::segmentContains(
+				*p.begin(), *p.rbegin(), q, EQUALITY_TOLERANCE, eps));
+	} else if (p.size() == 1) {
+		ASSERT_LT(linal::length(q - *p.begin()), eps);
 	}
 }
 
@@ -104,7 +118,7 @@ inline void testWholeGridOneDirection(
 
 inline void test3DFigure(
 		const std::string filename, const real h, const bool sharpEdges,
-		const int hitCountMin, const int hitCountMax) {
+		const int hitCountMin) {
 	std::cout << "Start testing grid from file " << filename
 			<< " with h == " << h << std::endl;
 	Task task;
@@ -127,8 +141,8 @@ inline void test3DFigure(
 						Cell c = grid.findCellCrossedByTheRay(it, shift);
 						testContains(grid, c, it, shift, hitCounter);
 					}, hitCount);
+			std::cout << "hitCount == " << hitCount << std::endl;
 			ASSERT_GT(hitCount, hitCountMin);
-			ASSERT_LT(hitCount, hitCountMax);
 			testWholeGridOneDirection(grid, direction, 10,
 					[&](Iterator it, RealD shift, int&) {
 						Cell lw = grid.findCellCrossedByTheRay(it, shift);
@@ -140,13 +154,15 @@ inline void test3DFigure(
 }
 
 TEST(LineWalkSearch3D, VersusLinalAndCgal) {
-	test3DFigure("meshes/tetrahedron.off", 0.6, true, 20, 200);
-	test3DFigure("meshes/cube.off", 0.4, true, 50, 170);
-	test3DFigure("meshes/icosahedron.off", 1.0, false, 60, 100);
+	test3DFigure("meshes/tetrahedron.off", 0.6, true, 20);
+	test3DFigure("meshes/cube.off", 0.4, true, 50);
+	test3DFigure("meshes/icosahedron.off", 1.0, false, 60);
 	
-	test3DFigure("meshes/tetrahedron.off", 0.4, true, 150, 600);
-	test3DFigure("meshes/cube.off", 0.2, true, 700, 1300);
-	test3DFigure("meshes/icosahedron.off", 0.4, false, 1700, 1900);
+	test3DFigure("meshes/tetrahedron.off", 0.4, true, 150);
+	test3DFigure("meshes/cube.off", 0.2, true, 700);
+	test3DFigure("meshes/icosahedron.off", 0.4, false, 1700);
+	
+//	test3DFigure("meshes/cube.off", 0.025, true, 400000);
 }
 
 

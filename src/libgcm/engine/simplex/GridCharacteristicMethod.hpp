@@ -158,7 +158,7 @@ private:
 		outerInvariants.clear();
 		Matrix ans = Matrix::Zeros();
 		
-		for (int k = 0; k < PdeVector::M; k++) {
+		for (int k = 0; k < PdeVector::M; k++)  {
 			
 			if (dx(k) == 0) {
 			// special for exact hit
@@ -263,9 +263,16 @@ private:
 		Real3 r2 = mesh.coordsD(borderFace(1));
 		Real3 r3 = mesh.coordsD(borderFace(2));
 		Real3 r0 = mesh.coordsD(it);
+		/// coordinate of border-characteristic intersection
 		Real3 rc = linal::lineWithFlatIntersection(r1, r2, r3, r0, r0 + shift);
-				//< coordinate of border-characteristic intersection
-		
+		/// find local coordinates of (rc - r1) in basis {e1, e2}
+		Real3 e1 = r2 - r1, e2 = r3 - r1, a = rc - r1;
+		linal::Matrix<3, 2> A = {
+				e1(0), e2(0),
+				e1(1), e2(1),
+				e1(2), e2(2),
+		};
+		Real2 w = linal::linearLeastSquares(A, a);
 		return TetrahedronInterpolator<PdeVector>::interpolateInOwner(
 				// current time layer
 				{0, 0, 0}, mesh.pde(borderFace(0)),
@@ -276,9 +283,7 @@ private:
 				{1, 0, 1}, mesh.pdeNew(borderFace(1)),
 				{0, 1, 1}, mesh.pdeNew(borderFace(2)),
 				// query in space-time
-				{    linal::length(rc - r1) / linal::length(r2 - r1),
-					 linal::length(rc - r1) / linal::length(r3 - r1),
-				 1 - linal::length(rc - r0) / linal::length(shift)});
+				{w(0), w(1), 1 - linal::length(rc - r0) / linal::length(shift)});
 	}
 	
 	
