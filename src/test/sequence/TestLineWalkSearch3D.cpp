@@ -152,7 +152,7 @@ inline void test3DFigure(
 		}
 	}
 }
-
+/*
 TEST(LineWalkSearch3D, VersusLinalAndCgal) {
 	test3DFigure("meshes/tetrahedron.off", 0.6, true, 20);
 	test3DFigure("meshes/cube.off", 0.4, true, 50);
@@ -178,7 +178,8 @@ inline bool quadrateContains(
 TEST(LineWalkSearch3D, CasesAlongBorder) {
 	Task task;
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
-	real h = 0.1, step = h / 3;
+//	real h = 0.1, step = h / 3;
+	real h = 0.025, step = h / 3;
 	task.simplexGrid.spatialStep = h;
 	task.simplexGrid.detectSharpEdges = true;
 	task.simplexGrid.fileName = "meshes/cube.off";
@@ -244,8 +245,8 @@ TEST(LineWalkSearch3D, CasesAlongBorder) {
 		std::cout << e.what(); throw;
 	}
 }
+*/
 
-/*
 TEST(LineWalkSearch3D, Skull) {
 	Task task;
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
@@ -254,7 +255,7 @@ TEST(LineWalkSearch3D, Skull) {
 	try {
 	
 	Triangulation triangulation(task);
-	Grid grid(1, {&triangulation});
+	Grid grid(5, {&triangulation});
 	VtkUtils::dumpGridToVtk(grid);
 	real h = grid.getAverageHeight(), step = h / 3;
 	
@@ -279,6 +280,6 @@ TEST(LineWalkSearch3D, Skull) {
 		std::cout << e.what(); throw;
 	}
 }
-*/
+
 
 #undef CellIterToCellReal

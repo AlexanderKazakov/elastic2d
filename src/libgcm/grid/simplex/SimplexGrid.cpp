@@ -84,8 +84,8 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	bool here = false;
 	if (Dimensionality == 3) {
 		here = 
-			linal::length(start - RealD({0.949427, 0.0219923, 0.978008})) < getAverageHeight() / 1000 &&
-			linal::length(query - RealD({1.01609, 0.0219923, 0.978008})) < getAverageHeight() / 1000;
+			linal::length(start - RealD({-1.60435, 0.0211456, 143.91})) < getAverageHeight() / 10 &&
+			linal::length(query - RealD({-1.58082, 0.0211456, 143.91	})) < getAverageHeight() / 10;
 	}
 	if (here) {
 		std::cout << "Here!" << std::endl;
@@ -94,15 +94,16 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	/// Try to go along the ray from it to it+shift cell-by-cell
 	std::vector<CellHandle> cellsAlong = LINE_WALKER::cellsAlongSegment(
 			triangulation, isLocalCell, vertexHandle(it), query);
-	Cell foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
 	if (here) {
 		int i = 0;
 		LOG_INFO("Start search from vertex");
 		for (CellHandle ch : cellsAlong) {
 			triangulation->printCell(ch, std::to_string(i++));
 			std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
+			std::cout << "height(ch) == " << Triangulation::minimalCellHeight(ch) << std::endl;
 		}
 	}
+	Cell foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
 	
 	if (foundCell.n > 0) { return foundCell; }
 	
@@ -138,6 +139,14 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	for (CellHandle incidentCell : localIncidentCells(it)) {
 		cellsAlong = LINE_WALKER::cellsAlongSegment(
 				triangulation, isLocalCell, incidentCell, query);
+		if (here) {
+			int i = 0;
+			LOG_INFO("Continue search all cells centers");
+			for (CellHandle ch : cellsAlong) {
+				triangulation->printCell(ch, std::to_string(i++));
+				std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
+			}
+		}
 		foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
 		if (foundCell.n > 0) { return foundCell; }
 	}

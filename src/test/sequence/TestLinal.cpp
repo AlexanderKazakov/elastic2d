@@ -1179,6 +1179,19 @@ TEST(Linal, barycentricTriangleIn3D) {
 			barycentricCoordinates(a, b, c, (b + c) / 2.0)));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
 			barycentricCoordinates(a, b, c, (a + b + c) / 3.0)));
+	
+	a = {-1.587519073486328, 0.00633697509765625, 143.9256103515625};
+	b = {-1.584312438964844, 0.0194580078125, 143.9030517578125};
+	c = {-1.575632476806641, 0.0271484375, 143.9210571289063};
+	Real3 q = {-1.581665132409098, 0.0211456298828125, 143.9104125976563};
+	ASSERT_TRUE(isDegenerate(a, b, c, q, 7e-11));
+	Real3 lambdaExpt = {0.063996977831142207, 0.60737008320664498, 0.32863293896221279};
+	Real3 lambdaCalc = barycentricCoordinates(a, b, c, q);
+	ASSERT_LT(linal::length(lambdaCalc - lambdaExpt), EQUALITY_TOLERANCE)
+			<< "lambdaCalc: " << lambdaCalc << "lambdaExpt: " << lambdaExpt;
+	Real3 qCalc = lambdaCalc(0) * a + lambdaCalc(1) * b + lambdaCalc(2) * c;
+	ASSERT_LT(linal::length(qCalc - q), EQUALITY_TOLERANCE)
+			<< "qCalc: " << qCalc << "q: " << q;
 }
 
 

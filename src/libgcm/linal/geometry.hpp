@@ -73,12 +73,12 @@ inline Real2 barycentricCoordinates(
 		const Real2& a, const Real2& b,
 		const Real2& q) {
 	/// if q is on the line {a, b}, one of the lines of T is linearly dependent
-	Matrix<3, 2> T = {   1,    1,
-	                  a(0), b(0),
-	                  a(1), b(1) };
-	Real3 f = {1, q(0), q(1)};
-	Real2 lambda = linearLeastSquares(T, f);
-	return lambda / (lambda(0) + lambda(1));
+	Matrix<2, 1> T = {
+			a(0) - b(0),
+			a(1) - b(1)
+	};
+	Real1 lambda = linearLeastSquares(T, q - b);
+	return {lambda(0), 1 - lambda(0)};
 }
 
 
@@ -91,13 +91,13 @@ inline Real2 barycentricCoordinates(
 		const Real3& a, const Real3& b,
 		const Real3& q) {
 	/// if q is on the line {a, b}, two of the lines of T is linearly dependent
-	Matrix<4, 2> T = {   1,    1,
-	                  a(0), b(0),
-	                  a(1), b(1),
-	                  a(2), b(2) };
-	Real4 f = {1, q(0), q(1), q(2)};
-	Real2 lambda = linearLeastSquares(T, f);
-	return lambda / (lambda(0) + lambda(1));
+	Matrix<3, 1> T = {
+			a(0) - b(0),
+			a(1) - b(1),
+			a(2) - b(2)
+	};
+	Real1 lambda = linearLeastSquares(T, q - b);
+	return {lambda(0), 1 - lambda(0)};
 }
 
 
@@ -125,13 +125,13 @@ inline Real3 barycentricCoordinates(
 		const Real3& a, const Real3& b, const Real3& c,
 		const Real3& q) {
 	/// if q is in the flat {a, b, c}, one of the lines of A is linearly dependent
-	Matrix<4, 3> T = {   1,    1,    1,
-	                  a(0), b(0), c(0), 
-	                  a(1), b(1), c(1),
-	                  a(2), b(2), c(2) };
-	Real4 f = {1, q(0), q(1), q(2)};
-	Real3 lambda = linearLeastSquares(T, f);
-	return lambda / (lambda(0) + lambda(1) + lambda(2));
+	Matrix<3, 2> T = {
+			a(0) - c(0), b(0) - c(0),
+			a(1) - c(1), b(1) - c(1),
+			a(2) - c(2), b(2) - c(2)
+	};
+	Real2 lambda = linearLeastSquares(T, q - c);
+	return {lambda(0), lambda(1), 1 - lambda(0) - lambda(1)};
 }
 
 
