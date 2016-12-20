@@ -113,7 +113,7 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	/// Now, two situations are possible:
 	/// - the ray is going out of the grid from a border (contact) node,
 	/// - we have some numerical inexactness in geometrical operations.
-	/// In order to avoid inexactness try to start from the center of
+	/// In order to avoid inexactness try to start from inside of
 	/// the incident cell which is crossed by the search direction
 	CellHandle startCell = triangulation->findCrossedIncidentCell(
 			isLocalCell, vertexHandle(it), query, 0);
@@ -122,28 +122,27 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 				isLocalCell, vertexHandle(it), query, EQUALITY_TOLERANCE);
 	}
 	if (startCell != NULL) {
-		cellsAlong = LINE_WALKER::cellsAlongSegment(
-				triangulation, isLocalCell, startCell, query);
-		
-		if (here) {
-			int i = 0;
-			LOG_INFO("Continue search from cell center");
-			vtk_utils::drawSegmentToVtk(Triangulation::center(startCell), query, "lineFromCenter");
-			writeCellsToVtk(cellsAlong, "fromCenter");
-			for (CellHandle ch : cellsAlong) {
-				triangulation->printCell(ch, std::to_string(i++));
-				std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
+		const int ITERATION_MAX = (int)(-log2(EQUALITY_TOLERANCE));
+		for (int iteration = 0; iteration < ITERATION_MAX; iteration++) {
+			real w = std::pow(2, -iteration);
+			RealD startPoint = Triangulation::center(startCell) * w + start * (1 - w);
+			cellsAlong = LINE_WALKER::cellsAlongSegment(
+					triangulation, isLocalCell, startCell, startPoint, query);
+			if (here) {
+				vtk_utils::drawSegmentToVtk(startPoint, query,
+						"lineFromCenter" + std::to_string(iteration));
+				writeCellsToVtk(cellsAlong, "fromCenter" + std::to_string(iteration));
 			}
+			foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
+			if (foundCell.n > 0) { return foundCell; }
 		}
-		
-		foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
-		if (foundCell.n > 0) { return foundCell; }
 	}
 	
 	/// Now, try to start from centers of all local incident cells
 	for (CellHandle incidentCell : localIncidentCells(it)) {
 		cellsAlong = LINE_WALKER::cellsAlongSegment(
-				triangulation, isLocalCell, incidentCell, query);
+				triangulation, isLocalCell, incidentCell,
+						Triangulation::center(incidentCell), query);
 		if (here) {
 			int i = 0;
 			LOG_INFO("Continue search all cells centers");
@@ -211,7 +210,7 @@ checkLineWalkFoundCell(const Iterator& it,
 	if (!belongsToTheGrid(last)) {
 		std::vector<VertexHandle> common = Triangulation::filterFaceNotCrossedByTheRay(
 				Triangulation::commonVertices(prev, last),
-				start, query, localEqualityTolerance());
+				start, query, EQUALITY_TOLERANCE);
 		return Cell(common.begin(), common.end(), [=](const VertexHandle vh) {
 				return localVertexIndex(vh, prev); });
 	}

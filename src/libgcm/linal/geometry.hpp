@@ -217,42 +217,6 @@ inline Real3 lineWithFlatIntersection(const Real3 f1, const Real3 f2, const Real
 }
 
 
-/**
- * Is triangle on given points degenerate with tolerance eps
- */
-inline bool isDegenerate(
-		const Real2 a, const Real2 b, const Real2 c, const real eps) {
-	Real2 l = a - b;
-	Real2 m = c - b;
-	return std::fabs(determinant(l(0), l(1), m(0), m(1))) <= eps;
-}
-
-
-/**
- * Is tetrahedron on given points degenerate with tolerance eps
- */
-inline bool isDegenerate(
-		const Real3 a, const Real3 b, const Real3 c, const Real3 d, const real eps) {
-	Real3 l = a - b;
-	Real3 m = c - b;
-	Real3 n = d - b;
-	return std::fabs(determinant(
-			l(0), l(1), l(2), m(0), m(1), m(2), n(0), n(1), n(2))) <= eps;
-}
-
-
-/**
- * Is triangle on given points degenerate with tolerance eps
- */
-inline bool isDegenerate(
-		const Real3 a, const Real3 b, const Real3 c, const real eps) {
-	Real3 l = a - b;
-	Real3 m = c - b;
-	real lm = dotProduct(l, m);
-	return std::fabs(lm * lm - dotProduct(l, l) * dotProduct(m, m)) <= eps;
-}
-
-
 /** 
  * @return oriented area of triangle {a, b, c};
  * Orientation is positive, if crossProduct(b - a, c - a) > 0.
@@ -297,12 +261,52 @@ inline real volume(const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
 }
 
 
-/** 
- * Is a orthogonal to b 
+/** Minimal height in triangle */
+template<typename RealD>
+real minimalHeight(const RealD& a, const RealD& b, const RealD& c) {
+	const real S = area(a, b, c);
+	const real ab = length(a - b);
+	const real ac = length(a - c);
+	const real bc = length(b - c);
+	return 2 * S / fmax(ab, fmax(ac, bc));
+}
+
+
+/** Minimal height in tetrahedron */
+inline real minimalHeight(
+		const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
+	const real V = volume(a, b, c, d);
+	const real A = area(b, c, d);
+	const real B = area(c, d, a);
+	const real C = area(d, a, b);
+	const real D = area(a, b, c);
+	return 3 * V / fmax(A, fmax(B, fmax(C, D)));
+}
+
+
+/**
+ * Is triangle on given points degenerate with relative tolerance eps
+ * (in terms of relation between minimal height and average length of edges)
  */
-template<int TM>
-bool isPerpendicular(const Vector<TM>& a, const Vector<TM>& b) {
-	return linal::dotProduct(a, b) == 0;
+template<typename RealD>
+bool isDegenerate(
+		const RealD& a, const RealD& b, const RealD& c, const real eps) {
+	const real h = minimalHeight(a, b, c);
+	const real l = ( length(a - b) + length(a - c) + length(b - c) ) / 3;
+	return h <= eps * l;
+}
+
+
+/**
+ * Is tetrahedron on given points degenerate with relative tolerance eps
+ * (in terms of relation between minimal height and average length of edges)
+ */
+inline bool isDegenerate(
+		const Real3 a, const Real3 b, const Real3 c, const Real3 d, const real eps) {
+	const real h = minimalHeight(a, b, c, d);
+	const real l = ( length(a - b) + length(a - c) + length(a - d) +
+			length(d - b) + length(d - c) + length(b - c) ) / 6;
+	return h <= eps * l;
 }
 
 
@@ -421,28 +425,6 @@ inline Real3 oppositeFaceNormal(const Real3& opposite,
 
 	Real3 ans = normalize(crossProduct(a - b, c - b));
 	return (dotProduct(ans, a - opposite) > 0) ? ans : -ans;
-}
-
-
-/** Minimal height in triangle */
-inline real minimalHeight(const Real2 a, const Real2 b, const Real2 c) {
-	const real S = area(a, b, c);
-	const real ab = length(a - b);
-	const real ac = length(a - c);
-	const real bc = length(b - c);
-	return 2 * S / fmax(ab, fmax(ac, bc));
-}
-
-
-/** Minimal height in tetrahedron */
-inline real minimalHeight(
-		const Real3 a, const Real3 b, const Real3 c, const Real3 d) {
-	const real V = volume(a, b, c, d);
-	const real A = area(b, c, d);
-	const real B = area(c, d, a);
-	const real C = area(d, a, b);
-	const real D = area(a, b, c);
-	return 3 * V / fmax(A, fmax(B, fmax(C, D)));
 }
 
 

@@ -31,15 +31,15 @@ inline void testContains(const Grid& grid, const RealCell& cell,
 		RealD intersection = linal::lineWithFlatIntersection(
 				cell(0), cell(1), cell(2), start, q);
 		ASSERT_TRUE(linal::triangleContains(cell(0), cell(1), cell(2),
-				intersection, EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+				intersection, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 		++hitCounter;
 	} else if (cell.n == 2) {
 		RealD intersection = linal::linesIntersection(cell(0), cell(1), start, q);
 		ASSERT_TRUE(linal::segmentContains(cell(0), cell(1),
-				intersection, EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+				intersection, EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 	} else if (cell.n == 1) {
 		ASSERT_TRUE(linal::segmentContains(
-				start, q, cell(0), EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+				start, q, cell(0), EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 	} else if (cell.n == 0) {
 		ASSERT_FALSE(grid.isInner(it));
 	} else {
@@ -90,7 +90,7 @@ inline void matchSearchResults(const Grid& grid,
 	if (byLineWalk.n == 4 && byCgal.n == 4) {
 		RealCell a(byLineWalk, CellIterToCellReal(grid));
 		RealCell b(byCgal,     CellIterToCellReal(grid));
-		checkBothCellsContainQueryPoint(a, b, q, grid.localEqualityTolerance());
+		checkBothCellsContainQueryPoint(a, b, q, EQUALITY_TOLERANCE);
 	}
 }
 
@@ -198,14 +198,14 @@ TEST(LineWalkSearch3D, CasesAlongBorder) {
 		RealD query = start + shift;
 		Cell iterCell;
 		if (!quadrateContains(
-				a, b, c, d, start, grid.localEqualityTolerance())) { return; }
+				a, b, c, d, start, EQUALITY_TOLERANCE)) { return; }
 		try {
 			iterCell = grid.findCellCrossedByTheRay(it, shift);
 		} catch (Exception& e) {
 			std::cout << e.what(); throw;
 		}
 		RealCell cell(iterCell, CellIterToCellReal(grid));
-		if (quadrateContains(a, b, c, d, query, grid.localEqualityTolerance())) {
+		if (quadrateContains(a, b, c, d, query, EQUALITY_TOLERANCE)) {
 			ASSERT_EQ(4, cell.n) << "start == " << start << "query == " << query << std::endl;
 			ASSERT_TRUE(linal::tetrahedronContains(
 					cell(0), cell(1), cell(2), cell(3), query, EQUALITY_TOLERANCE));
@@ -261,7 +261,7 @@ TEST(LineWalkSearch3D, Skull) {
 	
 	for (int i = 0; i < 16; i++) {
 		real phi = i * M_PI / 8;
-		for (int j = 8; j < 16; j++) {
+		for (int j = 0; j < 16; j++) {
 			real teta = j * M_PI / 8;
 			RealD direction = step * RealD({
 					cos(phi) * cos(teta), sin(phi) * cos(teta), sin(teta)});
@@ -272,7 +272,7 @@ TEST(LineWalkSearch3D, Skull) {
 						testContains(grid, c, it, shift, hitCounter);
 					}, hitCount);
 			std::cout << "i == " << i << "j == " << j << "hitCount == " << hitCount << std::endl;
-//			ASSERT_GT(hitCount, hitCountMin);
+			ASSERT_GT(hitCount, 130000);
 		}
 	}
 	

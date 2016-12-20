@@ -76,17 +76,17 @@ public:
 	}
 	
 	/**
-	 * Collect cells along the line from the center of cell t to point p.
+	 * Collect cells along the line from the point q to the point p.
+	 * Point q must lie inside the cell t (the search starts from t).
 	 * The search accepts only "valid" cells in terms of given predicate:
 	 * if meet a not "valid" cell, the search is stopped.
 	 * This method is more stable to numerical inexactness,
-	 * because it starts from the center of cell not from a vertex
+	 * because it starts from inside of cell not from a vertex
 	 */
 	template<typename Predicate>
 	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
-			const CellHandle t, const Real2 p) {
-		const Real2 q = Triangulation::center(t);
+			const CellHandle t, const Real2 q, const Real2 p) {
 		
 		VertexHandle l = NULL, r = NULL;
 		triangulation->findCrossedInsideOutFacet(t, q, p, l, r, 0);

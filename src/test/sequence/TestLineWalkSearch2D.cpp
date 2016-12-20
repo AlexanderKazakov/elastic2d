@@ -30,11 +30,11 @@ inline void testContains(const Grid& grid, const RealCell& cell,
 	} else if (cell.n == 2) {
 		RealD intersection = linal::linesIntersection(start, q, cell(0), cell(1));
 		ASSERT_TRUE(linal::segmentContains(cell(0), cell(1), intersection,
-				EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+				EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 		++hitCounter;
 	} else if (cell.n == 1) {
 		ASSERT_TRUE(linal::segmentContains(start, q, cell(0),
-				EQUALITY_TOLERANCE, grid.localEqualityTolerance()));
+				EQUALITY_TOLERANCE, EQUALITY_TOLERANCE));
 		++hitCounter;
 	}
 }
@@ -71,7 +71,7 @@ inline void matchSearchResults(const Grid& grid,
 	if (byLineWalk.n == 3 && byCgal.n == 3) {
 		RealCell a(byLineWalk, CellIterToCellRealD(grid));
 		RealCell b(byCgal,     CellIterToCellRealD(grid));
-		checkBothCellsContainQueryPoint(a, b, q, grid.localEqualityTolerance());
+		checkBothCellsContainQueryPoint(a, b, q, EQUALITY_TOLERANCE);
 	} else if (gridIsConvex) {
 		ASSERT_EQ(0, byCgal.n) << "byLineWalk.n == " << byLineWalk.n;
 	}
@@ -192,7 +192,7 @@ TEST(LineWalkSearch2D, findCellCrossedByTheRayNotConvex) {
 					RealD q = query;
 					if (ar.n == 2) { q = linal::linesIntersection(ar(0), ar(1), start, query); }
 					if (ar.n == 1) { q = ar(0); }
-					checkBothCellsContainQueryPoint(ar, br, q, one.localEqualityTolerance());
+					checkBothCellsContainQueryPoint(ar, br, q, EQUALITY_TOLERANCE);
 					testContains(one, a, it, shift, hitCounter);
 				}, hitCount);
 		ASSERT_NEAR(18, hitCount, 4);
@@ -213,11 +213,11 @@ TEST(LineWalkSearch2D, CasesAlongBorder) {
 		for (Iterator it : grid) {
 			RealD start = grid.coordsD(it);
 			if (!linal::segmentContains(a, b, start,
-					EQUALITY_TOLERANCE, grid.localEqualityTolerance())) { continue; }
+					EQUALITY_TOLERANCE, EQUALITY_TOLERANCE)) { continue; }
 			RealD query = start + shift;
 			Cell c = grid.findCellCrossedByTheRay(it, shift);
 			if (linal::segmentContains(a, b, query,
-					EQUALITY_TOLERANCE, grid.localEqualityTolerance())) {
+					EQUALITY_TOLERANCE, EQUALITY_TOLERANCE)) {
 				ASSERT_EQ(3, c.n);
 				testContains(grid, c, it, shift, hitCounter);
 			} else {

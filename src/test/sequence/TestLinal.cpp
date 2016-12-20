@@ -1230,16 +1230,7 @@ TEST(Linal, barycentric3D) {
 }
 
 
-TEST(Linal, isPerpendicular) {
-	ASSERT_TRUE (isPerpendicular(Real2({ 0, 1}), Real2({1, 0})));
-	ASSERT_FALSE(isPerpendicular(Real2({ 0, 1}), Real2({1, 1})));
-	ASSERT_TRUE (isPerpendicular(Real3({0, 1, 0}), Real3({1, 0, 1})));
-	ASSERT_FALSE(isPerpendicular(Real3({1, 0, 1}), Real3({1, 0, 0})));
-}
-
-
 TEST(Linal, isDegenerate) {
-	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({0, 0}), 0));
 	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 1}), Real2({0, 2}), 0));
 	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({1, 1}), Real2({2, 2}), 0));
 	ASSERT_TRUE (isDegenerate(Real2({0, 0}), Real2({0, 0}), Real2({1, 1}), 0));
@@ -1258,6 +1249,11 @@ TEST(Linal, isDegenerate) {
 	ASSERT_FALSE(isDegenerate(Real3({3, 0, 0}), Real3({0, 3, 0}), Real3({0, 0, 3}), Real3({1, 1, 5}), 0));
 	ASSERT_FALSE(isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3}), 0));
 	ASSERT_TRUE (isDegenerate(Real3({1e-7, 0, 0}), Real3({0, 0, 1}), Real3({0, 0, 2}), Real3({0, 2, 3}), 2e-7));
+	
+	Real3 a = {-1.721249389648438, -3.048403930664063, 143.6192138671875};
+	Real3 b = {-1.721249389648438, -3.050570678710938, 143.6185791015625};
+	Real3 q = {-1.721249389648438, -3.050628662109375, 143.619775390625};
+	ASSERT_FALSE(linal::isDegenerate(a, b, q, EQUALITY_TOLERANCE));
 }
 
 
@@ -1288,11 +1284,15 @@ TEST(Linal, orientedVolume) {
 
 
 TEST(Linal, minimalHeight) {
-	ASSERT_NEAR(1.0 / sqrt(2), minimalHeight({0, 0}, {1, 0}, {0, 1}), EQUALITY_TOLERANCE);
-	ASSERT_NEAR(2, minimalHeight({0, 0}, {5, 2}, {8, 0}), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(1.0 / sqrt(2), minimalHeight(
+			Real2({0, 0}), Real2({1, 0}), Real2({0, 1})), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(2, minimalHeight(
+			Real2({0, 0}), Real2({5, 2}), Real2({8, 0})), EQUALITY_TOLERANCE);
 	
-	ASSERT_NEAR(1.0 / sqrt(3), minimalHeight({0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}), EQUALITY_TOLERANCE);
-	ASSERT_NEAR(2, minimalHeight({0, 0, 0}, {5, 0, 0}, {0, 8, 0}, {2, 2, 2}), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(1.0 / sqrt(3), minimalHeight(
+			Real3({0, 0, 0}), Real3({1, 0, 0}), Real3({0, 1, 0}), Real3({0, 0, 1})), EQUALITY_TOLERANCE);
+	ASSERT_NEAR(2, minimalHeight(
+			Real3({0, 0, 0}), Real3({5, 0, 0}), Real3({0, 8, 0}), Real3({2, 2, 2})), EQUALITY_TOLERANCE);
 }
 
 

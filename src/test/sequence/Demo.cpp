@@ -3,9 +3,10 @@
 #include <cmath>
 
 #include <libgcm/linal/linal.hpp>
-
+#include <libgcm/util/snapshot/VtkUtils.hpp>
 //#include <libgcm/rheology/materials/OrthotropicMaterial.hpp>
 using namespace gcm;
+
 
 //TEST(Demo, sizes) {
 //	struct Empty { };

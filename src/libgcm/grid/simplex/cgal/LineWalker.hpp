@@ -71,8 +71,7 @@ public:
 	template<typename Predicate>
 	static std::vector<CellHandle> cellsAlongSegment(
 			const Triangulation* triangulation, const Predicate isValid,
-			const CellHandle t, const Real3 p) {
-		const Real3 q = Triangulation::center(t);
+			const CellHandle t, const Real3 q, const Real3 p) {
 		
 		VertexHandle u = NULL, v = NULL, w = NULL;
 		triangulation->findCrossedInsideOutFacet(t, q, p, u, v, w, 0);
