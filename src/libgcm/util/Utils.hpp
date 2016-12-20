@@ -98,6 +98,19 @@ public:
 	}
 	
 	
+	/**
+	 * Find the index of the given value in the given *sorted* array.
+	 * Assert that such value is present and unique in the array.
+	 */
+	template<typename RAIter>
+	static size_t findIndexOfValueInSortedArray(
+			const RAIter begin, const RAIter end,
+			typename std::add_const<decltype(*begin)>::type& value) {
+		const std::pair<RAIter, RAIter> p = std::equal_range(begin, end, value);
+		assert_true(std::next(p.first) == p.second);
+		return (size_t)(p.first - begin);
+	}
+	
 };
 
 

@@ -256,12 +256,12 @@ TEST(LineWalkSearch3D, Skull) {
 	
 	Triangulation triangulation(task);
 	Grid grid(5, {&triangulation});
-	VtkUtils::dumpGridToVtk(grid);
+	vtk_utils::dumpGridToVtk(grid);
 	real h = grid.getAverageHeight(), step = h / 3;
 	
 	for (int i = 0; i < 16; i++) {
 		real phi = i * M_PI / 8;
-		for (int j = 0; j < 16; j++) {
+		for (int j = 8; j < 16; j++) {
 			real teta = j * M_PI / 8;
 			RealD direction = step * RealD({
 					cos(phi) * cos(teta), sin(phi) * cos(teta), sin(teta)});
@@ -271,7 +271,7 @@ TEST(LineWalkSearch3D, Skull) {
 						Cell c = grid.findCellCrossedByTheRay(it, shift);
 						testContains(grid, c, it, shift, hitCounter);
 					}, hitCount);
-			std::cout << "hitCount == " << hitCount << std::endl;
+			std::cout << "i == " << i << "j == " << j << "hitCount == " << hitCount << std::endl;
 //			ASSERT_GT(hitCount, hitCountMin);
 		}
 	}

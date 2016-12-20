@@ -12,7 +12,7 @@ TEST(InmMeshLoader, load) {
 	task.cgal3DGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.cgal3DGrid.fileName = "meshes/refined/mesh-refined.out";
 	Cgal3DGrid grid(task);
-	VtkUtils::dumpGridToVtk(grid);
+	vtk_utils::dumpGridToVtk(grid);
 }
 */
 

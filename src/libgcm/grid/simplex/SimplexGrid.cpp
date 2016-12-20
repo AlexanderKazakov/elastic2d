@@ -2,6 +2,7 @@
 
 #include <libgcm/grid/simplex/cgal/CgalTriangulation.hpp>
 #include <libgcm/grid/simplex/cgal/LineWalker.hpp>
+#include <libgcm/util/snapshot/VtkUtils.hpp>
 
 
 using namespace gcm;
@@ -83,9 +84,9 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	
 	bool here = false;
 	if (Dimensionality == 3) {
-		here = 
-			linal::length(start - RealD({-1.60435, 0.0211456, 143.91})) < getAverageHeight() / 10 &&
-			linal::length(query - RealD({-1.58082, 0.0211456, 143.91	})) < getAverageHeight() / 10;
+		here =
+			linal::length(start - RealD({-1.67878, -3.05063, 143.62})) < getAverageHeight() / 10 &&
+			linal::length(query - RealD({-1.74938, -3.05063, 143.62})) < getAverageHeight() / 10;
 	}
 	if (here) {
 		std::cout << "Here!" << std::endl;
@@ -97,6 +98,8 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 	if (here) {
 		int i = 0;
 		LOG_INFO("Start search from vertex");
+		vtk_utils::drawSegmentToVtk(start, query, "lineFromVertex");
+		writeCellsToVtk(cellsAlong, "fromVertex");
 		for (CellHandle ch : cellsAlong) {
 			triangulation->printCell(ch, std::to_string(i++));
 			std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
@@ -125,6 +128,8 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 		if (here) {
 			int i = 0;
 			LOG_INFO("Continue search from cell center");
+			vtk_utils::drawSegmentToVtk(Triangulation::center(startCell), query, "lineFromCenter");
+			writeCellsToVtk(cellsAlong, "fromCenter");
 			for (CellHandle ch : cellsAlong) {
 				triangulation->printCell(ch, std::to_string(i++));
 				std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
@@ -303,6 +308,22 @@ calculateMinimalSpatialStep() {
 }
 
 
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+void SimplexGrid<Dimensionality, TriangulationT>::
+writeCellsToVtk(const std::vector<CellHandle>& cells, const std::string filename) const {
+	std::vector<elements::Element<RealD, CELL_POINTS_NUMBER>> elems;
+	for (const CellHandle ch : cells) {
+		assert_false(triangulation->isInfinite(ch));
+		elements::Element<RealD, CELL_POINTS_NUMBER> elem;
+		elem.n = CELL_POINTS_NUMBER;
+		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
+			elem(i) = Triangulation::realD(ch->vertex(i));
+		}
+		elems.push_back(elem);
+	}
+	vtk_utils::drawCellsToVtk(elems, filename);
+}
 
 template class SimplexGrid<2, CgalTriangulation>;
 template class SimplexGrid<3, CgalTriangulation>;

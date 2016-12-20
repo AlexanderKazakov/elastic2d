@@ -5,6 +5,7 @@
 #include <libgcm/engine/cubic/AbstractFactory.hpp>
 #include <libgcm/engine/cubic/ContactConditions.hpp>
 #include <libgcm/engine/cubic/BorderConditions.hpp>
+#include <libgcm/grid/cubic/CubicGrid.hpp>
 
 
 namespace gcm {

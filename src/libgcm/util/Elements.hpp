@@ -96,6 +96,20 @@ struct Element {
 };
 
 
+template<typename Point, int TN>
+std::vector<Point> sortedUniquePointsOfElements(
+		const std::vector<Element<Point, TN>>& items) {
+	std::set<Point> points;
+	for (const Element<Point, TN>& item : items) {
+		assert_eq(item.n, item.N);
+		for (int i = 0; i < item.n; i++) {
+			points.insert(item(i));
+		}
+	}
+	return std::vector<Point>(points.begin(), points.end());
+}
+
+
 template<typename Point> using Triangle = Element<Point, 3>;
 template<typename Point> using Tetrahedron = Element<Point, 4>;
 

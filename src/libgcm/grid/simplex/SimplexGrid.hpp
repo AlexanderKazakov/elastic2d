@@ -279,6 +279,11 @@ public:
 	}
 	
 	
+	/** Debugging helper */
+	void writeCellsToVtk(const std::vector<CellHandle>& cells,
+			const std::string filename = "cells") const;
+	
+	
 private:
 	/// Data
 	///@{
