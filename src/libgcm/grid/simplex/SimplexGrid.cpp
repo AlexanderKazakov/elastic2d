@@ -82,32 +82,10 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 		return belongsToTheGrid(c);
 	};
 	
-	bool here = false;
-	if (Dimensionality == 3) {
-		here =
-			linal::length(start - RealD({-1.67878, -3.05063, 143.62})) < getAverageHeight() / 10 &&
-			linal::length(query - RealD({-1.74938, -3.05063, 143.62})) < getAverageHeight() / 10;
-	}
-	if (here) {
-		std::cout << "Here!" << std::endl;
-	}
-	
 	/// Try to go along the ray from it to it+shift cell-by-cell
 	std::vector<CellHandle> cellsAlong = LINE_WALKER::cellsAlongSegment(
 			triangulation, isLocalCell, vertexHandle(it), query);
-	if (here) {
-		int i = 0;
-		LOG_INFO("Start search from vertex");
-		vtk_utils::drawSegmentToVtk(start, query, "lineFromVertex");
-		writeCellsToVtk(cellsAlong, "fromVertex");
-		for (CellHandle ch : cellsAlong) {
-			triangulation->printCell(ch, std::to_string(i++));
-			std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
-			std::cout << "height(ch) == " << Triangulation::minimalCellHeight(ch) << std::endl;
-		}
-	}
 	Cell foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
-	
 	if (foundCell.n > 0) { return foundCell; }
 	
 	/// Now, two situations are possible:
@@ -121,39 +99,43 @@ findCellCrossedByTheRay(const Iterator& it, const RealD& shift) const {
 		startCell = triangulation->findCrossedIncidentCell(
 				isLocalCell, vertexHandle(it), query, EQUALITY_TOLERANCE);
 	}
-	if (startCell != NULL) {
-		const int ITERATION_MAX = (int)(-log2(EQUALITY_TOLERANCE));
-		for (int iteration = 0; iteration < ITERATION_MAX; iteration++) {
-			real w = std::pow(2, -iteration);
-			RealD startPoint = Triangulation::center(startCell) * w + start * (1 - w);
-			cellsAlong = LINE_WALKER::cellsAlongSegment(
-					triangulation, isLocalCell, startCell, startPoint, query);
-			if (here) {
-				vtk_utils::drawSegmentToVtk(startPoint, query,
-						"lineFromCenter" + std::to_string(iteration));
-				writeCellsToVtk(cellsAlong, "fromCenter" + std::to_string(iteration));
-			}
-			foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
-			if (foundCell.n > 0) { return foundCell; }
-		}
+	if (startCell == NULL) {
+		startCell = localIncidentCells(it).front();
 	}
-	
-	/// Now, try to start from centers of all local incident cells
-	for (CellHandle incidentCell : localIncidentCells(it)) {
+	const int ITERATION_MAX = 5;
+	for (int iteration = 0; iteration < ITERATION_MAX; iteration++) {
+		real w = std::pow(10, -iteration);
+		RealD startPoint = Triangulation::center(startCell) * w + start * (1 - w);
 		cellsAlong = LINE_WALKER::cellsAlongSegment(
-				triangulation, isLocalCell, incidentCell,
-						Triangulation::center(incidentCell), query);
-		if (here) {
-			int i = 0;
-			LOG_INFO("Continue search all cells centers");
-			for (CellHandle ch : cellsAlong) {
-				triangulation->printCell(ch, std::to_string(i++));
-				std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
-			}
-		}
+				triangulation, isLocalCell, startCell, startPoint, query);
 		foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
 		if (foundCell.n > 0) { return foundCell; }
 	}
+	
+//	if (isInner(it)) {
+//		vtk_utils::drawSegmentToVtk(startPoint, query,
+//				"lineFromCenter" + std::to_string(iteration));
+//		vtk_utils::drawSegmentToVtk(startPoint, query,
+//				"lineFromVertex" + std::to_string(iteration));
+//		writeCellsToVtk(cellsAlong, "fromCenter");
+//	}
+	
+	/// Now, try to start from centers of all local incident cells
+//	for (CellHandle incidentCell : localIncidentCells(it)) {
+//		cellsAlong = LINE_WALKER::cellsAlongSegment(
+//				triangulation, isLocalCell, incidentCell,
+//						Triangulation::center(incidentCell), query);
+//		if (here) {
+//			int i = 0;
+//			LOG_INFO("Continue search all cells centers");
+//			for (CellHandle ch : cellsAlong) {
+//				triangulation->printCell(ch, std::to_string(i++));
+//				std::cout << "isLocalCell(ch) == " << isLocalCell(ch) << std::endl;
+//			}
+//		}
+//		foundCell = checkLineWalkFoundCell(it, cellsAlong, start, query);
+//		if (foundCell.n > 0) { return foundCell; }
+//	}
 	
 	/// Now, the majority (unlikely all) of inexactness cases are handled.
 	/// Also, the case when the ray starts from the border node and 

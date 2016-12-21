@@ -141,7 +141,6 @@ inline void test3DFigure(
 						Cell c = grid.findCellCrossedByTheRay(it, shift);
 						testContains(grid, c, it, shift, hitCounter);
 					}, hitCount);
-			std::cout << "hitCount == " << hitCount << std::endl;
 			ASSERT_GT(hitCount, hitCountMin);
 			testWholeGridOneDirection(grid, direction, 10,
 					[&](Iterator it, RealD shift, int&) {
@@ -152,7 +151,7 @@ inline void test3DFigure(
 		}
 	}
 }
-/*
+
 TEST(LineWalkSearch3D, VersusLinalAndCgal) {
 	test3DFigure("meshes/tetrahedron.off", 0.6, true, 20);
 	test3DFigure("meshes/cube.off", 0.4, true, 50);
@@ -162,7 +161,7 @@ TEST(LineWalkSearch3D, VersusLinalAndCgal) {
 	test3DFigure("meshes/cube.off", 0.2, true, 700);
 	test3DFigure("meshes/icosahedron.off", 0.4, false, 1700);
 	
-//	test3DFigure("meshes/cube.off", 0.025, true, 400000);
+	test3DFigure("meshes/cube.off", 0.025, true, 400000);
 }
 
 
@@ -245,20 +244,11 @@ TEST(LineWalkSearch3D, CasesAlongBorder) {
 		std::cout << e.what(); throw;
 	}
 }
-*/
 
-TEST(LineWalkSearch3D, Skull) {
-	Task task;
-	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
-	task.simplexGrid.scale = 10;
-	try {
-	
-	Triangulation triangulation(task);
-	Grid grid(5, {&triangulation});
-	vtk_utils::dumpGridToVtk(grid);
+
+inline void testSkullGrid(const size_t gridId, Triangulation* triangulation) {
+	Grid grid(gridId, {triangulation});
 	real h = grid.getAverageHeight(), step = h / 3;
-	
 	for (int i = 0; i < 16; i++) {
 		real phi = i * M_PI / 8;
 		for (int j = 0; j < 16; j++) {
@@ -271,14 +261,37 @@ TEST(LineWalkSearch3D, Skull) {
 						Cell c = grid.findCellCrossedByTheRay(it, shift);
 						testContains(grid, c, it, shift, hitCounter);
 					}, hitCount);
-			std::cout << "i == " << i << "j == " << j << "hitCount == " << hitCount << std::endl;
-			ASSERT_GT(hitCount, 130000);
+			std::cout << "i == " << i << " j == " << j
+					<< " hitCount == " << hitCount << std::endl;
 		}
 	}
-	
+}
+
+inline void testSkull(const std::string filename) {
+	Task task;
+	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
+	task.simplexGrid.fileName = filename;
+	task.simplexGrid.scale = 10;
+	try {
+		Triangulation triangulation(task);
+		for (size_t i = 1; i <= 5; i++) {
+			testSkullGrid(i, &triangulation);
+		}
 	} catch (Exception& e) {
 		std::cout << e.what(); throw;
 	}
+}
+
+TEST(LineWalkSearch3D, Skull1) {
+	testSkull("meshes/coarse/mesh-coarse.out");
+}
+
+TEST(LineWalkSearch3D, Skull2) {
+	testSkull("meshes/coarse/mesh-aneurysm.out");
+}
+
+TEST(LineWalkSearch3D, Skull3) {
+	testSkull("meshes/refined/mesh-refined.out");
 }
 
 
