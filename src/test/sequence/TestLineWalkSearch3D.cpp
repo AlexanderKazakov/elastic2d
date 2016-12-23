@@ -14,6 +14,7 @@ typedef typename Grid::BorderIterator     BorderIter;
 typedef typename Grid::RealD              RealD;
 typedef elements::Element<Real3, 4>       RealCell;
 
+#define RUN_TOO_LONG_BUT_USEFUL_SEARCH_TESTS 0
 #define CellIterToCellReal(gridName) [&](Iterator iter) {return  gridName.coordsD(iter);}
 
 
@@ -161,7 +162,9 @@ TEST(LineWalkSearch3D, VersusLinalAndCgal) {
 	test3DFigure("meshes/cube.off", 0.2, true, 700);
 	test3DFigure("meshes/icosahedron.off", 0.4, false, 1700);
 	
+#if RUN_TOO_LONG_BUT_USEFUL_SEARCH_TESTS
 	test3DFigure("meshes/cube.off", 0.025, true, 400000);
+#endif
 }
 
 
@@ -282,6 +285,8 @@ inline void testSkull(const std::string filename) {
 	}
 }
 
+#if RUN_TOO_LONG_BUT_USEFUL_SEARCH_TESTS
+
 TEST(LineWalkSearch3D, Skull1) {
 	testSkull("meshes/coarse/mesh-coarse.out");
 }
@@ -294,5 +299,6 @@ TEST(LineWalkSearch3D, Skull3) {
 	testSkull("meshes/refined/mesh-refined.out");
 }
 
+#endif
 
 #undef CellIterToCellReal
