@@ -80,6 +80,8 @@ TEST(AxesAlignedBoundaryBox, intersection) {
 	AABB2 a;
 	a.min = {0, 1};
 	a.max = {2, 3};
+	ASSERT_EQ(2, a.minimalWidth().first);
+	ASSERT_EQ(0, a.minimalWidth().second);
 	AABB2 b = {Int2({1, 1}), Int2({3, 3})};
 	AABB2 ab = AABB2::intersection(a, b);
 	ASSERT_EQ(Int2({1, 1}), ab.min);
@@ -95,6 +97,8 @@ TEST(AxesAlignedBoundaryBox, intersection) {
 	ASSERT_EQ(Int3({1, 2, 3}), cd.min);
 	ASSERT_EQ(Int3({0, 2, 2}), cd.max);
 	ASSERT_EQ(Int3({-1, 0, -1}), cd.sizes());
+	ASSERT_EQ(-1, cd.minimalWidth().first);
+	ASSERT_EQ(0, cd.minimalWidth().second);
 	ASSERT_FALSE(cd.valid());
 	
 	AABB3 slice = {Int3({1, 5, 1}), Int3({5, 5, 5})};

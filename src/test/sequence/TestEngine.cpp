@@ -44,8 +44,8 @@ TEST(Engine, AdhesionContact) {
 	task.cubicGrid.borderSize = 2;
 	task.cubicGrid.h = {1, 0.25};
 	task.cubicGrid.cubics = {
-			{0, {{X, Y}, { 0,  0}}},
-			{1, {{X, Y}, { 0, Y-1}}}
+			{0, {{X, Y}, { 0, 0}}},
+			{1, {{X, Y}, { 0, Y}}}
 	};
 	
 	Task::InitialCondition::Wave wave;
@@ -68,7 +68,7 @@ TEST(Engine, AdhesionContact) {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 	};
 	task.cubicGrid.cubics = {
-			{0, {{X, 2*Y-1}, { 0,  0}}},
+			{0, {{X, 2 * Y}, { 0,  0}}},
 	};
 	Engine<2> one(task);
 	one.run();
@@ -78,9 +78,9 @@ TEST(Engine, AdhesionContact) {
 	for (int x = 0; x < X; x++) {
 		for (int y = 0; y < Y; y++) {
 			ASSERT_EQ(all->coords({x, y}), first->coords({x, y}));
-			ASSERT_EQ(all->coords({x, Y + y - 1}), second->coords({x, y}));
+			ASSERT_EQ(all->coords({x, Y + y}), second->coords({x, y}));
 			ASSERT_EQ(all->pde({x, y}), first->pde({x, y}));
-			ASSERT_EQ(all->pde({x, Y + y - 1}), second->pde({x, y}));
+			ASSERT_EQ(all->pde({x, Y + y}), second->pde({x, y}));
 		}
 	}
 }

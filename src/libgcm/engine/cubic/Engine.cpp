@@ -51,13 +51,19 @@ createGridsAndContacts(const Task& task) {
 	
 	for (Body& body : bodies) {
 		for (const Body& other : bodies) if (other != body) {
+			
 			AABB intersection = AABB::intersection(
 					body.mesh->aabb(), other.mesh->aabb());
-			if ( !intersection.valid() ) { continue; } // no intersection
+			if (intersection.valid()) {
+				THROW_BAD_MESH("Bodies must not intersect");
+			}
+			if (intersection.minimalWidth().first != -1) {
+				continue; // no contact
+			}
 			
 			typename Body::Contact contact;
 			contact.neighborId = other.mesh->id;
-			contact.direction = intersection.sliceDirection();
+			contact.direction = intersection.minimalWidth().second;
 			
 			// create box for contact copying
 			AABB buffer = intersection;
@@ -65,10 +71,8 @@ createGridsAndContacts(const Task& task) {
 			   other.mesh->start(contact.direction)) {
 			// copy from the bottom
 				buffer.min(contact.direction) -= body.mesh->borderSize;
-				buffer.max(contact.direction) -= 1;
 			} else {
 			// copy from the top
-				buffer.min(contact.direction) += 1;
 				buffer.max(contact.direction) += body.mesh->borderSize;
 			}
 			contact.copier = body.factory->createContact(
@@ -121,15 +125,19 @@ nextTimeStep() {
 template<int Dimensionality>
 real Engine<Dimensionality>::
 estimateTimeStep() {
-	/// minimal among all bodies
-	real minimalTimeStep = std::numeric_limits<real>::max();
+	real maxEigenvalue = 0;
+	RealD h = bodies.front().mesh->h;
 	for (const Body& body : bodies) {
-		real bodyTimeStep = body.gcm->calculateTimeStep(*body.mesh, CourantNumber);
-		if (bodyTimeStep < minimalTimeStep) {
-			minimalTimeStep = bodyTimeStep;
+		assert_true(h == body.mesh->h);
+		real eigenvalue = body.mesh->getMaximalEigenvalue();
+		if (eigenvalue > maxEigenvalue) {
+			maxEigenvalue = eigenvalue;
 		}
 	}
-	return minimalTimeStep;
+	
+	return CourantNumber * 
+			bodies.front().mesh->getMinimalSpatialStep() /
+			maxEigenvalue;
 }
 
 

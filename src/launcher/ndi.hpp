@@ -3,6 +3,65 @@
 using namespace gcm;
 
 
+inline Task::CubicBorderCondition::Values
+fixedNormalForce2D(
+		const int direction, const Task::TimeDependency normalForce) {
+	switch (direction) {
+		case 0:
+			return {
+				{PhysicalQuantities::T::Sxx, normalForce },
+				{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
+			};
+		case 1:
+			return {
+				{PhysicalQuantities::T::Syy, normalForce },
+				{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
+			};
+		default:
+			THROW_INVALID_ARG("Invalid direction value");
+	}
+}
+
+inline Task::CubicBorderCondition::Values
+freeBorder2D(const int direction) {
+	return fixedNormalForce2D(direction, [](real) {return 0;});
+}
+
+inline Task::CubicBorderCondition::Values
+fixedNormalForce3D(
+		const int direction, const Task::TimeDependency normalForce) {
+	switch (direction) {
+		case 0:
+			return {
+				{PhysicalQuantities::T::Sxx, normalForce },
+				{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
+				{PhysicalQuantities::T::Sxz, [](real) {return 0;} },
+			};
+		case 1:
+			return {
+				{PhysicalQuantities::T::Syy, normalForce },
+				{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
+				{PhysicalQuantities::T::Syz, [](real) {return 0;} },
+			};
+		case 2:
+			return {
+				{PhysicalQuantities::T::Szz, normalForce },
+				{PhysicalQuantities::T::Sxz, [](real) {return 0;} },
+				{PhysicalQuantities::T::Syz, [](real) {return 0;} },
+			};
+		default:
+			THROW_INVALID_ARG("Invalid direction value");
+	}
+}
+
+inline Task::CubicBorderCondition::Values
+freeBorder3D(const int direction) {
+	return fixedNormalForce3D(direction, [](real) {return 0;});
+}
+
+
+
+
 inline real lambda(const real E, const real nu) {
 	return E * nu / (1 + nu) / (1 - 2 * nu);
 }
@@ -14,25 +73,11 @@ inline real mu(const real E, const real nu) {
 
 inline std::shared_ptr<OrthotropicMaterial>
 createCompositeMaterial(const real phi) {
-	real E11 = 1e+11;
-	real E22 = 3e+10;
-	real nu = 0.43;
-	real rho = 1.6;
-	
-	real c11 = lambda(E11, nu) + 2 * mu(E11, nu);
-	real c22 = lambda(E22, nu) + 2 * mu(E22, nu);
-	real c33 = c22;
-	real c12 = lambda(E11, nu);
-	real c13 = c12;
-	real c23 = lambda(E22, nu);
-	real c44 = mu(E22, nu);
-	real c55 = mu(E11, nu);
-	real c66 = c55;
+	real rho = 1.6e+3;
 	OrthotropicMaterial material(rho,
-			{c11, c12, c13,
-			      c22, c23,
-			           c33,
-			               c44, c55, c66});
+			{23.3e+9, 6.96e+9, 6.96e+9,
+			         10.3e+9,  6.96e+9,
+			                  10.3e+9, 1.67, 5.01, 5.01});
 	material.anglesOfRotation = {0, 0, phi};
 	return std::make_shared<OrthotropicMaterial>(material);
 }
@@ -47,64 +92,97 @@ createNdiMaterial() {
 }
 
 
-inline Task ndi() {
+inline Task ndiCommon() {
 	Task task;
+	task.cubicGrid.borderSize = 2;
 	task.globalSettings.dimensionality = 2;
 	task.globalSettings.gridId = Grids::T::CUBIC;
-	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
-	task.globalSettings.numberOfSnaps = 70;
-	task.globalSettings.CourantNumber = 0.9;
+	task.globalSettings.snapshottersId = {
+			Snapshotters::T::VTK,
+			Snapshotters::T::SLICESNAP
+	};
+	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
+	task.detector.quantities = { PhysicalQuantities::T::Vy };
+	task.detector.gridId = 1;
+	task.globalSettings.CourantNumber = 0.5;
+	
+	return task;
+}
+
+
+inline Task ndiEmpty() {
+	Task task = ndiCommon();
+	task.globalSettings.numberOfSnaps = 100;
+	task.globalSettings.stepsPerSnap = 5;
 	
 	task.bodies = {
-			{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}},
 			{1, {Materials::T::ISOTROPIC,   Models::T::ELASTIC, {}}}
 	};
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
 	task.materialConditions.byBodies.bodyMaterialMap = {
-		{0, createCompositeMaterial(0)},
 		{1, createNdiMaterial()},
 	};
 	
-	
-	task.cubicGrid.borderSize = 2;
-	task.cubicGrid.h = {1, 0.25};
+	real prismDiameter = 6.35e-3;
+	real prismLength = 10e-3;
+	int prismSizeY = 41, prismSizeX = 11;
+	real hX = prismDiameter / prismSizeX, hY = prismLength / prismSizeY;
+	task.cubicGrid.h = {hX, hY};
 	task.cubicGrid.cubics = {
-			{0, {{20, 41}, { 0,  0}}},
-			{1, {{10, 41}, { 5, 40}}}
+			{1, {{prismSizeX, prismSizeY}, { 5, 0}}}
 	};
+	real upperY = (prismSizeY - 1) * hY;
+	real big = 1e+5, eps = 1e-5;
 	
 	
-	Task::CubicBorderCondition::Values freeBorderY = {
-		{PhysicalQuantities::T::Syy, [](real) {return 0;} },
-		{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
-	};
-	Task::CubicBorderCondition::Values freeBorderX = {
-		{PhysicalQuantities::T::Sxx, [](real) {return 0;} },
-		{PhysicalQuantities::T::Sxy, [](real) {return 0;} },
-	};
-	auto area = std::make_shared<InfiniteArea>();
+	auto upper = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-big, upperY - eps, -big}), Real3({big, upperY + eps, big}));
+	real tau = 0.55e-6 / 4;
+//	real omega = 2 * M_PI * 3.66e+6;
 	task.cubicBorderConditions = {
-		{0, {
-			 {1, area, freeBorderY},
-		 }},
 		{1, {
-			 {0, area, freeBorderX},
-			 {1, area, freeBorderY},
+			 {0, std::make_shared<InfiniteArea>(), freeBorder2D(0) },
+			 {1, std::make_shared<InfiniteArea>(), freeBorder2D(1) },
+			 {1, upper, fixedNormalForce2D(1, [=](real t) {
+					t -= 2 * tau;
+					return /*sin(omega * t) **/ -exp(-t*t / ( 2 * tau*tau));}) },
 		 }},
 	};
 	
+	task.detector.area = upper;
+	return task;
+}
+
+
+inline Task ndi() {
+	Task task = ndiEmpty();
 	
-	Task::InitialCondition::Wave wave;
-	wave.waveType = Waves::T::P_FORWARD;
-	wave.direction = 1; // along y
-	wave.quantity = PhysicalQuantities::T::PRESSURE;
-	wave.quantityValue = 1;
-	Real3 min({-1000, 2.5, -1000});
-	Real3 max({ 1000, 7.5,  1000});
-	wave.area = std::make_shared<AxisAlignedBoxArea>(min, max);
-	task.initialCondition.waves.push_back(wave);
+	task.bodies.insert(
+			{0, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}});
+	
+	task.materialConditions.byBodies.bodyMaterialMap.insert(
+//			{0, createCompositeMaterial(0)});
+			{0, std::make_shared<OrthotropicMaterial>(
+					IsotropicMaterial(1.6e+3, 7e+9, 1.5e+9)) });
+	
+	int sampleSizeY = 31;
+	task.cubicGrid.cubics.insert(
+			{0, {{21, sampleSizeY}, { 0, 1 - sampleSizeY}}});
+	
+	task.cubicBorderConditions.insert(
+		{0, {
+			 {1, std::make_shared<InfiniteArea>(), freeBorder2D(1)},
+		 }});
+	
+	
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 0.5;
+//	pressure.area = std::make_shared<SphereArea>(1e-3, Real3({6e-3, -3e-3, 0}));
+//	task.initialCondition.quantities.push_back(pressure);
 	
 	return task;
 }
+
 

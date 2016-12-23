@@ -34,9 +34,9 @@ void AbstractEngine::run() {
 	while (Clock::Time() < requiredTime) {
 		Clock::timeStep = estimateTimeStep();
 		
-		LOG_INFO("Start step " << step
-				<< ". Time = " << Clock::Time()
-				<< ". TimeStep = " << Clock::TimeStep());
+//		LOG_INFO("Start step " << step
+//				<< ". Time = " << Clock::Time()
+//				<< ". TimeStep = " << Clock::TimeStep());
 		nextTimeStep();
 		step++; Clock::tickTack();
 		

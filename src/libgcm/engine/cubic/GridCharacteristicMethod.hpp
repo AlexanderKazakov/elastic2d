@@ -14,9 +14,6 @@ class GridCharacteristicMethodBase {
 public:
 	virtual void stage(
 			const int s, const real& timeStep, AbstractGrid& mesh_) const = 0;
-	
-	virtual real calculateTimeStep(
-			AbstractGrid& mesh_, const real CourantNumber) const = 0;
 };
 
 
@@ -52,14 +49,6 @@ public:
 					interpolateValuesAround(mesh, s, it,
 							crossingPoints(it, s, timeStep, mesh)));
 		}
-	}
-	
-	
-	virtual real calculateTimeStep(
-			AbstractGrid& mesh_, const real CourantNumber) const override {
-		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		return CourantNumber *
-				mesh.getMinimalSpatialStep() / mesh.getMaximalEigenvalue();
 	}
 	
 	

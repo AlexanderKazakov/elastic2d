@@ -31,3 +31,7 @@ tools/doxygen/doc/*
 *~
 meshes/coarse/*
 meshes/refined/*
+*.png
+*.jpg
+*.jpeg
+*.avi
