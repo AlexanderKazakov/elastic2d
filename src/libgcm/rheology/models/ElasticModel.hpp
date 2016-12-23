@@ -113,20 +113,17 @@ public:
 		/// S^T * (T * p) = f
 		/// S_{ik} * T_{ij} * p_{j} = f_{k}
 		/// G_{k}_{ij} * T_{ij} = f_{k}
-
+		
 		for (int k = 0; k < DIMENSIONALITY; k++) {
-			
-			SigmaD G = SigmaD::Zeros();			
+			SigmaD G = SigmaD::Zeros();	
 			for (int i = 0; i < DIMENSIONALITY; i++) {
 				for (int j = 0; j < DIMENSIONALITY; j++) {
 					G(i, j) += S(i, k) * p(j);
 				}
 			}
-			
 			PdeVariables pde = PdeVariables::Zeros();
 			pde.setSigma(G);
 			B_.setRow(k, pde);
-			
 		}
 		return B_;
 	}

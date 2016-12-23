@@ -65,7 +65,8 @@ protected:
 			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
 		
 		const auto M = B * Omega;
-		//checkConditionNumber(M, maxConditionNumber);
+//		if (linal::determinant(M) == 0) { return u.Zeros(); }
+		checkConditionNumber(M, maxConditionNumber);
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
 		return Omega * alpha;
 	}
@@ -114,14 +115,15 @@ public:
 			
 			const RealD reflectionDirection = direction;
 //					linal::reflectionDirection(nodeBorder.normal, direction);
-			
 			const real projection = linal::dotProduct(reflectionDirection, nodeBorder.normal);
 			if (projection == 0) { continue; }
 			const RealD outerDirection = reflectionDirection * Utils::sign(projection);
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),
 					linal::createLocalBasis(outerDirection));
-			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
+			const auto B = BorderMatrixCreator::create(
+//					outerDirection);
+					nodeBorder.normal);
 			auto& u = mesh->_pdeNew(nodeBorder.iterator);
 			
 			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
