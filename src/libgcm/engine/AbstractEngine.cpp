@@ -7,7 +7,8 @@ using namespace gcm;
 
 
 AbstractEngine::AbstractEngine(const Task& task) :
-		CourantNumber(task.globalSettings.CourantNumber) {
+		CourantNumber(task.globalSettings.CourantNumber),
+		verboseTimeSteps(task.globalSettings.verboseTimeSteps) {
 	LOG_INFO("Start initialization ...");
 	Clock::setZero();
 	Mpi::initialize(task.globalSettings.forceSequence);
@@ -33,13 +34,13 @@ void AbstractEngine::run() {
 	
 	while (Clock::Time() < requiredTime) {
 		Clock::timeStep = estimateTimeStep();
-		
-//		LOG_INFO("Start step " << step
-//				<< ". Time = " << Clock::Time()
-//				<< ". TimeStep = " << Clock::TimeStep());
+		if (verboseTimeSteps) {
+			LOG_INFO("Start step " << step
+					<< ". Time = " << Clock::Time()
+					<< ". TimeStep = " << Clock::TimeStep());
+		}
 		nextTimeStep();
 		step++; Clock::tickTack();
-		
 		writeSnapshots(step);
 	}
 }

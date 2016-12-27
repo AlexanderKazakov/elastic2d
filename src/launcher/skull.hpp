@@ -16,18 +16,18 @@ inline Task skullCommon() {
 	task.globalSettings.stepsPerSnap = 5;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
-//	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+//	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
+	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
 	
-//	Task::InitialCondition::Quantity pressure;
-//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-//	pressure.value = 1;
-//	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
-//	task.initialCondition.quantities.push_back(pressure);
+	Task::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+	pressure.value = 1;
+	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
+	task.initialCondition.quantities.push_back(pressure);
 	
 	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
 	return task;
@@ -39,11 +39,17 @@ inline Task skullAcoustic() {
 	Task task = skullCommon();
 	
 	task.bodies = {
-			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
-			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+
+//			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+//			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+//			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
+//			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+//			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 	};
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;

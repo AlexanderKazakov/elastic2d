@@ -66,7 +66,7 @@ protected:
 		
 		const auto M = B * Omega;
 //		if (linal::determinant(M) == 0) { return u.Zeros(); }
-		checkConditionNumber(M, maxConditionNumber);
+//		checkConditionNumber(M, maxConditionNumber);
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
 		return Omega * alpha;
 	}

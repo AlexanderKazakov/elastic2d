@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 
-const int LINAL_TEST_NUMBER_ITERATIONS = 1000;
+const int LINAL_TEST_NUMBER_ITERATIONS = 10000;
 
 using namespace gcm;
 using namespace gcm::linal;
@@ -1011,8 +1011,8 @@ TEST(Linal, cross_verification) {
 		            determinant(C), EQUALITY_TOLERANCE  * fabs(determinant(C)));
 		auto C1 = GslUtils::invert(C);
 		ASSERT_TRUE(approximatelyEqual(GslUtils::invert(B) * GslUtils::invert(A), C1));
-		ASSERT_TRUE(approximatelyEqual(identity(C), C * C1, 1000 * EQUALITY_TOLERANCE));
-		ASSERT_TRUE(approximatelyEqual(identity(C), C1 * C, 1000 * EQUALITY_TOLERANCE));
+		ASSERT_TRUE(approximatelyEqual(identity(C), C * C1, 10000 * EQUALITY_TOLERANCE));
+		ASSERT_TRUE(approximatelyEqual(identity(C), C1 * C, 10000 * EQUALITY_TOLERANCE));
 		ASSERT_EQ(A * D1, A * D);
 		ASSERT_EQ(D1 * A, D * A);
 		
@@ -1023,7 +1023,7 @@ TEST(Linal, cross_verification) {
 		// SLE + least squares
 		ASSERT_TRUE(approximatelyEqual(solveLinearSystem(A, f), 
 		                               linearLeastSquares(A, f),
-		                               1000 * EQUALITY_TOLERANCE))
+		                               2000 * EQUALITY_TOLERANCE))
 			<< solveLinearSystem(A, f) << "vs" << linearLeastSquares(A, f);
 	}
 }
@@ -1119,6 +1119,16 @@ TEST(Linal, barycentric1D) {
 	ASSERT_EQ(Real2({ 2, -1}), barycentricCoordinates(Real1({3}), Real1({4}), Real1({2})));
 	ASSERT_TRUE(linal::approximatelyEqual(Real2({ 0.3, 0.7 }), 
 			barycentricCoordinates(Real1({3}), Real1({4}), Real1({3.7}))));
+	
+	for (int cnt = 0; cnt < LINAL_TEST_NUMBER_ITERATIONS; ++cnt) {
+		Real1 a = linal::random<Real1>(-100, 100);
+		Real1 b = linal::random<Real1>(-100, 100);
+		Real1 q = linal::random<Real1>(-100, 100);
+		Real2 l = linal::barycentricCoordinates(a, b, q);
+		Real1 p = a * l(0) + b * l(1);
+		ASSERT_NEAR(1, l(0) + l(1), 1e-13);
+		ASSERT_LT(linal::length(p - q), EQUALITY_TOLERANCE * linal::length(q));
+	}
 }
 
 
@@ -1129,6 +1139,43 @@ TEST(Linal, barycentricSegmentIn2D) {
 	ASSERT_EQ(Real2({ 0.5, 0.5}), barycentricCoordinates(a, b, (a + b) / 2));
 	ASSERT_EQ(Real2({ 0.5, 0.5}), barycentricCoordinates(c, b, (c + b) / 2));
 	ASSERT_EQ(Real2({ -2, 3}), barycentricCoordinates(a, c, 3 * c));
+	
+	for (int cnt = 0; cnt < LINAL_TEST_NUMBER_ITERATIONS; ++cnt) {
+		a = linal::random<Real2>(-100, 100);
+		b = linal::random<Real2>(-100, 100);
+		c = linal::random<Real2>(-100, 100);
+		Real2 d = linal::random<Real2>(-100, 100);
+		Real2 q = linal::linesIntersection(a, b, c, d);
+		ASSERT_TRUE(linal::isDegenerate(a, b, q, EQUALITY_TOLERANCE));
+		Real2 l = linal::barycentricCoordinates(a, b, q);
+		Real2 p = a * l(0) + b * l(1);
+		ASSERT_NEAR(1, l(0) + l(1), 1e-13);
+		ASSERT_LT(linal::length(p - q), EQUALITY_TOLERANCE * linal::length(q));
+	}
+}
+
+
+TEST(Linal, barycentricSegmentIn3D) {
+	Real3 a = {0, 0, 0}, b = {0, 0, 1}, c = {4, 7, 5}, d = {2, 5, 6};
+	ASSERT_EQ(Real2({ 1,  0}), linal::barycentricCoordinates(a, b, a));
+	ASSERT_EQ(Real2({ 0,  1}), linal::barycentricCoordinates(a, b, b));
+	ASSERT_EQ(Real2({ 0.5, 0.5}), linal::barycentricCoordinates(a, b, (a + b) / 2));
+	ASSERT_EQ(Real2({ 0.5, 0.5}), linal::barycentricCoordinates(c, b, (c + b) / 2));
+	ASSERT_EQ(Real2({ -2, 3}), linal::barycentricCoordinates(a, c, 3 * c));
+	
+	for (int cnt = 0; cnt < LINAL_TEST_NUMBER_ITERATIONS; ++cnt) {
+		a = linal::random<Real3>(-100, 100);
+		b = linal::random<Real3>(-100, 100);
+		c = linal::random<Real3>(-100, 100);
+		d = linal::random<Real3>(-100, 100);
+		Real3 e = linal::random<Real3>(-100, 100);
+		Real3 q = linal::lineWithFlatIntersection(c, d, e, a, b);
+		ASSERT_TRUE(linal::isDegenerate(a, b, q, EQUALITY_TOLERANCE));
+		Real2 l = linal::barycentricCoordinates(a, b, q);
+		Real3 p = a * l(0) + b * l(1);
+		ASSERT_NEAR(1, l(0) + l(1), 1e-13);
+		ASSERT_LT(linal::length(p - q), EQUALITY_TOLERANCE * linal::length(q));
+	}
 }
 
 
@@ -1161,6 +1208,17 @@ TEST(Linal, barycentric2D) {
 	ASSERT_EQ(Real3({0, 0.5, 0.5}), barycentricCoordinates(a, b, c, (b+c)/2.0));
 	ASSERT_TRUE(approximatelyEqual(Real3({1.0 / 3, 1.0 / 3, 1.0 / 3}),
 			barycentricCoordinates(a, b, c, (a+b+c)/3.0)));
+	
+	for (int cnt = 0; cnt < LINAL_TEST_NUMBER_ITERATIONS; ++cnt) {
+		a = linal::random<Real2>(-100, 100);
+		b = linal::random<Real2>(-100, 100);
+		c = linal::random<Real2>(-100, 100);
+		Real2 q = linal::random<Real2>(-100, 100);
+		Real3 l = linal::barycentricCoordinates(a, b, c, q);
+		Real2 p = a * l(0) + b * l(1) + c * l(2);
+		ASSERT_NEAR(1, l(0) + l(1) + l(2), 1e-13);
+		ASSERT_LT(linal::length(p - q), EQUALITY_TOLERANCE * linal::length(q));
+	}
 }
 
 
@@ -1192,6 +1250,20 @@ TEST(Linal, barycentricTriangleIn3D) {
 	Real3 qCalc = lambdaCalc(0) * a + lambdaCalc(1) * b + lambdaCalc(2) * c;
 	ASSERT_LT(linal::length(qCalc - q), EQUALITY_TOLERANCE)
 			<< "qCalc: " << qCalc << "q: " << q;
+	
+	for (int cnt = 0; cnt < LINAL_TEST_NUMBER_ITERATIONS; ++cnt) {
+		a = linal::random<Real3>(-100, 100);
+		b = linal::random<Real3>(-100, 100);
+		c = linal::random<Real3>(-100, 100);
+		Real3 d = linal::random<Real3>(-100, 100);
+		Real3 e = linal::random<Real3>(-100, 100);
+		q = linal::lineWithFlatIntersection(a, b, c, d, e);
+		ASSERT_TRUE(linal::isDegenerate(a, b, c, q, EQUALITY_TOLERANCE));
+		Real3 l = linal::barycentricCoordinates(a, b, c, q);
+		Real3 p = a * l(0) + b * l(1) + c * l(2);
+		ASSERT_NEAR(1, l(0) + l(1) + l(2), 1e-13);
+		ASSERT_LT(linal::length(p - q), EQUALITY_TOLERANCE * linal::length(q));
+	}
 }
 
 
@@ -1227,6 +1299,18 @@ TEST(Linal, barycentric3D) {
 
 	ASSERT_EQ(Real4({0, 0.5, 0.5, 0}), barycentricCoordinates(a, b, c, d, (b+c)/2.0));
 	ASSERT_EQ(Real4({0.25, 0.25, 0.25, 0.25}), barycentricCoordinates(a, b, c, d, (a+b+c+d)/4));
+	
+	for (int cnt = 0; cnt < LINAL_TEST_NUMBER_ITERATIONS; ++cnt) {
+		a = linal::random<Real3>(-100, 100);
+		b = linal::random<Real3>(-100, 100);
+		c = linal::random<Real3>(-100, 100);
+		d = linal::random<Real3>(-100, 100);
+		Real3 q = linal::random<Real3>(-100, 100);
+		Real4 l = linal::barycentricCoordinates(a, b, c, d, q);
+		Real3 p = a * l(0) + b * l(1) + c * l(2) + d * l(3);
+		ASSERT_NEAR(1, l(0) + l(1) + l(2) + l(3), 1e-13);
+		ASSERT_LT(linal::length(p - q), 10 * EQUALITY_TOLERANCE * linal::length(q));
+	}
 }
 
 

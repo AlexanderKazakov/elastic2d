@@ -46,6 +46,7 @@ public:
 protected:
 	const real CourantNumber = 0;
 	real requiredTime = 0;
+	bool verboseTimeSteps = true;
 	
 	void afterConstruction(const Task& task);
 	virtual void nextTimeStep() = 0;

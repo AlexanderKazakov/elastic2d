@@ -54,6 +54,8 @@ struct Task {
 		int stepsPerSnap = 1;
 		/// Optional, required time if (numberOfSnaps <= 0)
 		real requiredTime = 0;
+		/// On/off logging from engine at each time step
+		bool verboseTimeSteps = true;
 	} globalSettings;
 	
 	

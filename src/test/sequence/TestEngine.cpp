@@ -33,6 +33,7 @@ TEST(Engine, AdhesionContact) {
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.numberOfSnaps = 70;
 	task.globalSettings.CourantNumber = 0.9;
+	task.globalSettings.verboseTimeSteps = false;
 	
 	task.bodies = {
 			{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
@@ -91,6 +92,7 @@ TEST(Engine, runStatement) {
 	Task task;
 	task.globalSettings.dimensionality = 2;
 	task.globalSettings.gridId = Grids::T::CUBIC;
+	task.globalSettings.verboseTimeSteps = false;
 	
 	task.bodies = {
 		{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}
@@ -139,6 +141,7 @@ TEST(Engine, TwoLayersDifferentRho) {
 	for (int i = 0; i < 5; i++) {
 		
 		Task task;
+		task.globalSettings.verboseTimeSteps = false;
 		task.globalSettings.dimensionality = 2;
 		task.globalSettings.gridId = Grids::T::CUBIC;
 		
@@ -219,6 +222,7 @@ TEST(Engine, TwoLayersDifferentE) {
 	for (int i = 0; i < 5; i++) {
 		
 		Task task;
+		task.globalSettings.verboseTimeSteps = false;
 		task.globalSettings.dimensionality = 2;
 		task.globalSettings.gridId = Grids::T::CUBIC;
 		task.globalSettings.CourantNumber = 1.5;
