@@ -1,8 +1,25 @@
 #include <gtest/gtest.h>
 
 #include <libgcm/util/StringUtils.hpp>
+#include <libgcm/util/math/Histogram.hpp>
 
 using namespace gcm;
+
+
+TEST(Histogram, hist) {
+	std::vector<real> a(1001);
+	for (size_t i = 0; i < a.size(); i++) { a[i] = (real)i; }
+	Histogram ha(a.begin(), a.end(), a.size());
+	ASSERT_EQ(0, ha.min());
+	ASSERT_EQ(a.size() - 1, ha.max());
+	ASSERT_NEAR(real(a.size() - 1) / 2, ha.mean(), EQUALITY_TOLERANCE);
+	ASSERT_EQ(std::vector<size_t>(a.size(), 1), ha.binCounts());
+	real binSize = real(a.size() - 1) / real(a.size());
+	std::vector<real> centers = ha.binCenters();
+	for (size_t i = 0; i < centers.size(); i++) {
+		ASSERT_NEAR((real(i) + 0.5) * binSize, centers[i], EQUALITY_TOLERANCE);
+	}
+}
 
 
 TEST(StringUtils, split) {

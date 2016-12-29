@@ -11,7 +11,16 @@ namespace gcm {
 class FileUtils {
 public:
 // FIXME clean this file as well as snapshotters
-
+	
+	template<typename T>
+	static void writeToTextFile(const std::string& fileName, const T& t) {
+		std::ofstream fileStream(fileName, std::ios::out);
+		assert_true(fileStream.is_open());
+		fileStream << t;
+		assert_true(fileStream.good());
+		fileStream.close();
+	}
+	
 	template<typename T>
 	static void writeStdVectorsToTextFile(const std::string fileName,
 			const std::vector<std::vector<T>>& vecs) {

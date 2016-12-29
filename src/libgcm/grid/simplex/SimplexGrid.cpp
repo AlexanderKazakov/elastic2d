@@ -3,6 +3,7 @@
 #include <libgcm/grid/simplex/cgal/CgalTriangulation.hpp>
 #include <libgcm/grid/simplex/cgal/LineWalker.hpp>
 #include <libgcm/util/snapshot/VtkUtils.hpp>
+#include <libgcm/util/math/Histogram.hpp>
 
 
 using namespace gcm;
@@ -14,7 +15,6 @@ SimplexGrid<Dimensionality, TriangulationT>::
 SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 		UnstructuredGrid(id_),
 		triangulation(constructionPack.triangulation) {
-	
 	assert_ne(id, EmptySpaceFlag);
 	LOG_INFO("Start construction of the grid " << id << " ...");
 	
@@ -23,18 +23,6 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 	for (auto cellIter  = triangulation->allCellsBegin();
 	          cellIter != triangulation->allCellsEnd(); ++cellIter) {
 		if (cellIter->info().getGridId() == id) {
-			
-			// check on mesher artifacts
-			if (Triangulation::minimalCellHeight(cellIter) < EQUALITY_TOLERANCE) {
-				// FIXME - EQUALITY_TOLERANCE is bad solution, move to mesher?
-//				cellIter->info().setGridId(EmptySpaceFlag);
-//				THROW_BAD_MESH("Fix degenerate cells");
-//				continue;
-				triangulation->printCell(cellIter, std::string(
-						"is degenerate with minimalHeight == ") +
-						std::to_string(Triangulation::minimalCellHeight(cellIter)));
-			}
-			
 			cellHandles.push_back(cellIter);
 			for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
 				localVertices.insert(cellIter->vertex(i));
@@ -45,7 +33,8 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 	
 	/// write local vertices indices to vertices info
 	/// note (!) later, it will be invalidated by other grids constructors,
-	/// so it is just temporary auxiliary info
+	/// so it is just a temporary auxiliary info 
+	/// (and thus no parallelize grids construction in that way!)
 	for (size_t i = 0; i < vertexHandles.size(); i++) {
 		vertexHandles[i]->info() = i;
 	}
@@ -57,10 +46,11 @@ SimplexGrid(const GridId id_, const ConstructionPack& constructionPack) :
 			(*cell)->info().localVertexIndices[i] = (*cell)->vertex(i)->info();
 		}
 	}
+	
 	// TODO - write border/contact/inner state into vertices info 
 	// because this information is equal for all grids in contact
 	markInnersAndBorders();
-	calculateMinimalSpatialStep();
+	collectCellHeightsStatistics();
 }
 
 
@@ -217,6 +207,39 @@ findVertexByCoordinates(const RealD& coordinates) const {
 
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
+std::vector<real>
+SimplexGrid<Dimensionality, TriangulationT>::
+allMinimalHeights() const {
+	std::vector<real> ans;
+	ans.reserve(cellHandles.size());
+	for (auto cell = cellBegin(); cell != cellEnd(); ++cell) {
+		ans.push_back(Triangulation::minimalCellHeight(*cell));
+	}
+	return ans;
+}
+
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+std::vector<real>
+SimplexGrid<Dimensionality, TriangulationT>::
+allMinimalBorderHeights() const {
+	std::vector<real> ans;
+	ans.reserve((sizeOfRealNodes() - innerIndices.size()) * DIMENSIONALITY);
+	for (auto cell = cellBegin(); cell != cellEnd(); ++cell) {
+		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
+			if (!isInner(iterator(*cell, i))) {
+				ans.push_back(Triangulation::minimalCellHeight(*cell));
+				break;
+			}
+		}
+	}
+	return ans;
+}
+
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
 void
 SimplexGrid<Dimensionality, TriangulationT>::
 markInnersAndBorders() {
@@ -266,26 +289,25 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void
 SimplexGrid<Dimensionality, TriangulationT>::
-calculateMinimalSpatialStep() {
-	real summHeight = 0;
-	size_t cellsNumber = 0;
-	minimalSpatialStep = std::numeric_limits<real>::max();
+collectCellHeightsStatistics() {
+	const std::vector<real> all= allMinimalHeights();
+	const std::vector<real> border = allMinimalBorderHeights();
 	
-	for (auto cell = cellBegin(); cell != cellEnd(); ++cell) {
-		real h = Triangulation::minimalCellHeight(*cell);
-		if (minimalSpatialStep > h) {
-			minimalSpatialStep = h;
-		}
-//		real summPrevious = summHeight;
-		summHeight += h;
-		// by now, zero cells are allowed
-//		assert_ne(summPrevious, summHeight); // check overflow and zero cells
-		++cellsNumber;
-	}
+	Histogram histAll(all.begin(), all.end(), 100);
+	Histogram histBorder(border.begin(), border.end(), 100);
 	
-	averageSpatialStep = summHeight / (real)cellsNumber;
-	LOG_INFO("Minimal height: " << minimalSpatialStep
-	    << ", Average height: " << averageSpatialStep);
+	averageSpatialStep = histAll.mean();
+	minimalSpatialStep = histAll.min();
+	
+	LOG_INFO("Minimal height of all cells: " << histAll.min());
+	LOG_INFO("Minimal height of border cells: " << histBorder.min());
+	LOG_INFO("Average height of all cells: " << histAll.mean());
+	LOG_INFO("Average height of border cells: " << histBorder.mean());
+	
+	FileUtils::writeToTextFile(
+			"snapshots/all_cells_hist_" + std::to_string(id) + ".txt", histAll);
+	FileUtils::writeToTextFile(
+			"snapshots/border_cells_hist_" + std::to_string(id) + ".txt", histBorder);
 }
 
 

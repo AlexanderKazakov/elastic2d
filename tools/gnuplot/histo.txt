@@ -1,0 +1,11 @@
+set term pngcairo enhanced
+set grid
+unset key
+set xlabel "value"
+set ylabel "count"
+
+list = system('ls snapshots | grep cells_hist')
+do for [file in list] {
+	set output sprintf('snapshots/%s.png', file)
+	plot sprintf('snapshots/%s', file) using 1:2 with boxes
+}

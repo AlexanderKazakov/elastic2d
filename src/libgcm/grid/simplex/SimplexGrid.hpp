@@ -264,10 +264,21 @@ public:
 	}
 	
 	
-	/** Equality tolerance specific for this grid average spatial step */
-	real localEqualityTolerance() const {
-		return averageSpatialStep * EQUALITY_TOLERANCE;
-	}
+	/**
+	 * All minimal heights of all cells of the grid
+	 */
+	std::vector<real> allMinimalHeights() const;
+	
+	/**
+	 * All minimal heights of all cells of the grid,
+	 * which are incident to a border vertex of the grid.
+	 * Note that the distance between an inner vertex and a border facet
+	 * can be less than the minimal of heights, perpendicular to a border facet.
+	 * But it cannot be less than the minimal height of all cells,
+	 * incident to a border vertex, i.e, in returned vector.
+	 * TODO - or check not heights, but lengths of cells along calc directions?
+	 */
+	std::vector<real> allMinimalBorderHeights() const;
 	
 	
 	/** Debugging helper */
@@ -344,7 +355,7 @@ private:
 	}
 	
 	
-	/** Is given cell belongs to this grid */
+	/** Is given cell belong to this grid */
 	bool belongsToTheGrid(const CellHandle ch) const {
 		return ch->info().getGridId() == id;
 	}
@@ -433,7 +444,7 @@ private:
 			const RealD& start, const RealD& query) const;
 	
 	
-	void calculateMinimalSpatialStep();
+	void collectCellHeightsStatistics();
 };
 
 

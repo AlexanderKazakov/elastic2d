@@ -32,7 +32,7 @@ while getopts ":n:t:sp" o; do
     esac
 done
 
-rm -rf snapshots/vtk snapshots/detector snapshots/zaxis
+rm -rf snapshots
 rm -f *.log
 mkdir -p snapshots/vtk snapshots/detector snapshots/zaxis
 echo "Start ./build/gcm_exe with $np processes ..."
