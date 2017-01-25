@@ -145,6 +145,12 @@ public:
 	/** Size of real nodes plus auxiliary fixture nodes */
 	size_t sizeOfAllNodes() const { return sizeOfRealNodes(); }
 	
+	/** Size of nodes of the grid in border state */
+	size_t sizeOfBorderNodes() const { return borderIndices.size(); }
+	
+	/** Size of nodes of the grid in contact state */
+	size_t sizeOfContactNodes() const { return contactIndices.size(); }
+	
 	
 	/** 
 	 * Normal to the contact surface between this and neighbor grids.

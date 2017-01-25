@@ -21,7 +21,7 @@ TEST(SimplexGrid2D, miscellaneous) {
 	
 	ASSERT_EQ(21, grid.sizeOfAllNodes());
 	ASSERT_EQ(grid.sizeOfRealNodes(), grid.sizeOfAllNodes());
-	ASSERT_NEAR(0.2210, grid.getAverageHeight(), 1e-4);
+	ASSERT_NEAR(0.22, grid.getAverageHeight(), 0.01);
 	
 	ASSERT_EQ(Real2::Zeros(), grid.borderNormal(*(grid.innerBegin())));
 	

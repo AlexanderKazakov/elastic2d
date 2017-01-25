@@ -8,11 +8,6 @@
 
 namespace gcm {
 
-namespace cubic {
-template<typename> class DataBus;
-}
-
-
 /**
  * Mesh implements the approach when data are stored in separate vectors.
  * All nodes have the same type of rheology model and material.
@@ -26,10 +21,11 @@ public:
 	typedef TModel                              Model;
 	typedef typename Model::PdeVariables        PdeVariables;
 	typedef typename Model::PdeVector           PdeVector;
-//	typedef typename Model::OdeVariables        OdeVariables;
 	typedef typename Model::GCM_MATRICES        GCM_MATRICES;
 	typedef typename Model::GcmMatricesPtr      GcmMatricesPtr;
 	typedef typename Model::ConstGcmMatricesPtr ConstGcmMatricesPtr;
+	/// Type of auxiliary info sent from inner gcm to border and contact correctors
+	typedef typename Model::WaveIndices         WaveIndices;
 	typedef typename GCM_MATRICES::Matrix       Matrix;
 	static const Models::T ModelType = Model::Type;
 	
@@ -44,7 +40,6 @@ public:
 	typedef std::shared_ptr<Material>           MaterialPtr;
 	typedef std::shared_ptr<const Material>     ConstMaterialPtr;
 	static const Materials::T MaterialType = Material::Type;
-	
 	
 	/// Dimensionality of rheology model and grid
 	static const int DIMENSIONALITY = Model::DIMENSIONALITY;
@@ -88,27 +83,16 @@ public:
 	
 	/** 
 	 * Read-only access to actual PDE vectors.
-	 * Yes, it has to be a different function from pdeVars.
+	 * Yes, it has to be a different from pdeVars function.
 	 */
 	const PdeVector& pde(const Iterator& it) const {
 		return this->pdeVariables[this->getIndex(it)];
 	}
 	
-//	/** Read-only access to actual ODE values */
-//	const OdeVariables& ode(const Iterator& it) const {
-//		assert_eq(odeVariables.size(), this->sizeOfAllNodes()); // TODO - less expensive
-//		return this->odeVariables[this->getIndex(it)];
-//	}
-	
 	/** Read-only access to PDE vectors on next time layer */
 	const PdeVector& pdeNew(const Iterator& it) const {
 		return this->pdeVariablesNew[this->getIndex(it)];
 	}
-	
-//	/** Read-only access to PDE vectors on current time layer */
-//	const PdeVector& pdePrev(const Iterator& it) const {
-//		return this->pdeVariablesPrev[this->getIndex(it)];
-//	}
 	
 	/** Read-only access to GCM matrices */
 	ConstGcmMatricesPtr matrices(const Iterator& it) const {
@@ -119,6 +103,12 @@ public:
 	ConstMaterialPtr material(const Iterator& it) const {
 		return this->materials[this->getIndex(it)];
 	}
+	
+	/** Read-only access to WaveIndices */
+	WaveIndices waveIndices(const Iterator& it) const {
+		return this->waveIndicesData[this->getIndex(it)];
+	}
+	
 	
 	virtual real getMaximalEigenvalue() const override {
 		assert_gt(maximalEigenvalue, 0);
@@ -135,12 +125,8 @@ public:
 		return calculationBasis;
 	}
 	
-//	/** Read / write "node" wrapper */
-//	std::shared_ptr<Node> node(const Iterator& it) {
-//		return std::make_shared<Node>(it, this);
-//	}
 	
-	/** Read-only access to actual PDE variables */
+	/** Read / write access to actual PDE variables */
 	PdeVariables& _pdeVars(const Iterator& it) {
 		return this->pdeVariables[this->getIndex(it)];
 	}
@@ -149,12 +135,6 @@ public:
 	PdeVector& _pde(const Iterator& it) {
 		return this->pdeVariables[this->getIndex(it)];
 	}
-	
-//	/** Read / write access to actual ODE vectors */
-//	OdeVariables& _ode(const Iterator& it) {
-//		assert_eq(odeVariables.size(), this->sizeOfAllNodes()); // TODO - less expensive
-//		return this->odeVariables[this->getIndex(it)];
-//	}
 	
 	/** Read / write access to PDE vectors in auxiliary "on next time layer" storage */
 	PdeVector& _pdeNew(const Iterator& it) {
@@ -171,29 +151,29 @@ public:
 		return this->materials[this->getIndex(it)];
 	}
 	
+	/** Read / write access to WaveIndices */
+	WaveIndices& _waveIndices(const Iterator& it) {
+		return this->waveIndicesData[this->getIndex(it)];
+	}
 	
 	
 protected:
-	/**
-	 * Data storage
-	 */
-	///@{
+	/// Data storage @{
 	std::vector<PdeVariables> pdeVariables;
 	std::vector<PdeVariables> pdeVariablesNew;
-//	std::vector<PdeVariables> pdeVariablesPrev;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
-//	std::vector<OdeVariables> odeVariables;
+	std::vector<WaveIndices> waveIndicesData;
 	///@}
 	
 	MatrixDD calculationBasis = MatrixDD::Identity();
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
 	bool pdeIsSetUp = false;
 	
+	
 private:
 	void allocate();
 	
-	friend class cubic::DataBus<DefaultMesh<Model, Grid, Material>>;
 	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
 };
 
@@ -203,12 +183,11 @@ void DefaultMesh<TModel, TGrid, TMaterial>::
 allocate() {
 	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
 	pdeVariablesNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
-//	pdeVariablesPrev.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
 	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
-//	if (Model::InternalOde::NonTrivial) {
-//		odeVariables.resize(this->sizeOfAllNodes());
-//	}
+	// yes, it's not used in inner nodes and on structured grids at all.
+	// but saving this not big amount of memory requires more pain (TODO)
+	waveIndicesData.resize(this->sizeOfAllNodes());
 }
 
 

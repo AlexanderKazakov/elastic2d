@@ -67,17 +67,17 @@ const MaterialsWavesMap AcousticModel<1>::MATERIALS_WAVES_MAP =
 		AcousticModel<3>::MATERIALS_WAVES_MAP;
 
 
-template<> const std::vector<int> AcousticModel<1>:: LEFT_INVARIANTS = {0};
-template<> const std::vector<int> AcousticModel<1>::RIGHT_INVARIANTS = {1};
-template<> const std::vector<int> AcousticModel<2>:: LEFT_INVARIANTS = {0};
-template<> const std::vector<int> AcousticModel<2>::RIGHT_INVARIANTS = {1};
-template<> const std::vector<int> AcousticModel<3>:: LEFT_INVARIANTS = {0};
-template<> const std::vector<int> AcousticModel<3>::RIGHT_INVARIANTS = {1};
+template<> const AcousticModel<1>::WaveIndices AcousticModel<1>:: LEFT_INVARIANTS = {0};
+template<> const AcousticModel<1>::WaveIndices AcousticModel<1>::RIGHT_INVARIANTS = {1};
+template<> const AcousticModel<2>::WaveIndices AcousticModel<2>:: LEFT_INVARIANTS = {0};
+template<> const AcousticModel<2>::WaveIndices AcousticModel<2>::RIGHT_INVARIANTS = {1};
+template<> const AcousticModel<3>::WaveIndices AcousticModel<3>:: LEFT_INVARIANTS = {0};
+template<> const AcousticModel<3>::WaveIndices AcousticModel<3>::RIGHT_INVARIANTS = {1};
 
-template<> const std::vector<int> ElasticModel<1>:: LEFT_INVARIANTS = {0};
-template<> const std::vector<int> ElasticModel<1>::RIGHT_INVARIANTS = {1};
-template<> const std::vector<int> ElasticModel<2>:: LEFT_INVARIANTS = {0, 2};
-template<> const std::vector<int> ElasticModel<2>::RIGHT_INVARIANTS = {1, 3};
-template<> const std::vector<int> ElasticModel<3>:: LEFT_INVARIANTS = {0, 2, 4};
-template<> const std::vector<int> ElasticModel<3>::RIGHT_INVARIANTS = {1, 3, 5};
+template<> const ElasticModel<1>::WaveIndices ElasticModel<1>:: LEFT_INVARIANTS = {0};
+template<> const ElasticModel<1>::WaveIndices ElasticModel<1>::RIGHT_INVARIANTS = {1};
+template<> const ElasticModel<2>::WaveIndices ElasticModel<2>:: LEFT_INVARIANTS = {0, 2};
+template<> const ElasticModel<2>::WaveIndices ElasticModel<2>::RIGHT_INVARIANTS = {1, 3};
+template<> const ElasticModel<3>::WaveIndices ElasticModel<3>:: LEFT_INVARIANTS = {0, 2, 4};
+template<> const ElasticModel<3>::WaveIndices ElasticModel<3>::RIGHT_INVARIANTS = {1, 3, 5};
 

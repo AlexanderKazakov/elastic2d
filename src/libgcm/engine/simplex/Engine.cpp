@@ -101,11 +101,11 @@ nextTimeStep() {
 			body.gcm->beforeStage(*body.grid);
 		}
 		for (const Body& body : bodies) {
-			body.gcm->contactStage(stage, Clock::TimeStep(), *body.grid);
+			body.gcm->borderStage(stage, Clock::TimeStep(), *body.grid);
 		}
 		correctContactsAndBorders(stage);
 		for (const Body& body : bodies) {
-			body.gcm->stage(stage, Clock::TimeStep(), *body.grid);
+			body.gcm->innerStage(stage, Clock::TimeStep(), *body.grid);
 		}
 		for (const Body& body : bodies) {
 			body.grid->swapPdeTimeLayers();
@@ -132,7 +132,6 @@ correctContactsAndBorders(const int stage) {
 				contact.second.nodesInContact,
 				calculationBasis.basis.getColumn(stage));
 	}
-	
 	for (const Body& body : bodies) {
 		for (const Border& border : body.borders) {
 			border.borderCorrector->apply(
@@ -140,10 +139,6 @@ correctContactsAndBorders(const int stage) {
 					border.borderNodes,
 					calculationBasis.basis.getColumn(stage));
 		}
-	}
-	
-	for (const Body& body : bodies) {
-		body.gcm->returnBackDoubleOuterCases(*body.grid);
 	}
 }
 

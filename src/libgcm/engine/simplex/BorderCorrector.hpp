@@ -88,6 +88,35 @@ private:
 	USE_AND_INIT_LOGGER("gcm.simplex.BorderCorrector")
 };
 
+//void checkOuterCases(const Iterator it, const Mesh& mesh) {
+	
+//	if (outerInvariants == Model::LEFT_INVARIANTS ||
+//		outerInvariants == Model::RIGHT_INVARIANTS) {
+//	/// The normal case for border corrector
+//		return;
+//	}
+	
+//	if (outerInvariants.size() == 0) {
+//	/// No outers. Nothing to do for border corrector
+//		outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
+//		return;
+//	}
+	
+//	if (outerInvariants.size() == 2 * OUTER_NUMBER) {
+//	/// All outers. No space -- no waves. Set to old value
+//		outerCasesToReturnBack.push_back({it, mesh.pde(it)});
+//		return;
+//	}
+	
+//	/// Some geometrical inexactness. Most likely that the calculation
+//	/// direction is almost parallel to the border. 
+//	/// TODO - make special for such cases more precise search?
+//	std::cout << outerInvariants.size() << " outer characteristics: ";
+//	for (int k : outerInvariants) { std::cout << k << " "; }
+//	std::cout << " at:" << mesh.coordsD(it);
+//	outerCasesToReturnBack.push_back({it, mesh.pde(it).Zeros()});
+//}
+
 
 
 template<typename Model, typename Material, typename TGrid,

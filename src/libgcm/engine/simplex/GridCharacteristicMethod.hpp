@@ -14,12 +14,12 @@ namespace simplex {
 
 class GridCharacteristicMethodBase {
 public:
-	virtual void beforeStage(const AbstractGrid& mesh_) = 0;
-	virtual void contactStage(
+	virtual void beforeStage(
+			const AbstractGrid& mesh_) = 0;
+	virtual void borderStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void stage(
+	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void returnBackDoubleOuterCases(AbstractGrid& mesh_) const = 0;
 };
 
 
@@ -43,7 +43,8 @@ public:
 	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
 	
 	
-	virtual void beforeStage(const AbstractGrid& mesh_) override {
+	virtual void beforeStage(
+			const AbstractGrid& mesh_) override {
 		/// calculate spatial derivatives of all mesh pde values ones before stage
 		/// in order to use them multiple times while stage calculation 
 		const Mesh& mesh = dynamic_cast<const Mesh&>(mesh_);
@@ -54,11 +55,10 @@ public:
 	/**
 	 * Do grid-characteristic stage of splitting method on contact and border nodes
 	 */
-	virtual void contactStage(
+	virtual void borderStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
-		outerCasesToReturnBack.clear();
 		
 		/// calculate inner waves of contact nodes
 //		#pragma omp parallel for
@@ -67,9 +67,10 @@ public:
 			mesh._pdeNew(*contactIter) = localGcmStep(
 					mesh.matrices(*contactIter)->m[s].U1,
 					mesh.matrices(*contactIter)->m[s].U,
-					interpolateValuesAround(mesh, direction, *contactIter,
-							crossingPoints(*contactIter, s, timeStep, mesh), false));
-			checkOuterCases(*contactIter, mesh);
+					interpolateValuesAroundBorderNode(
+							mesh, direction, *contactIter,
+							crossingPoints(*contactIter, s, timeStep, mesh)));
+			mesh._waveIndices(*contactIter) = outerInvariants;
 		}
 		
 		/// calculate inner waves of border nodes
@@ -79,9 +80,10 @@ public:
 			mesh._pdeNew(*borderIter) = localGcmStep(
 					mesh.matrices(*borderIter)->m[s].U1,
 					mesh.matrices(*borderIter)->m[s].U,
-					interpolateValuesAround(mesh, direction, *borderIter,
-							crossingPoints(*borderIter, s, timeStep, mesh), false));
-			checkOuterCases(*borderIter, mesh);
+					interpolateValuesAroundBorderNode(
+							mesh, direction, *borderIter,
+							crossingPoints(*borderIter, s, timeStep, mesh)));
+			mesh._waveIndices(*borderIter) = outerInvariants;
 		}
 	}
 	
@@ -93,7 +95,7 @@ public:
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
 	 */
-	virtual void stage(
+	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
@@ -105,26 +107,9 @@ public:
 			mesh._pdeNew(*innerIter) = localGcmStep(
 					mesh.matrices(*innerIter)->m[s].U1,
 					mesh.matrices(*innerIter)->m[s].U,
-					interpolateValuesAround(mesh, direction, *innerIter,
-							crossingPoints(*innerIter, s, timeStep, mesh), true));
-			if (outerInvariants.size() != 0) {
-				std::cout << outerInvariants.size() << " outer characteristics: ";
-				for (int k : outerInvariants) { std::cout << k << " "; }
-				std::cout << " at:" << mesh.coordsD(*innerIter);
-			}
-			assert_eq(outerInvariants.size(), 0);
-		}
-	}
-	
-	
-	/**
-	 * Rewrite back pdeNew values, corrected by border and contact correctors,
-	 * because for double-outer cases such correction is invalid.
-	 */
-	virtual void returnBackDoubleOuterCases(AbstractGrid& mesh_) const override {
-		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		for (std::pair<Iterator, PdeVector> p : outerCasesToReturnBack) {
-			mesh._pdeNew(p.first) = p.second;
+					interpolateValuesAroundInnerNode(
+							mesh, direction, *innerIter,
+							crossingPoints(*innerIter, s, timeStep, mesh)));
 		}
 	}
 	
@@ -138,24 +123,60 @@ private:
 	
 	
 	/**
-	 * Interpolate nodal values in specified points.
-	 * Interpolated value for k-th point in vector dx are
-	 * stored in k-th column of returned Matrix.
-	 * If specified point appears to be out of body
-	 * AND it is really border case, matrix column is set to zeros
-	 * and outerInvariants is added with the index.
+	 * Interpolate PDE vectors in specified points.
+	 * Interpolated vector for k-th point in vector dx are
+	 * stored in k-th column in returned Matrix.
+	 * If specified point appears to be out of body,
+	 * which is possible for border nodes, matrix column is set to zeros.
 	 * @param mesh mesh to perform interpolation on
 	 * @param direction direction of line to find values along
 	 * @param it index-iterator of node
-	 * @param dx Vector of distances from reference node on which
+	 * @param dx Vector of distances from the node on which
 	 * values should be interpolated
-	 * @param canInterpolateInSpaceTime is base of interpolation calculated
 	 * @return Matrix with interpolated nodal values in columns
 	 */
-	Matrix interpolateValuesAround(const Mesh& mesh, const RealD direction,
-	                               const Iterator& it, const PdeVector& dx,
-	                               const bool canInterpolateInSpaceTime) {
+	Matrix interpolateValuesAroundBorderNode(
+			const Mesh& mesh, const RealD direction,
+			const Iterator& it, const PdeVector& dx) {
 		outerInvariants.clear();
+		Matrix ans = Matrix::Zeros();
+		
+		for (int k = 0; k < PdeVector::M; k++) {
+			
+			if (dx(k) == 0) {
+			// special for exact hit
+				ans.setColumn(k, mesh.pde(it));
+				continue;
+			}
+			
+			// point to interpolate respectively to point by given iterator
+			RealD shift = direction * dx(k);
+			Cell t = mesh.findCellCrossedByTheRay(it, shift);
+			
+			if (t.n == t.N) {
+			// characteristic hits into the body
+				ans.setColumn(k,
+						interpolateInSpace(mesh, mesh.coordsD(it) + shift, t));
+			} else {
+			// outer characteristic from border/contact node
+				outerInvariants.push_back(k);
+			}
+			
+		}
+		return ans;
+	}
+	
+	
+	/**
+	 * @see interpolateValuesAroundBorderNode
+	 * Calculation of inner nodes differs from border nodes in two points:
+	 * 1. Interpolation can be performed not in space only, but also 
+	 *    in space-time using values from border nodes on the next time layer.
+	 * 2. Thus, there can not be outer characteristic hits from inner nodes.
+	 */
+	Matrix interpolateValuesAroundInnerNode(
+			const Mesh& mesh, const RealD direction,
+			const Iterator& it, const PdeVector& dx) {
 		Matrix ans = Matrix::Zeros();
 		
 		for (int k = 0; k < PdeVector::M; k++)  {
@@ -169,30 +190,23 @@ private:
 			// point to interpolate respectively to point by given iterator
 			RealD shift = direction * dx(k);
 			Cell t = mesh.findCellCrossedByTheRay(it, shift);
-			PdeVector u = PdeVector::Zeros();
 			
+			PdeVector u = PdeVector::Zeros();
 			if (t.n == t.N) {
-			// characteristic hits into body
-			// second order interpolate inner value in triangle on current time layer
+			// characteristic hits into the body
 				u = interpolateInSpace(mesh, mesh.coordsD(it) + shift, t);
-				
-			} else if (t.n == 0) {
-			// outer characteristic from border/contact node
-				outerInvariants.push_back(k);
-				
-			} else if (t.n == t.N - 1 && canInterpolateInSpaceTime) {
+			} else if (t.n == t.N - 1) {
 			// characteristic hits out of body going throughout border face
 				u = interpolateInSpaceTime(mesh, it, shift, t);
-				
-			} else if (t.n == t.N - 2 && canInterpolateInSpaceTime) {
-			// exact hit to border edge(point)
+			} else if (t.n == t.N - 2) {
+			// exact hit to border edge (3D) or point (2D)
 				u = interpolateInSpaceTime1D(mesh, it, shift, t);
-				
+			} else {
+				THROW_BAD_METHOD("Outer hit from inner node?");
 			}
-			
 			ans.setColumn(k, u);
+			
 		}
-		
 		return ans;
 	}
 	
@@ -316,58 +330,17 @@ private:
 	PdeVector interpolateInSpaceTime1D(const Mesh& /*mesh*/, 
 			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/) const {
 		THROW_UNSUPPORTED("TODO");
-		return PdeVector::Zeros(); // FIXME
-	}
-	
-	
-	/**
-	 * Check and remember cases with "illegal" outer characteristics
-	 */
-	void checkOuterCases(const Iterator it, const Mesh& mesh) {
-		
-		if (outerInvariants == Model::LEFT_INVARIANTS ||
-			outerInvariants == Model::RIGHT_INVARIANTS) {
-		/// The normal case for border corrector
-			return;
-		}
-		
-		if (outerInvariants.size() == 0) {
-		/// No outers. Nothing to do for border corrector
-			outerCasesToReturnBack.push_back({it, mesh.pdeNew(it)});
-			return;
-		}
-		
-		if (outerInvariants.size() == 2 * OUTER_NUMBER) {
-		/// All outers. No space -- no waves. Set to old value
-			outerCasesToReturnBack.push_back({it, mesh.pde(it)});
-			return;
-		}
-		
-		/// Some geometrical inexactness. Most likely that the calculation
-		/// direction is almost parallel to the border. 
-		/// TODO - make special for such cases more precise search?
-		std::cout << outerInvariants.size() << " outer characteristics: ";
-		for (int k : outerInvariants) { std::cout << k << " "; }
-		std::cout << " at:" << mesh.coordsD(it);
-		outerCasesToReturnBack.push_back({it, mesh.pde(it).Zeros()});
 	}
 	
 	
 	/// List of outer Riemann invariants after node calculation.
 	/// Invariants are specified by their indices in matrix L.
-	std::vector<int> outerInvariants;
-	
-	/// List of nodes which have "illegal" outer characteristics on the current
-	/// calculation direction. This is possible for borders and contacts only.
-	std::vector<std::pair<Iterator, PdeVector>> outerCasesToReturnBack;
+	typename Mesh::WaveIndices outerInvariants;
 	
 	/// The storage of gradients of mesh pde values.
 	std::vector<PdeGradient> gradients;
-	/// The storage of hessians of mesh pde values. (Unused now)
-	std::vector<PdeHessian> hessians;
 	
 	USE_AND_INIT_LOGGER("gcm.simplex.GridCharacteristicMethod")
-	
 };
 
 

@@ -16,14 +16,20 @@ public:
 		_max = (real)(*std::max_element(begin, end));
 		assert_gt(numberOfBins, 1);
 		const real _binSize = (_max - _min) / real(numberOfBins);
-		assert_gt(_binSize, 0);
 		
-		_bins.resize(numberOfBins + 1, 0);
-		for (ForwIter it = begin; it != end; ++it) {
-			++(_bins[(size_t)((*it - min()) / _binSize)]);
+		if (max() == min()) {
+			_bins.resize(numberOfBins, 0);
+			for (ForwIter it = begin; it != end; ++it) {
+				++(_bins[0]);
+			}
+		} else {
+			_bins.resize(numberOfBins + 1, 0);
+			for (ForwIter it = begin; it != end; ++it) {
+				++(_bins[(size_t)((*it - min()) / _binSize)]);
+			}
+			*std::next(_bins.rbegin()) += _bins.back();
+			_bins.pop_back();
 		}
-		*std::next(_bins.rbegin()) += _bins.back();
-		_bins.pop_back();
 	}
 	
 	real min() const { return _min; }

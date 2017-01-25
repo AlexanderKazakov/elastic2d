@@ -162,6 +162,9 @@ TEST(LineWalkSearch2D, findCellCrossedByTheRayNotConvex) {
 	task.simplexGrid.bodies = {
 		Task::SimplexGrid::Body({ 0, {{3, 3}, {-3, 3}, {-3, -3}, {3, -3}}, { } }),
 	};
+	
+	try {
+	
 	Triangulation triangulation(task);
 	Grid one(0, {&triangulation});
 	
@@ -196,6 +199,11 @@ TEST(LineWalkSearch2D, findCellCrossedByTheRayNotConvex) {
 					testContains(one, a, it, shift, hitCounter);
 				}, hitCount);
 		ASSERT_NEAR(18, hitCount, 4);
+	}
+	
+	} catch (Exception& e) {
+		std::cout << e.what() << std::endl;
+		throw;
 	}
 }
 
