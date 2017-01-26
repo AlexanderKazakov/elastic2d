@@ -454,15 +454,15 @@ inline Task parseTaskTmp() {
 //	task.globalSettings.numberOfSnaps = 100;
 	task.globalSettings.stepsPerSnap = 1;
 	
-//	real phi = M_PI / 4;
-//	task.calculationBasis = {
-//			cos(phi), -sin(phi),
-//			sin(phi),  cos(phi),
-//	};
+	real phi = M_PI / 4;
 	task.calculationBasis = {
-			1, 0,
-			0, 1
+			cos(phi), -sin(phi),
+			sin(phi),  cos(phi),
 	};
+//	task.calculationBasis = {
+//			1, 0,
+//			0, 1
+//	};
 	
 	task.bodies = {
 		{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
@@ -495,7 +495,7 @@ inline Task parseTaskTmp() {
 	
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
-	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
+	borderConditionAll.type = BorderConditions::T::FIXED_VELOCITY;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
 	};
@@ -509,6 +509,14 @@ inline Task parseTaskTmp() {
 	task.borderConditions = {borderConditionAll,
 	                         borderConditionLeft};
 	
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_FORWARD;
+	wave.direction = 0;
+	wave.quantity = PhysicalQuantities::T::PRESSURE;
+	wave.quantityValue = 1;
+	wave.area = std::make_shared<AxisAlignedBoxArea>(
+				Real3({-2.5, -2.99, -10}), Real3({-1.5, 2.99, 10}));
+	task.initialCondition.waves.push_back(wave);
 	
 	task.vtkSnapshotter.quantitiesToSnap = {
 		PhysicalQuantities::T::PRESSURE,

@@ -135,6 +135,7 @@ correctContactsAndBorders(const int stage) {
 	for (const Body& body : bodies) {
 		for (const Border& border : body.borders) {
 			border.borderCorrector->apply(
+					stage,
 					body.grid,
 					border.borderNodes,
 					calculationBasis.basis.getColumn(stage));

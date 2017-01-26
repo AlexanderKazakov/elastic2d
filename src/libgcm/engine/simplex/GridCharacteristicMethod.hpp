@@ -60,9 +60,8 @@ public:
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
 		
-		/// calculate inner waves of contact nodes
-//		#pragma omp parallel for
-		for (auto contactIter = mesh.contactBegin(); 
+		/// calculate inner waves of contact nodes in PDE variables
+		for (auto contactIter = mesh.contactBegin();
 		          contactIter < mesh.contactEnd(); ++contactIter) {
 			mesh._pdeNew(*contactIter) = localGcmStep(
 					mesh.matrices(*contactIter)->m[s].U1,
@@ -70,20 +69,19 @@ public:
 					interpolateValuesAroundBorderNode(
 							mesh, direction, *contactIter,
 							crossingPoints(*contactIter, s, timeStep, mesh)));
-			mesh._waveIndices(*contactIter) = outerInvariants;
+			mesh._waveIndices(*contactIter) = innerWaves;
 		}
 		
-		/// calculate inner waves of border nodes
-//		#pragma omp parallel for
-		for (auto borderIter = mesh.borderBegin(); 
+		/// calculate inner waves of border nodes in Riemann variables
+		/// then, it will be handled by BorderCorrector
+		for (auto borderIter = mesh.borderBegin();
 		          borderIter < mesh.borderEnd(); ++borderIter) {
-			mesh._pdeNew(*borderIter) = localGcmStep(
-					mesh.matrices(*borderIter)->m[s].U1,
+			mesh._pdeNew(*borderIter) = linal::diagonalMultiply(
 					mesh.matrices(*borderIter)->m[s].U,
 					interpolateValuesAroundBorderNode(
 							mesh, direction, *borderIter,
 							crossingPoints(*borderIter, s, timeStep, mesh)));
-			mesh._waveIndices(*borderIter) = outerInvariants;
+			mesh._waveIndices(*borderIter) = innerWaves;
 		}
 	}
 	
@@ -100,8 +98,7 @@ public:
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
 		
-		/// calculate inner nodes
-//		#pragma omp parallel for
+		/// calculate inner nodes in PDE variables
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(*innerIter) = localGcmStep(
@@ -138,7 +135,7 @@ private:
 	Matrix interpolateValuesAroundBorderNode(
 			const Mesh& mesh, const RealD direction,
 			const Iterator& it, const PdeVector& dx) {
-		outerInvariants.clear();
+		innerWaves.clear();
 		Matrix ans = Matrix::Zeros();
 		
 		for (int k = 0; k < PdeVector::M; k++) {
@@ -152,14 +149,11 @@ private:
 			// point to interpolate respectively to point by given iterator
 			RealD shift = direction * dx(k);
 			Cell t = mesh.findCellCrossedByTheRay(it, shift);
-			
 			if (t.n == t.N) {
 			// characteristic hits into the body
 				ans.setColumn(k,
 						interpolateInSpace(mesh, mesh.coordsD(it) + shift, t));
-			} else {
-			// outer characteristic from border/contact node
-				outerInvariants.push_back(k);
+				innerWaves.push_back(k);
 			}
 			
 		}
@@ -333,9 +327,9 @@ private:
 	}
 	
 	
-	/// List of outer Riemann invariants after node calculation.
-	/// Invariants are specified by their indices in matrix L.
-	typename Mesh::WaveIndices outerInvariants;
+	/// List of inner Riemann invariants after border/contact node calculation.
+	/// Used by border/contact correctors afterwards
+	typename Mesh::WaveIndices innerWaves;
 	
 	/// The storage of gradients of mesh pde values.
 	std::vector<PdeGradient> gradients;

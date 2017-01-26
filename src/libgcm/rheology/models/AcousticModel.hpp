@@ -45,9 +45,9 @@ public:
 	
 	typedef std::vector<int> WaveIndices;
 	/// Indices of invariants with positive eigenvalues (sorted ascending)
-	static const WaveIndices LEFT_INVARIANTS;
+	static const WaveIndices POSITIVE_WAVES;
 	/// Indices of invariants with negative eigenvalues (sorted ascending)
-	static const WaveIndices RIGHT_INVARIANTS;
+	static const WaveIndices NEGATIVE_WAVES;
 	
 	/**
 	 * Construct gcm matrices for calculation in given basis
@@ -60,6 +60,43 @@ public:
 			RealD n = basis.getColumn(i);
 			constructGcmMatrix((*m)(i), material, linal::createLocalBasis(n));
 		}
+	}
+	
+	
+	
+	static PdeVector calculateReflectionZeroBorderForce(
+			const real waveAmplitude, const int waveIndex,
+			const RealD& borderNormal, const RealD& calcDirection,
+			const GcmMatrix& matrixAlongCalcDirection,
+			std::shared_ptr<const IsotropicMaterial> material) {
+		return -waveAmplitude * calculateReflection(waveIndex, borderNormal,
+				calcDirection, matrixAlongCalcDirection, material);
+	}
+	
+	static PdeVector calculateReflectionZeroBorderVelocity(
+			const real waveAmplitude, const int waveIndex,
+			const RealD& borderNormal, const RealD& calcDirection,
+			const GcmMatrix& matrixAlongCalcDirection,
+			std::shared_ptr<const IsotropicMaterial> material) {
+		return waveAmplitude * calculateReflection(waveIndex, borderNormal,
+				calcDirection, matrixAlongCalcDirection, material);
+	}
+	
+	/// TODO comments after cleanup
+	static PdeVector calculateReflection(
+			const int waveIndex, const RealD& borderNormal, const RealD& calcDirection,
+			const GcmMatrix& matrixAlongCalcDirection,
+			std::shared_ptr<const IsotropicMaterial> material) {
+		
+		const int invariantSign = Utils::sign(matrixAlongCalcDirection.L(waveIndex));
+		const RealD initDirection = invariantSign * calcDirection;
+		assert_ge(linal::dotProduct(borderNormal, initDirection), 0);
+		
+		const RealD reflDirection = linal::reflectionDirection(borderNormal, initDirection);
+		Matrix u1; constructEigenvectors(u1, material,
+				linal::createLocalBasis(invariantSign * reflDirection));
+		
+		return u1.getColumn(waveIndex);
 	}
 	
 	
