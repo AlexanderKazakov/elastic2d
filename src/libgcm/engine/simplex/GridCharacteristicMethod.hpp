@@ -60,17 +60,18 @@ public:
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		RealD direction = mesh.getCalculationBasis().getColumn(s);
 		
-		/// calculate inner waves of contact nodes in PDE variables
+		/// calculate inner waves of contact nodes in Riemann variables
+		/// then, it will be handled by ContactCorrector
 		for (auto contactIter = mesh.contactBegin();
 		          contactIter < mesh.contactEnd(); ++contactIter) {
-			mesh._pdeNew(*contactIter) = localGcmStep(
-					mesh.matrices(*contactIter)->m[s].U1,
+			mesh._pdeNew(*contactIter) = linal::diagonalMultiply(
 					mesh.matrices(*contactIter)->m[s].U,
 					interpolateValuesAroundBorderNode(
 							mesh, direction, *contactIter,
 							crossingPoints(*contactIter, s, timeStep, mesh)));
 			mesh._waveIndices(*contactIter) = innerWaves;
 		}
+		
 		
 		/// calculate inner waves of border nodes in Riemann variables
 		/// then, it will be handled by BorderCorrector

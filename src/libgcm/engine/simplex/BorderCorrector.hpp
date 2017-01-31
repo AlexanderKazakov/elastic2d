@@ -69,9 +69,9 @@ public:
 			const WaveIndices initialWavesIndicesInGcmMatrix =
 					mesh->waveIndices(nodeBorder.iterator);
 			
-			PdeVector reflectionWavesInPdeVaiables = PdeVector::Zeros();
+			PdeVector reflectionWavesInPdeVariables = PdeVector::Zeros();
 			for (const int waveIndex : initialWavesIndicesInGcmMatrix) {
-				reflectionWavesInPdeVaiables +=
+				reflectionWavesInPdeVariables +=
 					BorderReflectionCalculator::calculate(
 						initialWavesInRiemannVariables(waveIndex),
 						waveIndex, nodeBorder.normal, calcDirection,
@@ -81,7 +81,7 @@ public:
 			const PdeVector initialWavesInPdeVariables =
 					gcmMatrix.U1 * initialWavesInRiemannVariables;
 			mesh->_pdeNew(nodeBorder.iterator) =
-					initialWavesInPdeVariables + reflectionWavesInPdeVaiables;
+					initialWavesInPdeVariables + reflectionWavesInPdeVariables;
 		}
 	}
 	

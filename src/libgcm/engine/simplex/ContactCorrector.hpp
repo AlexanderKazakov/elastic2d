@@ -12,17 +12,9 @@
 namespace gcm {
 namespace simplex {
 
-
-/**
- * @defgroup Contact correctors
- * Classes for applying "outer-waves"-correction on contact nodes
- * in order to satisfy some contact condition.
- */
-
 template<typename TGrid>
 class AbstractContactCorrector {
 public:
-	
 	typedef typename TGrid::Iterator    Iterator;
 	typedef typename TGrid::RealD       RealD;
 	
@@ -33,228 +25,203 @@ public:
 		RealD normal;
 	};
 	
-	
 	/**
-	 * Apply contact corrector for all nodes from the list
-	 * along given direction
+	 * For all node pairs from the list, along given calculation direction,
+	 * finalize calculation of contact nodes
+	 * (which was begun in simplex::GridCharacteristicMethod)
 	 */
 	virtual void apply(
+			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact,
 			const RealD& direction) = 0;
 	
-	
-protected:
-	/// maximal found condition numbers of correctors matrices
-	real maxConditionR = 0;
-	real maxConditionA = 0;
-	
-	
-	/**
-	 * General expression of linear contact condition is:
-	 *     B1_A * u_A = B1_B * u_B,
-	 *     B2_A * u_A = B2_B * u_B,
-	 * where u is pde-vector and B is border matrices.
-	 * Given with inner-calculated pde vectors, we correct them
-	 * with outer waves combination (Omega) in order to satisfy contact condition.
-	 * @see BorderCorrector
-	 */
-	template<typename PdeVector, typename MatrixOmega, typename MatrixB>
-	void
-	correctNodesContact(
-			PdeVector& uA,
-			const MatrixOmega& OmegaA, const MatrixB& B1A, const MatrixB& B2A,
-			PdeVector& uB,
-			const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
-		
-		const auto R = linal::invert(B1A * OmegaA);
-//		checkConditionNumber(R, "R", maxConditionR);
-		const auto p = R * (B1B * uB - B1A * uA);
-		const auto Q = R * (B1B * OmegaB);
-		
-		const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
-//		checkConditionNumber(A, "A", maxConditionA);
-		const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
-		
-		const auto alphaB = linal::solveLinearSystem(A, f);
-		const auto alphaA = p + Q * alphaB;
-		
-		uA += OmegaA * alphaA;
-		uB += OmegaB * alphaB;
-	}
-	
-	
-private:
-	
-	template<typename MatrixT>
-	void
-	checkConditionNumber(const MatrixT& m, const std::string name, real& currentMax) {
-		const real currentValue = linal::conditionNumber(m);
-		if (currentValue > currentMax) {
-			currentMax = currentValue;
-			LOG_INFO("New maximal condition number in matrix "
-					<< name << ": " << currentMax);
-		}
-	}
-	
-	
 	USE_AND_INIT_LOGGER("gcm.simplex.ContactCorrector")
 };
-
 
 
 template<typename ModelA, typename MaterialA,
          typename ModelB, typename MaterialB,
          typename TGrid,
-         typename ContactMatrixCreator>
+         typename RefractionCalculator>
 class ConcreteContactCorrector : public AbstractContactCorrector<TGrid> {
 public:
+	typedef AbstractContactCorrector<TGrid>       Base;
+	typedef typename Base::NodesContact           NodesContact;
+	typedef typename Base::RealD                  RealD;
+	typedef typename Base::Iterator               Iterator;
 	
 	typedef DefaultMesh<ModelA, TGrid, MaterialA> MeshA;
-	typedef DefaultMesh<ModelA, TGrid, MaterialB> MeshB;
+	typedef typename MeshA::WaveIndices           WaveIndicesA;
+	typedef typename MeshA::PdeVector             PdeVectorA;
+	typedef typename MeshA::Model::GcmMatrix      GcmMatrixA;
 	
-	typedef AbstractContactCorrector<TGrid> Base;
-	typedef typename Base::NodesContact     NodesContact;
-	typedef typename Base::RealD            RealD;
+	typedef DefaultMesh<ModelB, TGrid, MaterialB> MeshB;
+	typedef typename MeshB::WaveIndices           WaveIndicesB;
+	typedef typename MeshB::PdeVector             PdeVectorB;
+	typedef typename MeshB::Model::GcmMatrix      GcmMatrixB;
 	
 	virtual void apply(
+			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact,
-			const RealD& direction) override {
-		
+			const RealD& calcDirection) override {
 		std::shared_ptr<MeshA> meshA = std::dynamic_pointer_cast<MeshA>(a);
 		assert_true(meshA);
 		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
 		assert_true(meshB);
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
+			const GcmMatrixA& gcmMatrixA =
+					(*(meshA->matrices(nodesContact.first)))(stage);
+			const GcmMatrixB& gcmMatrixB =
+					(*(meshB->matrices(nodesContact.second)))(stage);
+			const std::pair<PdeVectorA, PdeVectorB> fromA =
+				calcOneSide(nodesContact.first, nodesContact.second,
+					*meshA, *meshB, gcmMatrixA, nodesContact.normal, calcDirection);
+			const std::pair<PdeVectorB, PdeVectorA> fromB =
+				calcOneSide(nodesContact.second, nodesContact.first,
+					*meshB, *meshA, gcmMatrixB, -nodesContact.normal, calcDirection);
 			
-			const RealD reflectionDirection = direction;
-//					linal::reflectionDirection(nodesContact.normal, direction);
-			
-			const real projection = linal::dotProduct(reflectionDirection, nodesContact.normal);
-			if (projection == 0) { continue; }
-			const RealD reflectionDirectionFromAToB =
-					reflectionDirection * Utils::sign(projection);
-			const auto OmegaA = ModelA::constructOuterEigenvectors(
-					meshA->material(nodesContact.first),
-					linal::createLocalBasis(  reflectionDirectionFromAToB));
-			const auto OmegaB = ModelB::constructOuterEigenvectors(
-					meshB->material(nodesContact.second),
-					linal::createLocalBasis( -reflectionDirectionFromAToB));
-			
-			const auto B1A = ContactMatrixCreator::createB1A(nodesContact.normal);
-			const auto B1B = ContactMatrixCreator::createB1B(nodesContact.normal);
-			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
-			const auto B2B = ContactMatrixCreator::createB2B(nodesContact.normal);
-			
-			auto& uA = meshA->_pdeNew(nodesContact.first);
-			auto& uB = meshB->_pdeNew(nodesContact.second);
-			
-			this->correctNodesContact(uA, OmegaA, B1A, B2A,
-			                          uB, OmegaB, B1B, B2B);
+			meshA->_pdeNew(nodesContact.first) =
+				gcmMatrixA.U1 * meshA->pdeNew(nodesContact.first) /* initial */ +
+				fromA.first /* reflection */ +
+				fromB.second /* refraction */;
+			meshB->_pdeNew(nodesContact.second) =
+				gcmMatrixB.U1 * meshB->pdeNew(nodesContact.second) /* initial */ +
+				fromB.first /* reflection */ +
+				fromA.second /* refraction */;
 		}
 	}
 	
+private:
+	/// Calculate reflection wave in mesh1 (first) and
+	/// refraction wave in mesh2 (second), caused by initial wave come from mesh1.
+	/// Mesh{i} can be either MeshA or MeshB
+	template<typename Mesh1, typename Mesh2>
+	std::pair<typename Mesh1::PdeVector, typename Mesh2::PdeVector>
+	calcOneSide(const Iterator one, const Iterator two,
+			const Mesh1& mesh1, const Mesh2& mesh2, 
+			const typename Mesh1::Model::GcmMatrix& gcmMatrix1,
+			const RealD& normalOuterForMesh1, const RealD& calcDirection) {
+		typedef typename Mesh1::PdeVector Pde1;
+		typedef typename Mesh2::PdeVector Pde2;
+		
+		const Pde1 initialWavesInRiemannVariables = mesh1.pdeNew(one);
+		const typename Mesh1::WaveIndices
+				initialWavesIndicesInGcmMatrix1 = mesh1.waveIndices(one);
+		
+		Pde1 reflectionInPdeVariables = Pde1::Zeros();
+		Pde2 refractionInPdeVariables = Pde2::Zeros();
+		for (const int waveIndex : initialWavesIndicesInGcmMatrix1) {
+			std::pair<Pde1, Pde2> reflectionAndRefraction =
+				RefractionCalculator::calculate(
+					initialWavesInRiemannVariables(waveIndex),
+					waveIndex, normalOuterForMesh1, calcDirection, gcmMatrix1,
+					mesh1.material(one), mesh2.material(two));
+			reflectionInPdeVariables += reflectionAndRefraction.first;
+			refractionInPdeVariables += reflectionAndRefraction.second;
+		}
+		
+		return {reflectionInPdeVariables, refractionInPdeVariables};
+	}
 };
 
 
-
-template<typename ModelA, typename ModelB>
-struct AdhesionContactMatrixCreator {
-	typedef typename ModelA::RealD        RealD;
-	typedef typename ModelA::BorderMatrix BorderMatrix;
+template<int Dimensionality>
+struct AcousticToAcousticRefractionCalculator {
+	typedef AcousticModel<Dimensionality> Model;
+	typedef typename Model::RealD        RealD;
+	typedef typename Model::GcmMatrix    GcmMatrix;
+	typedef typename Model::Matrix       Matrix;
+	typedef typename Model::PdeVector    PdeVector;
 	
-	static BorderMatrix createB1A(const RealD& normal) {
-		return ModelA::borderMatrixFixedVelocityGlobalBasis(normal);
-	}
-	static BorderMatrix createB1B(const RealD& normal) {
-		return ModelB::borderMatrixFixedVelocityGlobalBasis(normal);
-	}
-	static BorderMatrix createB2A(const RealD& normal) {
-		return ModelA::borderMatrixFixedForceGlobalBasis(normal);
-	}
-	static BorderMatrix createB2B(const RealD& normal) {
-		return ModelB::borderMatrixFixedForceGlobalBasis(normal);
+	/// Solve reflection-refraction problem
+	/// the first item in answer is reflection wave,
+	/// the second item -- refraction wave
+	static std::pair<PdeVector, PdeVector> calculate(
+			const real waveAmplitude, const int waveIndex,
+			const RealD& contactNormal, const RealD& calcDirection,
+			const GcmMatrix& matrixAlongCalcDirection,
+			std::shared_ptr<const IsotropicMaterial> material1,
+			std::shared_ptr<const IsotropicMaterial> material2) {
+		const real rho1 = material1->rho;
+		const real rho2 = material2->rho;
+		const real c1 = Model::acousticVelocity(material1);
+		const real c2 = Model::acousticVelocity(material2);
+		
+		const int invariantSign = Utils::sign(matrixAlongCalcDirection.L(waveIndex));
+		const RealD initDirection = invariantSign * calcDirection;
+		// cosinus of incident angle
+		const real cos1 = linal::dotProduct(contactNormal, initDirection);
+		assert_ge(cos1, 0);
+		
+		const RealD reflDirection =
+				linal::reflectionDirection(contactNormal, initDirection);
+		Matrix u1; //< helping temporary
+		Model::constructEigenvectors(u1, material1,
+				linal::createLocalBasis(invariantSign * reflDirection));
+		const PdeVector reflectionWave = u1.getColumn(waveIndex);
+		
+		if (c1*c1 / (c2*c2) + cos1*cos1 - 1 >= 0) {
+		/// normal refraction
+			const RealD refrDirection = linal::refractionDirection(
+					contactNormal, initDirection, c1, c2);
+			const real cos2 = linal::dotProduct(contactNormal, refrDirection);
+			Model::constructEigenvectors(u1, material2,
+					linal::createLocalBasis(invariantSign * refrDirection));
+			const PdeVector refractionWave = u1.getColumn(waveIndex);
+			// reflection coefficient
+			const real V = (c2 * rho2 * cos1 - c1 * rho1 * cos2) /
+					(c2 * rho2 * cos1 + c1 * rho1 * cos2);
+			// refraction coefficient
+			const real W = 2 * rho1 * c2 * cos1 /
+					(c2 * rho2 * cos1 + c1 * rho1 * cos2);
+			return {V * waveAmplitude * reflectionWave,
+					W * waveAmplitude * refractionWave};
+			
+		} else {
+		/// total internal reflection
+		/// FIXME (-waveAmplitude) is not correct
+			return {-waveAmplitude * reflectionWave, PdeVector::Zeros()};
+		}
 	}
 };
-template<typename ModelA, typename ModelB>
-struct SlideContactMatrixCreator {
-	typedef typename ModelA::RealD        RealD;
-	typedef typename ModelA::BorderMatrix BorderMatrix;
-	
-	// FIXME - this is valid for acoustic model only
-	static BorderMatrix createB1A(const RealD& normal) {
-		return ModelA::borderMatrixFixedVelocity(normal);
-	}
-	static BorderMatrix createB1B(const RealD& normal) {
-		return ModelB::borderMatrixFixedVelocity(normal);
-	}
-	static BorderMatrix createB2A(const RealD& normal) {
-		return ModelA::borderMatrixFixedForce(normal);
-	}
-	static BorderMatrix createB2B(const RealD& normal) {
-		return ModelB::borderMatrixFixedForce(normal);
-	}
-};
-
 
 
 template<typename TGrid>
 class ContactCorrectorFactory {
 public:
-	
 	static const int DIMENSIONALITY = TGrid::DIMENSIONALITY;
-	
 	typedef ElasticModel<DIMENSIONALITY>     ElasticModelD;
 	typedef AcousticModel<DIMENSIONALITY>    AcousticModelD;
-	
 	
 	static std::shared_ptr<AbstractContactCorrector<TGrid>> create(
 			const ContactConditions::T condition,
 			const Models::T model1, const Materials::T material1,
 			const Models::T model2, const Materials::T material2) {
 		
-		switch (condition) {
-			case ContactConditions::T::ADHESION:
-				if (model1 == Models::T::ELASTIC &&
-				    model2 == Models::T::ELASTIC &&
-				    material1 == Materials::T::ISOTROPIC &&
-				    material2 == Materials::T::ISOTROPIC) {
-					
-					return std::make_shared<ConcreteContactCorrector<
-							ElasticModelD, IsotropicMaterial,
-							ElasticModelD, IsotropicMaterial, TGrid,
-							AdhesionContactMatrixCreator<ElasticModelD, ElasticModelD>>>();
-					
-				} else {
-					THROW_UNSUPPORTED("Incompatible or unsupported contact conditions, \
-							models and materials combination");
-				}
-				
-			case ContactConditions::T::SLIDE:
-				if (model1 == Models::T::ACOUSTIC &&
-				    model2 == Models::T::ACOUSTIC &&
-				    material1 == Materials::T::ISOTROPIC &&
-				    material2 == Materials::T::ISOTROPIC) {
-					
-					return std::make_shared<ConcreteContactCorrector<
-							AcousticModelD, IsotropicMaterial,
-							AcousticModelD, IsotropicMaterial, TGrid,
-							SlideContactMatrixCreator<AcousticModelD, AcousticModelD>>>();
-					
-				} else {
-					THROW_UNSUPPORTED("Incompatible or unsupported contact conditions, \
-							models and materials combination");
-				}
-				
-			default:
-				THROW_INVALID_ARG("Unknown type of contact condition");
+		if (material1 != Materials::T::ISOTROPIC ||
+				material2 != Materials::T::ISOTROPIC) {
+			THROW_UNSUPPORTED("Unsupported material");
 		}
+		
+		if (model1 != Models::T::ACOUSTIC ||
+				model2 != Models::T::ACOUSTIC) {
+			THROW_UNSUPPORTED("Unsupported model");
+		}
+		
+		if (condition != ContactConditions::T::SLIDE) {
+			THROW_UNSUPPORTED("Unsupported condition");
+		}
+		
+		return std::make_shared<ConcreteContactCorrector<
+				AcousticModelD, IsotropicMaterial,
+				AcousticModelD, IsotropicMaterial, TGrid,
+				AcousticToAcousticRefractionCalculator<DIMENSIONALITY>>>();
 	}
-	
 };
 
 

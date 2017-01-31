@@ -127,6 +127,7 @@ correctContactsAndBorders(const int stage) {
 	
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->apply(
+				stage,
 				getBody(contact.first.first).grid,
 				getBody(contact.first.second).grid,
 				contact.second.nodesInContact,

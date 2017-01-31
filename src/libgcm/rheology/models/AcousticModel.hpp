@@ -49,6 +49,12 @@ public:
 	/// Indices of invariants with negative eigenvalues (sorted ascending)
 	static const WaveIndices NEGATIVE_WAVES;
 	
+	
+	static real acousticVelocity(
+			std::shared_ptr<const IsotropicMaterial> material) {
+		return sqrt(material->lambda / material->rho);
+	}
+	
 	/**
 	 * Construct gcm matrices for calculation in given basis
 	 */
@@ -61,7 +67,6 @@ public:
 			constructGcmMatrix((*m)(i), material, linal::createLocalBasis(n));
 		}
 	}
-	
 	
 	
 	static PdeVector calculateReflectionZeroBorderForce(
@@ -166,7 +171,7 @@ constructGcmMatrix(
 	
 	const real rho = material->rho;
 	const real lambda = material->lambda;
-	const real c1 = sqrt(lambda / rho);
+	const real c1 = acousticVelocity(material);
 	
 	const RealD n = basis.getColumn(DIMENSIONALITY - 1);
 	
@@ -200,8 +205,7 @@ constructEigenvectors(
 	/// fill u1 with eigenvectors
 	
 	const real rho = material->rho;
-	const real lambda = material->lambda;
-	const real c1 = sqrt(lambda / rho);
+	const real c1 = acousticVelocity(material);
 	
 	RealD n[DIMENSIONALITY];
 	for (int i = 0; i < DIMENSIONALITY; i++) {
@@ -235,8 +239,7 @@ constructEigenstrings(
 	/// fill u with eigenstrings
 	
 	const real rho = material->rho;
-	const real lambda = material->lambda;
-	const real c1 = sqrt(lambda / rho);
+	const real c1 = acousticVelocity(material);
 	
 	RealD n[DIMENSIONALITY];
 	for (int i = 0; i < DIMENSIONALITY; i++) {

@@ -61,6 +61,14 @@ int main(int argc, char** argv) {
 
 Task parseTaskContact2D() {
 	Task task;
+	real phi = M_PI / 4;
+	task.calculationBasis = {
+			cos(phi), -sin(phi),
+			sin(phi),  cos(phi),
+	};
+//	task.calculationBasis = {
+//			1, 0,
+//			0, 1};
 	
 	task.globalSettings.dimensionality = 2;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
@@ -96,7 +104,7 @@ Task parseTaskContact2D() {
 	real lambda = 2;
 	real mu = 1;
 	const auto material1 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 0);
-	const auto material2 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 1e+9);
+	const auto material2 = std::make_shared<IsotropicMaterial>(4 * rho, lambda, mu, 0, 0, 0, 1e+9);
 	task.materialConditions.byBodies.bodyMaterialMap = {
 		{0, material1},
 		{1, material2}
@@ -538,8 +546,8 @@ Task parseTaskCube() {
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
-//	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
+//	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
+	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
 	
 	const int N = 2;
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
@@ -557,19 +565,19 @@ Task parseTaskCube() {
 	task.globalSettings.numberOfSnaps = 200 / N;
 	task.globalSettings.stepsPerSnap = 1;
 	
-//	Task::InitialCondition::Quantity pressure;
-//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-//	pressure.value = 0.5;
-//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5}));
-//	task.initialCondition.quantities.push_back(pressure);
+	Task::InitialCondition::Quantity pressure;
+	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+	pressure.value = 0.5;
+	pressure.area = std::make_shared<SphereArea>(0.2, Real3({0.5, 0.5, 0.5}));
+	task.initialCondition.quantities.push_back(pressure);
 
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
 	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionAll.values = {
 		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
+//		[] (real) { return 0; },
+//		[] (real) { return 0; }
 	};
 	
 	Task::BorderCondition borderConditionLeft;
@@ -577,8 +585,8 @@ Task parseTaskCube() {
 			Real3({-10, -10, -10}), Real3({0.01, 10, 10}));
 	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
 	borderConditionLeft.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
+//		[] (real) { return 0; },
+//		[] (real) { return 0; },
 		[] (real t) { return (t < 0.5) ? -1 : 0; }
 	};
 	
@@ -587,8 +595,8 @@ Task parseTaskCube() {
 			Real3({0.99, -10, -10}), Real3({10, 10, 10}));
 	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
 	borderConditionRight.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
+//		[] (real) { return 0; },
+//		[] (real) { return 0; },
 		[] (real) { return 0; }
 	};
 	
