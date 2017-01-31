@@ -428,15 +428,34 @@ inline Real3 oppositeFaceNormal(const Real3& opposite,
 }
 
 
-/** 
- * Direction of the ray reflection from the surface
- * @param normal surface normal
+/**
+ * Direction of the ray reflection from the flat surface
+ * @param normal surface outer normal
  */
 template<int TM>
 Vector<TM> reflectionDirection(
 		const Vector<TM> normal, const Vector<TM> initialDirection) {
 	return normalize(initialDirection -
 			2 * normal * dotProduct(initialDirection, normal));
+}
+
+
+/**
+ * Direction of the ray refraction on flat interface. The ray goes from 
+ * the media with acoustic velocity cI to the media with acoustic velocity cT.
+ * @param n interface normal outer for the media with c_i (of unit length)
+ * @param i initial direction (of unit length)
+ * @param cI acoustic velocity of the media the wave comes from
+ * @param cT acoustic velocity of the media the wave goes to
+ * @return refraction direction (of unit length)
+ */
+template<int TM>
+Vector<TM> refractionDirection(const Vector<TM> n, const Vector<TM> i,
+		const real cI, const real cT) {
+	const real ni = dotProduct(n, i);
+	const real underSqrt = cI*cI / (cT*cT) + ni*ni - 1;
+	assert_ge(underSqrt, 0); // check on total internal reflection
+	return normalize(i + n * (sqrt(underSqrt) - ni));
 }
 
 

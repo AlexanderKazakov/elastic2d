@@ -123,6 +123,22 @@ TEST(Linal, reflectionDirection) {
 }
 
 
+TEST(Linal, refractionDirection) {
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real2({0, 1}),
+			refractionDirection(Real2({0, 1}), Real2({0, 1}), 1, 7)));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			normalize(Real3({1, 2, 3})),
+			refractionDirection(normalize(Real3({7, 4, 2})), normalize(Real3({1, 2, 3})), 5, 5)));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			normalize(Real3({1, 0, 0})),
+			refractionDirection(normalize(Real3({0, 0, 1})), normalize(Real3({1, 0, 0})), 1, 1)));
+	ASSERT_TRUE(linal::approximatelyEqual(
+			Real2({sqrt(3)/2, 0.5}),
+			refractionDirection(Real2({1, 0}), Real2({0.5, sqrt(3)/2}), sqrt(3), 1)));
+}
+
+
 TEST(Linal, normMax) {
 	ASSERT_EQ(7, normMax(Matrix22({
 			1, 2,
