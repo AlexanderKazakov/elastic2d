@@ -27,6 +27,7 @@ public:
 	
 	typedef typename TGrid::Iterator    Iterator;
 	typedef typename TGrid::RealD       RealD;
+	typedef typename TGrid::MatrixDD    MatrixDD;	
 	
 	struct NodeBorder {
 		/// iterator of the node in grid
@@ -40,8 +41,9 @@ public:
 	 * Apply border corrector for all nodes from the list 
 	 * along given direction
 	 */
-	virtual void apply(std::shared_ptr<AbstractMesh<TGrid>> grid,
-			std::list<NodeBorder> borderNodes, const RealD& direction) = 0;
+	virtual void apply(const int s, std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes, const RealD& direction,
+			const real timeAtNextLayer) = 0;
 	
 	
 protected:
@@ -96,20 +98,24 @@ class ConcreteBorderCorrector : public AbstractBorderCorrector<TGrid> {
 public:
 	
 	typedef DefaultMesh<Model, TGrid, Material> Mesh;
+	typedef typename Mesh::PdeVector            PdeVector;
+	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	
 	typedef AbstractBorderCorrector<TGrid>      Base;
 	typedef typename Base::NodeBorder           NodeBorder;
 	typedef typename Base::RealD                RealD;
+	typedef typename Base::MatrixDD             MatrixDD;
 	
 	ConcreteBorderCorrector(const Task::BorderCondition& bc) :
 			borderCondition(bc) { }
 	
-	virtual void apply(std::shared_ptr<AbstractMesh<TGrid>> grid,
-			std::list<NodeBorder> borderNodes, const RealD& direction) override {
+	virtual void apply(const int s, std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes, const RealD& direction,
+			const real timeAtNextLayer) override {
 		
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
-		const auto b = borderCondition.b();
+		const auto b = borderCondition.b(timeAtNextLayer);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			
@@ -121,11 +127,8 @@ public:
 			const auto Omega = Model::constructOuterEigenvectors(
 					mesh->material(nodeBorder.iterator),
 					linal::createLocalBasis(outerDirection));
-			const auto B = BorderMatrixCreator::create(
-//					outerDirection);
-					nodeBorder.normal);
-			auto& u = mesh->_pdeNew(nodeBorder.iterator);
-			
+			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
+			auto& u = mesh->_pdeNew(s, nodeBorder.iterator);
 			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
 		}
 		

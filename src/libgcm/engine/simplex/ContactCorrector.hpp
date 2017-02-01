@@ -25,6 +25,7 @@ public:
 	
 	typedef typename TGrid::Iterator    Iterator;
 	typedef typename TGrid::RealD       RealD;
+	typedef typename TGrid::MatrixDD    MatrixDD;
 	
 	struct NodesContact {
 		/// pair of nodes in contact (their iterators in grids)
@@ -38,7 +39,7 @@ public:
 	 * Apply contact corrector for all nodes from the list
 	 * along given direction
 	 */
-	virtual void apply(
+	virtual void apply(const int s,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact,
@@ -113,12 +114,15 @@ public:
 	
 	typedef DefaultMesh<ModelA, TGrid, MaterialA> MeshA;
 	typedef DefaultMesh<ModelA, TGrid, MaterialB> MeshB;
+	typedef typename MeshA::PdeVector             PdeVector;
+	static const int DIMENSIONALITY = MeshA::DIMENSIONALITY;
 	
 	typedef AbstractContactCorrector<TGrid> Base;
 	typedef typename Base::NodesContact     NodesContact;
 	typedef typename Base::RealD            RealD;
+	typedef typename Base::MatrixDD         MatrixDD;
 	
-	virtual void apply(
+	virtual void apply(const int s,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact,
@@ -150,14 +154,13 @@ public:
 			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
 			const auto B2B = ContactMatrixCreator::createB2B(nodesContact.normal);
 			
-			auto& uA = meshA->_pdeNew(nodesContact.first);
-			auto& uB = meshB->_pdeNew(nodesContact.second);
+			auto& uA = meshA->_pdeNew(s, nodesContact.first);
+			auto& uB = meshB->_pdeNew(s, nodesContact.second);
 			
 			this->correctNodesContact(uA, OmegaA, B1A, B2A,
 			                          uB, OmegaB, B1B, B2B);
 		}
 	}
-	
 };
 
 

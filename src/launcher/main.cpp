@@ -168,6 +168,7 @@ Task parseTaskCgal3d() {
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
 	task.simplexGrid.spatialStep = 0.2;
 	task.simplexGrid.fileName = "meshes/icosahedron.off";
+//	task.simplexGrid.spatialStep = 0.1;
 //	task.simplexGrid.detectSharpEdges = true;
 //	task.simplexGrid.fileName = "meshes/cube.off";
 	
@@ -334,16 +335,22 @@ Task parseTask2d() {
 	task.globalSettings.numberOfSnaps = 20;
 	task.globalSettings.stepsPerSnap = 1;
 	
-	Task::InitialCondition::Quantity pressure;
-	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
-	pressure.value = 10.0;
-	pressure.area = std::make_shared<SphereArea>(0.2, Real3({2, 1, 0}));
-	task.initialCondition.quantities.push_back(pressure);
-
+	Task::InitialCondition::Wave wave;
+	wave.waveType = Waves::T::P_FORWARD;
+	wave.direction = 0;
+	wave.quantity = PhysicalQuantities::T::PRESSURE;
+	wave.quantityValue = 1;
+	wave.area = std::make_shared<AxisAlignedBoxArea>(
+				Real3({1, -10, -10}), Real3({2, 10, 10}));
+	task.initialCondition.waves.push_back(wave);
+	
+//	Task::InitialCondition::Quantity pressure;
+//	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
+//	pressure.value = 10.0;
+//	pressure.area = std::make_shared<SphereArea>(0.2, Real3({2, 1, 0}));
+//	task.initialCondition.quantities.push_back(pressure);
 	
 	task.vtkSnapshotter.quantitiesToSnap = {PhysicalQuantities::T::PRESSURE};
-
-	
 	return task;
 }
 

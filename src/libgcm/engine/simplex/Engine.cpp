@@ -93,23 +93,14 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
 nextTimeStep() {
-	
 	createNewCalculationBasis();
 	
+	/// simple first order splitting by summ solutions from all directions
 	for (int stage = 0; stage < Dimensionality; stage++) {
-		for (const Body& body : bodies) {
-			body.gcm->beforeStage(*body.grid);
-		}
-		for (const Body& body : bodies) {
-			body.gcm->contactStage(stage, Clock::TimeStep(), *body.grid);
-		}
-		correctContactsAndBorders(stage);
-		for (const Body& body : bodies) {
-			body.gcm->stage(stage, Clock::TimeStep(), *body.grid);
-		}
-		for (const Body& body : bodies) {
-			body.grid->swapPdeTimeLayers();
-		}
+		gcmStage(stage, Clock::Time(), Clock::TimeStep());
+	}
+	for (const Body& body : bodies) {
+		body.grid->sumNewPdesToOld();
 	}
 	
 	for (const Body& body : bodies) {
@@ -123,10 +114,31 @@ nextTimeStep() {
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
-correctContactsAndBorders(const int stage) {
+gcmStage(const int stage, const real currentTime, const real timeStep) {
+	for (const Body& body : bodies) {
+		body.gcm->beforeStage(*body.grid);
+	}
+	for (const Body& body : bodies) {
+		body.gcm->contactStage(stage, timeStep, *body.grid);
+	}
+	correctContactsAndBorders(stage, currentTime + timeStep);
+	for (const Body& body : bodies) {
+		body.gcm->stage(stage, timeStep, *body.grid);
+	}
+//	for (const Body& body : bodies) {
+//		body.grid->swapPdeTimeLayers();
+//	}
+}
+
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+void Engine<Dimensionality, TriangulationT>::
+correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 	
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->apply(
+				stage,
 				getBody(contact.first.first).grid,
 				getBody(contact.first.second).grid,
 				contact.second.nodesInContact,
@@ -136,14 +148,16 @@ correctContactsAndBorders(const int stage) {
 	for (const Body& body : bodies) {
 		for (const Border& border : body.borders) {
 			border.borderCorrector->apply(
+					stage,
 					body.grid,
 					border.borderNodes,
-					calculationBasis.basis.getColumn(stage));
+					calculationBasis.basis.getColumn(stage),
+					timeAtNextLayer);
 		}
 	}
 	
 	for (const Body& body : bodies) {
-		body.gcm->returnBackDoubleOuterCases(*body.grid);
+		body.gcm->returnBackBadOuterCases(stage, *body.grid);
 	}
 }
 
