@@ -21,7 +21,7 @@ TEST(CubicGrid, initialize) {
 	cp.sizes = {7, 9};
 	cp.h = {1, 1};
 	
-	DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, 0, cp);
+	DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, 0, cp, 1);
 	
 	ASSERT_NEAR(mesh.getMaximalEigenvalue(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(mesh.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);

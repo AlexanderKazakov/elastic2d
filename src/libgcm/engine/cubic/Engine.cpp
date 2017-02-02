@@ -45,7 +45,7 @@ createGridsAndContacts(const Task& task) {
 		const GridId gridId = taskBody.first;
 		body.factory = createAbstractFactory(taskBody.second);
 		body.mesh = body.factory->createMesh(task, gridId,
-				createGridConstructionPack(task.cubicGrid, gridId));
+				createGridConstructionPack(task.cubicGrid, gridId), 1);
 		bodies.push_back(body);
 	}
 	
@@ -109,12 +109,9 @@ nextTimeStep() {
 		
 		for (Body& body : bodies) {
 			body.gcm->stage(stage, Clock::TimeStep(), *body.mesh);
-//			body.mesh->swapPdeTimeLayers();
+			body.mesh->swapCurrAndNextPdeTimeLayer(0);
 		}
 		
-	}
-	for (const Body& body : bodies) {
-		body.mesh->sumNewPdesToOld();
 	}
 	
 	for (Body& body : bodies) {

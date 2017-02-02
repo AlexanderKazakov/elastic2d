@@ -9,7 +9,7 @@
 namespace gcm {
 
 /**
- * Mesh implements the approach when data are stored in separate vectors.
+ * Mesh implements the approach when data are stored in separate std::vectors.
  * All nodes have the same type of rheology model and material.
  * @tparam TModel     rheology model
  * @tparam TGrid      geometric aspects
@@ -21,7 +21,6 @@ public:
 	typedef TModel                              Model;
 	typedef typename Model::PdeVariables        PdeVariables;
 	typedef typename Model::PdeVector           PdeVector;
-//	typedef typename Model::OdeVariables        OdeVariables;
 	typedef typename Model::GCM_MATRICES        GCM_MATRICES;
 	typedef typename Model::GcmMatricesPtr      GcmMatricesPtr;
 	typedef typename Model::ConstGcmMatricesPtr ConstGcmMatricesPtr;
@@ -53,8 +52,10 @@ public:
 	 */
 	DefaultMesh(const Task& task, const GridId gridId_,
 			const ConstructionPack& constructionPack,
+			const size_t numberOfNextPdeTimeLayers_,
 			const bool setUpPdeValues = true) :
-					Base(gridId_, constructionPack) {
+					Base(gridId_, constructionPack),
+					numberOfNextPdeTimeLayers(numberOfNextPdeTimeLayers_) {
 		static_assert(Grid::DIMENSIONALITY == Model::DIMENSIONALITY, "");
 		if (setUpPdeValues) {
 			setUpPde(task);
@@ -89,12 +90,6 @@ public:
 		return this->pdeVariables[this->getIndex(it)];
 	}
 	
-//	/** Read-only access to actual ODE values */
-//	const OdeVariables& ode(const Iterator& it) const {
-//		assert_eq(odeVariables.size(), this->sizeOfAllNodes()); // TODO - less expensive
-//		return this->odeVariables[this->getIndex(it)];
-//	}
-	
 	/**
 	 * Read-only access to PDE vectors on next time layer.
 	 * @param s -- stage -- we have individual next time layer for each stage
@@ -102,11 +97,6 @@ public:
 	const PdeVector& pdeNew(const int s, const Iterator& it) const {
 		return this->pdeVariablesNew[(size_t)s][this->getIndex(it)];
 	}
-	
-//	/** Read-only access to PDE vectors on current time layer */
-//	const PdeVector& pdePrev(const Iterator& it) const {
-//		return this->pdeVariablesPrev[this->getIndex(it)];
-//	}
 	
 	/** Read-only access to GCM matrices */
 	ConstGcmMatricesPtr matrices(const Iterator& it) const {
@@ -118,28 +108,7 @@ public:
 		return this->materials[this->getIndex(it)];
 	}
 	
-	virtual real getMaximalEigenvalue() const override {
-		assert_gt(maximalEigenvalue, 0);
-		return maximalEigenvalue;
-	}
-	
-	virtual void changeCalculationBasis(const MatrixDD& basis) override;
-	virtual void sumNewPdesToOld() override;
-	
-//	virtual void swapPdeTimeLayers() override {
-//		std::swap(pdeVariables, pdeVariablesNew);
-//	}
-	
-	MatrixDD getCalculationBasis() const {
-		return calculationBasis;
-	}
-	
-//	/** Read / write "node" wrapper */
-//	std::shared_ptr<Node> node(const Iterator& it) {
-//		return std::make_shared<Node>(it, this);
-//	}
-	
-	/** Read-only access to actual PDE variables */
+	/** Read / write access to actual PDE variables */
 	PdeVariables& _pdeVars(const Iterator& it) {
 		return this->pdeVariables[this->getIndex(it)];
 	}
@@ -148,12 +117,6 @@ public:
 	PdeVector& _pde(const Iterator& it) {
 		return this->pdeVariables[this->getIndex(it)];
 	}
-	
-//	/** Read / write access to actual ODE vectors */
-//	OdeVariables& _ode(const Iterator& it) {
-//		assert_eq(odeVariables.size(), this->sizeOfAllNodes()); // TODO - less expensive
-//		return this->odeVariables[this->getIndex(it)];
-//	}
 	
 	/**
 	 * Read / write access to PDE vectors on next time layer.
@@ -174,6 +137,24 @@ public:
 	}
 	
 	
+	virtual real getMaximalEigenvalue() const override {
+		assert_gt(maximalEigenvalue, 0);
+		return maximalEigenvalue;
+	}
+	
+	/// Meaningful for simplex grids only @{
+	virtual void setInnerCalculationBasis(const MatrixDD& basis) override;
+	MatrixDD getInnerCalculationBasis() const { return innerCalculationBasis; }
+	/// @}
+	
+	virtual void averageNewPdeLayersToCurrent() override;
+	
+	virtual void swapCurrAndNextPdeTimeLayer(const int indexOfNextPde) override {
+		assert_lt(indexOfNextPde, (int)numberOfNextPdeTimeLayers);
+		std::swap(pdeVariables, pdeVariablesNew[(size_t)indexOfNextPde]);
+	}
+	
+	
 	
 protected:
 	/**
@@ -182,13 +163,16 @@ protected:
 	///@{
 	std::vector<PdeVariables> pdeVariables;
 	std::vector<std::vector<PdeVariables>> pdeVariablesNew;
-//	std::vector<PdeVariables> pdeVariablesPrev;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
-//	std::vector<OdeVariables> odeVariables;
 	///@}
 	
-	MatrixDD calculationBasis = MatrixDD::Zeros();
+	/// (For SimplexGrid)
+	/// Current calculation basis for inner nodes only. Border/contact nodes
+	/// have each private calc basis connected to outer normal.
+	MatrixDD innerCalculationBasis = MatrixDD::Zeros();
+	
+	size_t numberOfNextPdeTimeLayers = 0;
 	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
 	bool pdeIsSetUp = false;
 	
@@ -203,42 +187,35 @@ template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
 allocate() {
 	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
-	pdeVariablesNew.resize(DIMENSIONALITY);
+	pdeVariablesNew.resize(numberOfNextPdeTimeLayers);
 	for (auto& pdeNew : pdeVariablesNew) {
 		pdeNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
 	}
-//	pdeVariablesPrev.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
 	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
-//	if (Model::InternalOde::NonTrivial) {
-//		odeVariables.resize(this->sizeOfAllNodes());
-//	}
 }
 
 
 template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
-changeCalculationBasis(const MatrixDD& basis) {
-	
-	calculationBasis = basis;
-	
-	// FIXME - here we suppose mesh homogenity!
-	Iterator someNode = *(this->begin());
-	
-	Model::constructGcmMatrices(this->_matrices(someNode),
-			this->material(someNode), calculationBasis);
+setInnerCalculationBasis(const MatrixDD& basis) {
+	innerCalculationBasis = basis;
+	/// @note here we suppose mesh homogenity!
+	Iterator someInnerNode = *(this->innerBegin());
+	Model::constructGcmMatrices(_matrices(someInnerNode),
+			material(someInnerNode), innerCalculationBasis);
 }
 
 
 template<typename TModel, typename TGrid, typename TMaterial>
 void DefaultMesh<TModel, TGrid, TMaterial>::
-sumNewPdesToOld() {
+averageNewPdeLayersToCurrent() {
 	for (Iterator it : *this) {
 		_pde(it) = PdeVector::Zeros();
 	}
-	for (int s = 0; s < DIMENSIONALITY; s++) {
+	for (int s = 0; s < (int)numberOfNextPdeTimeLayers; s++) {
 		for (Iterator it : *this) {
-			_pde(it) += pdeNew(s, it) / (int)DIMENSIONALITY;
+			_pde(it) += pdeNew(s, it) / numberOfNextPdeTimeLayers;
 		}
 	}
 }

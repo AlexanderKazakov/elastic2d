@@ -29,7 +29,8 @@ public:
 	
 	
 	virtual MeshPtr createMesh(const Task& task, const GridId gridId,
-			const GridConstructionPack& constructionPack) = 0;
+			const GridConstructionPack& constructionPack,
+			const size_t numberOfNextPdeTimeLayers) = 0;
 	
 	virtual GcmPtr createGcm() = 0;
 	
@@ -56,8 +57,10 @@ public:
 	
 	
 	virtual MeshPtr createMesh(const Task& task, const GridId gridId,
-			const GridConstructionPack& constructionPack) override {
-		return std::make_shared<Mesh>(task, gridId, constructionPack);
+			const GridConstructionPack& constructionPack,
+			const size_t numberOfNextPdeTimeLayers) override {
+		return std::make_shared<Mesh>(
+				task, gridId, constructionPack, numberOfNextPdeTimeLayers);
 	}
 	
 	virtual GcmPtr createGcm() override {

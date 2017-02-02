@@ -155,7 +155,7 @@ private:
 			calculationBasis.basis.copyFrom(taskBasis);
 			LOG_INFO("Use constant calculation basis:" << calculationBasis.basis);
 			for (const Body& body : bodies) {
-				body.grid->changeCalculationBasis(calculationBasis.basis);
+				body.grid->setInnerCalculationBasis(calculationBasis.basis);
 			}
 		}
 	}
@@ -164,13 +164,12 @@ private:
 		calculationBasis.basis = linal::randomBasis(calculationBasis.basis);
 		LOG_INFO("New calculation basis:" << calculationBasis.basis);
 		for (const Body& body : bodies) {
-			body.grid->changeCalculationBasis(calculationBasis.basis);
+			body.grid->setInnerCalculationBasis(calculationBasis.basis);
 		}
 	}
 	
 	void gcmStage(const int stage, const real currentTime, const real timeStep);
 	void correctContactsAndBorders(const int stage, const real timeAtNextLayer);
-	void sumNewPdesToOld();
 	
 	void createMeshes(const Task& task);
 	void createContacts(const Task& task);

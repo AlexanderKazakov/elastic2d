@@ -15,9 +15,9 @@ namespace simplex {
 class GridCharacteristicMethodBase {
 public:
 	virtual void beforeStage(const AbstractGrid& mesh_) = 0;
-	virtual void contactStage(
+	virtual void contactAndBorderStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void stage(
+	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	virtual void returnBackBadOuterCases(
 			const int s, AbstractGrid& mesh_) const = 0;
@@ -55,14 +55,13 @@ public:
 	/**
 	 * Do grid-characteristic stage of splitting method on contact and border nodes
 	 */
-	virtual void contactStage(
+	virtual void contactAndBorderStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		RealD direction = mesh.getCalculationBasis().getColumn(s);
 		outerCasesToReturnBack.clear();
+		RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
 		
 		/// calculate inner waves of contact nodes
-//		#pragma omp parallel for
 		for (auto contactIter = mesh.contactBegin(); 
 		          contactIter < mesh.contactEnd(); ++contactIter) {
 			mesh._pdeNew(s, *contactIter) = localGcmStep(
@@ -74,7 +73,6 @@ public:
 		}
 		
 		/// calculate inner waves of border nodes
-//		#pragma omp parallel for
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
 			mesh._pdeNew(s, *borderIter) = localGcmStep(
@@ -94,13 +92,12 @@ public:
 	 * @param timeStep time step
 	 * @param mesh mesh to perform calculation
 	 */
-	virtual void stage(
+	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		RealD direction = mesh.getCalculationBasis().getColumn(s);
+		RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
 		
 		/// calculate inner nodes
-//		#pragma omp parallel for
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(s, *innerIter) = localGcmStep(
@@ -108,11 +105,6 @@ public:
 					mesh.matrices(*innerIter)->m[s].U,
 					interpolateValuesAround(s, mesh, direction, *innerIter,
 							crossingPoints(*innerIter, s, timeStep, mesh), true));
-			if (outerInvariants.size() != 0) {
-				std::cout << outerInvariants.size() << " outer characteristics: ";
-				for (int k : outerInvariants) { std::cout << k << " "; }
-				std::cout << " at:" << mesh.coordsD(*innerIter);
-			}
 			assert_eq(outerInvariants.size(), 0);
 		}
 	}

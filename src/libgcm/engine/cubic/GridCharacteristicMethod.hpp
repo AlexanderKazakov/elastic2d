@@ -43,7 +43,7 @@ public:
 			const int s, const real& timeStep, AbstractGrid& mesh_) const override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		for (auto it : mesh) {
-			mesh._pdeNew(s, it) = localGcmStep(
+			mesh._pdeNew(0, it) = localGcmStep(
 					mesh.matrices(it)->m[s].U1,
 					mesh.matrices(it)->m[s].U,
 					interpolateValuesAround(mesh, s, it,

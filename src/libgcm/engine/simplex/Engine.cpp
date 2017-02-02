@@ -59,7 +59,7 @@ createMeshes(const Task& task) {
 		const GridId gridId = taskBody.first;
 		auto factory = createAbstractFactory(taskBody.second);
 		
-		body.grid = factory->createMesh(task, gridId, {&triangulation});
+		body.grid = factory->createMesh(task, gridId, {&triangulation}, Dimensionality);
 		
 		body.gcm = factory->createGcm();
 		
@@ -100,7 +100,7 @@ nextTimeStep() {
 		gcmStage(stage, Clock::Time(), Clock::TimeStep());
 	}
 	for (const Body& body : bodies) {
-		body.grid->sumNewPdesToOld();
+		body.grid->averageNewPdeLayersToCurrent();
 	}
 	
 	for (const Body& body : bodies) {
@@ -119,15 +119,12 @@ gcmStage(const int stage, const real currentTime, const real timeStep) {
 		body.gcm->beforeStage(*body.grid);
 	}
 	for (const Body& body : bodies) {
-		body.gcm->contactStage(stage, timeStep, *body.grid);
+		body.gcm->contactAndBorderStage(stage, timeStep, *body.grid);
 	}
 	correctContactsAndBorders(stage, currentTime + timeStep);
 	for (const Body& body : bodies) {
-		body.gcm->stage(stage, timeStep, *body.grid);
+		body.gcm->innerStage(stage, timeStep, *body.grid);
 	}
-//	for (const Body& body : bodies) {
-//		body.grid->swapPdeTimeLayers();
-//	}
 }
 
 
@@ -135,6 +132,7 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
 correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
+	if (stage != 0) { return; }
 	
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->apply(

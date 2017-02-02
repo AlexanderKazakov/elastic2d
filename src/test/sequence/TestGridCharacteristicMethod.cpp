@@ -31,7 +31,7 @@ TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 	
 	for (int stage = 0; stage <= 1; stage++) {
 		
-		DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, 0, cp);
+		DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, 0, cp, 1);
 		for (int x = 0; x < cp.sizes(0); x++) {
 			for (int y = 0; y < cp.sizes(1); y++) {
 				// check that values is set properly
