@@ -3,7 +3,8 @@
 
 #include <list>
 
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/engine/simplex/DefaultMesh.hpp>
+#include <libgcm/engine/simplex/common.hpp>
 #include <libgcm/rheology/models/ElasticModel.hpp>
 #include <libgcm/rheology/models/AcousticModel.hpp>
 #include <libgcm/rheology/materials/IsotropicMaterial.hpp>
@@ -11,7 +12,6 @@
 
 namespace gcm {
 namespace simplex {
-
 
 /**
  * @defgroup Contact correctors
@@ -22,7 +22,6 @@ namespace simplex {
 template<typename TGrid>
 class AbstractContactCorrector {
 public:
-	
 	typedef typename TGrid::Iterator    Iterator;
 	typedef typename TGrid::RealD       RealD;
 	typedef typename TGrid::MatrixDD    MatrixDD;
@@ -34,24 +33,22 @@ public:
 		RealD normal;
 	};
 	
-	
 	/**
-	 * Apply contact corrector for all nodes from the list
-	 * along given direction
+	 * Apply contact correction for all nodes from the list
+	 * along the contact normal direction.
+	 * It's supposed that gcm-matrices in contact nodes are written
+	 * in local basis and the first direction calculation (stage 0)
+	 * performed along contact normal direction.
+	 * Thus, this correction can be called after first stage only,
+	 * because other directions are degenerate a priori.
 	 */
-	virtual void apply(const int s,
+	virtual void apply(
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
-			std::list<NodesContact> nodesInContact,
-			const RealD& direction) = 0;
+			std::list<NodesContact> nodesInContact) = 0;
 	
 	
 protected:
-	/// maximal found condition numbers of correctors matrices
-	real maxConditionR = 0;
-	real maxConditionA = 0;
-	
-	
 	/**
 	 * General expression of linear contact condition is:
 	 *     B1_A * u_A = B1_B * u_B,
@@ -70,12 +67,10 @@ protected:
 			const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
 		
 		const auto R = linal::invert(B1A * OmegaA);
-//		checkConditionNumber(R, "R", maxConditionR);
 		const auto p = R * (B1B * uB - B1A * uA);
 		const auto Q = R * (B1B * OmegaB);
 		
 		const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
-//		checkConditionNumber(A, "A", maxConditionA);
 		const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
 		
 		const auto alphaB = linal::solveLinearSystem(A, f);
@@ -84,21 +79,6 @@ protected:
 		uA += OmegaA * alphaA;
 		uB += OmegaB * alphaB;
 	}
-	
-	
-private:
-	
-	template<typename MatrixT>
-	void
-	checkConditionNumber(const MatrixT& m, const std::string name, real& currentMax) {
-		const real currentValue = linal::conditionNumber(m);
-		if (currentValue > currentMax) {
-			currentMax = currentValue;
-			LOG_INFO("New maximal condition number in matrix "
-					<< name << ": " << currentMax);
-		}
-	}
-	
 	
 	USE_AND_INIT_LOGGER("gcm.simplex.ContactCorrector")
 };
@@ -111,10 +91,8 @@ template<typename ModelA, typename MaterialA,
          typename ContactMatrixCreator>
 class ConcreteContactCorrector : public AbstractContactCorrector<TGrid> {
 public:
-	
 	typedef DefaultMesh<ModelA, TGrid, MaterialA> MeshA;
-	typedef DefaultMesh<ModelA, TGrid, MaterialB> MeshB;
-	typedef typename MeshA::PdeVector             PdeVector;
+	typedef DefaultMesh<ModelB, TGrid, MaterialB> MeshB;
 	static const int DIMENSIONALITY = MeshA::DIMENSIONALITY;
 	
 	typedef AbstractContactCorrector<TGrid> Base;
@@ -122,11 +100,10 @@ public:
 	typedef typename Base::RealD            RealD;
 	typedef typename Base::MatrixDD         MatrixDD;
 	
-	virtual void apply(const int s,
+	virtual void apply(
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
-			std::list<NodesContact> nodesInContact,
-			const RealD& direction) override {
+			std::list<NodesContact> nodesInContact) override {
 		
 		std::shared_ptr<MeshA> meshA = std::dynamic_pointer_cast<MeshA>(a);
 		assert_true(meshA);
@@ -134,28 +111,22 @@ public:
 		assert_true(meshB);
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
+			assert_true(nodesContact.normal == // TODO - replace the debugging
+				meshA->matrices(nodesContact.first)->basis.getColumn(0));
+			assert_true(nodesContact.normal == // TODO - replace the debugging
+				-meshB->matrices(nodesContact.second)->basis.getColumn(0));
 			
-			const RealD reflectionDirection = direction;
-//					linal::reflectionDirection(nodesContact.normal, direction);
-			
-			const real projection = linal::dotProduct(reflectionDirection, nodesContact.normal);
-			if (projection == 0) { continue; }
-			const RealD reflectionDirectionFromAToB =
-					reflectionDirection * Utils::sign(projection);
-			const auto OmegaA = ModelA::constructOuterEigenvectors(
-					meshA->material(nodesContact.first),
-					linal::createLocalBasis(  reflectionDirectionFromAToB));
-			const auto OmegaB = ModelB::constructOuterEigenvectors(
-					meshB->material(nodesContact.second),
-					linal::createLocalBasis( -reflectionDirectionFromAToB));
-			
+			const auto OmegaA = getOuterMatrixFromGcmMatricesInLocalBasis<ModelA>(
+					meshA->matrices(nodesContact.first));
+			const auto OmegaB = getOuterMatrixFromGcmMatricesInLocalBasis<ModelB>(
+					meshB->matrices(nodesContact.second));
 			const auto B1A = ContactMatrixCreator::createB1A(nodesContact.normal);
 			const auto B1B = ContactMatrixCreator::createB1B(nodesContact.normal);
 			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
 			const auto B2B = ContactMatrixCreator::createB2B(nodesContact.normal);
 			
-			auto& uA = meshA->_pdeNew(s, nodesContact.first);
-			auto& uB = meshB->_pdeNew(s, nodesContact.second);
+			auto& uA = meshA->_pdeNew(0, nodesContact.first);
+			auto& uB = meshB->_pdeNew(0, nodesContact.second);
 			
 			this->correctNodesContact(uA, OmegaA, B1A, B2A,
 			                          uB, OmegaB, B1B, B2B);
@@ -208,9 +179,7 @@ struct SlideContactMatrixCreator {
 template<typename TGrid>
 class ContactCorrectorFactory {
 public:
-	
 	static const int DIMENSIONALITY = TGrid::DIMENSIONALITY;
-	
 	typedef ElasticModel<DIMENSIONALITY>     ElasticModelD;
 	typedef AcousticModel<DIMENSIONALITY>    AcousticModelD;
 	
@@ -257,7 +226,6 @@ public:
 				THROW_INVALID_ARG("Unknown type of contact condition");
 		}
 	}
-	
 };
 
 

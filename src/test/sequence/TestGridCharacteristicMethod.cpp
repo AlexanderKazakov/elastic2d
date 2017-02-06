@@ -2,13 +2,14 @@
 
 #include <libgcm/util/math/Area.hpp>
 #include <libgcm/grid/cubic/CubicGrid.hpp>
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/engine/cubic/DefaultMesh.hpp>
 #include <libgcm/engine/cubic/GridCharacteristicMethod.hpp>
 #include <libgcm/rheology/models/models.hpp>
 
 #include <libgcm/util/snapshot/VtkSnapshotter.hpp>
 
 using namespace gcm;
+using namespace gcm::cubic;
 
 
 TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
@@ -30,8 +31,8 @@ TEST(GridCharacteristicMethodCubicGrid, interpolateValuesAround) {
 	cp.h = {1, 1};
 	
 	for (int stage = 0; stage <= 1; stage++) {
-		
 		DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, 0, cp, 1);
+		mesh.setUpPde(task);
 		for (int x = 0; x < cp.sizes(0); x++) {
 			for (int y = 0; y < cp.sizes(1); y++) {
 				// check that values is set properly

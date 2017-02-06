@@ -33,6 +33,7 @@ template<int TM, int Dim>
 struct GcmMatrices {
 	static const int M = TM;
 	static const int D = Dim;
+	typedef linal::Matrix<D, D> MatrixDD;
 	typedef linal::Matrix<M, M> Matrix;
 
 	/** Matrix in PDE along some direction with its eigensystem */
@@ -44,9 +45,9 @@ struct GcmMatrices {
 		Matrix U;
 		/// matrix of right eigenvectors
 		Matrix U1;
-		///< diagonal eigenvalue matrix
+		/// diagonal eigenvalue matrix
 		linal::DiagonalMatrix<M> L;
-
+		
 		real getMaximalEigenvalue() const {
 			real ans = 0;
 			for (int i = 0; i < M; i++) {
@@ -73,13 +74,17 @@ struct GcmMatrices {
 			linal::clear(U1);
 			linal::clear(U);
 		}
-
+	
 	};
-
+	
+	/// Spatial basis gcm-matrices are written in
+	MatrixDD basis = MatrixDD::Zeros();
+	/// gcm-matrices which written in the basis above.
+	/// i-th gcm-matrix along i-th column of the basis
 	GcmMatrix m[D];
 	const GcmMatrix& operator()(const int s) const { return m[s]; }
 	      GcmMatrix& operator()(const int s)       { return m[s]; }
-
+	
 	/** @return maximal in modulus eigenvalue of matrices from all directions */
 	real getMaximalEigenvalue() const {
 		real ans = 0;
@@ -88,13 +93,13 @@ struct GcmMatrices {
 		}
 		return ans;
 	}
-
+	
 	/** @throw gcm::Exception */
 	void checkDecomposition(const real eps = EQUALITY_TOLERANCE) const {
 		SUPPRESS_WUNUSED(eps);
-//		for (int s = 0; s < D; s++) {
-//			m[s].checkDecomposition(eps);
-//		}
+		for (int s = 0; s < D; s++) {
+			m[s].checkDecomposition(eps);
+		}
 	}
 	
 	void clear() {
@@ -102,7 +107,7 @@ struct GcmMatrices {
 			m[s].clear();
 		}
 	}
-
+	
 };
 
 

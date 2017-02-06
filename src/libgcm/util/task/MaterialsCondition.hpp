@@ -5,7 +5,6 @@
 
 namespace gcm {
 
-
 /**
  * Class for applying material conditions (setting rheology to mesh nodes)
  */
@@ -23,7 +22,6 @@ public:
 	 * according to given task
 	 */
 	static void apply(const Task& task, Mesh* mesh) {
-		
 		Conditions conditions = convertToLocalFormat(task, mesh->id);
 		
 		for (const auto& it : *mesh) {
@@ -54,9 +52,7 @@ public:
 		std::shared_ptr<TMaterial> material;
 		std::shared_ptr<GCM_MATRICES> matrices;
 	};
-	
 	typedef std::vector<Condition> Conditions;
-	
 	
 	
 	static Conditions convertToLocalFormat(
@@ -104,12 +100,8 @@ public:
 		}
 		return ans;
 	}
-	
-	
 };
 
-
-}
-
+} // namespace gcm
 
 #endif // LIBGCM_MATERIALSCONDITION_HPP

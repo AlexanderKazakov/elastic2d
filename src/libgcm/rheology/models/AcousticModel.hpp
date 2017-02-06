@@ -54,7 +54,7 @@ public:
 	static void constructGcmMatrices(GcmMatricesPtr m,
 			std::shared_ptr<const IsotropicMaterial> material,
 			const MatrixDD& basis = MatrixDD::Identity()) {
-		
+		m->basis = basis;
 		for (int i = 0; i < DIMENSIONALITY; i++) {
 			RealD n = basis.getColumn(i);
 			constructGcmMatrix((*m)(i), material, linal::createLocalBasis(n));

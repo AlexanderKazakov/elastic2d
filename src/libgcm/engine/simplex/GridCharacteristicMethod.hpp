@@ -32,6 +32,7 @@ class GridCharacteristicMethod : public GridCharacteristicMethodBase {
 public:
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
+	typedef typename Mesh::GCM_MATRICES                        GcmMatrices;
 	typedef typename Mesh::Iterator                            Iterator;
 	typedef typename Mesh::Cell                                Cell;
 	
@@ -59,28 +60,29 @@ public:
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		outerCasesToReturnBack.clear();
-		RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
 		
 		/// calculate inner waves of contact nodes
 		for (auto contactIter = mesh.contactBegin(); 
 		          contactIter < mesh.contactEnd(); ++contactIter) {
+			const GcmMatrices& gcmMatrices = *mesh.matrices(*contactIter);
+			const RealD direction = gcmMatrices.basis.getColumn(s);
 			mesh._pdeNew(s, *contactIter) = localGcmStep(
-					mesh.matrices(*contactIter)->m[s].U1,
-					mesh.matrices(*contactIter)->m[s].U,
-					interpolateValuesAround(s, mesh, direction, *contactIter,
-							crossingPoints(*contactIter, s, timeStep, mesh), false));
-			checkOuterCases(s, *contactIter, mesh);
+				gcmMatrices(s).U1, gcmMatrices(s).U,
+				interpolateValuesAround(s, mesh, direction, *contactIter,
+					crossingPoints(*contactIter, s, timeStep, mesh), false));
+//			checkOuterCases(s, *contactIter, mesh);
 		}
 		
 		/// calculate inner waves of border nodes
 		for (auto borderIter = mesh.borderBegin(); 
 		          borderIter < mesh.borderEnd(); ++borderIter) {
+			const GcmMatrices& gcmMatrices = *mesh.matrices(*borderIter);
+			const RealD direction = gcmMatrices.basis.getColumn(s);
 			mesh._pdeNew(s, *borderIter) = localGcmStep(
-					mesh.matrices(*borderIter)->m[s].U1,
-					mesh.matrices(*borderIter)->m[s].U,
-					interpolateValuesAround(s, mesh, direction, *borderIter,
-							crossingPoints(*borderIter, s, timeStep, mesh), false));
-			checkOuterCases(s, *borderIter, mesh);
+				gcmMatrices(s).U1, gcmMatrices(s).U,
+				interpolateValuesAround(s, mesh, direction, *borderIter,
+					crossingPoints(*borderIter, s, timeStep, mesh), false));
+//			checkOuterCases(s, *borderIter, mesh);
 		}
 	}
 	
@@ -95,16 +97,16 @@ public:
 	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
+		const RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
 		
 		/// calculate inner nodes
 		for (auto innerIter = mesh.innerBegin(); 
 		          innerIter < mesh.innerEnd(); ++innerIter) {
 			mesh._pdeNew(s, *innerIter) = localGcmStep(
-					mesh.matrices(*innerIter)->m[s].U1,
-					mesh.matrices(*innerIter)->m[s].U,
-					interpolateValuesAround(s, mesh, direction, *innerIter,
-							crossingPoints(*innerIter, s, timeStep, mesh), true));
+				mesh.matrices(*innerIter)->m[s].U1,
+				mesh.matrices(*innerIter)->m[s].U,
+				interpolateValuesAround(s, mesh, direction, *innerIter,
+					crossingPoints(*innerIter, s, timeStep, mesh), true));
 			assert_eq(outerInvariants.size(), 0);
 		}
 	}
@@ -325,6 +327,14 @@ private:
 			outerInvariants == Model::RIGHT_INVARIANTS) {
 		/// The normal case for border corrector
 			return;
+		}
+		
+		if (s == 0) {
+			std::cout << "Invalid outers at:" << mesh.coordsD(it)
+					<< "normal == " << mesh.commonNormal(it);
+			for (int i : outerInvariants) { std::cout << i << " "; }
+			std::cout << endl;
+			THROW_BAD_METHOD("Invalid outers for normal direction");
 		}
 		
 		if (outerInvariants.size() == 0) {

@@ -2,12 +2,12 @@
 
 #include <libgcm/util/math/Area.hpp>
 #include <libgcm/grid/cubic/CubicGrid.hpp>
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/engine/cubic/DefaultMesh.hpp>
 #include <libgcm/rheology/models/models.hpp>
 
 
 using namespace gcm;
-
+using namespace gcm::cubic;
 
 TEST(CubicGrid, initialize) {
 	Task task;
@@ -22,6 +22,7 @@ TEST(CubicGrid, initialize) {
 	cp.h = {1, 1};
 	
 	DefaultMesh<ElasticModel<2>, Grid, IsotropicMaterial> mesh(task, 0, cp, 1);
+	mesh.setUpPde(task);
 	
 	ASSERT_NEAR(mesh.getMaximalEigenvalue(), 0.866025404, EQUALITY_TOLERANCE);
 	ASSERT_NEAR(mesh.getMinimalSpatialStep(), 1.0, EQUALITY_TOLERANCE);

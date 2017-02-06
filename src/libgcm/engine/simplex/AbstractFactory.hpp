@@ -5,8 +5,9 @@
 
 #include <libgcm/util/snapshot/snapshotters.hpp>
 #include <libgcm/rheology/ode/Ode.hpp>
-#include <libgcm/engine/mesh/AbstractMesh.hpp>
+#include <libgcm/engine/simplex/AbstractMesh.hpp>
 #include <libgcm/engine/simplex/GridCharacteristicMethod.hpp>
+#include <libgcm/engine/simplex/DefaultMesh.hpp>
 
 
 namespace gcm {
@@ -41,11 +42,10 @@ public:
 };
 
 
-template<typename TModel, typename TGrid, typename TMaterial,
-         template<typename, typename, typename> class TMesh>
+template<typename TModel, typename TGrid, typename TMaterial>
 class AbstractFactory : public AbstractFactoryBase<TGrid> {
 public:
-	typedef TMesh<TModel, TGrid, TMaterial>        Mesh;
+	typedef gcm::simplex::DefaultMesh<TModel, TGrid, TMaterial> Mesh;
 	
 	typedef AbstractFactoryBase<TGrid>             Base;
 	typedef typename Base::MeshPtr                 MeshPtr;

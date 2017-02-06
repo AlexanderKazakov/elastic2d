@@ -4,7 +4,7 @@
 #include <libgcm/util/math/Area.hpp>
 #include <libgcm/rheology/models/models.hpp>
 
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/engine/cubic/DefaultMesh.hpp>
 #include <libgcm/grid/cubic/CubicGrid.hpp>
 
 

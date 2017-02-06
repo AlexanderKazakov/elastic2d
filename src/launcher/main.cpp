@@ -68,7 +68,7 @@ Task parseTaskContact2D() {
 	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
 	task.globalSettings.CourantNumber = 1;
 	task.globalSettings.numberOfSnaps = 150;
-	task.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.stepsPerSnap = 3;
 	
 	task.bodies = {
 		{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {/*Odes::T::MAXWELL_VISCOSITY*/}}},
@@ -95,7 +95,7 @@ Task parseTaskContact2D() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	const auto material1 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 0);
+	const auto material1 = std::make_shared<IsotropicMaterial>(4 * rho, lambda, mu, 0, 0, 0, 0);
 	const auto material2 = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 0, 0, 0, 1e+9);
 	task.materialConditions.byBodies.bodyMaterialMap = {
 		{0, material1},
@@ -173,15 +173,18 @@ Task parseTaskCgal3d() {
 //	task.simplexGrid.fileName = "meshes/cube.off";
 	
 	real rho = 4;
-	real lambda = 4;
+	real lambda = 1; // 2;
 	real mu = 1;
-	task.materialConditions.byAreas.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1, 1, 1);
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
+	const auto material = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1, 1, 1);
+	task.materialConditions.byBodies.bodyMaterialMap = {
+		{0, material},
+	};
 	
 	task.globalSettings.CourantNumber = 1;
 	
 	task.globalSettings.numberOfSnaps = 50;
-	task.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.stepsPerSnap = 3;
 	
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
@@ -247,12 +250,14 @@ Task parseTaskCgal2d() {
 	real rho = 4;
 	real lambda = 1; // 2;
 	real mu = 1;
-	task.materialConditions.byAreas.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
+	const auto material = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	task.materialConditions.byBodies.bodyMaterialMap = {
+		{0, material},
+	};
 	
 	task.globalSettings.CourantNumber = 1;
-	
-	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.numberOfSnaps = 150;
 	task.globalSettings.stepsPerSnap = 1;
 	
 	Task::InitialCondition::Quantity pressure;
@@ -459,7 +464,7 @@ inline Task parseTaskTmp() {
 	task.globalSettings.CourantNumber = 1.0;
 	task.globalSettings.requiredTime = 14;
 //	task.globalSettings.numberOfSnaps = 100;
-	task.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.stepsPerSnap = 3;
 	
 //	real phi = M_PI / 4;
 //	task.calculationBasis = {
@@ -549,8 +554,11 @@ Task parseTaskCube() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
-	task.materialConditions.byAreas.defaultMaterial =
-	        std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1, 1, 1);
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
+	const auto material = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
+	task.materialConditions.byBodies.bodyMaterialMap = {
+		{0, material},
+	};
 	
 	task.globalSettings.CourantNumber = 1;
 	task.globalSettings.numberOfSnaps = 200 / N;

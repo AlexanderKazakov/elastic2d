@@ -1,19 +1,20 @@
-#ifndef LIBGCM_DEFAULTMESH_HPP
-#define LIBGCM_DEFAULTMESH_HPP
+#ifndef LIBGCM_SIMPLEX_DEFAULTMESH_HPP
+#define LIBGCM_SIMPLEX_DEFAULTMESH_HPP
 
-#include <libgcm/engine/mesh/AbstractMesh.hpp>
+#include <libgcm/engine/simplex/AbstractMesh.hpp>
 #include <libgcm/util/task/InitialCondition.hpp>
-#include <libgcm/util/task/MaterialsCondition.hpp>
 
 
 namespace gcm {
+namespace simplex {
 
 /**
  * Mesh implements the approach when data are stored in separate std::vectors.
  * All nodes have the same type of rheology model and material.
  * @tparam TModel     rheology model
- * @tparam TGrid      geometric aspects
+ * @tparam TGrid      instantiation of gcm::SimplexGrid
  * @tparam TMaterial  type of material
+ * @see comments in AbstractMesh
  */
 template<typename TModel, typename TGrid, typename TMaterial>
 class DefaultMesh : public AbstractMesh<TGrid> {
@@ -31,50 +32,40 @@ public:
 	typedef typename Base::Grid                 Grid;
 	typedef typename Base::GridId               GridId;
 	typedef typename Base::ConstructionPack     ConstructionPack;
+	typedef typename Base::RealD                RealD;
+	typedef typename Base::MatrixDD             MatrixDD;
 	typedef typename Grid::Iterator             Iterator;
-	typedef typename Grid::MatrixDD             MatrixDD;
 	
 	typedef TMaterial                           Material;
 	typedef std::shared_ptr<Material>           MaterialPtr;
 	typedef std::shared_ptr<const Material>     ConstMaterialPtr;
 	static const Materials::T MaterialType = Material::Type;
 	
-	
 	/// Dimensionality of rheology model and grid
 	static const int DIMENSIONALITY = Model::DIMENSIONALITY;
 	
+	virtual Models::T getModelType() const override { return ModelType; }
+	virtual Materials::T getMaterialType() const override { return MaterialType; }
 	
-	/**
-	 * Constructor: grid creation and (if setUpPdeValues)
-	 * setting up the part connected with PDE: storages, matrices, etc.
-	 * The opportunity to delay with PDE setup can be useful
-	 * for MPI, when not all meshes initialized on the one core.
-	 */
-	DefaultMesh(const Task& task, const GridId gridId_,
+	
+	DefaultMesh(const Task&, const GridId gridId_,
 			const ConstructionPack& constructionPack,
-			const size_t numberOfNextPdeTimeLayers_,
-			const bool setUpPdeValues = true) :
+			const size_t numberOfNextPdeTimeLayers_) :
 					Base(gridId_, constructionPack),
-					numberOfNextPdeTimeLayers(numberOfNextPdeTimeLayers_) {
+					numberOfNextPdeTimeLayers(numberOfNextPdeTimeLayers_),
+					pdeIsSetUp(false) {
 		static_assert(Grid::DIMENSIONALITY == Model::DIMENSIONALITY, "");
-		if (setUpPdeValues) {
-			setUpPde(task);
-		}
 	}
 	virtual ~DefaultMesh() { }
 	
-	/** Setting up the part connected with PDE: storages, matrices, etc */
-	virtual void setUpPde(const Task& task) override {
+	
+	virtual void setUpPde(const Task& task, const MatrixDD& innerBasis) override {
 		assert_false(pdeIsSetUp);
 		pdeIsSetUp = true;
 		allocate();
-		MaterialsCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
+		applyMaterialsCondition(task, innerBasis);
 		InitialCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
 	}
-	
-	
-	virtual Models::T getModelType() const override { return ModelType; }
-	virtual Materials::T getMaterialType() const override { return MaterialType; }
 	
 	
 	/** Read-only access to actual PDE variables */
@@ -142,85 +133,103 @@ public:
 		return maximalEigenvalue;
 	}
 	
-	/// Meaningful for simplex grids only @{
-	virtual void setInnerCalculationBasis(const MatrixDD& basis) override;
-	MatrixDD getInnerCalculationBasis() const { return innerCalculationBasis; }
-	/// @}
-	
-	virtual void averageNewPdeLayersToCurrent() override;
+	virtual void averageNewPdeLayersToCurrent() override {
+		for (Iterator it : *this) {
+			_pde(it) = PdeVector::Zeros();
+		}
+		for (int s = 0; s < (int)numberOfNextPdeTimeLayers; s++) {
+			for (Iterator it : *this) {
+				_pde(it) += pdeNew(s, it) / numberOfNextPdeTimeLayers;
+			}
+		}
+	}
 	
 	virtual void swapCurrAndNextPdeTimeLayer(const int indexOfNextPde) override {
 		assert_lt(indexOfNextPde, (int)numberOfNextPdeTimeLayers);
 		std::swap(pdeVariables, pdeVariablesNew[(size_t)indexOfNextPde]);
 	}
 	
+	virtual void setInnerCalculationBasis(const MatrixDD& basis) override {
+		Iterator someInnerNode = *(this->innerBegin());
+		Model::constructGcmMatrices(_matrices(someInnerNode),
+				material(someInnerNode), basis);
+	}
+
+	MatrixDD getInnerCalculationBasis() const {
+		Iterator someInnerNode = *(this->innerBegin());
+		return matrices(someInnerNode)->basis;
+	}
 	
 	
 protected:
-	/**
-	 * Data storage
-	 */
-	///@{
+	/// Data storage @{
 	std::vector<PdeVariables> pdeVariables;
 	std::vector<std::vector<PdeVariables>> pdeVariablesNew;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
-	///@}
+	/// @}
 	
-	/// (For SimplexGrid)
-	/// Current calculation basis for inner nodes only. Border/contact nodes
-	/// have each private calc basis connected to outer normal.
-	MatrixDD innerCalculationBasis = MatrixDD::Zeros();
-	
+	/// there is only one "current" PDE time layer, but several "next"(new) layers
 	size_t numberOfNextPdeTimeLayers = 0;
-	real maximalEigenvalue = 0; ///< maximal in modulus eigenvalue of all gcm matrices
+	/// maximal in modulus eigenvalue of all gcm matrices
+	real maximalEigenvalue = 0;
+	/// a way to delay with PDE data allocation
 	bool pdeIsSetUp = false;
 	
-private:
-	void allocate();
 	
-	friend class MaterialsCondition<Model, Grid, Material, DefaultMesh>;
-};
-
-
-template<typename TModel, typename TGrid, typename TMaterial>
-void DefaultMesh<TModel, TGrid, TMaterial>::
-allocate() {
-	pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
-	pdeVariablesNew.resize(numberOfNextPdeTimeLayers);
-	for (auto& pdeNew : pdeVariablesNew) {
-		pdeNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
+private:
+	void allocate() {
+		pdeVariables.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
+		pdeVariablesNew.resize(numberOfNextPdeTimeLayers);
+		for (auto& pdeNew : pdeVariablesNew) {
+			pdeNew.resize(this->sizeOfAllNodes(), PdeVariables::Zeros());
+		}
+		gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
+		materials.resize(this->sizeOfAllNodes(), MaterialPtr());
 	}
-	gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
-	materials.resize(this->sizeOfAllNodes(), MaterialPtr());
-}
-
-
-template<typename TModel, typename TGrid, typename TMaterial>
-void DefaultMesh<TModel, TGrid, TMaterial>::
-setInnerCalculationBasis(const MatrixDD& basis) {
-	innerCalculationBasis = basis;
-	/// @note here we suppose mesh homogenity!
-	Iterator someInnerNode = *(this->innerBegin());
-	Model::constructGcmMatrices(_matrices(someInnerNode),
-			material(someInnerNode), innerCalculationBasis);
-}
-
-
-template<typename TModel, typename TGrid, typename TMaterial>
-void DefaultMesh<TModel, TGrid, TMaterial>::
-averageNewPdeLayersToCurrent() {
-	for (Iterator it : *this) {
-		_pde(it) = PdeVector::Zeros();
-	}
-	for (int s = 0; s < (int)numberOfNextPdeTimeLayers; s++) {
+	
+	void applyMaterialsCondition(const Task& task, const MatrixDD& innerBasis) {
+		assert_true(task.materialConditions.type ==
+				Task::MaterialCondition::Type::BY_BODIES); // TODO BY_AREAS
+		std::shared_ptr<AbstractMaterial> abstractMaterial =
+				task.materialConditions.byBodies.bodyMaterialMap.at(this->id);
+		std::shared_ptr<Material> concreteMaterial =
+				std::dynamic_pointer_cast<Material>(abstractMaterial);
+		assert_true(concreteMaterial);
+		std::shared_ptr<GCM_MATRICES> innerGcmMatrices = std::make_shared<GCM_MATRICES>();
+		Model::constructGcmMatrices(innerGcmMatrices, concreteMaterial, innerBasis);
+		maximalEigenvalue = innerGcmMatrices->getMaximalEigenvalue();
+		
 		for (Iterator it : *this) {
-			_pde(it) += pdeNew(s, it) / numberOfNextPdeTimeLayers;
+			this->_material(it) = concreteMaterial;
+			this->_matrices(it) = innerGcmMatrices;
+		}
+		
+		for (auto it = this->borderBegin(); it != this->borderEnd(); ++it) {
+			this->_material(*it) = concreteMaterial;
+			const RealD borderNormal = this->borderNormal(*it);
+			_matrices(*it) = std::make_shared<GCM_MATRICES>();
+			Model::constructGcmMatrices(_matrices(*it), concreteMaterial,
+					linal::createLocalBasisWithX(borderNormal));
+			if (matrices(*it)->getMaximalEigenvalue() > maximalEigenvalue) {
+				maximalEigenvalue = matrices(*it)->getMaximalEigenvalue();
+			}
+		}
+		
+		for (auto it = this->contactBegin(); it != this->contactEnd(); ++it) {
+			this->_material(*it) = concreteMaterial;
+			const RealD contactNormal = this->contactNormal(*it);
+			_matrices(*it) = std::make_shared<GCM_MATRICES>();
+			Model::constructGcmMatrices(_matrices(*it), concreteMaterial,
+					linal::createLocalBasisWithX(contactNormal));
+			if (matrices(*it)->getMaximalEigenvalue() > maximalEigenvalue) {
+				maximalEigenvalue = matrices(*it)->getMaximalEigenvalue();
+			}
 		}
 	}
-}
+};
 
+} // namespace simplex 
+} // namespace gcm
 
-}
-
-#endif // LIBGCM_DEFAULTMESH_HPP
+#endif // LIBGCM_SIMPLEX_DEFAULTMESH_HPP

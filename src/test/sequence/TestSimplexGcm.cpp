@@ -5,7 +5,7 @@
 #include <libgcm/util/math/Area.hpp>
 #include <libgcm/rheology/models/models.hpp>
 
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/engine/simplex/DefaultMesh.hpp>
 #include <libgcm/grid/simplex/SimplexGrid.hpp>
 
 
@@ -33,6 +33,7 @@ TEST(Engine, ZeroInitialization) {
 	task.globalSettings.CourantNumber = 1;
 	task.globalSettings.numberOfSnaps = 10;
 	task.globalSettings.stepsPerSnap = 1;
+	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
 	task.bodies = {{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
 	task.simplexGrid.spatialStep = 1.15;

@@ -38,7 +38,6 @@ public:
 	/// @{
 	ForwardIterator begin() const { return ForwardIterator::begin(sizes); }
 	ForwardIterator end() const { return ForwardIterator::end(sizes); }
-	ForwardIterator innerBegin() const { THROW_UNSUPPORTED("Unnecessary here"); }
 	/// @}
 	
 	/** @name iteration suitable for vtk snapshotters */

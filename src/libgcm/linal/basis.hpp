@@ -9,7 +9,7 @@ namespace gcm {
 namespace linal {
 
 /** 
- * @name Local basis creation
+ * @name Local basis creation given with direction of its z-component (last column)
  * Create local orthogonal basis for given vector n of unit length.
  * @note vector n MUST BE of unit length
  * 
@@ -83,6 +83,33 @@ inline Matrix33 createLocalBasisTranspose(const Real3& n) {
 	                     n(0),     n(1),     n(2)});
 }
  ///@}
+
+
+/// @name Local basis creation given with direction of its x-component.
+/// @see createLocalBasis - those functions creates a local right basis
+/// given with direction of its z-component, i.e its LAST column is
+/// argument of the function; and conversely, functions behind create
+/// local right basis with the argument of the function as its FIRST column
+/// @{
+inline Matrix11 createLocalBasisWithX(const Real1& n) {
+	return Matrix11({n(0)});
+}
+
+inline Matrix22 createLocalBasisWithX(const Real2& n) {
+	const Real2 tau = -perpendicularClockwise(n);
+	return Matrix22({n(0), tau(0), 
+	                 n(1), tau(1)});
+}
+
+inline Matrix33 createLocalBasisWithX(const Real3& n) {
+	const Real3 tau_1 = -perpendicularClockwise(n);
+	const Real3 tau_2 = crossProduct(n, tau_1);
+	return Matrix33({n(0), tau_1(0), tau_2(0),
+	                 n(1), tau_1(1), tau_2(1),
+	                 n(2), tau_1(2), tau_2(2)});
+}
+///@}
+
 
 /// @name Random basis creation
  /// @{

@@ -5,7 +5,7 @@
 
 #include <libgcm/util/snapshot/snapshotters.hpp>
 #include <libgcm/rheology/ode/Ode.hpp>
-#include <libgcm/engine/mesh/AbstractMesh.hpp>
+#include <libgcm/engine/cubic/DefaultMesh.hpp>
 #include <libgcm/engine/cubic/GridCharacteristicMethod.hpp>
 #include <libgcm/engine/cubic/ContactConditions.hpp>
 #include <libgcm/engine/cubic/BorderConditions.hpp>
@@ -77,7 +77,7 @@ public:
 			const GridConstructionPack& constructionPack,
 			const size_t numberOfNextPdeTimeLayers) override {
 		return std::make_shared<Mesh>(task, gridId,
-				constructionPack, numberOfNextPdeTimeLayers, false);
+				constructionPack, numberOfNextPdeTimeLayers);
 	}
 	
 	virtual GcmPtr createGcm(const Task& task) override {

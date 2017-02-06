@@ -11,7 +11,6 @@
 namespace gcm {
 namespace simplex {
 
-
 /**
  * Engine implements grid-characteristic method 
  * with dimensional splitting (stages) on simplex grids
@@ -20,7 +19,6 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 class Engine : public AbstractEngine {
 public:
-	
 	typedef SimplexGrid<Dimensionality, TriangulationT>    Grid;
 	typedef AbstractMesh<Grid>                             Mesh;
 	typedef typename Grid::Triangulation                   Triangulation;
@@ -66,7 +64,7 @@ public:
 	virtual ~Engine() { }
 	
 	std::shared_ptr<const Mesh> getMesh(const GridId gridId) const {
-		return getBody(gridId).grid;
+		return getBody(gridId).mesh;
 	}
 	
 protected:
@@ -82,8 +80,8 @@ protected:
 		real minimalTimeStep = std::numeric_limits<real>::max();
 		for (const Body& body : bodies) {
 			real bodyTimeStep = CourantNumber *
-					body.grid->getAverageHeight() /
-					body.grid->getMaximalEigenvalue();
+					body.mesh->getAverageHeight() /
+					body.mesh->getMaximalEigenvalue();
 			if (bodyTimeStep < minimalTimeStep) {
 				minimalTimeStep = bodyTimeStep;
 			}
@@ -94,7 +92,7 @@ protected:
 	
 private:
 	struct Body {
-		std::shared_ptr<Mesh> grid;
+		std::shared_ptr<Mesh> mesh;
 		
 		std::shared_ptr<GridCharacteristicMethodBase> gcm;
 		
@@ -104,7 +102,7 @@ private:
 		typedef std::shared_ptr<Snapshotter> SnapPtr;
 		std::vector<SnapPtr> snapshotters;
 		
-		/// it's possible to have several border conditions for one grid
+		/// it's possible to have several border conditions for one mesh
 		std::vector<Border> borders;
 	};
 	
@@ -133,38 +131,37 @@ private:
 	
 	Body& getBody(const GridId gridId) {
 		for (Body& body : bodies) {
-			if (body.grid->id == gridId) { return body; }
+			if (body.mesh->id == gridId) { return body; }
 		}
 		THROW_INVALID_ARG("There isn't a body with given id");
 	}
 	const Body& getBody(const GridId gridId) const {
 		for (const Body& body : bodies) {
-			if (body.grid->id == gridId) { return body; }
+			if (body.mesh->id == gridId) { return body; }
 		}
 		THROW_INVALID_ARG("There isn't a body with given id");
 	}
 	
 	
 	void initializeCalculationBasis(const Task& task) {
-		std::vector<real> taskBasis = task.calculationBasis;
-		calculationBasis.createNewRandomAtEachTimeStep = taskBasis.empty();
+		calculationBasis.createNewRandomAtEachTimeStep =
+				task.calculationBasis.empty();
 		if (calculationBasis.createNewRandomAtEachTimeStep) {
+			calculationBasis.basis = linal::randomBasis(calculationBasis.basis);
 			LOG_INFO("Use new random calculation basis at each time step");
 		} else {
-			assert_eq(taskBasis.size(), Dimensionality * Dimensionality);
-			calculationBasis.basis.copyFrom(taskBasis);
+			assert_eq(task.calculationBasis.size(), Dimensionality * Dimensionality);
+			calculationBasis.basis.copyFrom(task.calculationBasis);
 			LOG_INFO("Use constant calculation basis:" << calculationBasis.basis);
-			for (const Body& body : bodies) {
-				body.grid->setInnerCalculationBasis(calculationBasis.basis);
-			}
 		}
 	}
-	void createNewCalculationBasis() {
+	
+	void changeCalculationBasis() {
 		if (!calculationBasis.createNewRandomAtEachTimeStep) { return; }
 		calculationBasis.basis = linal::randomBasis(calculationBasis.basis);
 		LOG_INFO("New calculation basis:" << calculationBasis.basis);
 		for (const Body& body : bodies) {
-			body.grid->setInnerCalculationBasis(calculationBasis.basis);
+			body.mesh->setInnerCalculationBasis(calculationBasis.basis);
 		}
 	}
 	
@@ -200,11 +197,11 @@ private:
 			case (Models::T::ACOUSTIC):
 				return std::make_shared<AbstractFactory<
 						AcousticModel<Dimensionality>,
-						Grid, IsotropicMaterial, DefaultMesh>>();
+						Grid, IsotropicMaterial>>();
 			case (Models::T::ELASTIC):
 				return std::make_shared<AbstractFactory<
 						ElasticModel<Dimensionality>,
-						Grid, IsotropicMaterial, DefaultMesh>>();
+						Grid, IsotropicMaterial>>();
 			default:
 				THROW_UNSUPPORTED("Unknown model type");
 		}

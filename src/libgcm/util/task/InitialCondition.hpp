@@ -18,7 +18,6 @@ public:
 	
 	typedef MaterialsCondition<TModel, TGrid, TMaterial, TMesh> MC;
 	
-	
 	/**
 	 * Apply initial conditions to mesh according to given task
 	 */
@@ -39,7 +38,6 @@ public:
 	
 	
 private:
-	
 	struct Condition {
 		std::shared_ptr<Area> area;
 		PdeVector pdeVector;
@@ -57,7 +55,6 @@ private:
 			assert_eq(PdeVector::M, v.list.size());
 			conditions.push_back({v.area, PdeVector(v.list)});
 		}
-		
 		
 		typename MC::Conditions mcConditions = 
 				MC::convertToLocalFormat(task, gridId);
@@ -90,11 +87,8 @@ private:
 		
 		return conditions;
 	}
-	
 };
 
-
 }
-
 
 #endif // LIBGCM_INITIALCONDITION_HPP

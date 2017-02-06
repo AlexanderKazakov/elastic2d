@@ -157,6 +157,11 @@ public:
 				return outerCell->info().getGridId() == neighborId;});
 	}
 	
+	/** Normal to the contact surface in specified contact node */
+	RealD contactNormal(const Iterator& it) const {
+		return contactNormal(it, contactGridId(it));
+	}
+	
 	/** Normal to the free border surface of this grid */
 	RealD borderNormal(const Iterator& it) const {
 		return contactNormal(it, EmptySpaceFlag);
@@ -166,6 +171,16 @@ public:
 	RealD commonNormal(const Iterator& it) const {
 		return normal(it, [=](const CellHandle outerCell) {
 				return outerCell->info().getGridId() != id;});
+	}
+	
+	/** Id of the grid the node is in contact with */
+	GridId contactGridId(const Iterator& it) const {
+		std::set<GridId> incidentGrids = gridsAroundVertex(it);
+		assert_true(incidentGrids.erase(id));
+		assert_eq(incidentGrids.size(), 1);
+		const GridId ans = *incidentGrids.begin();
+		assert_ne(ans, EmptySpaceFlag);
+		return ans;
 	}
 	
 	

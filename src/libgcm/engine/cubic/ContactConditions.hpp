@@ -1,7 +1,7 @@
 #ifndef LIBGCM_CUBIC_CONTACTCONDITIONS_HPP
 #define LIBGCM_CUBIC_CONTACTCONDITIONS_HPP
 
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
+#include <libgcm/engine/cubic/DefaultMesh.hpp>
 #include <libgcm/rheology/materials/materials.hpp>
 
 

@@ -15,6 +15,7 @@ Engine(const Task& task) :
 		triangulation(task),
 		movable(task.simplexGrid.movable) {
 	
+	initializeCalculationBasis(task);
 	createMeshes(task);
 	createContacts(task);
 	
@@ -37,14 +38,13 @@ Engine(const Task& task) :
 	LOG_INFO("Found borders (except non-reflection cases):");
 	for (const Body& body : bodies) {
 		for (size_t i = 0; i < body.borders.size(); i++) {
-			LOG_INFO("For body " << body.grid->id
+			LOG_INFO("For body " << body.mesh->id
 					<< " and border condition number " << i
 					<< " number of border nodes = "
 					<< body.borders[i].borderNodes.size());
 		}
 	}
 	
-	initializeCalculationBasis(task);
 	afterConstruction(task);
 }
 
@@ -53,13 +53,13 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
 createMeshes(const Task& task) {
-	
 	for (const auto& taskBody : task.bodies) {
 		Body body;
 		const GridId gridId = taskBody.first;
 		auto factory = createAbstractFactory(taskBody.second);
 		
-		body.grid = factory->createMesh(task, gridId, {&triangulation}, Dimensionality);
+		body.mesh = factory->createMesh(task, gridId, {&triangulation}, Dimensionality);
+		body.mesh->setUpPde(task, calculationBasis.basis);
 		
 		body.gcm = factory->createGcm();
 		
@@ -77,8 +77,8 @@ createMeshes(const Task& task) {
 			border.correctionArea = condition.area;	
 			border.borderCorrector = BorderCorrectorFactory<Grid>::create(
 					condition, 
-					task.bodies.at(body.grid->id).modelId,
-					task.bodies.at(body.grid->id).materialId);
+					task.bodies.at(body.mesh->id).modelId,
+					task.bodies.at(body.mesh->id).materialId);
 			body.borders.push_back(border);
 		}
 		
@@ -93,19 +93,19 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
 nextTimeStep() {
-	createNewCalculationBasis();
+	changeCalculationBasis();
 	
 	/// simple first order splitting by summ solutions from all directions
 	for (int stage = 0; stage < Dimensionality; stage++) {
 		gcmStage(stage, Clock::Time(), Clock::TimeStep());
 	}
 	for (const Body& body : bodies) {
-		body.grid->averageNewPdeLayersToCurrent();
+		body.mesh->averageNewPdeLayersToCurrent();
 	}
 	
 	for (const Body& body : bodies) {
 		for (typename Body::OdePtr ode : body.odes) {
-			ode->apply(*body.grid, Clock::TimeStep());
+			ode->apply(*body.mesh, Clock::TimeStep());
 		}
 	}
 }
@@ -116,14 +116,14 @@ template<int Dimensionality,
 void Engine<Dimensionality, TriangulationT>::
 gcmStage(const int stage, const real currentTime, const real timeStep) {
 	for (const Body& body : bodies) {
-		body.gcm->beforeStage(*body.grid);
+		body.gcm->beforeStage(*body.mesh);
 	}
 	for (const Body& body : bodies) {
-		body.gcm->contactAndBorderStage(stage, timeStep, *body.grid);
+		body.gcm->contactAndBorderStage(stage, timeStep, *body.mesh);
 	}
 	correctContactsAndBorders(stage, currentTime + timeStep);
 	for (const Body& body : bodies) {
-		body.gcm->innerStage(stage, timeStep, *body.grid);
+		body.gcm->innerStage(stage, timeStep, *body.mesh);
 	}
 }
 
@@ -136,26 +136,22 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 	
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->apply(
-				stage,
-				getBody(contact.first.first).grid,
-				getBody(contact.first.second).grid,
-				contact.second.nodesInContact,
-				calculationBasis.basis.getColumn(stage));
+				getBody(contact.first.first).mesh,
+				getBody(contact.first.second).mesh,
+				contact.second.nodesInContact);
 	}
 	
 	for (const Body& body : bodies) {
 		for (const Border& border : body.borders) {
 			border.borderCorrector->apply(
-					stage,
-					body.grid,
+					body.mesh,
 					border.borderNodes,
-					calculationBasis.basis.getColumn(stage),
 					timeAtNextLayer);
 		}
 	}
 	
 	for (const Body& body : bodies) {
-		body.gcm->returnBackBadOuterCases(stage, *body.grid);
+		body.gcm->returnBackBadOuterCases(stage, *body.mesh);
 	}
 }
 
@@ -167,7 +163,7 @@ createContacts(const Task& task) {
 	
 	std::set<GridId> gridsIds;
 	for (const Body& body : bodies) {
-		gridsIds.insert(body.grid->id);
+		gridsIds.insert(body.mesh->id);
 	}
 	
 	for (const GridsPair gridsPair : Utils::makePairs(gridsIds)) {
@@ -212,9 +208,9 @@ template<int Dimensionality,
 void Engine<Dimensionality, TriangulationT>::
 addContactNode(const VertexHandle vh, const GridsPair gridsIds) {
 	
-	Iterator firstIter = getBody(gridsIds.first).grid->localVertexIndex(vh);
-	Iterator secondIter = getBody(gridsIds.second).grid->localVertexIndex(vh);
-	RealD normal = getBody(gridsIds.first).grid->contactNormal(firstIter, gridsIds.second);
+	Iterator firstIter = getBody(gridsIds.first).mesh->localVertexIndex(vh);
+	Iterator secondIter = getBody(gridsIds.second).mesh->localVertexIndex(vh);
+	RealD normal = getBody(gridsIds.first).mesh->contactNormal(firstIter, gridsIds.second);
 	if (normal != RealD::Zeros()) {
 		contacts.at(gridsIds).nodesInContact.push_back(
 				{ firstIter, secondIter, normal });
@@ -228,7 +224,7 @@ void Engine<Dimensionality, TriangulationT>::
 addBorderNode(const VertexHandle vh, const GridId gridId) {
 	assert_ne(gridId, EmptySpaceFlag);
 	
-	std::shared_ptr<Mesh> mesh = getBody(gridId).grid;
+	std::shared_ptr<Mesh> mesh = getBody(gridId).mesh;
 	Iterator iter = mesh->localVertexIndex(vh);
 	
 	// for a concrete node, not more than one border condition can be applied
@@ -254,7 +250,7 @@ void Engine<Dimensionality, TriangulationT>::
 writeSnapshots(const int step) {
 	for (Body& body : bodies) {
 		for (typename Body::SnapPtr snapshotter : body.snapshotters) {
-			snapshotter->snapshot(body.grid.get(), step);
+			snapshotter->snapshot(body.mesh.get(), step);
 		}
 	}
 }

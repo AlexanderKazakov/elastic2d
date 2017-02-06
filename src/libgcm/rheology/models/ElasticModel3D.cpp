@@ -434,20 +434,16 @@ void ElasticModel<3>::constructGcmMatrices(GcmMatricesPtr m,
 		std::shared_ptr<const OrthotropicMaterial> material,
 		const MatrixDD& basis) {
 	assert_true(basis == linal::identity(basis)); // TODO
-	
+	m->basis = basis;
 	if (material->anglesOfRotation == Real3::Zeros()) {
 		constructNotRotated(m, material->rho, 
 				material->c11, material->c12, material->c13,
 				material->c22, material->c23, material->c33,
 				material->c44, material->c55, material->c66);
-		
 		m->checkDecomposition();
-	
 	} else {
 		constructRotated(m, material);
-		
 	}
-	
 }
 
 

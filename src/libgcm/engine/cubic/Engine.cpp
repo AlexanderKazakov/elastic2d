@@ -1,7 +1,6 @@
 #include <libgcm/engine/cubic/Engine.hpp>
 
 #include <libgcm/engine/cubic/AbstractFactory.hpp>
-#include <libgcm/engine/mesh/DefaultMesh.hpp>
 #include <libgcm/rheology/models/AcousticModel.hpp>
 #include <libgcm/rheology/models/ElasticModel.hpp>
 
