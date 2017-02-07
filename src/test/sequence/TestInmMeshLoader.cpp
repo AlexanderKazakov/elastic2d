@@ -20,7 +20,7 @@ TEST(InmMeshLoader, readFromFile) {
 	std::vector<Real3> points;
 	std::map<InmMeshLoader::Cell, InmMeshLoader::Material> materials;
 	
-	InmMeshLoader::readFromFile("meshes/coarse/testInmLoader.out", 
+	InmMeshLoader::readFromFile("meshes/testInmLoader.out", 
 			points, materials);
 	
 	ASSERT_EQ(12, points.size());

@@ -13,7 +13,7 @@ inline Task skullCommon() {
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.CourantNumber = 1;
 	task.globalSettings.numberOfSnaps = 1000;
-	task.globalSettings.stepsPerSnap = 5;
+	task.globalSettings.stepsPerSnap = 15;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";

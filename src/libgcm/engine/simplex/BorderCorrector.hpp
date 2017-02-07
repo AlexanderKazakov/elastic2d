@@ -101,9 +101,6 @@ public:
 		const auto b = borderCondition.b(timeAtNextLayer);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
-			assert_true(nodeBorder.normal == // TODO - replace the debugging
-				mesh->matrices(nodeBorder.iterator)->basis.getColumn(0));
-			
 			const auto Omega = getOuterMatrixFromGcmMatricesInLocalBasis<Model>(
 					mesh->matrices(nodeBorder.iterator));
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
