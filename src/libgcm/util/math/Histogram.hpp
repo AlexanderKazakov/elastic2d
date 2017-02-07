@@ -2,6 +2,7 @@
 #define LIBGCM_HISTOGRAM_HPP
 
 #include <algorithm>
+#include <numeric>
 
 #include <libgcm/util/infrastructure/infrastructure.hpp>
 
