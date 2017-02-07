@@ -111,11 +111,6 @@ public:
 		assert_true(meshB);
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
-			assert_true(nodesContact.normal == // TODO - replace the debugging
-				meshA->matrices(nodesContact.first)->basis.getColumn(0));
-			assert_true(nodesContact.normal == // TODO - replace the debugging
-				-meshB->matrices(nodesContact.second)->basis.getColumn(0));
-			
 			const auto OmegaA = getOuterMatrixFromGcmMatricesInLocalBasis<ModelA>(
 					meshA->matrices(nodesContact.first));
 			const auto OmegaB = getOuterMatrixFromGcmMatricesInLocalBasis<ModelB>(
