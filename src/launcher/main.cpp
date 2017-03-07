@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
 	else if (taskId == "cube"      ) { task = parseTaskCube(); }
 	else if (taskId == "ndi"       ) { task = ndi(); }
 	else if (taskId == "tor"       ) { task = torAcoustic(); }
+	else if (taskId == "titan"     ) { task = titan(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;

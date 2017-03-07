@@ -59,7 +59,32 @@ freeBorder3D(const int direction) {
 	return fixedNormalForce3D(direction, [](real) {return 0;});
 }
 
-
+inline Task::CubicBorderCondition::Values
+fixedNormalVelocity3D(
+		const int direction, const Task::TimeDependency normalVelocity) {
+	switch (direction) {
+		case 0:
+			return {
+				{PhysicalQuantities::T::Vx, normalVelocity},
+				{PhysicalQuantities::T::Vy, [](real) {return 0;} },
+				{PhysicalQuantities::T::Vz, [](real) {return 0;} },
+			};
+		case 1:
+			return {
+				{PhysicalQuantities::T::Vx, [](real) {return 0;} },
+				{PhysicalQuantities::T::Vy, normalVelocity},
+				{PhysicalQuantities::T::Vz, [](real) {return 0;} },
+			};
+		case 2:
+			return {
+				{PhysicalQuantities::T::Vx, [](real) {return 0;} },
+				{PhysicalQuantities::T::Vy, [](real) {return 0;} },
+				{PhysicalQuantities::T::Vz, normalVelocity},
+			};
+		default:
+			THROW_INVALID_ARG("Invalid direction value");
+	}
+}
 
 
 inline real lambda(const real E, const real nu) {
@@ -89,6 +114,48 @@ createNdiMaterial() {
 	real nu = 0.19; // Puasson
 	real rho = 6e+3;
 	return std::make_shared<IsotropicMaterial>(rho, lambda(E, nu), mu(E, nu));
+}
+
+
+inline std::shared_ptr<OrthotropicMaterial>
+createCompositeMaterialFromCagiReport2014() {
+	real rho = 1.58e+3;
+	OrthotropicMaterial material(rho,
+			{10.30e+9,  6.96e+9,  6.96e+9,
+			           23.25e+9,  6.96e+9,
+			                     10.30e+9,
+			                               5.01e+9, 1.67e+9, 5.01e+9});
+	material.anglesOfRotation = {0, 0, 0};
+	material.materialNumber = 0;
+	return std::make_shared<OrthotropicMaterial>(material);
+}
+
+inline std::shared_ptr<IsotropicMaterial>
+createTitan() {
+	real E = 120e+9; // Young
+	real nu = 0.31; // Puasson
+	real rho = 4.5e+3;
+	std::shared_ptr<IsotropicMaterial> ans =
+			std::make_shared<IsotropicMaterial>(rho, lambda(E, nu), mu(E, nu));
+	ans->materialNumber = 1;
+	return ans;
+}
+
+inline std::shared_ptr<IsotropicMaterial>
+createSteel() {
+	real lambda = 99.43e+9;
+	real mu = 78.13e+9;
+	real rho = 7.8e+3;
+	std::shared_ptr<IsotropicMaterial> ans =
+			std::make_shared<IsotropicMaterial>(rho, lambda, mu);
+	ans->materialNumber = 2;
+	return ans;
+}
+
+inline std::shared_ptr<OrthotropicMaterial>
+createTitanOrthotropicMaterial() {
+/// isotropic is orthotropic too
+	return std::make_shared<OrthotropicMaterial>(*createTitan());
 }
 
 
@@ -185,4 +252,69 @@ inline Task ndi() {
 	return task;
 }
 
+
+inline Task titan() {
+	Task task;
+	task.cubicGrid.borderSize = 2;
+	task.globalSettings.dimensionality = 3;
+	task.globalSettings.gridId = Grids::T::CUBIC;
+	task.bodies = {
+			{1, {Materials::T::ORTHOTROPIC, Models::T::ELASTIC, {}}}
+	};
+	
+	task.globalSettings.snapshottersId = {
+			Snapshotters::T::VTK,
+//			Snapshotters::T::SLICESNAP
+	};
+	task.vtkSnapshotter.quantitiesToSnap = {
+			PhysicalQuantities::T::PRESSURE,
+			PhysicalQuantities::T::Sxx,
+			PhysicalQuantities::T::Sxy,
+			PhysicalQuantities::T::Sxz,
+			PhysicalQuantities::T::Syy,
+			PhysicalQuantities::T::Syz,
+			PhysicalQuantities::T::Szz
+	};
+//	task.detector.quantities = { PhysicalQuantities::T::Vy };
+//	task.detector.gridId = 1;
+	
+	task.globalSettings.CourantNumber = 1;
+	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.stepsPerSnap = 5;
+	
+	const real width = 4e-2;
+	const real compositeH = 6.5e-3;
+	const real titanH = 1e-3;
+	task.materialConditions.type = Task::MaterialCondition::Type::BY_AREAS;
+	task.materialConditions.byAreas.defaultMaterial =
+			createCompositeMaterialFromCagiReport2014();
+	Task::MaterialCondition::ByAreas::Inhomogenity titanArea = {
+		std::make_shared<AxisAlignedBoxArea>(Real3({-width, 0, -width}), Real3({width, titanH + 1e-3, width})),
+		createTitanOrthotropicMaterial()
+	};
+	task.materialConditions.byAreas.materials = {titanArea};
+	
+	const int sizeXZ = 50;
+	const int sizeYofComposite = 50;
+	const int sizeY = int(sizeYofComposite * (compositeH + titanH) / compositeH);
+	const real hXZ = width / sizeXZ;
+	const real hY = compositeH / sizeYofComposite;
+	task.cubicGrid.h = {hXZ, hY, hXZ};
+	task.cubicGrid.cubics = {
+			{1, {{sizeXZ, sizeY, sizeXZ}, { -sizeXZ/2, -sizeYofComposite, -sizeXZ/2}}}
+	};
+	
+	const real diameter = 3e-3;
+	auto upper = std::make_shared<StraightBoundedCylinderArea>(diameter / 2,
+			Real3({0, -compositeH/2, 0}), Real3({0, titanH + 1e-3, 0}));
+	task.cubicBorderConditions = {
+		{1, {
+			 {1, std::make_shared<InfiniteArea>(), freeBorder3D(1) },
+			 {1, upper, fixedNormalVelocity3D(1, [=](real) {return -4.24;}) },
+		 }},
+	};
+//	task.detector.area = upper;
+	
+	return task;
+}
 

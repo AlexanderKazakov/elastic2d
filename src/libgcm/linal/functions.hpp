@@ -420,7 +420,9 @@ bool approximatelyEqual(
     // TODO - or check (m1 - m2) with some norm?
 	for (int i = 0; i < TM; i++) {
 		for (int j = 0; j < TN; j++) {
-			if ( !Utils::approximatelyEqual(m1(i, j), m2(i, j), tolerance) ) {
+			const real a = m1(i, j);
+			const real b = m2(i, j);
+			if ( !Utils::approximatelyEqual(a, b, tolerance) ) {
 				return false;
 			}
 		}

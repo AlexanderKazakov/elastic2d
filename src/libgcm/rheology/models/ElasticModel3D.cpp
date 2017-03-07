@@ -440,7 +440,7 @@ void ElasticModel<3>::constructGcmMatrices(GcmMatricesPtr m,
 				material->c11, material->c12, material->c13,
 				material->c22, material->c23, material->c33,
 				material->c44, material->c55, material->c66);
-		m->checkDecomposition();
+//		m->checkDecomposition();
 	} else {
 		constructRotated(m, material);
 	}

@@ -14,6 +14,7 @@ OrthotropicMaterial(const IsotropicMaterial& isotropic) {
 	c11 = c22 = c33 = isotropic.lambda + 2 * isotropic.mu;
 	c44 = c55 = c66 = isotropic.mu;
 	c12 = c13 = c23 = isotropic.lambda;
+	materialNumber = isotropic.materialNumber;
 }
 
 
