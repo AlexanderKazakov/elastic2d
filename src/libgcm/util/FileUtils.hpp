@@ -114,7 +114,7 @@ public:
 
 
 	static void closeFileStream(std::ifstream& fileStream) {
-		assert_true(fileStream.good());
+		assert_true(!fileStream.bad());
 		fileStream.close();
 	}
 	

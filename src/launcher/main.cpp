@@ -5,6 +5,7 @@
 #include <launcher/getopt_wrapper.hpp>
 #include <launcher/skull.hpp>
 #include <launcher/ndi.hpp>
+#include <launcher/tor.hpp>
 
 
 using namespace gcm;
@@ -37,6 +38,7 @@ int main(int argc, char** argv) {
 	else if (taskId == "tmp"       ) { task = parseTaskTmp(); }
 	else if (taskId == "cube"      ) { task = parseTaskCube(); }
 	else if (taskId == "ndi"       ) { task = ndi(); }
+	else if (taskId == "tor"       ) { task = torAcoustic(); }
 	else {
 		LOG_FATAL("Invalid task file");
 		return -1;
