@@ -255,7 +255,7 @@ inline Task ndi() {
 
 inline Task titan() {
 	Task task;
-	task.cubicGrid.borderSize = 2;
+	task.cubicGrid.borderSize = 1;
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::CUBIC;
 	task.bodies = {
@@ -264,7 +264,6 @@ inline Task titan() {
 	
 	task.globalSettings.snapshottersId = {
 			Snapshotters::T::VTK,
-//			Snapshotters::T::SLICESNAP
 	};
 	task.vtkSnapshotter.quantitiesToSnap = {
 			PhysicalQuantities::T::PRESSURE,
@@ -275,16 +274,15 @@ inline Task titan() {
 			PhysicalQuantities::T::Syz,
 			PhysicalQuantities::T::Szz
 	};
-//	task.detector.quantities = { PhysicalQuantities::T::Vy };
-//	task.detector.gridId = 1;
 	
-	task.globalSettings.CourantNumber = 1;
-	task.globalSettings.numberOfSnaps = 50;
+	const int m = 2;
+	task.globalSettings.CourantNumber = 0.9;
+	task.globalSettings.numberOfSnaps = 100 * m;
 	task.globalSettings.stepsPerSnap = 5;
 	
-	const real width = 4e-2;
+	const real width = 2e-2;
 	const real compositeH = 6.5e-3;
-	const real titanH = 1e-3;
+	const real titanH = 2e-3;
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_AREAS;
 	task.materialConditions.byAreas.defaultMaterial =
 			createCompositeMaterialFromCagiReport2014();
@@ -294,8 +292,8 @@ inline Task titan() {
 	};
 	task.materialConditions.byAreas.materials = {titanArea};
 	
-	const int sizeXZ = 50;
-	const int sizeYofComposite = 50;
+	const int sizeXZ = 50 * m;
+	const int sizeYofComposite = 50 * m;
 	const int sizeY = int(sizeYofComposite * (compositeH + titanH) / compositeH);
 	const real hXZ = width / sizeXZ;
 	const real hY = compositeH / sizeYofComposite;
@@ -307,13 +305,13 @@ inline Task titan() {
 	const real diameter = 3e-3;
 	auto upper = std::make_shared<StraightBoundedCylinderArea>(diameter / 2,
 			Real3({0, -compositeH/2, 0}), Real3({0, titanH + 1e-3, 0}));
+	auto freeBorderArea = std::make_shared<InfiniteArea>();
 	task.cubicBorderConditions = {
 		{1, {
-			 {1, std::make_shared<InfiniteArea>(), freeBorder3D(1) },
-			 {1, upper, fixedNormalVelocity3D(1, [=](real) {return -4.24;}) },
+			 {1, freeBorderArea, freeBorder3D(1) },
+			 {1, upper, fixedNormalVelocity3D(1, [](real) {return -4.24;}) },
 		 }},
 	};
-//	task.detector.area = upper;
 	
 	return task;
 }
