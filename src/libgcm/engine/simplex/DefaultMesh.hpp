@@ -59,11 +59,12 @@ public:
 	virtual ~DefaultMesh() { }
 	
 	
-	virtual void setUpPde(const Task& task, const MatrixDD& innerBasis) override {
+	virtual void setUpPde(const Task& task, const MatrixDD& innerBasis,
+			const BorderCalcMode borderCalcMode) override {
 		assert_false(pdeIsSetUp);
 		pdeIsSetUp = true;
 		allocate();
-		applyMaterialsCondition(task, innerBasis);
+		applyMaterialsCondition(task, innerBasis, borderCalcMode);
 		InitialCondition<Model, Grid, Material, DefaultMesh>::apply(task, this);
 	}
 	
@@ -188,7 +189,8 @@ private:
 		materials.resize(this->sizeOfAllNodes(), MaterialPtr());
 	}
 	
-	void applyMaterialsCondition(const Task& task, const MatrixDD& innerBasis) {
+	void applyMaterialsCondition(const Task& task, const MatrixDD& innerBasis,
+			const BorderCalcMode borderCalcMode) {
 		assert_true(task.materialConditions.type ==
 				Task::MaterialCondition::Type::BY_BODIES); // TODO BY_AREAS
 		std::shared_ptr<AbstractMaterial> abstractMaterial =
@@ -205,8 +207,9 @@ private:
 			this->_matrices(it) = innerGcmMatrices;
 		}
 		
+		if (borderCalcMode == BorderCalcMode::GLOBAL_BASIS) { return; }
+		
 		for (auto it = this->borderBegin(); it != this->borderEnd(); ++it) {
-			this->_material(*it) = concreteMaterial;
 			const RealD borderNormal = this->borderNormal(*it);
 			_matrices(*it) = std::make_shared<GCM_MATRICES>();
 			Model::constructGcmMatrices(_matrices(*it), concreteMaterial,
@@ -217,7 +220,6 @@ private:
 		}
 		
 		for (auto it = this->contactBegin(); it != this->contactEnd(); ++it) {
-			this->_material(*it) = concreteMaterial;
 			const RealD contactNormal = this->contactNormal(*it);
 			_matrices(*it) = std::make_shared<GCM_MATRICES>();
 			Model::constructGcmMatrices(_matrices(*it), concreteMaterial,

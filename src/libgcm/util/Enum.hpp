@@ -160,6 +160,15 @@ struct Odes {
 };
 
 
+/**
+ * Different border-contact nodes calculation modes for simplex engine
+ */
+enum class BorderCalcMode {
+	LOCAL_BASIS,
+	GLOBAL_BASIS,
+};
+
+
 }
 
 

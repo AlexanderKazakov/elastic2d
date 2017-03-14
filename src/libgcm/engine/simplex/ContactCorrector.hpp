@@ -39,10 +39,23 @@ public:
 	 * It's supposed that gcm-matrices in contact nodes are written
 	 * in local basis and the first direction calculation (stage 0)
 	 * performed along contact normal direction.
-	 * Thus, this correction can be called after first stage only,
+	 * Thus, this correction must be called after first stage only,
 	 * because other directions are degenerate a priori.
 	 */
-	virtual void apply(
+	virtual void applyInLocalBasis(
+			std::shared_ptr<AbstractMesh<TGrid>> a,
+			std::shared_ptr<AbstractMesh<TGrid>> b,
+			std::list<NodesContact> nodesInContact) = 0;
+	
+	/**
+	 * Apply contact correction for all nodes from the list
+	 * along the direction of the given stage.
+	 * It's supposed that gcm-matrices in contact nodes are written
+	 * in global basis as in inner nodes.
+	 * Thus, this correction must be called after all stages.
+	 */
+	virtual void applyInGlobalBasis(
+			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact) = 0;
@@ -100,7 +113,7 @@ public:
 	typedef typename Base::RealD            RealD;
 	typedef typename Base::MatrixDD         MatrixDD;
 	
-	virtual void apply(
+	virtual void applyInLocalBasis(
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact) override {
@@ -122,6 +135,47 @@ public:
 			
 			auto& uA = meshA->_pdeNew(0, nodesContact.first);
 			auto& uB = meshB->_pdeNew(0, nodesContact.second);
+			
+			this->correctNodesContact(uA, OmegaA, B1A, B2A,
+			                          uB, OmegaB, B1B, B2B);
+		}
+	}
+	
+	virtual void applyInGlobalBasis(
+			const int stage,
+			std::shared_ptr<AbstractMesh<TGrid>> a,
+			std::shared_ptr<AbstractMesh<TGrid>> b,
+			std::list<NodesContact> nodesInContact) override {
+		
+		std::shared_ptr<MeshA> meshA = std::dynamic_pointer_cast<MeshA>(a);
+		assert_true(meshA);
+		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
+		assert_true(meshB);
+		const RealD calcDirection =
+				meshA->getInnerCalculationBasis().getColumn(stage);
+		assert_true(calcDirection ==
+				meshB->getInnerCalculationBasis().getColumn(stage));
+		
+		for (const NodesContact& nodesContact : nodesInContact) {
+			
+			const real projection = linal::dotProduct(calcDirection, nodesContact.normal);
+//			if (projection == 0) { continue; }
+			const RealD directionFromAToB =
+					calcDirection * Utils::sign(projection);
+			const auto OmegaA = ModelA::constructOuterEigenvectors(
+					meshA->material(nodesContact.first),
+					linal::createLocalBasis(  directionFromAToB));
+			const auto OmegaB = ModelB::constructOuterEigenvectors(
+					meshB->material(nodesContact.second),
+					linal::createLocalBasis( -directionFromAToB));
+			
+			const auto B1A = ContactMatrixCreator::createB1A(nodesContact.normal);
+			const auto B1B = ContactMatrixCreator::createB1B(nodesContact.normal);
+			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
+			const auto B2B = ContactMatrixCreator::createB2B(nodesContact.normal);
+			
+			auto& uA = meshA->_pdeNew(stage, nodesContact.first);
+			auto& uB = meshB->_pdeNew(stage, nodesContact.second);
 			
 			this->correctNodesContact(uA, OmegaA, B1A, B2A,
 			                          uB, OmegaB, B1B, B2B);

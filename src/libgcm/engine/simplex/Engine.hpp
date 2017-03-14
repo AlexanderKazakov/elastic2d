@@ -118,6 +118,9 @@ private:
 	/// on/off points motion
 	bool movable = false;
 	
+	/// method of border/contacts calculation
+	const BorderCalcMode borderCalcMode;
+	
 	struct CalculationBasis {
 	/// Current basis of calculations --
 	/// i'th gcm stage is performed along i'th column of the matrix

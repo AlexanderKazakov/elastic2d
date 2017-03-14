@@ -13,7 +13,8 @@ Engine<Dimensionality, TriangulationT>::
 Engine(const Task& task) :
 		AbstractEngine(task),
 		triangulation(task),
-		movable(task.simplexGrid.movable) {
+		movable(task.simplexGrid.movable),
+		borderCalcMode(task.simplexGrid.borderCalcMode) {
 	
 	initializeCalculationBasis(task);
 	createMeshes(task);
@@ -59,7 +60,7 @@ createMeshes(const Task& task) {
 		auto factory = createAbstractFactory(taskBody.second);
 		
 		body.mesh = factory->createMesh(task, gridId, {&triangulation}, Dimensionality);
-		body.mesh->setUpPde(task, calculationBasis.basis);
+		body.mesh->setUpPde(task, calculationBasis.basis, borderCalcMode);
 		
 		body.gcm = factory->createGcm();
 		
@@ -132,22 +133,46 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
 correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
-	if (stage != 0) { return; }
-	
-	for (const auto& contact : contacts) {
-		contact.second.contactCorrector->apply(
-				getBody(contact.first.first).mesh,
-				getBody(contact.first.second).mesh,
-				contact.second.nodesInContact);
-	}
-	
-	for (const Body& body : bodies) {
-		for (const Border& border : body.borders) {
-			border.borderCorrector->apply(
-					body.mesh,
-					border.borderNodes,
-					timeAtNextLayer);
-		}
+	switch (borderCalcMode) {
+		case BorderCalcMode::GLOBAL_BASIS:
+			for (const auto& contact : contacts) {
+				contact.second.contactCorrector->applyInGlobalBasis(
+						stage,
+						getBody(contact.first.first).mesh,
+						getBody(contact.first.second).mesh,
+						contact.second.nodesInContact);
+			}
+			for (const Body& body : bodies) {
+				for (const Border& border : body.borders) {
+					border.borderCorrector->applyInGlobalBasis(
+							stage,
+							body.mesh,
+							border.borderNodes,
+							timeAtNextLayer);
+				}
+			}
+			break;
+			
+		case BorderCalcMode::LOCAL_BASIS:
+			if (stage != 0) { return; }
+			for (const auto& contact : contacts) {
+				contact.second.contactCorrector->applyInLocalBasis(
+						getBody(contact.first.first).mesh,
+						getBody(contact.first.second).mesh,
+						contact.second.nodesInContact);
+			}
+			for (const Body& body : bodies) {
+				for (const Border& border : body.borders) {
+					border.borderCorrector->applyInLocalBasis(
+							body.mesh,
+							border.borderNodes,
+							timeAtNextLayer);
+				}
+			}
+			break;
+			
+		default:
+			THROW_BAD_CONFIG("Unknown border calculation mode");
 	}
 	
 	for (const Body& body : bodies) {

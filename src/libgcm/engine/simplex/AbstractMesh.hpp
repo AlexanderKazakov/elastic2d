@@ -36,8 +36,10 @@ public:
 	 * Setting up the part connected with PDE: storages, matrices, etc.
 	 * It is not called in constructor!
 	 * @param innerBasis calculation basis for all inner nodes
+	 * @param borderCalcMode affects what gcm-matrices will be on borders
 	 */
-	virtual void setUpPde(const Task& task, const MatrixDD& innerBasis) = 0;
+	virtual void setUpPde(const Task& task, const MatrixDD& innerBasis,
+			const BorderCalcMode borderCalcMode) = 0;
 	
 	/** Maximal in absolute value */
 	virtual real getMaximalEigenvalue() const = 0;

@@ -4,9 +4,12 @@
 using namespace gcm;
 
 
-
 inline Task skullCommon() {
 	Task task;
+	task.calculationBasis = {
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
@@ -16,8 +19,9 @@ inline Task skullCommon() {
 	task.globalSettings.stepsPerSnap = 15;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
+	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
-	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+//	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
@@ -33,6 +37,42 @@ inline Task skullCommon() {
 	return task;
 }
 
+
+inline Task skullAcousticHomogeneous() {
+	Task task = skullCommon();
+	
+	task.bodies = {
+			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+	};
+	
+	task.contactCondition.defaultCondition = ContactConditions::T::SLIDE;
+	
+	auto connectiveTissue = std::make_shared<IsotropicMaterial>(0.916,  1.886, 0, 0, 0, 1, 1.585);
+	task.materialConditions.byBodies.bodyMaterialMap = {
+			{1, connectiveTissue},
+	};
+	
+//	Task::BorderCondition freeBorder;
+//	freeBorder.area = std::make_shared<AxisAlignedBoxArea>(
+//			Real3({-100, -100, 132}), Real3({100, 100, 1000}));
+//	freeBorder.type = BorderConditions::T::FIXED_FORCE;
+//	freeBorder.values = {
+//		[] (real) { return 0; },
+//	};
+//	Task::BorderCondition source;
+//	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
+//	source.type = BorderConditions::T::FIXED_FORCE;
+//	real tau = 0.5;
+//	real omega = 2 * M_PI / tau;
+//	source.values = {
+//		[=] (real t) {
+//			t -= 2 * tau;
+//			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
+//	};
+//	task.borderConditions = {freeBorder, source};
+	
+	return task;
+}
 
 
 inline Task skullAcoustic() {

@@ -41,10 +41,23 @@ public:
 	 * It's supposed that gcm-matrices in border nodes are written
 	 * in local basis and the first direction calculation (stage 0)
 	 * performed along border normal direction.
-	 * Thus, this correction can be called after first stage only,
+	 * Thus, this correction must be called after first stage only,
 	 * because other directions are degenerate a priori.
 	 */
-	virtual void apply(
+	virtual void applyInLocalBasis(
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real timeAtNextLayer) = 0;
+	
+	/**
+	 * Apply border correction for all nodes from the list
+	 * along the direction of the given stage.
+	 * It's supposed that gcm-matrices in border nodes are written
+	 * in global basis as in inner nodes.
+	 * Thus, this correction must be called after all stages.
+	 */
+	virtual void applyInGlobalBasis(
+			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
 			const real timeAtNextLayer) = 0;
@@ -91,7 +104,7 @@ public:
 	ConcreteBorderCorrector(const Task::BorderCondition& bc) :
 			borderCondition(bc) { }
 	
-	virtual void apply(
+	virtual void applyInLocalBasis(
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
 			const real timeAtNextLayer) override {
@@ -106,6 +119,34 @@ public:
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			
 			auto& u = mesh->_pdeNew(0, nodeBorder.iterator);
+			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
+		}
+	}
+	
+	virtual void applyInGlobalBasis(
+			const int stage,
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real timeAtNextLayer) override {
+		
+		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
+		assert_true(mesh);
+		const auto b = borderCondition.b(timeAtNextLayer);
+		const RealD calcDirection =
+				mesh->getInnerCalculationBasis().getColumn(stage);
+		
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			
+			const real projection = linal::dotProduct(calcDirection, nodeBorder.normal);
+//			if (projection == 0) { continue; }
+			const RealD outerDirection = calcDirection * Utils::sign(projection);
+			const auto Omega = Model::constructOuterEigenvectors(
+					mesh->material(nodeBorder.iterator),
+					linal::createLocalBasis(outerDirection));
+			
+			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
+			
+			auto& u = mesh->_pdeNew(stage, nodeBorder.iterator);
 			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
 		}
 	}

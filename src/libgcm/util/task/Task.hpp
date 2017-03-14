@@ -97,6 +97,9 @@ struct Task {
 		/// On/off deformations and bodies motion
 		bool movable = false;
 		
+		/// Method of border and contact nodes calculation
+		BorderCalcMode borderCalcMode = BorderCalcMode::GLOBAL_BASIS;
+		
 		
 		/// for Cgal2DMesher only @{
 		struct Body {
