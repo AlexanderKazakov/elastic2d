@@ -1,6 +1,8 @@
 #ifndef LIBGCM_SLICESNAPSHOTTER_HPP
 #define LIBGCM_SLICESNAPSHOTTER_HPP
 
+#include <numeric>
+
 #include <libgcm/util/snapshot/Snapshotter.hpp>
 
 namespace gcm {

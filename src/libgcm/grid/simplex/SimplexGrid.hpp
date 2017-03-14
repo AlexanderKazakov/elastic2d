@@ -1,6 +1,7 @@
 #ifndef LIBGCM_SIMPLEXGRID_HPP
 #define LIBGCM_SIMPLEXGRID_HPP
 
+#include <numeric>
 #include <list>
 
 #include <libgcm/util/infrastructure/infrastructure.hpp>
