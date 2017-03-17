@@ -161,13 +161,21 @@ private:
 			// outer characteristic from border/contact node
 				outerInvariants.push_back(k);
 				
-			} else if (t.n == t.N - 1 && canInterpolateInSpaceTime) {
+			} else if (t.n == t.N - 1) {
 			// characteristic hits out of body going throughout border face
-				u = interpolateInSpaceTime(s, mesh, it, shift, t);
+				if (canInterpolateInSpaceTime) {
+					u = interpolateInSpaceTime(s, mesh, it, shift, t);
+				} else {
+					outerInvariants.push_back(k);
+				}
 				
-			} else if (t.n == t.N - 2 && canInterpolateInSpaceTime) {
+			} else if (t.n == t.N - 2) {
 			// exact hit to border edge(point)
-				u = interpolateInSpaceTime1D(s, mesh, it, shift, t);
+				if (canInterpolateInSpaceTime) {
+					u = interpolateInSpaceTime1D(s, mesh, it, shift, t);
+				} else {
+					outerInvariants.push_back(k);
+				}
 				
 			}
 			
