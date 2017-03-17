@@ -19,8 +19,6 @@ public:
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void returnBackBadOuterCases(
-			const int s, AbstractGrid& mesh_) const = 0;
 };
 
 
@@ -35,6 +33,7 @@ public:
 	typedef typename Mesh::GCM_MATRICES                        GcmMatrices;
 	typedef typename Mesh::Iterator                            Iterator;
 	typedef typename Mesh::Cell                                Cell;
+	typedef typename Mesh::WaveIndices                         WaveIndices;
 	
 	typedef Differentiation<Mesh>                              DIFFERENTIATION;
 	typedef typename DIFFERENTIATION::PdeGradient              PdeGradient;
@@ -59,30 +58,27 @@ public:
 	virtual void contactAndBorderStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		outerCasesToReturnBack.clear();
 		
 		/// calculate inner waves of contact nodes
-		for (auto contactIter = mesh.contactBegin(); 
-		          contactIter < mesh.contactEnd(); ++contactIter) {
-			const GcmMatrices& gcmMatrices = *mesh.matrices(*contactIter);
+		for (auto iter = mesh.contactBegin(); iter < mesh.contactEnd(); ++iter) {
+			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(s, *contactIter) = localGcmStep(
+			mesh._pdeNew(s, *iter) = localGcmStep(
 				gcmMatrices(s).U1, gcmMatrices(s).U,
-				interpolateValuesAround(s, mesh, direction, *contactIter,
-					crossingPoints(*contactIter, s, timeStep, mesh), false));
-//			checkOuterCases(s, *contactIter, mesh);
+				interpolateValuesAround(s, mesh, direction, *iter,
+					crossingPoints(*iter, s, timeStep, mesh), false));
+			mesh._waveIndices(*iter) = outerInvariants;
 		}
 		
 		/// calculate inner waves of border nodes
-		for (auto borderIter = mesh.borderBegin(); 
-		          borderIter < mesh.borderEnd(); ++borderIter) {
-			const GcmMatrices& gcmMatrices = *mesh.matrices(*borderIter);
+		for (auto iter = mesh.borderBegin(); iter < mesh.borderEnd(); ++iter) {
+			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(s, *borderIter) = localGcmStep(
+			mesh._pdeNew(s, *iter) = localGcmStep(
 				gcmMatrices(s).U1, gcmMatrices(s).U,
-				interpolateValuesAround(s, mesh, direction, *borderIter,
-					crossingPoints(*borderIter, s, timeStep, mesh), false));
-//			checkOuterCases(s, *borderIter, mesh);
+				interpolateValuesAround(s, mesh, direction, *iter,
+					crossingPoints(*iter, s, timeStep, mesh), false));
+			mesh._waveIndices(*iter) = outerInvariants;
 		}
 	}
 	
@@ -108,19 +104,6 @@ public:
 				interpolateValuesAround(s, mesh, direction, *innerIter,
 					crossingPoints(*innerIter, s, timeStep, mesh), true));
 			assert_eq(outerInvariants.size(), 0);
-		}
-	}
-	
-	
-	/**
-	 * Rewrite back pdeNew values, corrected by border and contact correctors,
-	 * because for double-outer cases such correction is invalid.
-	 */
-	virtual void returnBackBadOuterCases(
-			const int s, AbstractGrid& mesh_) const override {
-		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
-		for (std::pair<Iterator, PdeVector> p : outerCasesToReturnBack) {
-			mesh._pdeNew(s, p.first) = p.second;
 		}
 	}
 	
@@ -318,54 +301,9 @@ private:
 	}
 	
 	
-	/**
-	 * Check and remember cases with "illegal" outer characteristics
-	 */
-	void checkOuterCases(const int s, const Iterator it, const Mesh& mesh) {
-		
-		if (outerInvariants == Model::LEFT_INVARIANTS ||
-			outerInvariants == Model::RIGHT_INVARIANTS) {
-		/// The normal case for border corrector
-			return;
-		}
-		
-		if (s == 0) {
-			std::cout << "Invalid outers at:" << mesh.coordsD(it)
-					<< "normal == " << mesh.commonNormal(it);
-			for (int i : outerInvariants) { std::cout << i << " "; }
-			std::cout << endl;
-			THROW_BAD_METHOD("Invalid outers for normal direction");
-		}
-		
-		if (outerInvariants.size() == 0) {
-		/// No outers. Nothing to do for border corrector
-			outerCasesToReturnBack.push_back({it, mesh.pdeNew(s, it)});
-			return;
-		}
-		
-		if (outerInvariants.size() == 2 * OUTER_NUMBER) {
-		/// All outers. No space -- no waves. Set to old value
-			outerCasesToReturnBack.push_back({it, mesh.pde(it)});
-			return;
-		}
-		
-		/// Some geometrical inexactness. Most likely that the calculation
-		/// direction is almost parallel to the border. 
-		/// TODO - make special for such cases more precise search?
-		std::cout << outerInvariants.size() << " outer characteristics: ";
-		for (int k : outerInvariants) { std::cout << k << " "; }
-		std::cout << " at:" << mesh.coordsD(it);
-		outerCasesToReturnBack.push_back({it, mesh.pde(it).Zeros()});
-	}
-	
-	
 	/// List of outer Riemann invariants after node calculation.
 	/// Invariants are specified by their indices in matrix L.
-	std::vector<int> outerInvariants;
-	
-	/// List of nodes which have "illegal" outer characteristics on the current
-	/// calculation direction. This is possible for borders and contacts only.
-	std::vector<std::pair<Iterator, PdeVector>> outerCasesToReturnBack;
+	WaveIndices outerInvariants;
 	
 	/// The storage of gradients of mesh pde values.
 	std::vector<PdeGradient> gradients;
@@ -373,7 +311,6 @@ private:
 	std::vector<PdeHessian> hessians;
 	
 	USE_AND_INIT_LOGGER("gcm.simplex.GridCharacteristicMethod")
-	
 };
 
 

@@ -94,7 +94,9 @@ class ConcreteBorderCorrector : public AbstractBorderCorrector<TGrid> {
 public:
 	typedef DefaultMesh<Model, TGrid, Material> Mesh;
 	typedef typename Mesh::PdeVector            PdeVector;
+	typedef typename Mesh::WaveIndices          WaveIndices;
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
+	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
 	
 	typedef AbstractBorderCorrector<TGrid>      Base;
 	typedef typename Base::NodeBorder           NodeBorder;
@@ -114,8 +116,8 @@ public:
 		const auto b = borderCondition.b(timeAtNextLayer);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
-			const auto Omega = getOuterMatrixFromGcmMatricesInLocalBasis<Model>(
-					mesh->matrices(nodeBorder.iterator));
+			const auto Omega = getColumnsFromGcmMatrices<Model>(
+					0, Model::RIGHT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			
 			auto& u = mesh->_pdeNew(0, nodeBorder.iterator);
@@ -132,22 +134,38 @@ public:
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
 		const auto b = borderCondition.b(timeAtNextLayer);
-		const RealD calcDirection =
-				mesh->getInnerCalculationBasis().getColumn(stage);
+//		const RealD calcDirection =
+//				mesh->getInnerCalculationBasis().getColumn(stage);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
-			
-			const real projection = linal::dotProduct(calcDirection, nodeBorder.normal);
-//			if (projection == 0) { continue; }
-			const RealD outerDirection = calcDirection * Utils::sign(projection);
-			const auto Omega = Model::constructOuterEigenvectors(
-					mesh->material(nodeBorder.iterator),
-					linal::createLocalBasis(outerDirection));
-			
+			const WaveIndices outers = mesh->waveIndices(nodeBorder.iterator);
+			if (outers.empty()) { continue; }
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			
-			auto& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
+			if (outers == Model::RIGHT_INVARIANTS ||
+					outers == Model::LEFT_INVARIANTS) {
+			/// Normal case for border corrector
+				const auto Omega = getColumnsFromGcmMatrices<Model>(
+						stage, outers, mesh->matrices(nodeBorder.iterator));
+				auto& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+				u += this->calculateOuterWaveCorrection(u, Omega, B, b);
+				continue;
+			}
+			
+			if (outers.size() == 2 * OUTER_NUMBER) {
+			/// Double-outer case: apply correction as average from both sides
+				auto& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+				const auto OmegaR = getColumnsFromGcmMatrices<Model>(
+						stage, Model::RIGHT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
+				const auto OmegaL = getColumnsFromGcmMatrices<Model>(
+						stage, Model::LEFT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
+				const PdeVector uR = this->calculateOuterWaveCorrection(u, OmegaR, B, b);
+				const PdeVector uL = this->calculateOuterWaveCorrection(u, OmegaL, B, b);
+				u += (uR + uL) / 2; // FIXME - this is valid for pressure only
+				continue;
+			}
+			
+			THROW_UNSUPPORTED("TODO");
 		}
 	}
 	

@@ -26,6 +26,8 @@ public:
 	typedef typename Model::GcmMatricesPtr      GcmMatricesPtr;
 	typedef typename Model::ConstGcmMatricesPtr ConstGcmMatricesPtr;
 	typedef typename GCM_MATRICES::Matrix       Matrix;
+	/// Type of auxiliary info sent from inner gcm to border/contact correctors
+	typedef typename Model::WaveIndices         WaveIndices;
 	static const Models::T ModelType = Model::Type;
 	
 	typedef AbstractMesh<TGrid>                 Base;
@@ -100,6 +102,12 @@ public:
 		return this->materials[this->getIndex(it)];
 	}
 	
+	/** Read-only access to WaveIndices */
+	WaveIndices waveIndices(const Iterator& it) const {
+		return this->waveIndicesData[this->getIndex(it)];
+	}
+	
+	
 	/** Read / write access to actual PDE variables */
 	PdeVariables& _pdeVars(const Iterator& it) {
 		return this->pdeVariables[this->getIndex(it)];
@@ -126,6 +134,11 @@ public:
 	/** Read / write access to actual GCM matrices */
 	MaterialPtr& _material(const Iterator& it) {
 		return this->materials[this->getIndex(it)];
+	}
+	
+	/** Read / write access to WaveIndices */
+	WaveIndices& _waveIndices(const Iterator& it) {
+		return this->waveIndicesData[this->getIndex(it)];
 	}
 	
 	
@@ -168,6 +181,7 @@ protected:
 	std::vector<std::vector<PdeVariables>> pdeVariablesNew;
 	std::vector<GcmMatricesPtr> gcmMatrices;
 	std::vector<MaterialPtr> materials;
+	std::vector<WaveIndices> waveIndicesData;
 	/// @}
 	
 	/// there is only one "current" PDE time layer, but several "next"(new) layers
@@ -187,6 +201,9 @@ private:
 		}
 		gcmMatrices.resize(this->sizeOfAllNodes(), GcmMatricesPtr());
 		materials.resize(this->sizeOfAllNodes(), MaterialPtr());
+		// yes, it's not used in inner nodes at all.
+		// but saving this not a big amount of memory requires much pain
+		waveIndicesData.resize(this->sizeOfAllNodes());
 	}
 	
 	void applyMaterialsCondition(const Task& task, const MatrixDD& innerBasis,

@@ -174,10 +174,6 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 		default:
 			THROW_BAD_CONFIG("Unknown border calculation mode");
 	}
-	
-	for (const Body& body : bodies) {
-		body.gcm->returnBackBadOuterCases(stage, *body.mesh);
-	}
 }
 
 

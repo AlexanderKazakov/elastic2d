@@ -124,10 +124,10 @@ public:
 		assert_true(meshB);
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
-			const auto OmegaA = getOuterMatrixFromGcmMatricesInLocalBasis<ModelA>(
-					meshA->matrices(nodesContact.first));
-			const auto OmegaB = getOuterMatrixFromGcmMatricesInLocalBasis<ModelB>(
-					meshB->matrices(nodesContact.second));
+			const auto OmegaA = getColumnsFromGcmMatrices<ModelA>(
+					0, ModelA::RIGHT_INVARIANTS, meshA->matrices(nodesContact.first));
+			const auto OmegaB = getColumnsFromGcmMatrices<ModelB>(
+					0, ModelB::RIGHT_INVARIANTS, meshB->matrices(nodesContact.second));
 			const auto B1A = ContactMatrixCreator::createB1A(nodesContact.normal);
 			const auto B1B = ContactMatrixCreator::createB1B(nodesContact.normal);
 			const auto B2A = ContactMatrixCreator::createB2A(nodesContact.normal);
@@ -156,6 +156,7 @@ public:
 		assert_true(calcDirection ==
 				meshB->getInnerCalculationBasis().getColumn(stage));
 		
+		THROW_UNSUPPORTED("TODO -- take outer wave indices into account");
 		for (const NodesContact& nodesContact : nodesInContact) {
 			
 			const real projection = linal::dotProduct(calcDirection, nodesContact.normal);

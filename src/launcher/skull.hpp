@@ -52,13 +52,13 @@ inline Task skullAcousticHomogeneous() {
 			{1, connectiveTissue},
 	};
 	
-//	Task::BorderCondition freeBorder;
-//	freeBorder.area = std::make_shared<AxisAlignedBoxArea>(
-//			Real3({-100, -100, 132}), Real3({100, 100, 1000}));
-//	freeBorder.type = BorderConditions::T::FIXED_FORCE;
-//	freeBorder.values = {
-//		[] (real) { return 0; },
-//	};
+	Task::BorderCondition freeBorder;
+	freeBorder.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-100, -100, 132}), Real3({100, 100, 1000}));
+	freeBorder.type = BorderConditions::T::FIXED_FORCE;
+	freeBorder.values = {
+		[] (real) { return 0; },
+	};
 //	Task::BorderCondition source;
 //	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 //	source.type = BorderConditions::T::FIXED_FORCE;
@@ -69,7 +69,10 @@ inline Task skullAcousticHomogeneous() {
 //			t -= 2 * tau;
 //			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
 //	};
-//	task.borderConditions = {freeBorder, source};
+	task.borderConditions = {
+		freeBorder,
+//		source,
+	};
 	
 	return task;
 }
