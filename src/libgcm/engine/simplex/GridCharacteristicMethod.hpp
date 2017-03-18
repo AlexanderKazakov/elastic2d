@@ -188,7 +188,7 @@ private:
 	
 	/** Interpolate PdeVector from space on current time layer (2D case) */
 	PdeVector interpolateInSpace(const Mesh& mesh, const Real2& query, const Cell& c) const {
-		return TriangleInterpolator<PdeVector>::interpolate(
+		return TriangleInterpolator<PdeVector>::minMaxInterpolate(
 				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
 				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
 				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
@@ -198,7 +198,7 @@ private:
 	
 	/** Interpolate PdeVector from space on current time layer (3D case) */
 	PdeVector interpolateInSpace(const Mesh& mesh, const Real3& query, const Cell& c) const {
-		return TetrahedronInterpolator<PdeVector>::interpolate(
+		return TetrahedronInterpolator<PdeVector>::minMaxInterpolate(
 				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
 				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
 				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],

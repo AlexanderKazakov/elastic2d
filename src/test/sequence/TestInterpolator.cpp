@@ -264,6 +264,22 @@ TEST(TetrahedronInterpolator, interpolateInOwner) {
 }
 
 
+TEST(TriangleInterpolator, quadraticMinMax) {
+	// f(x, y) = x**2 + y**2
+	ASSERT_EQ(1, TriangleInterpolator<real>::minMaxInterpolate(
+			{0, 1}, 1, {0, 2},
+			{1, 0}, 1, {2, 0},
+			{-1, -1}, 2, {-2, -2}, {0, 0}));
+}
 
+
+TEST(TetrahedronInterpolator, quadraticMinMax) {
+	// f(x, y) = x**2 + y**2 + z**2
+	ASSERT_EQ(1, TetrahedronInterpolator<real>::minMaxInterpolate(
+			{0, 0, 1}, 1, {0, 0, 2},
+			{0, 1, 0}, 1, {0, 2, 0},
+			{1, 0, 0}, 1, {2, 0, 0},
+			{-1, -1, -1}, 3, {-2, -2, -2}, {0, 0, 0}));
+}
 
 

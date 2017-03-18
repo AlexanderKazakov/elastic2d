@@ -18,7 +18,7 @@ public:
 		       lambda(2) > -EQUALITY_TOLERANCE &&
 		       lambda(3) > -EQUALITY_TOLERANCE;
 	}
-
+	
 	/**
 	 * Linear interpolation in non-degenerate tetrahedron
 	 * @param c_i and v_i - points and values
@@ -29,7 +29,6 @@ public:
 	                          const Real3& c2, const TValue v2,
 	                          const Real3& c3, const TValue v3,
 	                          const Real3& q) {
-
 		Real4 lambda = linal::barycentricCoordinates(c0, c1, c2, c3, q);
 		assert_true(isInterpolation(lambda));
 		return lambda(0) * v0 + 
@@ -52,13 +51,32 @@ public:
 			const Real3& c2, const TValue v2, const Gradient g2,
 			const Real3& c3, const TValue v3, const Gradient g3,
 			const Real3& q) {
-		
 		Real4 lambda = linal::barycentricCoordinates(c0, c1, c2, c3, q);
 		assert_true(isInterpolation(lambda));
 		return lambda(0) * (v0 + linal::dotProduct(g0, q - c0) / 2.0) +
 		       lambda(1) * (v1 + linal::dotProduct(g1, q - c1) / 2.0) +
 		       lambda(2) * (v2 + linal::dotProduct(g2, q - c2) / 2.0) +
 		       lambda(3) * (v3 + linal::dotProduct(g3, q - c3) / 2.0);
+	}
+	
+	
+	/**
+	 * Quadratic interpolation in non-degenerate tetrahedron,
+	 * limited with min-max limiter to avoid oscillations
+	 * @param c_i points
+	 * @param v_i values
+	 * @param g_i gradients
+	 * @param q point to interpolate
+	 */
+	static TValue minMaxInterpolate(
+			const Real3& c0, const TValue v0, const Gradient g0,
+			const Real3& c1, const TValue v1, const Gradient g1,
+			const Real3& c2, const TValue v2, const Gradient g2,
+			const Real3& c3, const TValue v3, const Gradient g3,
+			const Real3& q) {
+		TValue quadratic = interpolate(
+				c0, v0, g0, c1, v1, g1, c2, v2, g2, c3, v3, g3, q);
+		return linal::limiterMinMax(quadratic, v0, v1, v2, v3);
 	}
 	
 	
@@ -110,8 +128,7 @@ public:
 		#undef TRY_TETRAHEDRON
 		
 		THROW_INVALID_ARG("Containing tetrahedron is not found");
-}
-
+	}
 };
 
 
