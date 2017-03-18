@@ -37,9 +37,9 @@ rm -f *.log
 mkdir -p snapshots/vtk snapshots/detector snapshots/zaxis
 echo "Start ./build/gcm_exe with $np processes ..."
 if ((silent)); then
-	mpirun -np $np ./build/gcm_exe --task ${task} > /dev/null &
+	./build/gcm_exe --task ${task} > /dev/null &
 else
-	mpirun -np $np ./build/gcm_exe --task ${task}
+	./build/gcm_exe --task ${task}
 fi
 
 if ((run_paraview)); then
