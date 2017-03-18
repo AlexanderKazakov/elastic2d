@@ -44,11 +44,11 @@ public:
 	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	
-	virtual void beforeStage(const AbstractGrid& /*mesh_*/) override {
+	virtual void beforeStage(const AbstractGrid& mesh_) override {
 		/// calculate spatial derivatives of all mesh pde values ones before stage
 		/// in order to use them multiple times while stage calculation 
-		//const Mesh& mesh = dynamic_cast<const Mesh&>(mesh_);
-		//DIFFERENTIATION::estimateGradient(mesh, gradients);
+		const Mesh& mesh = dynamic_cast<const Mesh&>(mesh_);
+		DIFFERENTIATION::estimateGradient(mesh, gradients);
 	}
 	
 	
@@ -189,9 +189,9 @@ private:
 	/** Interpolate PdeVector from space on current time layer (2D case) */
 	PdeVector interpolateInSpace(const Mesh& mesh, const Real2& query, const Cell& c) const {
 		return TriangleInterpolator<PdeVector>::interpolate(
-				mesh.coordsD(c(0)), mesh.pde(c(0)), //gradients[mesh.getIndex(c(0))],
-				mesh.coordsD(c(1)), mesh.pde(c(1)), //gradients[mesh.getIndex(c(1))],
-				mesh.coordsD(c(2)), mesh.pde(c(2)), //gradients[mesh.getIndex(c(2))],
+				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
+				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
+				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
 				query);
 	}
 	
@@ -199,10 +199,10 @@ private:
 	/** Interpolate PdeVector from space on current time layer (3D case) */
 	PdeVector interpolateInSpace(const Mesh& mesh, const Real3& query, const Cell& c) const {
 		return TetrahedronInterpolator<PdeVector>::interpolate(
-				mesh.coordsD(c(0)), mesh.pde(c(0)), //gradients[mesh.getIndex(c(0))],
-				mesh.coordsD(c(1)), mesh.pde(c(1)), //gradients[mesh.getIndex(c(1))],
-				mesh.coordsD(c(2)), mesh.pde(c(2)), //gradients[mesh.getIndex(c(2))],
-				mesh.coordsD(c(3)), mesh.pde(c(3)), //gradients[mesh.getIndex(c(3))],
+				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
+				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
+				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
+				mesh.coordsD(c(3)), mesh.pde(c(3)), gradients[mesh.getIndex(c(3))],
 				query);
 	}
 	
