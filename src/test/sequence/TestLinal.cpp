@@ -11,6 +11,40 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, minMax) {
+	ASSERT_EQ(1, linal::min(1, 2, 3, 4));
+	ASSERT_EQ(4, linal::max(1, 2, 3, 4));
+	ASSERT_EQ(1, linal::min(1, 1, 2, 2));
+	ASSERT_EQ(4, linal::max(1, 1, 4, 4));
+	ASSERT_EQ(1, linal::limiterMinMax(1, -1, 0, 1, 5));
+	ASSERT_EQ(5, linal::limiterMinMax(7, -1, 0, 1, 5));
+	ASSERT_EQ(1, linal::limiterMinMax(-2, 7, 3, 1, 5, 11));
+	
+	
+	Real3 a = {1, 2, 3};
+	Real3 b = {3, 2, 1};
+	Real3 c = {2, 2, 2};
+	
+	Real3 min = {1, 2, 1};
+	ASSERT_EQ(min, linal::min(a, b, c));
+	ASSERT_EQ(min, linal::min(a, b));
+	ASSERT_EQ(min, linal::min(a, a, b, c, c, a));
+	
+	Real3 max = {3, 2, 3};
+	ASSERT_EQ(max, linal::max(a, b, c));
+	ASSERT_EQ(max, linal::max(a, b));
+	ASSERT_EQ(max, linal::max(a, a, b, c, c, a));
+	
+	ASSERT_EQ(c, linal::limiterMinMax(c, a, b));
+	ASSERT_EQ(c, linal::limiterMinMax(c, a, b, c));
+	ASSERT_EQ(c, linal::limiterMinMax(a, c, b));
+	ASSERT_EQ(c, linal::limiterMinMax(b, c, a));
+	ASSERT_EQ(Real3({3, 2, 2}), linal::limiterMinMax(Real3({5, 1, 2}), a, b, c));
+	ASSERT_EQ(Real3({0, 0, 0}), linal::limiterMinMax(
+			Real3({3, 0, -3}), Real3({0, 0, 0}), Real3({0, 0, 0})));
+}
+
+
 TEST(Linal, segmentContains) {
 	Real3 p = {0, 0, 0}, q = {1, 0, 0}, r = {1, 1, 1}, m = {2, 2, 2};
 	ASSERT_TRUE (segmentContains(q, p, q, 0, 0));

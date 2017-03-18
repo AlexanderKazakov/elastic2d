@@ -107,9 +107,9 @@ add_executable(gcm_tests ${SEQUENCE_TEST_SOURCES})
 target_link_libraries(gcm_tests gcm cgalmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tmp
-add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestUtils.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
+#add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestUtils.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
 #add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestLineWalkSearch3D.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
-#add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestLinal.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
+add_executable(tmp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestLinal.cpp ${CMAKE_CURRENT_LIST_DIR}/src/test/sequence/TestMain.cpp)
 target_link_libraries(tmp gcm cgalmesher ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CGAL_LIBRARIES} ${GSL_LIBRARIES} ${LOG4CXX_LIBRARIES} ${MPI_CXX_LIBRARIES} ${VTK_LIBRARIES})
 
 # tests on mpi

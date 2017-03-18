@@ -503,6 +503,127 @@ symmDirectProduct(const MatrixBase<TM, 1, TElement1, NonSymmetric, TContainer1>&
 }
 
 
+/**
+ * Elementwise function for two scalar arguments (recursion bottom)
+ */
+template<typename TFunction, typename TValue>
+typename std::enable_if<std::is_arithmetic<TValue>::value, TValue>::type
+elementwise(TFunction function, const TValue& s1, const TValue& s2) {
+	return function(s1, s2);
+}
+
+/**
+ * Elementwise function for arbitrary number of scalar arguments
+ */
+template<typename TFunction, typename TValue, typename ... Args>
+typename std::enable_if<std::is_arithmetic<TValue>::value, TValue>::type
+elementwise(TFunction function,
+		const TValue& s1, const TValue& s2, const Args& ... args) {
+	return elementwise(function, elementwise(function, s1, s2), args...);
+}
+
+/**
+ * Elementwise minimum function for arbitrary number of scalar arguments
+ */
+template<typename TValue, typename ... Args>
+typename std::enable_if<std::is_arithmetic<TValue>::value, TValue>::type
+min(const TValue& s1, const Args& ... args) {
+	return elementwise(
+			[](TValue a, TValue b) { return std::min(a, b); }, s1, args...);
+}
+
+/**
+ * Elementwise maximum function for arbitrary number of scalar arguments
+ */
+template<typename TValue, typename ... Args>
+typename std::enable_if<std::is_arithmetic<TValue>::value, TValue>::type
+max(const TValue& s1, const Args& ... args) {
+	return elementwise(
+			[](TValue a, TValue b) { return std::max(a, b); }, s1, args...);
+}
+
+
+/**
+ * Elementwise function for two matrix arguments (recursion bottom)
+ */
+template<typename TFunction,
+         int TM, int TN,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer>
+MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
+elementwise(TFunction function,
+		const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m1,
+		const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m2) {
+	MatrixBase<TM, TN, TElement, TSymmetry, TContainer> ans;
+	for (int i = 0; i < ans.SIZE; i++) {
+		ans(i) = function(m1(i), m2(i));
+	}
+	return ans;
+}
+
+/**
+ * Elementwise function for arbitrary number of matrix arguments
+ */
+template<typename TFunction,
+         int TM, int TN,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer,
+         typename ... Args>
+MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
+elementwise(TFunction function,
+		const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m1,
+		const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m2,
+		const Args& ... args) {
+	return elementwise(function, elementwise(function, m1, m2), args...);
+}
+
+/**
+ * Elementwise minimum function for arbitrary number of matrix arguments
+ */
+template<int TM, int TN,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer,
+         typename ... Args>
+MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
+min(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m1,
+		const Args& ... args) {
+	return elementwise(
+			[](TElement a, TElement b) { return std::min(a, b); }, m1, args...);
+}
+
+/**
+ * Elementwise maximum function for arbitrary number of matrix arguments
+ */
+template<int TM, int TN,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer,
+         typename ... Args>
+MatrixBase<TM, TN, TElement, TSymmetry, TContainer>
+max(const MatrixBase<TM, TN, TElement, TSymmetry, TContainer>& m1,
+		const Args& ... args) {
+	return elementwise(
+			[](TElement a, TElement b) { return std::max(a, b); }, m1, args...);
+}
+
+
+/**
+ * The function to bound u by given args, i.e. the answer is:
+ * equal to min, if u < min
+ * equal to max, if u > max
+ * equal to u,   else.
+ * Here min and max are respectively minimal and maximal among given args.
+ */
+template<typename TValue, typename ... Args>
+TValue
+limiterMinMax(const TValue& u, const Args& ... args) {
+	return min(max(u, min(args...)), max(args...));
+}
+
+
 }
 }
 
