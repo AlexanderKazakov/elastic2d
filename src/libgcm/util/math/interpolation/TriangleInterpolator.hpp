@@ -75,6 +75,29 @@ public:
 	
 	
 	/**
+	 * Quadratic interpolation in plain non-degenerate triangle,
+	 * limited with hybrid limiter to avoid oscillations.
+	 * "Hybrid" means if an ocsillation occurs,
+	 * interpolation is switched to first-order.
+	 * @param c_i points
+	 * @param v_i values
+	 * @param g_i gradients
+	 * @param q point to interpolate
+	 */
+	static TValue hybridInterpolate(
+			const Real2& c0, const TValue v0, const Gradient g0,
+			const Real2& c1, const TValue v1, const Gradient g1,
+			const Real2& c2, const TValue v2, const Gradient g2,
+			const Real2& q) {
+		TValue quadratic = interpolate(
+				c0, v0, g0, c1, v1, g1, c2, v2, g2, q);
+		TValue minMaxLimited = linal::limiterMinMax(quadratic, v0, v1, v2);
+		return (quadratic == minMaxLimited) ?
+				quadratic : interpolate(c0, v0, c1, v1, c2, v2, q);
+	}
+	
+	
+	/**
 	 * Given with 4 point-value pairs, determine among them triangle that
 	 * contains the query point inside and perform linear interpolation in it
 	 * @param c_i and v_i - points and values

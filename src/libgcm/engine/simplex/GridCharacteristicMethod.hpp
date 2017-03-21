@@ -213,7 +213,7 @@ private:
 			g[i] = {gradients[mesh.getIndex(c(i))](0)(k),
 			        gradients[mesh.getIndex(c(i))](1)(k)};
 		}
-		return TriangleInterpolator<RiemannInvariant>::minMaxInterpolate(
+		return TriangleInterpolator<RiemannInvariant>::hybridInterpolate(
 				mesh.coordsD(c(0)), mesh.pde(c(0))(k), g[0],
 				mesh.coordsD(c(1)), mesh.pde(c(1))(k), g[1],
 				mesh.coordsD(c(2)), mesh.pde(c(2))(k), g[2],
@@ -230,7 +230,7 @@ private:
 			        gradients[mesh.getIndex(c(i))](1)(k),
 			        gradients[mesh.getIndex(c(i))](2)(k)};
 		}
-		return TetrahedronInterpolator<RiemannInvariant>::minMaxInterpolate(
+		return TetrahedronInterpolator<RiemannInvariant>::hybridInterpolate(
 				mesh.coordsD(c(0)), mesh.pde(c(0))(k), g[0],
 				mesh.coordsD(c(1)), mesh.pde(c(1))(k), g[1],
 				mesh.coordsD(c(2)), mesh.pde(c(2))(k), g[2],
