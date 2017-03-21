@@ -1,5 +1,5 @@
-#ifndef LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHOD_HPP
-#define LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHOD_HPP
+#ifndef LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
+#define LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
 
 #include <libgcm/util/infrastructure/infrastructure.hpp>
 #include <libgcm/grid/AbstractGrid.hpp>
@@ -11,25 +11,32 @@
 namespace gcm {
 namespace simplex {
 
-
 class GridCharacteristicMethodBase {
 public:
-	virtual void beforeStage(const AbstractGrid& mesh_) = 0;
+	virtual void beforeStage(
+			const int s, AbstractGrid& mesh_) = 0;
 	virtual void contactAndBorderStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	virtual void innerStage(
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
+	virtual void afterStage(
+			const int s, AbstractGrid& mesh_) = 0;
 };
 
 
 /**
- * Grid-characteristic method for meshes based on SimplexGrid
+ * Grid-characteristic method for meshes based on SimplexGrid.
+ * The approach is to calculate and advect along characteristics
+ * scalar Riemann-invariants not PDE-vectors
+ * @see GridCharacteristicMethodInPdeVectors -- an opposite approach
  */
 template<typename Mesh>
-class GridCharacteristicMethod : public GridCharacteristicMethodBase {
+class GridCharacteristicMethodInRiemannInvariants :
+		public GridCharacteristicMethodBase {
 public:
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
+	typedef typename Mesh::PdeVariables                        PdeVariables;
 	typedef typename Mesh::GCM_MATRICES                        GcmMatrices;
 	typedef typename Mesh::Iterator                            Iterator;
 	typedef typename Mesh::Cell                                Cell;
@@ -43,11 +50,23 @@ public:
 	typedef typename Mesh::Model                               Model;
 	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
+	static const int CELL_POINTS_NUMBER = Mesh::CELL_POINTS_NUMBER;
 	
-	virtual void beforeStage(const AbstractGrid& mesh_) override {
-		/// calculate spatial derivatives of all mesh pde values ones before stage
+	typedef real	                              RiemannInvariant;
+	typedef linal::VECTOR<
+			DIMENSIONALITY, RiemannInvariant>	 RiemannInvariantGradient;
+	
+	
+	virtual void beforeStage(
+			const int s, AbstractGrid& mesh_) override {
+		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
+		savedPdeTimeLayer = mesh.getPdeVariablesStorage();
+		/// switch to Riemann invariants for that stage
+		for (const Iterator it : mesh) {
+			mesh._pde(it) = (*mesh.matrices(it))(s).U * mesh.pde(it);
+		}
+		/// calculate spatial derivatives of all mesh Riemann invariants ones before stage
 		/// in order to use them multiple times while stage calculation 
-		const Mesh& mesh = dynamic_cast<const Mesh&>(mesh_);
 		DIFFERENTIATION::estimateGradient(mesh, gradients);
 	}
 	
@@ -63,10 +82,9 @@ public:
 		for (auto iter = mesh.contactBegin(); iter < mesh.contactEnd(); ++iter) {
 			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(s, *iter) = localGcmStep(
-				gcmMatrices(s).U1, gcmMatrices(s).U,
-				interpolateValuesAround(s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), false));
+			mesh._pdeNew(s, *iter) = interpolateValuesAround(
+					s, mesh, direction, *iter,
+					crossingPoints(*iter, s, timeStep, mesh), false);
 			mesh._waveIndices(*iter) = outerInvariants;
 		}
 		
@@ -74,10 +92,9 @@ public:
 		for (auto iter = mesh.borderBegin(); iter < mesh.borderEnd(); ++iter) {
 			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(s, *iter) = localGcmStep(
-				gcmMatrices(s).U1, gcmMatrices(s).U,
-				interpolateValuesAround(s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), false));
+			mesh._pdeNew(s, *iter) = interpolateValuesAround(
+					s, mesh, direction, *iter,
+					crossingPoints(*iter, s, timeStep, mesh), false);
 			mesh._waveIndices(*iter) = outerInvariants;
 		}
 	}
@@ -96,14 +113,23 @@ public:
 		const RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
 		
 		/// calculate inner nodes
-		for (auto innerIter = mesh.innerBegin(); 
-		          innerIter < mesh.innerEnd(); ++innerIter) {
-			mesh._pdeNew(s, *innerIter) = localGcmStep(
-				mesh.matrices(*innerIter)->m[s].U1,
-				mesh.matrices(*innerIter)->m[s].U,
-				interpolateValuesAround(s, mesh, direction, *innerIter,
-					crossingPoints(*innerIter, s, timeStep, mesh), true));
+		for (auto iter = mesh.innerBegin(); iter < mesh.innerEnd(); ++iter) {
+			mesh._pdeNew(s, *iter) = interpolateValuesAround(
+					s, mesh, direction, *iter,
+					crossingPoints(*iter, s, timeStep, mesh), true);
 			assert_eq(outerInvariants.size(), 0);
+		}
+	}
+	
+	
+	virtual void afterStage(
+			const int s, AbstractGrid& mesh_) override {
+		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
+		/// set PDE-vectors on old time layer to its values saved before the stage
+		mesh.swapPdeVariablesStorage(savedPdeTimeLayer);
+		/// switch back from Riemann invariants to PDE-variables
+		for (const Iterator it : mesh) {
+			mesh._pdeNew(s, it) = (*mesh.matrices(it))(s).U1 * mesh.pdeNew(s, it);
 		}
 	}
 	
@@ -117,11 +143,9 @@ private:
 	
 	
 	/**
-	 * Interpolate nodal values in specified points.
-	 * Interpolated value for k-th point in vector dx are
-	 * stored in k-th column of returned Matrix.
+	 * Interpolate Riemann invariants in specified points.
 	 * If specified point appears to be out of body
-	 * AND it is really border case, matrix column is set to zeros
+	 * AND it is really border case, invariant is set to zero
 	 * and outerInvariants is added with the index.
 	 * @param s stage
 	 * @param mesh mesh to perform interpolation on
@@ -130,32 +154,31 @@ private:
 	 * @param dx Vector of distances from reference node on which
 	 * values should be interpolated
 	 * @param canInterpolateInSpaceTime is base of interpolation calculated
-	 * @return Matrix with interpolated nodal values in columns
+	 * @return vector with interpolated Riemann invariants
 	 */
-	Matrix interpolateValuesAround(const int s, 
-	                               const Mesh& mesh, const RealD direction,
-	                               const Iterator& it, const PdeVector& dx,
-	                               const bool canInterpolateInSpaceTime) {
+	PdeVector interpolateValuesAround(const int s, const Mesh& mesh,
+			const RealD direction, const Iterator& it, const PdeVector& dx,
+			const bool canInterpolateInSpaceTime) {
 		outerInvariants.clear();
-		Matrix ans = Matrix::Zeros();
+		PdeVector ans = PdeVector::Zeros();
 		
-		for (int k = 0; k < PdeVector::M; k++)  {
+		for (int k = 0; k < PdeVector::M; k++) {
 			
 			if (dx(k) == 0) {
 			// special for exact hit
-				ans.setColumn(k, mesh.pde(it));
+				ans(k) = mesh.pde(it)(k);
 				continue;
 			}
 			
 			// point to interpolate respectively to point by given iterator
 			RealD shift = direction * dx(k);
 			Cell t = mesh.findCellCrossedByTheRay(it, shift);
-			PdeVector u = PdeVector::Zeros();
+			RiemannInvariant u = 0;
 			
 			if (t.n == t.N) {
 			// characteristic hits into body
 			// second order interpolate inner value in triangle on current time layer
-				u = interpolateInSpace(mesh, mesh.coordsD(it) + shift, t);
+				u = interpolateInSpace(mesh, mesh.coordsD(it) + shift, t, k);
 				
 			} else if (t.n == 0) {
 			// outer characteristic from border/contact node
@@ -164,7 +187,7 @@ private:
 			} else if (t.n == t.N - 1) {
 			// characteristic hits out of body going throughout border face
 				if (canInterpolateInSpaceTime) {
-					u = interpolateInSpaceTime(s, mesh, it, shift, t);
+					u = interpolateInSpaceTime(s, mesh, it, shift, t, k);
 				} else {
 					outerInvariants.push_back(k);
 				}
@@ -172,37 +195,50 @@ private:
 			} else if (t.n == t.N - 2) {
 			// exact hit to border edge(point)
 				if (canInterpolateInSpaceTime) {
-					u = interpolateInSpaceTime1D(s, mesh, it, shift, t);
+					u = interpolateInSpaceTime1D(s, mesh, it, shift, t, k);
 				} else {
 					outerInvariants.push_back(k);
 				}
 				
 			}
 			
-			ans.setColumn(k, u);
+			ans(k) = u;
 		}
 		
 		return ans;
 	}
 	
 	
-	/** Interpolate PdeVector from space on current time layer (2D case) */
-	PdeVector interpolateInSpace(const Mesh& mesh, const Real2& query, const Cell& c) const {
-		return TriangleInterpolator<PdeVector>::minMaxInterpolate(
-				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
-				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
-				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
+	/** Interpolate invariant from space on current time layer (2D case) */
+	RiemannInvariant interpolateInSpace(
+			const Mesh& mesh, const Real2& query, const Cell& c, const int k) const {
+		RiemannInvariantGradient g[CELL_POINTS_NUMBER];
+		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
+			g[i] = {gradients[mesh.getIndex(c(i))](0)(k),
+			        gradients[mesh.getIndex(c(i))](1)(k)};
+		}
+		return TriangleInterpolator<RiemannInvariant>::hybridInterpolate(
+				mesh.coordsD(c(0)), mesh.pde(c(0))(k), g[0],
+				mesh.coordsD(c(1)), mesh.pde(c(1))(k), g[1],
+				mesh.coordsD(c(2)), mesh.pde(c(2))(k), g[2],
 				query);
 	}
 	
 	
-	/** Interpolate PdeVector from space on current time layer (3D case) */
-	PdeVector interpolateInSpace(const Mesh& mesh, const Real3& query, const Cell& c) const {
-		return TetrahedronInterpolator<PdeVector>::minMaxInterpolate(
-				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
-				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
-				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
-				mesh.coordsD(c(3)), mesh.pde(c(3)), gradients[mesh.getIndex(c(3))],
+	/** Interpolate invariant from space on current time layer (3D case) */
+	RiemannInvariant interpolateInSpace(
+			const Mesh& mesh, const Real3& query, const Cell& c, const int k) const {
+		RiemannInvariantGradient g[CELL_POINTS_NUMBER];
+		for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
+			g[i] = {gradients[mesh.getIndex(c(i))](0)(k),
+			        gradients[mesh.getIndex(c(i))](1)(k),
+			        gradients[mesh.getIndex(c(i))](2)(k)};
+		}
+		return TetrahedronInterpolator<RiemannInvariant>::hybridInterpolate(
+				mesh.coordsD(c(0)), mesh.pde(c(0))(k), g[0],
+				mesh.coordsD(c(1)), mesh.pde(c(1))(k), g[1],
+				mesh.coordsD(c(2)), mesh.pde(c(2))(k), g[2],
+				mesh.coordsD(c(3)), mesh.pde(c(3))(k), g[3],
 				query);
 	}
 	
@@ -212,8 +248,8 @@ private:
 	 * border in some point. It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderEdge) const {
+	RiemannInvariant interpolateInSpaceTime(const int s, const Mesh& mesh, 
+			const Iterator& it, const Real2& shift, const Cell& borderEdge, const int k) const {
 		/// 2D case
 		/// first order interpolate in triangle formed by border points from
 		/// current and next time layers (triangle in space-time)
@@ -224,13 +260,13 @@ private:
 		Real2 rc = linal::linesIntersection(r1, r2, r0, r0 + shift);
 				//< coordinate of border-characteristic intersection
 		
-		return TriangleInterpolator<PdeVector>::interpolateInOwner(
+		return TriangleInterpolator<RiemannInvariant>::interpolateInOwner(
 				// current time layer
-				{0, 0}, mesh.pde(borderEdge(0)),
-				{1, 0}, mesh.pde(borderEdge(1)),
+				{0, 0}, mesh.pde(borderEdge(0))(k),
+				{1, 0}, mesh.pde(borderEdge(1))(k),
 				// next time layer
-				{0, 1}, mesh.pdeNew(s, borderEdge(0)),
-				{1, 1}, mesh.pdeNew(s, borderEdge(1)),
+				{0, 1}, mesh.pdeNew(s, borderEdge(0))(k),
+				{1, 1}, mesh.pdeNew(s, borderEdge(1))(k),
 				// query in space-time
 				{    linal::length(rc - r1) / linal::length(r2 - r1),
 				 1 - linal::length(rc - r0) / linal::length(shift)});
@@ -242,8 +278,8 @@ private:
 	 * border in some point. It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real3& shift, const Cell& borderFace) const {
+	RiemannInvariant interpolateInSpaceTime(const int s, const Mesh& mesh, 
+			const Iterator& it, const Real3& shift, const Cell& borderFace, const int k) const {
 		/// 3D case
 		/// first order interpolate in tetrahedron formed by border points from
 		/// current and next time layers (tetrahedron in space-time)
@@ -262,15 +298,15 @@ private:
 				e1(2), e2(2),
 		};
 		Real2 w = linal::linearLeastSquares(A, a);
-		return TetrahedronInterpolator<PdeVector>::interpolateInOwner(
+		return TetrahedronInterpolator<RiemannInvariant>::interpolateInOwner(
 				// current time layer
-				{0, 0, 0}, mesh.pde(borderFace(0)),
-				{1, 0, 0}, mesh.pde(borderFace(1)),
-				{0, 1, 0}, mesh.pde(borderFace(2)),
+				{0, 0, 0}, mesh.pde(borderFace(0))(k),
+				{1, 0, 0}, mesh.pde(borderFace(1))(k),
+				{0, 1, 0}, mesh.pde(borderFace(2))(k),
 				// next time layer
-				{0, 0, 1}, mesh.pdeNew(s, borderFace(0)),
-				{1, 0, 1}, mesh.pdeNew(s, borderFace(1)),
-				{0, 1, 1}, mesh.pdeNew(s, borderFace(2)),
+				{0, 0, 1}, mesh.pdeNew(s, borderFace(0))(k),
+				{1, 0, 1}, mesh.pdeNew(s, borderFace(1))(k),
+				{0, 1, 1}, mesh.pdeNew(s, borderFace(2))(k),
 				// query in space-time
 				{w(0), w(1), 1 - linal::length(rc - r0) / linal::length(shift)});
 	}
@@ -282,8 +318,8 @@ private:
 	 * It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime1D(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderVertex) const {
+	RiemannInvariant interpolateInSpaceTime1D(const int s, const Mesh& mesh, 
+			const Iterator& it, const Real2& shift, const Cell& borderVertex, const int k) const {
 		/// 2D case
 		/// first order interpolate in the line formed by crossed point
 		/// at current and next time layers (line in space-time)
@@ -292,7 +328,7 @@ private:
 		Real2 rv = mesh.coordsD(bv);
 		Real2 r0 = mesh.coordsD(it);
 		real w = linal::length(rv - r0) / linal::length(shift);
-		return mesh.pde(bv) * w + mesh.pdeNew(s, it) * (1 - w);
+		return mesh.pde(bv)(k) * w + mesh.pdeNew(s, it)(k) * (1 - w);
 	}
 	
 	
@@ -302,16 +338,19 @@ private:
 	 * It's possible either for border and inner nodes.
 	 * @note border nodes must be already calculated
 	 */
-	PdeVector interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
-			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/) const {
+	RiemannInvariant interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
+			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/, const int /*k*/) const {
 		THROW_UNSUPPORTED("TODO");
-		return PdeVector::Zeros(); // FIXME
 	}
 	
 	
 	/// List of outer Riemann invariants after node calculation.
 	/// Invariants are specified by their indices in matrix L.
 	WaveIndices outerInvariants;
+	
+	/// The additional storage of PDE-vectors for the opportunity
+	/// to save some time layers temporary during stage calculation
+	std::vector<PdeVariables> savedPdeTimeLayer;
 	
 	/// The storage of gradients of mesh pde values.
 	std::vector<PdeGradient> gradients;
@@ -326,4 +365,4 @@ private:
 } // namespace gcm
 
 
-#endif // LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHOD_HPP
+#endif // LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP

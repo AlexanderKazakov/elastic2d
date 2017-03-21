@@ -117,7 +117,7 @@ template<int Dimensionality,
 void Engine<Dimensionality, TriangulationT>::
 gcmStage(const int stage, const real currentTime, const real timeStep) {
 	for (const Body& body : bodies) {
-		body.gcm->beforeStage(*body.mesh);
+		body.gcm->beforeStage(stage, *body.mesh);
 	}
 	for (const Body& body : bodies) {
 		body.gcm->contactAndBorderStage(stage, timeStep, *body.mesh);
@@ -125,6 +125,9 @@ gcmStage(const int stage, const real currentTime, const real timeStep) {
 	correctContactsAndBorders(stage, currentTime + timeStep);
 	for (const Body& body : bodies) {
 		body.gcm->innerStage(stage, timeStep, *body.mesh);
+	}
+	for (const Body& body : bodies) {
+		body.gcm->afterStage(stage, *body.mesh);
 	}
 }
 

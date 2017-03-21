@@ -81,6 +81,30 @@ public:
 	
 	
 	/**
+	 * Quadratic interpolation in non-degenerate tetrahedron,
+	 * limited with hybrid limiter to avoid oscillations.
+	 * "Hybrid" means if an ocsillation occurs,
+	 * interpolation is switched to first-order.
+	 * @param c_i points
+	 * @param v_i values
+	 * @param g_i gradients
+	 * @param q point to interpolate
+	 */
+	static TValue hybridInterpolate(
+			const Real3& c0, const TValue v0, const Gradient g0,
+			const Real3& c1, const TValue v1, const Gradient g1,
+			const Real3& c2, const TValue v2, const Gradient g2,
+			const Real3& c3, const TValue v3, const Gradient g3,
+			const Real3& q) {
+		TValue quadratic = interpolate(
+				c0, v0, g0, c1, v1, g1, c2, v2, g2, c3, v3, g3, q);
+		TValue minMaxLimited = linal::limiterMinMax(quadratic, v0, v1, v2, v3);
+		return (quadratic == minMaxLimited) ?
+				quadratic : interpolate(c0, v0, c1, v1, c2, v2, c3, v3, q);
+	}
+	
+	
+	/**
 	 * Given with 6 point-value pairs, determine among them tetrahedron that
 	 * contains the query point inside and perform linear interpolation in it
 	 * @param c_i and v_i - points and values

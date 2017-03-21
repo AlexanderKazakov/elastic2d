@@ -163,12 +163,21 @@ public:
 		std::swap(pdeVariables, pdeVariablesNew[(size_t)indexOfNextPde]);
 	}
 	
+	/// used by gcm-method in some scenarios @{
+	const std::vector<PdeVariables>& getPdeVariablesStorage() const {
+		return pdeVariables;
+	}
+	void swapPdeVariablesStorage(std::vector<PdeVariables>& exchange) {
+		std::swap(pdeVariables, exchange);
+	}
+	/// @}
+	
 	virtual void setInnerCalculationBasis(const MatrixDD& basis) override {
 		Iterator someInnerNode = *(this->innerBegin());
 		Model::constructGcmMatrices(_matrices(someInnerNode),
 				material(someInnerNode), basis);
 	}
-
+	
 	MatrixDD getInnerCalculationBasis() const {
 		Iterator someInnerNode = *(this->innerBegin());
 		return matrices(someInnerNode)->basis;

@@ -6,7 +6,7 @@
 #include <libgcm/util/snapshot/snapshotters.hpp>
 #include <libgcm/rheology/ode/Ode.hpp>
 #include <libgcm/engine/simplex/AbstractMesh.hpp>
-#include <libgcm/engine/simplex/GridCharacteristicMethod.hpp>
+#include <libgcm/engine/simplex/GridCharacteristicMethodInRiemannInvariants.hpp>
 #include <libgcm/engine/simplex/DefaultMesh.hpp>
 
 
@@ -64,7 +64,7 @@ public:
 	}
 	
 	virtual GcmPtr createGcm() override {
-		return std::make_shared<GridCharacteristicMethod<Mesh>>();
+		return std::make_shared<GridCharacteristicMethodInRiemannInvariants<Mesh>>();
 	}
 	
 	virtual OdePtr createOde(const Odes::T type) override {
