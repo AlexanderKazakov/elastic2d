@@ -1,5 +1,5 @@
-#ifndef LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHOD_HPP
-#define LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHOD_HPP
+#ifndef LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
+#define LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
 
 #include <libgcm/util/infrastructure/infrastructure.hpp>
 #include <libgcm/grid/AbstractGrid.hpp>
@@ -25,10 +25,14 @@ public:
 
 
 /**
- * Grid-characteristic method for meshes based on SimplexGrid
+ * Grid-characteristic method for meshes based on SimplexGrid.
+ * The approach is to calculate and advect along characteristics
+ * scalar Riemann-invariants not PDE-vectors
+ * @see GridCharacteristicMethodInPdeVectors -- an opposite approach
  */
 template<typename Mesh>
-class GridCharacteristicMethod : public GridCharacteristicMethodBase {
+class GridCharacteristicMethodInRiemannInvariants :
+		public GridCharacteristicMethodBase {
 public:
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
@@ -361,4 +365,4 @@ private:
 } // namespace gcm
 
 
-#endif // LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHOD_HPP
+#endif // LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
