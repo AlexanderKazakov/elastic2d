@@ -1,32 +1,20 @@
 #ifndef LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINPDEVECTORS_HPP
 #define LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINPDEVECTORS_HPP
 
-#include <libgcm/util/infrastructure/infrastructure.hpp>
-#include <libgcm/grid/AbstractGrid.hpp>
-#include <libgcm/util/math/Differentiation.hpp>
-#include <libgcm/util/math/interpolation/interpolation.hpp>
-#include <libgcm/util/math/GridCharacteristicMethod.hpp>
-
+#include <libgcm/engine/simplex/common.hpp>
 
 namespace gcm {
 namespace simplex {
 
-
-class GridCharacteristicMethodBase {
-public:
-	virtual void beforeStage(const AbstractGrid& mesh_) = 0;
-	virtual void contactAndBorderStage(
-			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void innerStage(
-			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-};
-
-
 /**
- * Grid-characteristic method for meshes based on SimplexGrid
+ * Grid-characteristic method for meshes based on SimplexGrid.
+ * The approach is to calculate and advect along characteristics
+ * PDE-vectors not scalar Riemann-invariants
+ * @see GridCharacteristicMethodInRiemannInvariants -- an opposite approach
  */
 template<typename Mesh>
-class GridCharacteristicMethodInPdeVariables : public GridCharacteristicMethodBase {
+class GridCharacteristicMethodInPdeVectors :
+		public GridCharacteristicMethodBase {
 public:
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
@@ -44,7 +32,8 @@ public:
 	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	
-	virtual void beforeStage(const AbstractGrid& mesh_) override {
+	virtual void beforeStage(
+			const int /*s*/, AbstractGrid& mesh_) override {
 		/// calculate spatial derivatives of all mesh pde values ones before stage
 		/// in order to use them multiple times while stage calculation 
 		const Mesh& mesh = dynamic_cast<const Mesh&>(mesh_);
@@ -106,6 +95,10 @@ public:
 			assert_eq(outerInvariants.size(), 0);
 		}
 	}
+	
+	
+	virtual void afterStage(
+			const int /*s*/, AbstractGrid& /*mesh_*/) override { }
 	
 	
 private:
@@ -318,7 +311,7 @@ private:
 	/// The storage of hessians of mesh pde values. (Unused now)
 	std::vector<PdeHessian> hessians;
 	
-	USE_AND_INIT_LOGGER("gcm.simplex.GridCharacteristicMethod")
+	USE_AND_INIT_LOGGER("gcm.simplex.GridCharacteristicMethodInPdeVectors")
 };
 
 

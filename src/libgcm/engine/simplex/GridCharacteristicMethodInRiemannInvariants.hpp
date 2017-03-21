@@ -1,28 +1,10 @@
 #ifndef LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
 #define LIBGCM_SIMPLEX_GRIDCHARACTERISTICMETHODINRIEMANNINVARIANTS_HPP
 
-#include <libgcm/util/infrastructure/infrastructure.hpp>
-#include <libgcm/grid/AbstractGrid.hpp>
-#include <libgcm/util/math/Differentiation.hpp>
-#include <libgcm/util/math/interpolation/interpolation.hpp>
-#include <libgcm/util/math/GridCharacteristicMethod.hpp>
-
+#include <libgcm/engine/simplex/common.hpp>
 
 namespace gcm {
 namespace simplex {
-
-class GridCharacteristicMethodBase {
-public:
-	virtual void beforeStage(
-			const int s, AbstractGrid& mesh_) = 0;
-	virtual void contactAndBorderStage(
-			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void innerStage(
-			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
-	virtual void afterStage(
-			const int s, AbstractGrid& mesh_) = 0;
-};
-
 
 /**
  * Grid-characteristic method for meshes based on SimplexGrid.
@@ -52,9 +34,9 @@ public:
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	static const int CELL_POINTS_NUMBER = Mesh::CELL_POINTS_NUMBER;
 	
-	typedef real	                              RiemannInvariant;
+	typedef real                                  RiemannInvariant;
 	typedef linal::VECTOR<
-			DIMENSIONALITY, RiemannInvariant>	 RiemannInvariantGradient;
+			DIMENSIONALITY, RiemannInvariant>     RiemannInvariantGradient;
 	
 	
 	virtual void beforeStage(
@@ -357,7 +339,7 @@ private:
 	/// The storage of hessians of mesh pde values. (Unused now)
 	std::vector<PdeHessian> hessians;
 	
-	USE_AND_INIT_LOGGER("gcm.simplex.GridCharacteristicMethod")
+	USE_AND_INIT_LOGGER("gcm.simplex.GridCharacteristicMethodInRiemannInvariants")
 };
 
 

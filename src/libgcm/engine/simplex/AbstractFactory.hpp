@@ -7,6 +7,7 @@
 #include <libgcm/rheology/ode/Ode.hpp>
 #include <libgcm/engine/simplex/AbstractMesh.hpp>
 #include <libgcm/engine/simplex/GridCharacteristicMethodInRiemannInvariants.hpp>
+#include <libgcm/engine/simplex/GridCharacteristicMethodInPdeVectors.hpp>
 #include <libgcm/engine/simplex/DefaultMesh.hpp>
 
 
@@ -33,7 +34,7 @@ public:
 			const GridConstructionPack& constructionPack,
 			const size_t numberOfNextPdeTimeLayers) = 0;
 	
-	virtual GcmPtr createGcm() = 0;
+	virtual GcmPtr createGcm(const GcmType gcmType) = 0;
 	
 	virtual OdePtr createOde(const Odes::T type) = 0;
 	
@@ -63,8 +64,15 @@ public:
 				task, gridId, constructionPack, numberOfNextPdeTimeLayers);
 	}
 	
-	virtual GcmPtr createGcm() override {
-		return std::make_shared<GridCharacteristicMethodInRiemannInvariants<Mesh>>();
+	virtual GcmPtr createGcm(const GcmType gcmType) override {
+		switch(gcmType) {
+		case GcmType::ADVECT_RIEMANN_INVARIANTS:
+			return std::make_shared<GridCharacteristicMethodInRiemannInvariants<Mesh>>();
+		case GcmType::ADVECT_PDE_VECTORS:
+			return std::make_shared<GridCharacteristicMethodInPdeVectors<Mesh>>();
+		default:
+			THROW_UNSUPPORTED("Unknown or unsupported type of gcm-method");
+		}
 	}
 	
 	virtual OdePtr createOde(const Odes::T type) override {

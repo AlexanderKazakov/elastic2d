@@ -14,7 +14,8 @@ Engine(const Task& task) :
 		AbstractEngine(task),
 		triangulation(task),
 		movable(task.simplexGrid.movable),
-		borderCalcMode(task.simplexGrid.borderCalcMode) {
+		borderCalcMode(task.simplexGrid.borderCalcMode),
+		gcmType(task.globalSettings.gcmType) {
 	
 	initializeCalculationBasis(task);
 	createMeshes(task);
@@ -62,7 +63,7 @@ createMeshes(const Task& task) {
 		body.mesh = factory->createMesh(task, gridId, {&triangulation}, Dimensionality);
 		body.mesh->setUpPde(task, calculationBasis.basis, borderCalcMode);
 		
-		body.gcm = factory->createGcm();
+		body.gcm = factory->createGcm(gcmType);
 		
 		for (const Snapshotters::T snapType : task.globalSettings.snapshottersId) {
 			body.snapshotters.push_back(

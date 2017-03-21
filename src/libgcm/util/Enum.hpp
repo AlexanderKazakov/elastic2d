@@ -169,6 +169,15 @@ enum class BorderCalcMode {
 };
 
 
+/**
+ * Different types of gcm-method to use for calculations
+ */
+enum class GcmType {
+	ADVECT_RIEMANN_INVARIANTS,
+	ADVECT_PDE_VECTORS,
+};
+
+
 }
 
 

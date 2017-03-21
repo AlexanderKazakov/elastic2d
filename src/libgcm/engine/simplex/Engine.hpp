@@ -121,6 +121,9 @@ private:
 	/// method of border/contacts calculation
 	const BorderCalcMode borderCalcMode;
 	
+	/// Type of gcm-method to use for calculations
+	const GcmType gcmType;
+	
 	struct CalculationBasis {
 	/// Current basis of calculations --
 	/// i'th gcm stage is performed along i'th column of the matrix

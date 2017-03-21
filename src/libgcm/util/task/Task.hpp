@@ -56,6 +56,8 @@ struct Task {
 		real requiredTime = 0;
 		/// On/off logging from engine at each time step
 		bool verboseTimeSteps = true;
+		/// Type of gcm-method to use (only for simplex engine)
+		GcmType gcmType = GcmType::ADVECT_RIEMANN_INVARIANTS;
 	} globalSettings;
 	
 	
