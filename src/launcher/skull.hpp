@@ -15,11 +15,14 @@ inline Task skullCommon() {
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.CourantNumber = 1;
-	task.globalSettings.numberOfSnaps = 1000;
-	task.globalSettings.stepsPerSnap = 15;
+//	task.globalSettings.numberOfSnaps = 1000;
+//	task.globalSettings.stepsPerSnap = 15;
+	task.globalSettings.numberOfSnaps = 100;
+	task.globalSettings.stepsPerSnap = 2;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
+	task.simplexGrid.fileName = "meshes/coarse/skull_part.out";
+//	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
@@ -30,7 +33,7 @@ inline Task skullCommon() {
 	Task::InitialCondition::Quantity pressure;
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 1;
-	pressure.area = std::make_shared<SphereArea>(2, Real3({0, 5, 147}));
+	pressure.area = std::make_shared<SphereArea>(1, Real3({0, 7.5, 142}));
 	task.initialCondition.quantities.push_back(pressure);
 	
 	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
