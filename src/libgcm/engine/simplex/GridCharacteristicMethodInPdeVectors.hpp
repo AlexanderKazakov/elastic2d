@@ -16,6 +16,8 @@ template<typename Mesh>
 class GridCharacteristicMethodInPdeVectors :
 		public GridCharacteristicMethodBase {
 public:
+	typedef GridCharacteristicMethodBase                       Base;
+	
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
 	typedef typename Mesh::GCM_MATRICES                        GcmMatrices;
@@ -55,7 +57,7 @@ public:
 			mesh._pdeNew(s, *iter) = localGcmStep(
 				gcmMatrices(s).U1, gcmMatrices(s).U,
 				interpolateValuesAround(s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), false));
+					Base::crossingPoints(*iter, s, timeStep, mesh), false));
 			mesh._waveIndices(*iter) = outerInvariants;
 		}
 		
@@ -66,7 +68,7 @@ public:
 			mesh._pdeNew(s, *iter) = localGcmStep(
 				gcmMatrices(s).U1, gcmMatrices(s).U,
 				interpolateValuesAround(s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), false));
+					Base::crossingPoints(*iter, s, timeStep, mesh), false));
 			mesh._waveIndices(*iter) = outerInvariants;
 		}
 	}
@@ -91,7 +93,7 @@ public:
 				mesh.matrices(*innerIter)->m[s].U1,
 				mesh.matrices(*innerIter)->m[s].U,
 				interpolateValuesAround(s, mesh, direction, *innerIter,
-					crossingPoints(*innerIter, s, timeStep, mesh), true));
+					Base::crossingPoints(*innerIter, s, timeStep, mesh), true));
 			assert_eq(outerInvariants.size(), 0);
 		}
 	}
@@ -102,13 +104,6 @@ public:
 	
 	
 private:
-	/** Points where characteristics from next time layer cross current time layer */
-	PdeVector crossingPoints(const Iterator& it, const int s,
-	                         const real timeStep, const Mesh& mesh) const {
-		return -timeStep * linal::diag(mesh.matrices(it)->m[s].L);
-	}
-	
-	
 	/**
 	 * Interpolate nodal values in specified points.
 	 * Interpolated value for k-th point in vector dx are
@@ -180,8 +175,9 @@ private:
 	
 	
 	/** Interpolate PdeVector from space on current time layer (2D case) */
+	inline
 	PdeVector interpolateInSpace(const Mesh& mesh, const Real2& query, const Cell& c) const {
-		return TriangleInterpolator<PdeVector>::minMaxInterpolate(
+		return TriangleInterpolator<PdeVector>::hybridInterpolate(
 				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
 				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
 				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
@@ -190,8 +186,9 @@ private:
 	
 	
 	/** Interpolate PdeVector from space on current time layer (3D case) */
+	inline
 	PdeVector interpolateInSpace(const Mesh& mesh, const Real3& query, const Cell& c) const {
-		return TetrahedronInterpolator<PdeVector>::minMaxInterpolate(
+		return TetrahedronInterpolator<PdeVector>::hybridInterpolate(
 				mesh.coordsD(c(0)), mesh.pde(c(0)), gradients[mesh.getIndex(c(0))],
 				mesh.coordsD(c(1)), mesh.pde(c(1)), gradients[mesh.getIndex(c(1))],
 				mesh.coordsD(c(2)), mesh.pde(c(2)), gradients[mesh.getIndex(c(2))],
@@ -201,104 +198,62 @@ private:
 	
 	
 	/** 
-	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border in some point. It's possible either for border and inner nodes.
+	 * Handle the case when characteristic goes inside the body
+	 * and then cross the border in some point (2D)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	PdeVector interpolateInSpaceTime(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderEdge) const {
-		/// 2D case
-		/// first order interpolate in triangle formed by border points from
-		/// current and next time layers (triangle in space-time)
-
-		Real2 r1 = mesh.coordsD(borderEdge(0));
-		Real2 r2 = mesh.coordsD(borderEdge(1));
-		Real2 r0 = mesh.coordsD(it);
-		Real2 rc = linal::linesIntersection(r1, r2, r0, r0 + shift);
-				//< coordinate of border-characteristic intersection
-		
-		return TriangleInterpolator<PdeVector>::interpolateInOwner(
-				// current time layer
-				{0, 0}, mesh.pde(borderEdge(0)),
-				{1, 0}, mesh.pde(borderEdge(1)),
-				// next time layer
-				{0, 1}, mesh.pdeNew(s, borderEdge(0)),
-				{1, 1}, mesh.pdeNew(s, borderEdge(1)),
-				// query in space-time
-				{    linal::length(rc - r1) / linal::length(r2 - r1),
-				 1 - linal::length(rc - r0) / linal::length(shift)});
+			const Iterator& it, const Real2& shift, const Cell& borderEdge) {
+		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
+				mesh.coordsD(borderEdge(0)), mesh.coordsD(borderEdge(1)),
+				mesh.pde(borderEdge(0)), mesh.pde(borderEdge(1)),
+				mesh.pdeNew(s, borderEdge(0)), mesh.pdeNew(s, borderEdge(1)));
 	}
 	
 	
 	/** 
-	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border in some point. It's possible either for border and inner nodes.
+	 * Handle the case when characteristic goes inside the body
+	 * and then cross border in some point (3D)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	PdeVector interpolateInSpaceTime(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real3& shift, const Cell& borderFace) const {
-		/// 3D case
-		/// first order interpolate in tetrahedron formed by border points from
-		/// current and next time layers (tetrahedron in space-time)
-
-		Real3 r1 = mesh.coordsD(borderFace(0));
-		Real3 r2 = mesh.coordsD(borderFace(1));
-		Real3 r3 = mesh.coordsD(borderFace(2));
-		Real3 r0 = mesh.coordsD(it);
-		/// coordinate of border-characteristic intersection
-		Real3 rc = linal::lineWithFlatIntersection(r1, r2, r3, r0, r0 + shift);
-		/// find local coordinates of (rc - r1) in basis {e1, e2}
-		Real3 e1 = r2 - r1, e2 = r3 - r1, a = rc - r1;
-		linal::Matrix<3, 2> A = {
-				e1(0), e2(0),
-				e1(1), e2(1),
-				e1(2), e2(2),
-		};
-		Real2 w = linal::linearLeastSquares(A, a);
-		return TetrahedronInterpolator<PdeVector>::interpolateInOwner(
-				// current time layer
-				{0, 0, 0}, mesh.pde(borderFace(0)),
-				{1, 0, 0}, mesh.pde(borderFace(1)),
-				{0, 1, 0}, mesh.pde(borderFace(2)),
-				// next time layer
-				{0, 0, 1}, mesh.pdeNew(s, borderFace(0)),
-				{1, 0, 1}, mesh.pdeNew(s, borderFace(1)),
-				{0, 1, 1}, mesh.pdeNew(s, borderFace(2)),
-				// query in space-time
-				{w(0), w(1), 1 - linal::length(rc - r0) / linal::length(shift)});
+			const Iterator& it, const Real3& shift, const Cell& borderFace) {
+		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
+				mesh.coordsD(borderFace(0)), mesh.coordsD(borderFace(1)),
+				mesh.coordsD(borderFace(2)),
+				mesh.pde(borderFace(0)), mesh.pde(borderFace(1)),
+				mesh.pde(borderFace(2)),
+				mesh.pdeNew(s, borderFace(0)), mesh.pdeNew(s, borderFace(1)),
+				mesh.pdeNew(s, borderFace(2)));
 	}
 	
 	
-	/** 
+	/**
 	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border exactly through the border vertex. It's possible for 2D case.
-	 * It's possible either for border and inner nodes.
+	 * border exactly through the border vertex. (in 2D case)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	PdeVector interpolateInSpaceTime1D(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderVertex) const {
-		/// 2D case
-		/// first order interpolate in the line formed by crossed point
-		/// at current and next time layers (line in space-time)
-
-		auto bv = borderVertex(0);
-		Real2 rv = mesh.coordsD(bv);
-		Real2 r0 = mesh.coordsD(it);
-		real w = linal::length(rv - r0) / linal::length(shift);
-		return mesh.pde(bv) * w + mesh.pdeNew(s, it) * (1 - w);
+			const Iterator& it, const Real2& shift, const Cell& borderVertex) {
+		return Base::interpolateInSpaceTime1D(shift, mesh.coordsD(it),
+				mesh.coordsD(borderVertex(0)),
+				mesh.pde(borderVertex(0)),
+				mesh.pdeNew(s, borderVertex(0)));
 	}
 	
 	
-	/** 
+	/**
 	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border exactly through the border vertex. It's possible for 2D case.
-	 * It's possible either for border and inner nodes.
+	 * border exactly through the border edge. (in 3D)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	PdeVector interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
-			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/) const {
-		THROW_UNSUPPORTED("TODO");
-		return PdeVector::Zeros(); // FIXME
+			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderVertex*/) {
+		THROW_UNSUPPORTED("This was not occured ever before");
 	}
 	
 	

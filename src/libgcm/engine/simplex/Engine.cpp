@@ -78,7 +78,8 @@ createMeshes(const Task& task) {
 			Border border;
 			border.correctionArea = condition.area;	
 			border.borderCorrector = BorderCorrectorFactory<Grid>::create(
-					condition, 
+					gcmType,
+					condition,
 					task.bodies.at(body.mesh->id).modelId,
 					task.bodies.at(body.mesh->id).materialId);
 			body.borders.push_back(border);

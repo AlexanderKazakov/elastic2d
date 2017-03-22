@@ -47,7 +47,7 @@ public:
 	virtual void applyInLocalBasis(
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
-			const real timeAtNextLayer) = 0;
+			const real timeAtNextLayer) const = 0;
 	
 	/**
 	 * Apply border correction for all nodes from the list
@@ -60,7 +60,7 @@ public:
 			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
-			const real timeAtNextLayer) = 0;
+			const real timeAtNextLayer) const = 0;
 	
 	
 protected:
@@ -77,7 +77,7 @@ protected:
 			typename MatrixOmega, typename MatrixB, typename VectorB>
 	PdeVector
 	calculateOuterWaveCorrection(const PdeVector& u,
-			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
+			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) const {
 		const auto M = B * Omega;
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
 		return Omega * alpha;
@@ -90,11 +90,10 @@ protected:
 
 template<typename Model, typename Material, typename TGrid,
          typename BorderMatrixCreator>
-class ConcreteBorderCorrector : public AbstractBorderCorrector<TGrid> {
+class BorderCorrectorInPdeVectors : public AbstractBorderCorrector<TGrid> {
 public:
 	typedef DefaultMesh<Model, TGrid, Material> Mesh;
 	typedef typename Mesh::PdeVector            PdeVector;
-	typedef typename Mesh::GCM_MATRICES         GcmMatrices;
 	typedef typename Mesh::WaveIndices          WaveIndices;
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
@@ -104,13 +103,13 @@ public:
 	typedef typename Base::RealD                RealD;
 	typedef typename Base::MatrixDD             MatrixDD;
 	
-	ConcreteBorderCorrector(const Task::BorderCondition& bc) :
+	BorderCorrectorInPdeVectors(const Task::BorderCondition& bc) :
 			borderCondition(bc) { }
 	
 	virtual void applyInLocalBasis(
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
-			const real timeAtNextLayer) override {
+			const real timeAtNextLayer) const override {
 		const int stage = 0; ///< the only valid stage number
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
@@ -122,10 +121,7 @@ public:
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			
 			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
-			u = gcmMatrices(stage).U1 * u;
 			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
-			u = gcmMatrices(stage).U * u;
 		}
 	}
 	
@@ -133,7 +129,7 @@ public:
 			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
-			const real timeAtNextLayer) override {
+			const real timeAtNextLayer) const override {
 		
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
@@ -147,8 +143,6 @@ public:
 			
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
-			u = gcmMatrices(stage).U1 * u;
 			
 			if (outers == Model::RIGHT_INVARIANTS ||
 					outers == Model::LEFT_INVARIANTS) {
@@ -156,7 +150,6 @@ public:
 				const auto Omega = getColumnsFromGcmMatrices<Model>(
 						stage, outers, mesh->matrices(nodeBorder.iterator));
 				u += this->calculateOuterWaveCorrection(u, Omega, B, b);
-				u = gcmMatrices(stage).U * u;
 				continue;
 			}
 			
@@ -169,7 +162,6 @@ public:
 				const PdeVector uR = this->calculateOuterWaveCorrection(u, OmegaR, B, b);
 				const PdeVector uL = this->calculateOuterWaveCorrection(u, OmegaL, B, b);
 				u += (uR + uL) / 2; // FIXME - this is valid for pressure only
-				u = gcmMatrices(stage).U * u;
 				continue;
 			}
 			
@@ -180,6 +172,80 @@ public:
 	
 private:
 	const BorderCondition<Model> borderCondition;
+};
+
+
+
+template<typename Model, typename Material, typename TGrid,
+         typename BorderMatrixCreator>
+class BorderCorrectorInRiemannInvariants: public AbstractBorderCorrector<TGrid> {
+public:
+	typedef DefaultMesh<Model, TGrid, Material> Mesh;
+	typedef typename Mesh::PdeVector            PdeVector;
+	typedef typename Mesh::GCM_MATRICES         GcmMatrices;
+	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
+	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
+	
+	typedef AbstractBorderCorrector<TGrid>      Base;
+	typedef typename Base::NodeBorder           NodeBorder;
+	
+	BorderCorrectorInRiemannInvariants(const Task::BorderCondition& bc) :
+			pdeCorrector(bc) { }
+		
+	virtual void applyInLocalBasis(
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real timeAtNextLayer) const override {
+		const int stage = 0; ///< the only valid stage number
+		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
+		assert_true(mesh);
+		
+		/// convert to PDE variables to perform correction
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
+			u = gcmMatrices(stage).U1 * u;
+		}
+		
+		pdeCorrector.applyInLocalBasis(grid, borderNodes, timeAtNextLayer);
+		
+		/// convert back to Riemann invariants
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
+			u = gcmMatrices(stage).U * u;
+		}
+	}
+	
+	virtual void applyInGlobalBasis(
+			const int stage,
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real timeAtNextLayer) const override {
+		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
+		assert_true(mesh);
+		
+		/// convert to PDE variables to perform correction
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
+			u = gcmMatrices(stage).U1 * u;
+		}
+		
+		pdeCorrector.applyInGlobalBasis(stage, grid, borderNodes, timeAtNextLayer);
+		
+		/// convert back to Riemann invariants
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
+			u = gcmMatrices(stage).U * u;
+		}
+	}
+	
+	
+private:
+	const BorderCorrectorInPdeVectors<
+			Model, Material, TGrid, BorderMatrixCreator> pdeCorrector;
 };
 
 
@@ -211,6 +277,7 @@ public:
 	typedef AcousticModel<DIMENSIONALITY>    AcousticModelD;
 	
 	static std::shared_ptr<AbstractBorderCorrector<TGrid>> create(
+			const GcmType gcmType,
 			const Task::BorderCondition& condition,
 			const Models::T model, const Materials::T material) {
 		
@@ -218,43 +285,84 @@ public:
 			THROW_UNSUPPORTED("Unsupported material");
 		}
 		
+		// TODO - this is a horrible shit:
+		switch (gcmType) {
+		
+		case GcmType::ADVECT_RIEMANN_INVARIANTS:
 		switch (condition.type) {
 			case BorderConditions::T::FIXED_FORCE:
-				
 				switch (model) {
 					case Models::T::ELASTIC:
-						return std::make_shared<ConcreteBorderCorrector<
+						return std::make_shared<BorderCorrectorInRiemannInvariants<
 								ElasticModelD, IsotropicMaterial, TGrid,
 								FixedForceBorderMatrixCreator<ElasticModelD>>>(
 										condition);
 					case Models::T::ACOUSTIC:
-						return std::make_shared<ConcreteBorderCorrector<
+						return std::make_shared<BorderCorrectorInRiemannInvariants<
 								AcousticModelD, IsotropicMaterial, TGrid,
 								FixedForceBorderMatrixCreator<AcousticModelD>>>(
 										condition);
 					default:
 						THROW_INVALID_ARG("Unknown type of model");
 				}
-				
 			case BorderConditions::T::FIXED_VELOCITY:
-				
 				switch (model) {
 					case Models::T::ELASTIC:
-						return std::make_shared<ConcreteBorderCorrector<
+						return std::make_shared<BorderCorrectorInRiemannInvariants<
 								ElasticModelD, IsotropicMaterial, TGrid,
 								FixedVelocityBorderMatrixCreator<ElasticModelD>>>(
 										condition);
 					case Models::T::ACOUSTIC:
-						return std::make_shared<ConcreteBorderCorrector<
+						return std::make_shared<BorderCorrectorInRiemannInvariants<
 								AcousticModelD, IsotropicMaterial, TGrid,
 								FixedVelocityBorderMatrixCreator<AcousticModelD>>>(
 										condition);
 					default:
 						THROW_INVALID_ARG("Unknown type of model");
 				}
-				
 			default:
 				THROW_INVALID_ARG("Unknown type of border condition");
+		}
+		
+		case GcmType::ADVECT_PDE_VECTORS:
+		switch (condition.type) {
+			case BorderConditions::T::FIXED_FORCE:
+				switch (model) {
+					case Models::T::ELASTIC:
+						return std::make_shared<BorderCorrectorInPdeVectors<
+								ElasticModelD, IsotropicMaterial, TGrid,
+								FixedForceBorderMatrixCreator<ElasticModelD>>>(
+										condition);
+					case Models::T::ACOUSTIC:
+						return std::make_shared<BorderCorrectorInPdeVectors<
+								AcousticModelD, IsotropicMaterial, TGrid,
+								FixedForceBorderMatrixCreator<AcousticModelD>>>(
+										condition);
+					default:
+						THROW_INVALID_ARG("Unknown type of model");
+				}
+			case BorderConditions::T::FIXED_VELOCITY:
+				switch (model) {
+					case Models::T::ELASTIC:
+						return std::make_shared<BorderCorrectorInPdeVectors<
+								ElasticModelD, IsotropicMaterial, TGrid,
+								FixedVelocityBorderMatrixCreator<ElasticModelD>>>(
+										condition);
+					case Models::T::ACOUSTIC:
+						return std::make_shared<BorderCorrectorInPdeVectors<
+								AcousticModelD, IsotropicMaterial, TGrid,
+								FixedVelocityBorderMatrixCreator<AcousticModelD>>>(
+										condition);
+					default:
+						THROW_INVALID_ARG("Unknown type of model");
+				}
+			default:
+				THROW_INVALID_ARG("Unknown type of border condition");
+		}
+		
+		default:
+		THROW_UNSUPPORTED("Unknown type of gcm-method");
+		
 		}
 	}
 };

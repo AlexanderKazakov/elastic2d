@@ -16,6 +16,8 @@ template<typename Mesh>
 class GridCharacteristicMethodInRiemannInvariants :
 		public GridCharacteristicMethodBase {
 public:
+	typedef GridCharacteristicMethodBase                       Base;
+	
 	typedef typename Mesh::Matrix                              Matrix;
 	typedef typename Mesh::PdeVector                           PdeVector;
 	typedef typename Mesh::PdeVariables                        PdeVariables;
@@ -66,7 +68,7 @@ public:
 			const RealD direction = gcmMatrices.basis.getColumn(s);
 			mesh._pdeNew(s, *iter) = interpolateValuesAround(
 					s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), false);
+					Base::crossingPoints(*iter, s, timeStep, mesh), false);
 			mesh._waveIndices(*iter) = outerInvariants;
 		}
 		
@@ -76,7 +78,7 @@ public:
 			const RealD direction = gcmMatrices.basis.getColumn(s);
 			mesh._pdeNew(s, *iter) = interpolateValuesAround(
 					s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), false);
+					Base::crossingPoints(*iter, s, timeStep, mesh), false);
 			mesh._waveIndices(*iter) = outerInvariants;
 		}
 	}
@@ -98,7 +100,7 @@ public:
 		for (auto iter = mesh.innerBegin(); iter < mesh.innerEnd(); ++iter) {
 			mesh._pdeNew(s, *iter) = interpolateValuesAround(
 					s, mesh, direction, *iter,
-					crossingPoints(*iter, s, timeStep, mesh), true);
+					Base::crossingPoints(*iter, s, timeStep, mesh), true);
 			assert_eq(outerInvariants.size(), 0);
 		}
 	}
@@ -117,13 +119,6 @@ public:
 	
 	
 private:
-	/** Points where characteristics from next time layer cross current time layer */
-	PdeVector crossingPoints(const Iterator& it, const int s,
-	                         const real timeStep, const Mesh& mesh) const {
-		return -timeStep * linal::diag(mesh.matrices(it)->m[s].L);
-	}
-	
-	
 	/**
 	 * Interpolate Riemann invariants in specified points.
 	 * If specified point appears to be out of body
@@ -192,6 +187,7 @@ private:
 	
 	
 	/** Interpolate invariant from space on current time layer (2D case) */
+	inline
 	RiemannInvariant interpolateInSpace(
 			const Mesh& mesh, const Real2& query, const Cell& c, const int k) const {
 		RiemannInvariantGradient g[CELL_POINTS_NUMBER];
@@ -208,6 +204,7 @@ private:
 	
 	
 	/** Interpolate invariant from space on current time layer (3D case) */
+	inline
 	RiemannInvariant interpolateInSpace(
 			const Mesh& mesh, const Real3& query, const Cell& c, const int k) const {
 		RiemannInvariantGradient g[CELL_POINTS_NUMBER];
@@ -225,104 +222,67 @@ private:
 	}
 	
 	
-	/** 
-	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border in some point. It's possible either for border and inner nodes.
+	/**
+	 * Handle the case when characteristic goes inside the body
+	 * and then cross the border in some point (2D)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	RiemannInvariant interpolateInSpaceTime(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderEdge, const int k) const {
-		/// 2D case
-		/// first order interpolate in triangle formed by border points from
-		/// current and next time layers (triangle in space-time)
-
-		Real2 r1 = mesh.coordsD(borderEdge(0));
-		Real2 r2 = mesh.coordsD(borderEdge(1));
-		Real2 r0 = mesh.coordsD(it);
-		Real2 rc = linal::linesIntersection(r1, r2, r0, r0 + shift);
-				//< coordinate of border-characteristic intersection
-		
-		return TriangleInterpolator<RiemannInvariant>::interpolateInOwner(
-				// current time layer
-				{0, 0}, mesh.pde(borderEdge(0))(k),
-				{1, 0}, mesh.pde(borderEdge(1))(k),
-				// next time layer
-				{0, 1}, mesh.pdeNew(s, borderEdge(0))(k),
-				{1, 1}, mesh.pdeNew(s, borderEdge(1))(k),
-				// query in space-time
-				{    linal::length(rc - r1) / linal::length(r2 - r1),
-				 1 - linal::length(rc - r0) / linal::length(shift)});
+			const Iterator& it, const Real2& shift, const Cell& borderEdge,
+			const int k) {
+		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
+				mesh.coordsD(borderEdge(0)), mesh.coordsD(borderEdge(1)),
+				mesh.pde(borderEdge(0))(k), mesh.pde(borderEdge(1))(k),
+				mesh.pdeNew(s, borderEdge(0))(k), mesh.pdeNew(s, borderEdge(1))(k));
 	}
 	
 	
-	/** 
-	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border in some point. It's possible either for border and inner nodes.
+	/**
+	 * Handle the case when characteristic goes inside the body
+	 * and then cross border in some point (3D)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	RiemannInvariant interpolateInSpaceTime(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real3& shift, const Cell& borderFace, const int k) const {
-		/// 3D case
-		/// first order interpolate in tetrahedron formed by border points from
-		/// current and next time layers (tetrahedron in space-time)
-
-		Real3 r1 = mesh.coordsD(borderFace(0));
-		Real3 r2 = mesh.coordsD(borderFace(1));
-		Real3 r3 = mesh.coordsD(borderFace(2));
-		Real3 r0 = mesh.coordsD(it);
-		/// coordinate of border-characteristic intersection
-		Real3 rc = linal::lineWithFlatIntersection(r1, r2, r3, r0, r0 + shift);
-		/// find local coordinates of (rc - r1) in basis {e1, e2}
-		Real3 e1 = r2 - r1, e2 = r3 - r1, a = rc - r1;
-		linal::Matrix<3, 2> A = {
-				e1(0), e2(0),
-				e1(1), e2(1),
-				e1(2), e2(2),
-		};
-		Real2 w = linal::linearLeastSquares(A, a);
-		return TetrahedronInterpolator<RiemannInvariant>::interpolateInOwner(
-				// current time layer
-				{0, 0, 0}, mesh.pde(borderFace(0))(k),
-				{1, 0, 0}, mesh.pde(borderFace(1))(k),
-				{0, 1, 0}, mesh.pde(borderFace(2))(k),
-				// next time layer
-				{0, 0, 1}, mesh.pdeNew(s, borderFace(0))(k),
-				{1, 0, 1}, mesh.pdeNew(s, borderFace(1))(k),
-				{0, 1, 1}, mesh.pdeNew(s, borderFace(2))(k),
-				// query in space-time
-				{w(0), w(1), 1 - linal::length(rc - r0) / linal::length(shift)});
+			const Iterator& it, const Real3& shift, const Cell& borderFace,
+			const int k) {
+		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
+				mesh.coordsD(borderFace(0)), mesh.coordsD(borderFace(1)),
+				mesh.coordsD(borderFace(2)),
+				mesh.pde(borderFace(0))(k), mesh.pde(borderFace(1))(k),
+				mesh.pde(borderFace(2))(k),
+				mesh.pdeNew(s, borderFace(0))(k), mesh.pdeNew(s, borderFace(1))(k),
+				mesh.pdeNew(s, borderFace(2))(k));
 	}
 	
 	
-	/** 
+	/**
 	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border exactly through the border vertex. It's possible for 2D case.
-	 * It's possible either for border and inner nodes.
+	 * border exactly through the border vertex. (in 2D case)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	RiemannInvariant interpolateInSpaceTime1D(const int s, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderVertex, const int k) const {
-		/// 2D case
-		/// first order interpolate in the line formed by crossed point
-		/// at current and next time layers (line in space-time)
-
-		auto bv = borderVertex(0);
-		Real2 rv = mesh.coordsD(bv);
-		Real2 r0 = mesh.coordsD(it);
-		real w = linal::length(rv - r0) / linal::length(shift);
-		return mesh.pde(bv)(k) * w + mesh.pdeNew(s, it)(k) * (1 - w);
+			const Iterator& it, const Real2& shift, const Cell& borderVertex,
+			const int k) {
+		return Base::interpolateInSpaceTime1D(shift, mesh.coordsD(it),
+				mesh.coordsD(borderVertex(0)),
+				mesh.pde(borderVertex(0))(k),
+				mesh.pdeNew(s, borderVertex(0))(k));
 	}
 	
 	
-	/** 
+	/**
 	 * Handle the case when characteristic goes inside the body and then cross 
-	 * border exactly through the border vertex. It's possible for 2D case.
-	 * It's possible either for border and inner nodes.
+	 * border exactly through the border edge. (in 3D)
 	 * @note border nodes must be already calculated
 	 */
+	static inline
 	RiemannInvariant interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
-			const Iterator& /*it*/, const Real3& /*shift*/, const Cell& /*borderEdge*/, const int /*k*/) const {
-		THROW_UNSUPPORTED("TODO");
+			const Iterator& /*it*/, const Real3& /*shift*/,
+			const Cell& /*borderVertex*/, const int /*k*/) {
+		THROW_UNSUPPORTED("This did not occur ever before");
 	}
 	
 	
