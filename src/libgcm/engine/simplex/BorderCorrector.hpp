@@ -55,8 +55,12 @@ public:
 	 * It's supposed that gcm-matrices in border nodes are written
 	 * in global basis as in inner nodes.
 	 * Thus, this correction must be called after all stages.
+	 * @param nextPdeLayerIndex is equal to stage if 
+	 * splitting by directions is performed by summ, but if
+	 * splitting by directions is done by product, it equals to 0 on all stages
 	 */
 	virtual void applyInGlobalBasis(
+			const int nextPdeLayerIndex,
 			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
@@ -126,6 +130,7 @@ public:
 	}
 	
 	virtual void applyInGlobalBasis(
+			const int nextPdeLayerIndex,
 			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
@@ -142,7 +147,7 @@ public:
 			if (outers.empty()) { continue; }
 			
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
-			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
 			
 			if (outers == Model::RIGHT_INVARIANTS ||
 					outers == Model::LEFT_INVARIANTS) {
@@ -218,6 +223,7 @@ public:
 	}
 	
 	virtual void applyInGlobalBasis(
+			const int nextPdeLayerIndex,
 			const int stage,
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
@@ -227,16 +233,17 @@ public:
 		
 		/// convert to PDE variables to perform correction
 		for (const NodeBorder& nodeBorder: borderNodes) {
-			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
 			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
 			u = gcmMatrices(stage).U1 * u;
 		}
 		
-		pdeCorrector.applyInGlobalBasis(stage, grid, borderNodes, timeAtNextLayer);
+		pdeCorrector.applyInGlobalBasis(
+				nextPdeLayerIndex, stage, grid, borderNodes, timeAtNextLayer);
 		
 		/// convert back to Riemann invariants
 		for (const NodeBorder& nodeBorder: borderNodes) {
-			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
+			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
 			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
 			u = gcmMatrices(stage).U * u;
 		}

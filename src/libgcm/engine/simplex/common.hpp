@@ -15,16 +15,29 @@ namespace simplex {
  */
 class GridCharacteristicMethodBase {
 public:
+	/** Actions necessary before the stage */
 	virtual void beforeStage(
+			const int nextPdeLayerIndex,
 			const int s, AbstractGrid& mesh_) = 0;
 	
+	/**
+	 * Do inner part of stage of splitting grid-characteristic method
+	 * on contact and border nodes
+	 */
 	virtual void contactAndBorderStage(
+			const int nextPdeLayerIndex,
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	
+	/**
+	 * Do stage of splitting grid-characteristic method on inner nodes
+	 */
 	virtual void innerStage(
+			const int nextPdeLayerIndex,
 			const int s, const real timeStep, AbstractGrid& mesh_) = 0;
 	
+	/** Actions necessary after the stage */
 	virtual void afterStage(
+			const int nextPdeLayerIndex,
 			const int s, AbstractGrid& mesh_) = 0;
 	
 	

@@ -13,7 +13,6 @@ usage() { echo "Usage: $0
 
 np=1
 
-rm -f snaps/*
 cmake_line="cmake .."
 build_type="RelWithDebInfo"
 make_task="all"
@@ -41,6 +40,7 @@ while getopts ":cdrovpt:" option; do
             ;;
         t)
             make_task=$OPTARG
+            rm -f build/$make_task
             ;;
         *)
             usage

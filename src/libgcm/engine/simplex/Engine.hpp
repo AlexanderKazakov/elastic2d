@@ -124,6 +124,38 @@ private:
 	/// Type of gcm-method to use for calculations
 	const GcmType gcmType;
 	
+	/// Type of splitting by directions approach @{
+	const SplittingType splittingType;
+	
+	/// Map between stage number and index of next PDE time layer for that stage calculation
+	const std::array<int, Dimensionality> stageVsLayerMap;
+	
+	static std::array<int, Dimensionality> createStageVsLayerMap(
+			const SplittingType splittingType) {
+		std::array<int, Dimensionality> ans;
+		switch(splittingType) {
+			case SplittingType::PRODUCT: /// all stages to 0'th
+				for (size_t i = 0; i < Dimensionality; i++) {
+					ans[i] = 0;
+				}
+				break;
+			case SplittingType::SUMM: /// all stages to each own
+				for (size_t i = 0; i < Dimensionality; i++) {
+					ans[i] = int(i);
+				}
+				break;
+			default:
+				THROW_BAD_CONFIG("Unknown splitting type");
+		}
+		return ans;
+	}
+	
+	size_t numberOfNextPdeTimeLayers() const {
+		return (size_t) stageVsLayerMap[Dimensionality - 1] + 1;
+	}
+	/// @}
+	
+	
 	struct CalculationBasis {
 	/// Current basis of calculations --
 	/// i'th gcm stage is performed along i'th column of the matrix

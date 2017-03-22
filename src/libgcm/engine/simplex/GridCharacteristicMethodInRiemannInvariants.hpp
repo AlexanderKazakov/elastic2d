@@ -42,6 +42,7 @@ public:
 	
 	
 	virtual void beforeStage(
+			const int /*nextPdeLayerIndex*/,
 			const int s, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		savedPdeTimeLayer = mesh.getPdeVariablesStorage();
@@ -55,18 +56,17 @@ public:
 	}
 	
 	
-	/**
-	 * Do grid-characteristic stage of splitting method on contact and border nodes
-	 */
 	virtual void contactAndBorderStage(
-			const int s, const real timeStep, AbstractGrid& mesh_) override {
+			const int nextPdeLayerIndex, const int s,
+			const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		
 		/// calculate inner waves of contact nodes
 		for (auto iter = mesh.contactBegin(); iter < mesh.contactEnd(); ++iter) {
 			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(s, *iter) = interpolateValuesAround(
+			mesh._pdeNew(nextPdeLayerIndex, *iter) = interpolateValuesAround(
+					nextPdeLayerIndex,
 					s, mesh, direction, *iter,
 					Base::crossingPoints(*iter, s, timeStep, mesh), false);
 			mesh._waveIndices(*iter) = outerInvariants;
@@ -76,7 +76,8 @@ public:
 		for (auto iter = mesh.borderBegin(); iter < mesh.borderEnd(); ++iter) {
 			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(s, *iter) = interpolateValuesAround(
+			mesh._pdeNew(nextPdeLayerIndex, *iter) = interpolateValuesAround(
+					nextPdeLayerIndex,
 					s, mesh, direction, *iter,
 					Base::crossingPoints(*iter, s, timeStep, mesh), false);
 			mesh._waveIndices(*iter) = outerInvariants;
@@ -84,21 +85,16 @@ public:
 	}
 	
 	
-	/**
-	 * Do grid-characteristic stage of splitting method on inner nodes
-	 * @note contact and border nodes must be already calculated
-	 * @param s number of stage (GcmMatrix number)
-	 * @param timeStep time step
-	 * @param mesh mesh to perform calculation
-	 */
 	virtual void innerStage(
-			const int s, const real timeStep, AbstractGrid& mesh_) override {
+			const int nextPdeLayerIndex, const int s,
+			const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		const RealD direction = mesh.getInnerCalculationBasis().getColumn(s);
 		
 		/// calculate inner nodes
 		for (auto iter = mesh.innerBegin(); iter < mesh.innerEnd(); ++iter) {
-			mesh._pdeNew(s, *iter) = interpolateValuesAround(
+			mesh._pdeNew(nextPdeLayerIndex, *iter) = interpolateValuesAround(
+					nextPdeLayerIndex,
 					s, mesh, direction, *iter,
 					Base::crossingPoints(*iter, s, timeStep, mesh), true);
 			assert_eq(outerInvariants.size(), 0);
@@ -107,13 +103,15 @@ public:
 	
 	
 	virtual void afterStage(
+			const int nextPdeLayerIndex,
 			const int s, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		/// set PDE-vectors on old time layer to its values saved before the stage
 		mesh.swapPdeVariablesStorage(savedPdeTimeLayer);
 		/// switch back from Riemann invariants to PDE-variables
 		for (const Iterator it : mesh) {
-			mesh._pdeNew(s, it) = (*mesh.matrices(it))(s).U1 * mesh.pdeNew(s, it);
+			mesh._pdeNew(nextPdeLayerIndex, it) =
+					(*mesh.matrices(it))(s).U1 * mesh.pdeNew(nextPdeLayerIndex, it);
 		}
 	}
 	
@@ -124,6 +122,7 @@ private:
 	 * If specified point appears to be out of body
 	 * AND it is really border case, invariant is set to zero
 	 * and outerInvariants is added with the index.
+	 * @param nextPdeLayerIndex not always equal to stage!
 	 * @param s stage
 	 * @param mesh mesh to perform interpolation on
 	 * @param direction direction of line to find values along
@@ -133,7 +132,9 @@ private:
 	 * @param canInterpolateInSpaceTime is base of interpolation calculated
 	 * @return vector with interpolated Riemann invariants
 	 */
-	PdeVector interpolateValuesAround(const int s, const Mesh& mesh,
+	PdeVector interpolateValuesAround(
+			const int nextPdeLayerIndex,
+			const int s,const Mesh& mesh,
 			const RealD direction, const Iterator& it, const PdeVector& dx,
 			const bool canInterpolateInSpaceTime) {
 		outerInvariants.clear();
@@ -164,7 +165,7 @@ private:
 			} else if (t.n == t.N - 1) {
 			// characteristic hits out of body going throughout border face
 				if (canInterpolateInSpaceTime) {
-					u = interpolateInSpaceTime(s, mesh, it, shift, t, k);
+					u = interpolateInSpaceTime(s, mesh, it, shift, t, nextPdeLayerIndex, k);
 				} else {
 					outerInvariants.push_back(k);
 				}
@@ -172,7 +173,7 @@ private:
 			} else if (t.n == t.N - 2) {
 			// exact hit to border edge(point)
 				if (canInterpolateInSpaceTime) {
-					u = interpolateInSpaceTime1D(s, mesh, it, shift, t, k);
+					u = interpolateInSpaceTime1D(s, mesh, it, shift, t, nextPdeLayerIndex, k);
 				} else {
 					outerInvariants.push_back(k);
 				}
@@ -228,13 +229,14 @@ private:
 	 * @note border nodes must be already calculated
 	 */
 	static inline
-	RiemannInvariant interpolateInSpaceTime(const int s, const Mesh& mesh, 
+	RiemannInvariant interpolateInSpaceTime(const int /*s*/, const Mesh& mesh, 
 			const Iterator& it, const Real2& shift, const Cell& borderEdge,
-			const int k) {
+			const int nextPdeLayerIndex, const int k) {
 		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
 				mesh.coordsD(borderEdge(0)), mesh.coordsD(borderEdge(1)),
 				mesh.pde(borderEdge(0))(k), mesh.pde(borderEdge(1))(k),
-				mesh.pdeNew(s, borderEdge(0))(k), mesh.pdeNew(s, borderEdge(1))(k));
+				mesh.pdeNew(nextPdeLayerIndex, borderEdge(0))(k),
+				mesh.pdeNew(nextPdeLayerIndex, borderEdge(1))(k));
 	}
 	
 	
@@ -244,16 +246,17 @@ private:
 	 * @note border nodes must be already calculated
 	 */
 	static inline
-	RiemannInvariant interpolateInSpaceTime(const int s, const Mesh& mesh, 
+	RiemannInvariant interpolateInSpaceTime(const int /*s*/, const Mesh& mesh, 
 			const Iterator& it, const Real3& shift, const Cell& borderFace,
-			const int k) {
+			const int nextPdeLayerIndex, const int k) {
 		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
 				mesh.coordsD(borderFace(0)), mesh.coordsD(borderFace(1)),
 				mesh.coordsD(borderFace(2)),
 				mesh.pde(borderFace(0))(k), mesh.pde(borderFace(1))(k),
 				mesh.pde(borderFace(2))(k),
-				mesh.pdeNew(s, borderFace(0))(k), mesh.pdeNew(s, borderFace(1))(k),
-				mesh.pdeNew(s, borderFace(2))(k));
+				mesh.pdeNew(nextPdeLayerIndex, borderFace(0))(k),
+				mesh.pdeNew(nextPdeLayerIndex, borderFace(1))(k),
+				mesh.pdeNew(nextPdeLayerIndex, borderFace(2))(k));
 	}
 	
 	
@@ -263,13 +266,13 @@ private:
 	 * @note border nodes must be already calculated
 	 */
 	static inline
-	RiemannInvariant interpolateInSpaceTime1D(const int s, const Mesh& mesh, 
+	RiemannInvariant interpolateInSpaceTime1D(const int /*s*/, const Mesh& mesh, 
 			const Iterator& it, const Real2& shift, const Cell& borderVertex,
-			const int k) {
+			const int nextPdeLayerIndex, const int k) {
 		return Base::interpolateInSpaceTime1D(shift, mesh.coordsD(it),
 				mesh.coordsD(borderVertex(0)),
 				mesh.pde(borderVertex(0))(k),
-				mesh.pdeNew(s, borderVertex(0))(k));
+				mesh.pdeNew(nextPdeLayerIndex, borderVertex(0))(k));
 	}
 	
 	
@@ -281,7 +284,7 @@ private:
 	static inline
 	RiemannInvariant interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
 			const Iterator& /*it*/, const Real3& /*shift*/,
-			const Cell& /*borderVertex*/, const int /*k*/) {
+			const Cell& /*borderVertex*/, const int /*nextPdeLayerIndex*/, const int /*k*/) {
 		THROW_UNSUPPORTED("This did not occur ever before");
 	}
 	

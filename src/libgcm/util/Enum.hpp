@@ -178,6 +178,14 @@ enum class GcmType {
 };
 
 
+/**
+ * Splitting by directions approach
+ */
+enum class SplittingType {
+	SUMM,   ///< (A_1 * u + A_2 * u) / 2
+	PRODUCT ///< A_2 * (A_1 * u)
+};
+
 }
 
 

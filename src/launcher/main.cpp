@@ -467,7 +467,7 @@ inline Task parseTaskTmp() {
 	task.globalSettings.requiredTime = 14;
 //	task.globalSettings.numberOfSnaps = 100;
 	task.globalSettings.stepsPerSnap = 3;
-	task.globalSettings.gcmType = GcmType::ADVECT_PDE_VECTORS;
+//	task.globalSettings.gcmType = GcmType::ADVECT_PDE_VECTORS;
 	
 //	real phi = M_PI / 4;
 //	task.calculationBasis = {

@@ -6,10 +6,10 @@ using namespace gcm;
 
 inline Task skullCommon() {
 	Task task;
-	task.calculationBasis = {
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1};
+//	task.calculationBasis = {
+//			1, 0, 0,
+//			0, 1, 0,
+//			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;

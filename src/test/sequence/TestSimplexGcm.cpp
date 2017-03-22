@@ -49,8 +49,6 @@ TEST(Engine, ZeroInitialization) {
 	auto mesh = Wrapper::getMesh(engine, 1);
 	for (auto it = mesh->begin(); it != mesh->end(); ++it) {
 		ASSERT_EQ(mesh->pde(it), mesh->pde(it).Zeros());
-		ASSERT_EQ(mesh->pdeNew(0, it), mesh->pde(it).Zeros());
-		ASSERT_EQ(mesh->pdeNew(1, it), mesh->pde(it).Zeros());
 	}
 	
 	
@@ -65,8 +63,6 @@ TEST(Engine, ZeroInitialization) {
 	mesh = Wrapper::getMesh(engine2, 1);
 	for (auto it = mesh->begin(); it != mesh->end(); ++it) {
 		ASSERT_EQ(mesh->pde(it), mesh->pde(it).Zeros());
-		ASSERT_EQ(mesh->pdeNew(0, it), mesh->pde(it).Zeros());
-		ASSERT_EQ(mesh->pdeNew(1, it), mesh->pde(it).Zeros());
 	}
 }
 

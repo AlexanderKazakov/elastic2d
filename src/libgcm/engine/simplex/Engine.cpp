@@ -15,7 +15,9 @@ Engine(const Task& task) :
 		triangulation(task),
 		movable(task.simplexGrid.movable),
 		borderCalcMode(task.simplexGrid.borderCalcMode),
-		gcmType(task.globalSettings.gcmType) {
+		gcmType(task.globalSettings.gcmType),
+		splittingType(task.globalSettings.splittingType),
+		stageVsLayerMap(createStageVsLayerMap(splittingType)) {
 	
 	initializeCalculationBasis(task);
 	createMeshes(task);
@@ -23,7 +25,6 @@ Engine(const Task& task) :
 	
 	for (auto vertexIter  = triangulation.verticesBegin();
 	          vertexIter != triangulation.verticesEnd(); ++vertexIter) {
-		
 		std::set<GridId> incidentGrids = incidentGridsIds(vertexIter);
 		const auto gridPairs = Utils::makePairs(incidentGrids);
 		if (gridPairs.size() != 1) { continue; } // TODO
@@ -60,7 +61,8 @@ createMeshes(const Task& task) {
 		const GridId gridId = taskBody.first;
 		auto factory = createAbstractFactory(taskBody.second);
 		
-		body.mesh = factory->createMesh(task, gridId, {&triangulation}, Dimensionality);
+		body.mesh = factory->createMesh(
+				task, gridId, {&triangulation}, numberOfNextPdeTimeLayers());
 		body.mesh->setUpPde(task, calculationBasis.basis, borderCalcMode);
 		
 		body.gcm = factory->createGcm(gcmType);
@@ -98,12 +100,13 @@ void Engine<Dimensionality, TriangulationT>::
 nextTimeStep() {
 	changeCalculationBasis();
 	
-	/// simple first order splitting by summ solutions from all directions
 	for (int stage = 0; stage < Dimensionality; stage++) {
 		gcmStage(stage, Clock::Time(), Clock::TimeStep());
 	}
-	for (const Body& body : bodies) {
-		body.mesh->averageNewPdeLayersToCurrent();
+	if (splittingType == SplittingType::SUMM) {
+		for (const Body& body : bodies) {
+			body.mesh->averageNewPdeLayersToCurrent();
+		}
 	}
 	
 	for (const Body& body : bodies) {
@@ -119,17 +122,23 @@ template<int Dimensionality,
 void Engine<Dimensionality, TriangulationT>::
 gcmStage(const int stage, const real currentTime, const real timeStep) {
 	for (const Body& body : bodies) {
-		body.gcm->beforeStage(stage, *body.mesh);
+		body.gcm->beforeStage(stageVsLayerMap[(size_t)stage], stage, *body.mesh);
 	}
 	for (const Body& body : bodies) {
-		body.gcm->contactAndBorderStage(stage, timeStep, *body.mesh);
+		body.gcm->contactAndBorderStage(
+				stageVsLayerMap[(size_t)stage], stage, timeStep, *body.mesh);
 	}
 	correctContactsAndBorders(stage, currentTime + timeStep);
 	for (const Body& body : bodies) {
-		body.gcm->innerStage(stage, timeStep, *body.mesh);
+		body.gcm->innerStage(stageVsLayerMap[(size_t)stage], stage, timeStep, *body.mesh);
 	}
 	for (const Body& body : bodies) {
-		body.gcm->afterStage(stage, *body.mesh);
+		body.gcm->afterStage(stageVsLayerMap[(size_t)stage], stage, *body.mesh);
+	}
+	if (splittingType == SplittingType::PRODUCT) {
+		for (const Body& body : bodies) {
+			body.mesh->swapCurrAndNextPdeTimeLayer(0);
+		}
 	}
 }
 
@@ -150,6 +159,7 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 			for (const Body& body : bodies) {
 				for (const Border& border : body.borders) {
 					border.borderCorrector->applyInGlobalBasis(
+							stageVsLayerMap[(size_t)stage],
 							stage,
 							body.mesh,
 							border.borderNodes,
