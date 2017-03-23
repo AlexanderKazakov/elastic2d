@@ -40,6 +40,8 @@ public:
 	/// Matrix of linear border condition "B * \vec{u} = b"
 	/// @see BorderCondition
 	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
+	/// Vector of linear border condition "B * \vec{u} = b"
+	typedef linal::Vector<OUTER_NUMBER>           BorderVector;
 	/// Matrix of outer eigenvectors
 	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterMatrix;
 	
@@ -94,10 +96,8 @@ public:
 	(const linal::Vector<DIMENSIONALITY>&) {
 		PdeVariables pde = PdeVariables::Zeros();
 		pde.pressure() = 1;
-		
 		BorderMatrix B_;
 		B_.setRow(0, pde);
-		
 		return B_;
 	}
 	
@@ -111,11 +111,39 @@ public:
 	(const linal::Vector<DIMENSIONALITY>& borderNormal) {
 		PdeVariables pde = PdeVariables::Zeros();
 		pde.setVelocity(borderNormal);
-		
 		BorderMatrix B_;
 		B_.setRow(0, pde);
-		
 		return B_;
+	}
+	
+	
+	/**
+	 * Just set the values in the node to satisfy the given border condition 
+	 * in local basis. I.e, for velocity, we firstly convert the velocity to
+	 * local basis, then set the normal component to given value, then convert
+	 * it back to global basis. Used when gcm-correction is degenerate
+	 */
+	inline static void applyPlainBorderCorrection(
+			PdeVariables& u,
+			const BorderConditions::T type,
+			const RealD& normal, const BorderVector& value) {
+		switch (type) {
+		case BorderConditions::T::FIXED_FORCE: {
+			u.pressure() = value(0);
+			break;
+		}
+		case BorderConditions::T::FIXED_VELOCITY: {
+			RealD velocityGlobal = u.getVelocity();
+			MatrixDD S = linal::createLocalBasisTranspose(normal);
+			RealD velocityLocal = S * velocityGlobal;
+			velocityLocal(DIMENSIONALITY - 1) = value(0);
+			velocityGlobal = linal::transposeMultiply(S, velocityLocal);
+			u.setVelocity(velocityGlobal);
+			break;
+		}
+		default:
+			THROW_UNSUPPORTED("Unknown border condition type");
+		}
 	}
 	
 };

@@ -6,19 +6,19 @@ using namespace gcm;
 
 inline Task skullCommon() {
 	Task task;
-//	task.calculationBasis = {
-//			1, 0, 0,
-//			0, 1, 0,
-//			0, 0, 1};
+	task.calculationBasis = {
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.CourantNumber = 1;
 //	task.globalSettings.numberOfSnaps = 1000;
-//	task.globalSettings.stepsPerSnap = 15;
-	task.globalSettings.numberOfSnaps = 100;
-	task.globalSettings.stepsPerSnap = 2;
+//	task.globalSettings.stepsPerSnap = 5;
+	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.stepsPerSnap = 5;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
 	task.simplexGrid.fileName = "meshes/coarse/skull_part.out";
@@ -62,19 +62,19 @@ inline Task skullAcousticHomogeneous() {
 	freeBorder.values = {
 		[] (real) { return 0; },
 	};
-//	Task::BorderCondition source;
-//	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
-//	source.type = BorderConditions::T::FIXED_FORCE;
-//	real tau = 0.5;
-//	real omega = 2 * M_PI / tau;
-//	source.values = {
-//		[=] (real t) {
-//			t -= 2 * tau;
-//			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
-//	};
+	Task::BorderCondition source;
+	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
+	source.type = BorderConditions::T::FIXED_FORCE;
+	real tau = 0.5;
+	real omega = 2 * M_PI / tau;
+	source.values = {
+		[=] (real t) {
+			t -= 2 * tau;
+			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
+	};
 	task.borderConditions = {
 		freeBorder,
-//		source,
+		source,
 	};
 	
 	return task;
@@ -120,6 +120,14 @@ inline Task skullAcoustic() {
 	freeBorder.values = {
 		[] (real) { return 0; },
 	};
+	
+	Task::BorderCondition fixedBorder;
+	fixedBorder.area = freeBorder.area;
+	fixedBorder.type = BorderConditions::T::FIXED_VELOCITY;
+	fixedBorder.values = {
+		[] (real) { return 0; },
+	};
+	
 	Task::BorderCondition source;
 	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
@@ -130,7 +138,11 @@ inline Task skullAcoustic() {
 			t -= 2 * tau;
 			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
 	};
-	task.borderConditions = {freeBorder, source};
+	task.borderConditions = {
+//		fixedBorder,
+		freeBorder,
+		source
+	};
 	
 	return task;
 }

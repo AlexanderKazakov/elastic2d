@@ -33,12 +33,14 @@ public:
 	static const int OUTER_NUMBER = TModel::OUTER_NUMBER;
 	
 	typedef typename TModel::PdeVariables         PdeVariables;
-	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
-	typedef linal::Vector<OUTER_NUMBER>           BorderVector;
+	typedef typename TModel::BorderMatrix         BorderMatrix;
+	typedef typename TModel::BorderVector         BorderVector;
 	typedef std::function<BorderVector(real)>     BorderVectorTimeDependency;
 	
+	const BorderConditions::T type;
 	
 	BorderCondition(const Task::BorderCondition& task) :
+			type(task.type),
 			b_(createBorderVectorTimeDependency(task.values)) { }
 	
 	/**

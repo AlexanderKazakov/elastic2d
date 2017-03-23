@@ -76,6 +76,11 @@ public:
 		return this->pdeVariables[this->getIndex(it)];
 	}
 	
+	/** Read-only access to PDE variables on next time layer */
+	const PdeVariables& pdeVarsNew(const int s, const Iterator& it) const {
+		return this->pdeVariablesNew[(size_t)s][this->getIndex(it)];
+	}
+	
 	/** 
 	 * Read-only access to actual PDE vectors.
 	 * Yes, it has to be a different function from pdeVars.
@@ -111,6 +116,11 @@ public:
 	/** Read / write access to actual PDE variables */
 	PdeVariables& _pdeVars(const Iterator& it) {
 		return this->pdeVariables[this->getIndex(it)];
+	}
+	
+	/** Read/write access to PDE variables on next time layer */
+	PdeVariables& _pdeVarsNew(const int s, const Iterator& it) {
+		return this->pdeVariablesNew[(size_t)s][this->getIndex(it)];
 	}
 	
 	/** Read / write access to actual PDE vectors */

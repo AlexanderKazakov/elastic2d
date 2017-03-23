@@ -40,6 +40,8 @@ public:
 	/// Matrix of linear border condition "B * \vec{u} = b"
 	/// @see BorderCondition
 	typedef linal::Matrix<OUTER_NUMBER, PDE_SIZE> BorderMatrix;
+	/// Vector of linear border condition "B * \vec{u} = b"
+	typedef linal::Vector<OUTER_NUMBER>           BorderVector;
 	/// Matrix of outer eigenvectors
 	typedef linal::Matrix<PDE_SIZE, OUTER_NUMBER> OuterMatrix;
 	
@@ -188,6 +190,50 @@ public:
 			B_.setRow(i, pde);
 		}
 		return B_;
+	}
+	
+	
+	/**
+	 * Just set the values in the node to satisfy the given border condition 
+	 * in local basis. I.e, for sigma, we firstly convert the tensor to local
+	 * basis, then set all values in local basis to given values, then convert
+	 * tensor back to global basis. Used when gcm-correction is degenerate
+	 */
+	inline static void applyPlainBorderCorrection(
+			PdeVariables& u,
+			const BorderConditions::T type,
+			const RealD& normal, const BorderVector& value) {
+		switch (type) {
+		case BorderConditions::T::FIXED_FORCE: {
+			MatrixDD sigmaGlobal = MatrixDD::Zeros();
+			for (int i = 0; i < DIMENSIONALITY; i++) {
+				for (int j = 0; j < DIMENSIONALITY; j++) {
+					sigmaGlobal(i, j) = u.sigma(i, j);
+				}
+			}
+			MatrixDD S = linal::createLocalBasis(normal);
+			MatrixDD S_T = linal::transpose(S);
+			MatrixDD sigmaLocal = S_T * sigmaGlobal * S;
+			sigmaLocal.setColumn(DIMENSIONALITY - 1, value);
+			sigmaLocal.setRow(DIMENSIONALITY - 1, value);
+			sigmaGlobal = S * sigmaLocal * S_T;
+			for (int i = 0; i < DIMENSIONALITY; i++) {
+				for (int j = 0; j < DIMENSIONALITY; j++) {
+					u.sigma(i, j) = sigmaGlobal(i, j);
+				}
+			}
+			break;
+		}
+		case BorderConditions::T::FIXED_VELOCITY: {
+			RealD velocityLocal = value;
+			MatrixDD S = linal::createLocalBasis(normal);
+			RealD velocityGlobal = S * velocityLocal;
+			u.setVelocity(velocityGlobal);
+			break;
+		}
+		default:
+			THROW_UNSUPPORTED("Unknown border condition type");
+		}
 	}
 	
 	

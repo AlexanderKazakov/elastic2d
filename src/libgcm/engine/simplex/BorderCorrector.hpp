@@ -68,23 +68,33 @@ public:
 	
 	
 protected:
+	template<typename PdeVector>
+	struct CorrectionResult {
+		bool isSuccessful;
+		PdeVector value;
+	};
+	
 	/**
 	 * General expression of linear border condition is:
 	 *     B * u = b,
 	 * where u is pde-vector and B is border matrix.
 	 * Given with inner-calculated pde vector, we correct them
 	 * with outer waves combination (Omega) in order to satisfy border condition.
+	 * But this is not always possible due to degeneracies
 	 * @see BorderCondition
-	 * @return correction outer wave
 	 */
 	template<typename PdeVector,
 			typename MatrixOmega, typename MatrixB, typename VectorB>
-	PdeVector
+	CorrectionResult<PdeVector>
 	calculateOuterWaveCorrection(const PdeVector& u,
 			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) const {
 		const auto M = B * Omega;
+		// TODO - here should be more consistent degeneracy conditions
+		if (linal::determinant(M) == 0) {
+			return { false, PdeVector::Zeros() };
+		}
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
-		return Omega * alpha;
+		return { true, Omega * alpha };
 	}
 	
 	USE_AND_INIT_LOGGER("gcm.simplex.BorderCorrector")
@@ -98,6 +108,7 @@ class BorderCorrectorInPdeVectors : public AbstractBorderCorrector<TGrid> {
 public:
 	typedef DefaultMesh<Model, TGrid, Material> Mesh;
 	typedef typename Mesh::PdeVector            PdeVector;
+	typedef typename Mesh::PdeVariables         PdeVariables;
 	typedef typename Mesh::WaveIndices          WaveIndices;
 	static const int DIMENSIONALITY = Mesh::DIMENSIONALITY;
 	static const int OUTER_NUMBER = Model::OUTER_NUMBER;
@@ -125,7 +136,10 @@ public:
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			
 			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			u += this->calculateOuterWaveCorrection(u, Omega, B, b);
+			const auto correction =
+					this->calculateOuterWaveCorrection(u, Omega, B, b);
+			assert_true(correction.isSuccessful);
+			u += correction.value;
 		}
 	}
 	
@@ -135,42 +149,53 @@ public:
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
 			const real timeAtNextLayer) const override {
-		
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
 		const auto b = borderCondition.b(timeAtNextLayer);
-//		const RealD calcDirection =
-//				mesh->getInnerCalculationBasis().getColumn(stage);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			const WaveIndices outers = mesh->waveIndices(nodeBorder.iterator);
-			if (outers.empty()) { continue; }
-			
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
-			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
+			PdeVariables& u = mesh->_pdeVarsNew(nextPdeLayerIndex, nodeBorder.iterator);
 			
-			if (outers == Model::RIGHT_INVARIANTS ||
-					outers == Model::LEFT_INVARIANTS) {
+			if (outers == Model::RIGHT_INVARIANTS || outers == Model::LEFT_INVARIANTS) {
 			/// Normal case for border corrector
 				const auto Omega = getColumnsFromGcmMatrices<Model>(
 						stage, outers, mesh->matrices(nodeBorder.iterator));
-				u += this->calculateOuterWaveCorrection(u, Omega, B, b);
-				continue;
-			}
-			
-			if (outers.size() == 2 * OUTER_NUMBER) {
+				const auto correction =
+						this->calculateOuterWaveCorrection(u, Omega, B, b);
+				if (correction.isSuccessful) {
+					u += correction.value;
+				} else {
+					Model::applyPlainBorderCorrection(u,
+							borderCondition.type, nodeBorder.normal, b);
+				}
+				
+			} else if (outers.size() == 2 * OUTER_NUMBER) {
 			/// Double-outer case: apply correction as average from both sides
 				const auto OmegaR = getColumnsFromGcmMatrices<Model>(
 						stage, Model::RIGHT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
 				const auto OmegaL = getColumnsFromGcmMatrices<Model>(
 						stage, Model::LEFT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
-				const PdeVector uR = this->calculateOuterWaveCorrection(u, OmegaR, B, b);
-				const PdeVector uL = this->calculateOuterWaveCorrection(u, OmegaL, B, b);
-				u += (uR + uL) / 2; // FIXME - this is valid for pressure only
-				continue;
-			}
+				const auto correctionR =
+						this->calculateOuterWaveCorrection(u, OmegaR, B, b);
+				const auto correctionL =
+						this->calculateOuterWaveCorrection(u, OmegaL, B, b);
+				if (correctionR.isSuccessful && correctionL.isSuccessful) {
+					u += (correctionR.value + correctionL.value) / 2;
+				} else {
+					Model::applyPlainBorderCorrection(u,
+							borderCondition.type, nodeBorder.normal, b);
+				}
 			
-			THROW_UNSUPPORTED("TODO");
+			} else if (outers.empty()) {
+				Model::applyPlainBorderCorrection(u,
+						borderCondition.type, nodeBorder.normal, b);
+				
+			} else {
+				THROW_UNSUPPORTED("TODO");
+				
+			}
 		}
 	}
 	
