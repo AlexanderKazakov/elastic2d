@@ -14,7 +14,6 @@ public:
 	typedef typename Mesh::PdeVariables      PdeVariables;
 	typedef typename Mesh::PdeVector         PdeVector;
 	typedef typename Mesh::GCM_MATRICES      GCM_MATRICES;
-	typedef typename Mesh::GridId            GridId;
 	
 	typedef MaterialsCondition<TModel, TGrid, TMaterial, TMesh> MC;
 	

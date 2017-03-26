@@ -32,7 +32,7 @@ struct Element {
 	}
 	
 	Element(std::initializer_list<Point> list) :
-			Element(list.begin(), list.end()) { }
+			Element(list.begin(), list.end(), [](const Point& v) {return v;}) { }
 	
 	template<typename OtherPointType, typename Predicate>
 	Element(const Element<OtherPointType, N>& other,

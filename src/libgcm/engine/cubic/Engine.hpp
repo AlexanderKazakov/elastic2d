@@ -25,7 +25,6 @@ public:
 	typedef typename Grid::IntD                  IntD;
 	typedef typename Grid::RealD                 RealD;
 	typedef typename Grid::AABB                  AABB;
-	typedef typename Grid::GridId                GridId;
 	typedef typename Grid::ConstructionPack      GridConstructionPack;
 	
 	Engine(const Task& task);

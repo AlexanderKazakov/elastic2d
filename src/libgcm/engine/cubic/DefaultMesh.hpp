@@ -31,7 +31,6 @@ public:
 	
 	typedef AbstractMesh<TGrid>                 Base;
 	typedef typename Base::Grid                 Grid;
-	typedef typename Base::GridId               GridId;
 	typedef typename Base::ConstructionPack     ConstructionPack;
 	typedef typename Grid::Iterator             Iterator;
 	typedef typename Grid::MatrixDD             MatrixDD;

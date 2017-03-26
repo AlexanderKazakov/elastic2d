@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <libgcm/util/Utils.hpp>
 #include <libgcm/util/StringUtils.hpp>
 #include <libgcm/util/math/Histogram.hpp>
 
@@ -47,3 +48,18 @@ TEST(StringUtils, toString) {
 	ASSERT_EQ("0000000004", StringUtils::toString(4, 10));
 	ASSERT_EQ("1234", StringUtils::toString(1234, 4));
 }
+
+
+TEST(Utils, findIndexOfValueInSortedArray) {
+	const std::vector<int> v = {1, 2, 3, 4, 9};
+	const auto b = v.begin();
+	const auto e = v.end();
+	ASSERT_EQ(0, Utils::findIndexOfValueInSortedArray(b, e, 1));
+	ASSERT_EQ(1, Utils::findIndexOfValueInSortedArray(b, e, 2));
+	ASSERT_EQ(2, Utils::findIndexOfValueInSortedArray(b, e, 3));
+	ASSERT_EQ(3, Utils::findIndexOfValueInSortedArray(b, e, 4));
+	ASSERT_EQ(4, Utils::findIndexOfValueInSortedArray(b, e, 9));
+	ASSERT_THROW(Utils::findIndexOfValueInSortedArray(b, e, 5), Exception);
+}
+
+

@@ -5,6 +5,7 @@
 #include <libgcm/grid/simplex/cgal/Cgal3DTriangulation.hpp>
 #include <libgcm/grid/simplex/cgal/Cgal2DTriangulation.hpp>
 
+
 namespace gcm {
 
 template<int Dimensionality, typename VertexInfo, typename CellInfo>
@@ -70,12 +71,10 @@ public:
 	/// @}
 	
 	
-	CgalTriangulation(const Task& task) : Base(task) {
-		static_assert(CELL_POINTS_NUMBER == Base::CELL_SIZE, "");
-		static_assert(DIMENSIONALITY == Base::DIMENSIONALITY, "");
-		rescale(task.simplexGrid.scale);
-	}
+	CgalTriangulation(const Task& task);
 	virtual ~CgalTriangulation() { }
+	
+	bool clearFromDisconnectedCellSets(VertexHandle vh);
 	
 	
 	/** Read-only access to points coordinates */
@@ -150,7 +149,7 @@ public:
 	 */
 	void move(const VertexHandle vh, const RealD distance) {
 		auto& point = vh->point();
-		point = point + cgalVectorD(distance);
+		point = point + Base::cgalVectorD(distance);
 	}
 	
 	

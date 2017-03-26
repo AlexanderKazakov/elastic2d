@@ -24,7 +24,6 @@ public:
 	typedef typename Grid::Triangulation                   Triangulation;
 	typedef typename Grid::ConstructionPack                GridConstructionPack;
 	typedef typename Grid::Iterator                        Iterator;
-	typedef typename Grid::GridId                          GridId;
 	typedef typename Grid::RealD                           RealD;
 	typedef typename Grid::MatrixDD                        MatrixDD;
 	

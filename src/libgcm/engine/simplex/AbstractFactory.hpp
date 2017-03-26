@@ -27,7 +27,6 @@ public:
 	typedef std::shared_ptr<Snapshotter>                  SnapPtr;
 	
 	typedef typename TGrid::ConstructionPack     GridConstructionPack;
-	typedef typename AbstractGrid::GridId        GridId;
 	
 	
 	virtual MeshPtr createMesh(const Task& task, const GridId gridId,
@@ -53,7 +52,6 @@ public:
 	typedef typename Base::GcmPtr                  GcmPtr;
 	typedef typename Base::OdePtr                  OdePtr;
 	typedef typename Base::SnapPtr                 SnapPtr;
-	typedef typename Base::GridId                  GridId;
 	typedef typename Base::GridConstructionPack    GridConstructionPack;
 	
 	

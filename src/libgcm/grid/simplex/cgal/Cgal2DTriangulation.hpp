@@ -165,6 +165,15 @@ public:
 	}
 	
 	
+	/** Is the cell is degenerate in terms of gcm::linal::isDegenerate */
+	static bool isDegenerate(const CellHandle ch, const real eps) {
+		RealD a = realD(ch->vertex(0));
+		RealD b = realD(ch->vertex(1));
+		RealD c = realD(ch->vertex(2));
+		return linal::isDegenerate(a, b, c, eps);
+	}
+	
+	
 	/**
 	 * The face represented as a set of vertices. If the face is not crossed by
 	 * the line from start to query, return empty set, else return back given set

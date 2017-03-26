@@ -78,7 +78,6 @@ public:
 			if (material != materials.end()) {
 				++matchCounter;
 				size_t materialId = (size_t)(*material).second;
-				if (materialId == 6) { materialId = EmptyMaterialFlag; }
 				cell->info().setGridId(materialId);
 			}
 			
@@ -94,7 +93,7 @@ public:
 				<< ", percentage: " << missedCellsRatio * 100 << "%");
 		
 		
-		correctHangedCells(triangulation);
+//		correctHangedCells(triangulation);
 	}
 	
 	

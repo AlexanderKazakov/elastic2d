@@ -10,6 +10,7 @@
 
 #include <vtkSmartPointer.h>
 #include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkCellArray.h>
 #include <vtkFloatArray.h>
 #include <vtkStructuredGrid.h>

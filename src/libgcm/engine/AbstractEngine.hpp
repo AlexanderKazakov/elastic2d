@@ -28,9 +28,6 @@ namespace gcm {
  */
 class AbstractEngine {
 public:
-	typedef AbstractGrid::GridId GridId;
-	
-	
 	AbstractEngine(const Task& task);
 	virtual ~AbstractEngine() { }
 	AbstractEngine(const AbstractEngine&) = delete;

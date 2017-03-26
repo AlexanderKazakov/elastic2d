@@ -68,9 +68,21 @@ void drawCellsToVtk(
 		cellArray->InsertNextCell(tetra);
 	}
 	
-	auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+	vtkSmartPointer<vtkUnstructuredGrid> grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	grid->SetPoints(pointsVtk);
 	grid->SetCells(VTK_TETRA, cellArray);
+	
+	/// write sequential index of each cell
+	vtkSmartPointer<vtkFloatArray> vtkArr = vtkSmartPointer<vtkFloatArray>::New();
+	vtkArr->SetNumberOfComponents(1);
+	const vtkIdType N = cellArray->GetNumberOfCells();
+	vtkArr->Allocate(N);
+	vtkArr->SetName("index");
+	for (vtkIdType i = 0; i < N; i++) {
+		vtkArr->InsertNextValue(float(i));
+	}
+	grid->GetCellData()->AddArray(vtkArr);
+	
 	writeToFile(grid, fileName + "." + getVtkFileExtension(grid));
 }
 

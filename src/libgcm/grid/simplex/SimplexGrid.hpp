@@ -6,6 +6,7 @@
 
 #include <libgcm/util/infrastructure/infrastructure.hpp>
 #include <libgcm/grid/simplex/UnstructuredGrid.hpp>
+#include <libgcm/grid/simplex/VertexInfoAndCellInfo.hpp>
 
 
 namespace gcm {
@@ -29,10 +30,6 @@ template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 class SimplexGrid : public UnstructuredGrid {
 public:
-	
-	/// Indicator that no grid owns the cell (auxiliary empty cell)
-	static const GridId EmptySpaceFlag = (GridId)(-1);
-	
 	/// Index of a global triangulation vertex in the grid
 	typedef Iterator::Index LocalVertexIndex;
 	
@@ -46,21 +43,9 @@ public:
 	typedef linal::Matrix<DIMENSIONALITY, DIMENSIONALITY> MatrixDD;
 	
 	
-	/** Auxiliary information stored in global triangulation cells */
-	struct CellInfo {
-		/// global triangulation cell can belongs to the only one grid
-		GridId gridId;
-		void setGridId(const GridId gridId_) { gridId = gridId_; }
-		GridId getGridId() const { return gridId; }
-		
-		/// local indices of the cell's vertices in the order
-		/// the same with their pointers (VertexHandles)
-		LocalVertexIndex localVertexIndices[CELL_POINTS_NUMBER];
-	};
-	
-	/** Auxiliary information stored in global triangulation vertices */
-	typedef size_t VertexInfo;
-	
+	typedef CellInfoT<CELL_POINTS_NUMBER> CellInfo;
+	/// Indicator that no grid owns the cell (auxiliary empty cell)
+	static const GridId EmptySpaceFlag = CellInfo::EmptySpaceFlag;
 	
 	/// Type of the global triangulation structure
 	typedef TriangulationT<Dimensionality, VertexInfo, CellInfo> Triangulation;

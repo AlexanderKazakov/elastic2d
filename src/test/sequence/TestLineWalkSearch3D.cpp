@@ -158,11 +158,11 @@ TEST(LineWalkSearch3D, VersusLinalAndCgal) {
 	test3DFigure("meshes/cube.off", 0.4, true, 50);
 	test3DFigure("meshes/icosahedron.off", 1.0, false, 60);
 	
+#if RUN_TOO_LONG_BUT_USEFUL_SEARCH_TESTS
 	test3DFigure("meshes/tetrahedron.off", 0.4, true, 150);
 	test3DFigure("meshes/cube.off", 0.2, true, 700);
 	test3DFigure("meshes/icosahedron.off", 0.4, false, 1700);
 	
-#if RUN_TOO_LONG_BUT_USEFUL_SEARCH_TESTS
 	test3DFigure("meshes/cube.off", 0.025, true, 400000);
 #endif
 }

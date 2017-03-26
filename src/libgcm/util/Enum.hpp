@@ -17,6 +17,10 @@
 
 namespace gcm {
 
+/// The common type to enumerate grids of different materials
+typedef size_t GridId;
+
+
 /**
  * For all physical quantities used in the program.
  */

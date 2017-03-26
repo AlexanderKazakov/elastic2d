@@ -91,6 +91,7 @@ protected:
 		const auto M = B * Omega;
 		// TODO - here should be more consistent degeneracy conditions
 		if (linal::determinant(M) == 0) {
+//		if (std::fabs(linal::determinant(M)) < 1e-3) {
 			return { false, PdeVector::Zeros() };
 		}
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
@@ -167,6 +168,7 @@ public:
 				if (correction.isSuccessful) {
 					u += correction.value;
 				} else {
+//					THROW_UNSUPPORTED("Just check");
 					Model::applyPlainBorderCorrection(u,
 							borderCondition.type, nodeBorder.normal, b);
 				}
@@ -184,10 +186,11 @@ public:
 				if (correctionR.isSuccessful && correctionL.isSuccessful) {
 					u += (correctionR.value + correctionL.value) / 2;
 				} else {
+//					THROW_UNSUPPORTED("Just check");
 					Model::applyPlainBorderCorrection(u,
 							borderCondition.type, nodeBorder.normal, b);
 				}
-			
+				
 			} else if (outers.empty()) {
 				Model::applyPlainBorderCorrection(u,
 						borderCondition.type, nodeBorder.normal, b);

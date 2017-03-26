@@ -14,7 +14,6 @@ template<typename TGrid>
 class AbstractMesh : public TGrid {
 public:
 	typedef TGrid                           Grid;
-	typedef typename Grid::GridId           GridId;
 	typedef typename Grid::RealD            RealD;
 	typedef typename Grid::MatrixDD         MatrixDD;
 	typedef typename Grid::ConstructionPack ConstructionPack;

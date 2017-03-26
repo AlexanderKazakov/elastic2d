@@ -62,6 +62,14 @@ inline Task skullAcousticHomogeneous() {
 	freeBorder.values = {
 		[] (real) { return 0; },
 	};
+	
+	Task::BorderCondition fixedBorder;
+	fixedBorder.area = freeBorder.area;
+	fixedBorder.type = BorderConditions::T::FIXED_VELOCITY;
+	fixedBorder.values = {
+		[] (real) { return 0; },
+	};
+	
 	Task::BorderCondition source;
 	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
@@ -72,9 +80,11 @@ inline Task skullAcousticHomogeneous() {
 			t -= 2 * tau;
 			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
 	};
+	
 	task.borderConditions = {
-		freeBorder,
-		source,
+		fixedBorder,
+//		freeBorder,
+//		source
 	};
 	
 	return task;
@@ -138,6 +148,7 @@ inline Task skullAcoustic() {
 			t -= 2 * tau;
 			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
 	};
+	
 	task.borderConditions = {
 //		fixedBorder,
 		freeBorder,

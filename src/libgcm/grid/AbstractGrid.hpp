@@ -2,6 +2,8 @@
 #define LIBGCM_ABSTRACTGRID_HPP
 
 
+#include <libgcm/util/Enum.hpp>
+
 namespace gcm {
 
 /**
@@ -11,7 +13,6 @@ class AbstractGrid {
 public:
 	
 	/// unique number of the grid among others
-	typedef size_t GridId;
 	const GridId id;
 	
 	AbstractGrid(const GridId id_) : id(id_) { }

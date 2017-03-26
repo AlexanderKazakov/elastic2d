@@ -12,9 +12,8 @@ template<typename TModel, typename TGrid, typename TMaterial,
          template<typename, typename, typename> class TMesh>
 class MaterialsCondition {
 public:
-	typedef TMesh<TModel, TGrid, TMaterial>    Mesh;	
+	typedef TMesh<TModel, TGrid, TMaterial>    Mesh;
 	typedef typename Mesh::GCM_MATRICES        GCM_MATRICES;
-	typedef typename Mesh::GridId              GridId;
 	
 	
 	/**
