@@ -21,7 +21,8 @@ inline Task skullCommon() {
 	task.globalSettings.stepsPerSnap = 5;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/skull_part.out";
+	task.simplexGrid.fileName = "meshes/coarse/ball.out";
+//	task.simplexGrid.fileName = "meshes/coarse/ball_homogeneous.out";
 //	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
@@ -97,9 +98,9 @@ inline Task skullAcoustic() {
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+//			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+//			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 
 //			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 //			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},

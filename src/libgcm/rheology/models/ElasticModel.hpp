@@ -205,23 +205,14 @@ public:
 			const RealD& normal, const BorderVector& value) {
 		switch (type) {
 		case BorderConditions::T::FIXED_FORCE: {
-			MatrixDD sigmaGlobal = MatrixDD::Zeros();
-			for (int i = 0; i < DIMENSIONALITY; i++) {
-				for (int j = 0; j < DIMENSIONALITY; j++) {
-					sigmaGlobal(i, j) = u.sigma(i, j);
-				}
-			}
+			MatrixDD sigmaGlobal = getSigmaFrom(u);
 			MatrixDD S = linal::createLocalBasis(normal);
 			MatrixDD S_T = linal::transpose(S);
 			MatrixDD sigmaLocal = S_T * sigmaGlobal * S;
 			sigmaLocal.setColumn(DIMENSIONALITY - 1, value);
 			sigmaLocal.setRow(DIMENSIONALITY - 1, value);
 			sigmaGlobal = S * sigmaLocal * S_T;
-			for (int i = 0; i < DIMENSIONALITY; i++) {
-				for (int j = 0; j < DIMENSIONALITY; j++) {
-					u.sigma(i, j) = sigmaGlobal(i, j);
-				}
-			}
+			setSigmaTo(u, sigmaGlobal);
 			break;
 		}
 		case BorderConditions::T::FIXED_VELOCITY: {
@@ -237,8 +228,63 @@ public:
 	}
 	
 	
+	/**
+	 * Just set the values in the nodes to satisfy the given contact condition 
+	 * in local basis. I.e, we firstly convert the PDE variables to
+	 * local basis, then set the its components to satisfy contact conditions,
+	 * then convert it back to global basis. Used when gcm-correction is degenerate
+	 */
+	inline static void applyPlainContactCorrection(
+			PdeVariables& uA, PdeVariables& uB,
+			const ContactConditions::T type, const RealD& normal) {
+		if (type != ContactConditions::T::ADHESION) {
+			THROW_UNSUPPORTED("Unsupported contact condition");
+		}
+		
+		RealD velocity = (uA.getVelocity() + uB.getVelocity()) / 2;
+		uA.setVelocity(velocity);
+		uB.setVelocity(velocity);
+		
+		MatrixDD sigmaGlobalA = getSigmaFrom(uA);
+		MatrixDD sigmaGlobalB = getSigmaFrom(uB);
+		MatrixDD S = linal::createLocalBasis(normal);
+		MatrixDD S_T = linal::transpose(S);
+		MatrixDD sigmaLocalA = S_T * sigmaGlobalA * S;
+		MatrixDD sigmaLocalB = S_T * sigmaGlobalB * S;
+		RealD sigmaNormal = (
+				sigmaLocalA.getColumn(DIMENSIONALITY - 1) +
+				sigmaLocalB.getColumn(DIMENSIONALITY - 1)) / 2;
+		sigmaLocalA.setColumn(DIMENSIONALITY - 1, sigmaNormal);
+		sigmaLocalA.setRow(DIMENSIONALITY - 1, sigmaNormal);
+		sigmaLocalB.setColumn(DIMENSIONALITY - 1, sigmaNormal);
+		sigmaLocalB.setRow(DIMENSIONALITY - 1, sigmaNormal);
+		sigmaGlobalA = S * sigmaLocalA * S_T;
+		sigmaGlobalB = S * sigmaLocalB * S_T;
+		
+		setSigmaTo(uA, sigmaGlobalA);
+		setSigmaTo(uB, sigmaGlobalB);
+	}
+	
 	
 private:
+	static MatrixDD getSigmaFrom(const PdeVariables& u) {
+		MatrixDD sigma = MatrixDD::Zeros();
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			for (int j = 0; j < DIMENSIONALITY; j++) {
+				sigma(i, j) = u.sigma(i, j);
+			}
+		}
+		return sigma;
+	}
+	
+	static void setSigmaTo(PdeVariables& u, const MatrixDD& sigma) {
+		for (int i = 0; i < DIMENSIONALITY; i++) {
+			for (int j = 0; j < DIMENSIONALITY; j++) {
+				u.sigma(i, j) = sigma(i, j);
+			}
+		}
+	}
+	
 	
 	static SigmaD correctFromTensorToVector(const SigmaD& s) {
 	/// Because formulas for tension (sigma) are usually written 

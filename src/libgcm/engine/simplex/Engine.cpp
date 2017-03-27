@@ -151,6 +151,7 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 		case BorderCalcMode::GLOBAL_BASIS:
 			for (const auto& contact : contacts) {
 				contact.second.contactCorrector->applyInGlobalBasis(
+						stageVsLayerMap[(size_t)stage],
 						stage,
 						getBody(contact.first.first).mesh,
 						getBody(contact.first.second).mesh,
@@ -212,6 +213,7 @@ createContacts(const Task& task) {
 		
 		Contact contact;
 		contact.contactCorrector = ContactCorrectorFactory<Grid>::create(
+				gcmType,
 				condition,
 				task.bodies.at(gridsPair.first).modelId,
 				task.bodies.at(gridsPair.first).materialId,

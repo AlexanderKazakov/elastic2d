@@ -168,7 +168,6 @@ public:
 				if (correction.isSuccessful) {
 					u += correction.value;
 				} else {
-//					THROW_UNSUPPORTED("Just check");
 					Model::applyPlainBorderCorrection(u,
 							borderCondition.type, nodeBorder.normal, b);
 				}
@@ -186,7 +185,6 @@ public:
 				if (correctionR.isSuccessful && correctionL.isSuccessful) {
 					u += (correctionR.value + correctionL.value) / 2;
 				} else {
-//					THROW_UNSUPPORTED("Just check");
 					Model::applyPlainBorderCorrection(u,
 							borderCondition.type, nodeBorder.normal, b);
 				}
@@ -233,21 +231,9 @@ public:
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
 		
-		/// convert to PDE variables to perform correction
-		for (const NodeBorder& nodeBorder: borderNodes) {
-			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
-			u = gcmMatrices(stage).U1 * u;
-		}
-		
+		convertToPdeVariables(stage, stage, mesh, borderNodes);
 		pdeCorrector.applyInLocalBasis(grid, borderNodes, timeAtNextLayer);
-		
-		/// convert back to Riemann invariants
-		for (const NodeBorder& nodeBorder: borderNodes) {
-			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
-			u = gcmMatrices(stage).U * u;
-		}
+		convertToRiemannInvariants(stage, stage, mesh, borderNodes);
 	}
 	
 	virtual void applyInGlobalBasis(
@@ -259,28 +245,35 @@ public:
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
 		
-		/// convert to PDE variables to perform correction
-		for (const NodeBorder& nodeBorder: borderNodes) {
-			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
-			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
-			u = gcmMatrices(stage).U1 * u;
-		}
-		
+		convertToPdeVariables(nextPdeLayerIndex, stage, mesh, borderNodes);
 		pdeCorrector.applyInGlobalBasis(
 				nextPdeLayerIndex, stage, grid, borderNodes, timeAtNextLayer);
-		
-		/// convert back to Riemann invariants
-		for (const NodeBorder& nodeBorder: borderNodes) {
-			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
-			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
-			u = gcmMatrices(stage).U * u;
-		}
+		convertToRiemannInvariants(nextPdeLayerIndex, stage, mesh, borderNodes);
 	}
 	
 	
 private:
 	const BorderCorrectorInPdeVectors<
 			Model, Material, TGrid, BorderMatrixCreator> pdeCorrector;
+	
+	
+	void convertToPdeVariables(const int nextPdeLayerIndex, const int stage,
+			std::shared_ptr<Mesh>& mesh, std::list<NodeBorder> borderNodes) const {
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
+			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
+			u = gcmMatrices(stage).U1 * u;
+		}
+	}
+	
+	void convertToRiemannInvariants(const int nextPdeLayerIndex, const int stage,
+			std::shared_ptr<Mesh>& mesh, std::list<NodeBorder> borderNodes) const {
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVector& u = mesh->_pdeNew(nextPdeLayerIndex, nodeBorder.iterator);
+			const GcmMatrices& gcmMatrices = *(mesh->matrices(nodeBorder.iterator));
+			u = gcmMatrices(stage).U * u;
+		}
+	}
 };
 
 

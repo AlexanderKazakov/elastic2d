@@ -146,6 +146,40 @@ public:
 		}
 	}
 	
+	
+	/**
+	 * Just set the values in the nodes to satisfy the given contact condition 
+	 * in local basis. I.e, we firstly convert the PDE variables to
+	 * local basis, then set the its components to satisfy contact conditions,
+	 * then convert it back to global basis. Used when gcm-correction is degenerate
+	 */
+	inline static void applyPlainContactCorrection(
+			PdeVariables& uA, PdeVariables& uB,
+			const ContactConditions::T type, const RealD& normal) {
+		if (type != ContactConditions::T::SLIDE) {
+			THROW_UNSUPPORTED("Invalid contact condition for acoustic model");
+		}
+		
+		const real pressure = (uA.pressure() + uB.pressure()) / 2;
+		uA.pressure() = pressure;
+		uB.pressure() = pressure;
+		
+		RealD velocityGlobalA = uA.getVelocity();
+		RealD velocityGlobalB = uB.getVelocity();
+		MatrixDD S = linal::createLocalBasisTranspose(normal);
+		RealD velocityLocalA = S * velocityGlobalA;
+		RealD velocityLocalB = S * velocityGlobalB;
+		real normalVelocityLocal = (
+				velocityLocalA(DIMENSIONALITY - 1) +
+				velocityLocalB(DIMENSIONALITY - 1)) / 2;
+		velocityLocalA(DIMENSIONALITY - 1) = normalVelocityLocal;
+		velocityLocalB(DIMENSIONALITY - 1) = normalVelocityLocal;
+		velocityGlobalA = linal::transposeMultiply(S, velocityLocalA);
+		velocityGlobalB = linal::transposeMultiply(S, velocityLocalB);
+		uA.setVelocity(velocityGlobalA);
+		uB.setVelocity(velocityGlobalB);
+	}
+	
 };
 
 
