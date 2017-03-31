@@ -22,13 +22,9 @@ Engine(const Task& task) :
 	initializeCalculationBasis(task);
 	createMeshes(task);
 	createContacts(task);
-	
 	for (auto vertexIter  = triangulation.verticesBegin();
 	          vertexIter != triangulation.verticesEnd(); ++vertexIter) {
-		std::set<GridId> incidentGrids = incidentGridsIds(vertexIter);
-		const auto gridPairs = Utils::makePairs(incidentGrids);
-		if (gridPairs.size() != 1) { continue; } // TODO
-		addNode(vertexIter, gridPairs.front());
+		addBorderOrContact(vertexIter);
 	}
 	
 	LOG_INFO("Found contacts:");
@@ -228,16 +224,23 @@ createContacts(const Task& task) {
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
-addNode(const VertexHandle vh, const GridsPair gridsIds) {
+addBorderOrContact(const VertexHandle vh) {
+	std::set<GridId> incidentGrids = triangulation.incidentGridsIds(vh);
+	if (incidentGrids.size() == 1) { return; }
 	
-	if (gridsIds.first == EmptySpaceFlag) {
-		addBorderNode(vh, gridsIds.second);
-	} else if (gridsIds.second == EmptySpaceFlag) {
-		addBorderNode(vh, gridsIds.first);
+	if (incidentGrids.erase((size_t)EmptySpaceFlag)) {
+		for (const GridId id : incidentGrids) {
+			addBorderNode(vh, id);
+		}
 	} else {
-		addContactNode(vh, gridsIds);
+		if (incidentGrids.size() == 2) {
+			addContactNode(vh, {*incidentGrids.begin(), *incidentGrids.rbegin()});
+		} else {
+			for (const GridId id : incidentGrids) {
+				addBorderNode(vh, id);
+			}
+		}
 	}
-	
 }
 
 
@@ -274,7 +277,7 @@ addBorderNode(const VertexHandle vh, const GridId gridId) {
 	}
 	if (chosenBorder == nullptr) { return; }
 	
-	RealD normal = mesh->borderNormal(iter);
+	RealD normal = mesh->commonNormal(iter);
 	if (normal != RealD::Zeros()) {
 		chosenBorder->borderNodes.push_back({ iter, normal });
 	}

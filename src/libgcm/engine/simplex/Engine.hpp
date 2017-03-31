@@ -208,19 +208,9 @@ private:
 	void createMeshes(const Task& task);
 	void createContacts(const Task& task);
 	
-	void addNode(const VertexHandle vh, const GridsPair gridsIds);
+	void addBorderOrContact(const VertexHandle vh);
 	void addContactNode(const VertexHandle vh, const GridsPair gridsIds);
 	void addBorderNode(const VertexHandle vh, const GridId gridId);
-	
-	
-	std::set<GridId> incidentGridsIds(const VertexHandle vh) const {
-		std::list<CellHandle> incidentCells = triangulation.allIncidentCells(vh);
-		std::set<GridId> ans;
-		for (CellHandle ch : incidentCells) {
-			ans.insert(ch->info().getGridId());
-		}
-		return ans;
-	}
 	
 	
 	/** Creation of the factory of meshes and snapshotters */

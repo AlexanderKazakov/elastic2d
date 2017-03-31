@@ -239,7 +239,8 @@ markInnersAndBorders() {
 				break;
 				
 			case BorderState::MULTICONTACT:
-				++multicontactCounter;
+				borderIndices.push_back(it);
+//				++multicontactCounter;
 				break;
 				
 			default:
@@ -251,7 +252,7 @@ markInnersAndBorders() {
 	assert_eq(contactIndices.size() + borderIndices.size() + innerIndices.size() +
 			multicontactCounter, sizeOfAllNodes());
 	
-	LOG_INFO("Number of multicontact vertices: " << multicontactCounter);
+//	LOG_INFO("Number of multicontact vertices: " << multicontactCounter);
 	LOG_INFO("Number of contact vertices: " << contactIndices.size());
 	LOG_INFO("Number of border vertices: " << borderIndices.size());
 	LOG_INFO("Number of inner vertices: " << innerIndices.size());

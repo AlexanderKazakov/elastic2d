@@ -15,7 +15,7 @@ CgalTriangulation(const Task& task) : Base(task) {
 //	for (auto it  = this->allCellsBegin(); it != this->allCellsEnd(); ++it) {
 //		if (isInfinite(it)) { continue; }
 //		GridId id = it->info().getGridId();
-//		if (id != 1 /*&& !Base::isDegenerate(it, 0.5)*/) {
+//		if (id != 1) {
 //			it->info().setGridId(4);
 //		}
 //	}

@@ -163,6 +163,16 @@ public:
 	}
 	
 	
+	std::set<GridId> incidentGridsIds(const VertexHandle vh) const {
+		std::list<CellHandle> incidentCells = this->allIncidentCells(vh);
+		std::set<GridId> ans;
+		for (CellHandle ch : incidentCells) {
+			ans.insert(ch->info().getGridId());
+		}
+		return ans;
+	}
+	
+	
 	/** Debugging helper */
 	void printCell(const CellHandle f, const std::string name) const {
 		SUPPRESS_WUNUSED(name);
