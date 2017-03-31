@@ -90,16 +90,18 @@ protected:
 			const PdeVector& uB,
 			const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) const {
 		const auto R1 = B1A * OmegaA;
-		if (linal::determinant(R1) == 0) {
+//		if (linal::determinant(R1) == 0) {
+		if (std::fabs(linal::determinant(R1)) < 0.1) {
 			return { false, PdeVector::Zeros(), PdeVector::Zeros() };
 		}
-		const auto R = linal::invert(B1A * OmegaA);
+		const auto R = linal::invert(R1);
 		const auto p = R * (B1B * uB - B1A * uA);
 		const auto Q = R * (B1B * OmegaB);
 		
 		const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
 		const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
-		if (linal::determinant(A) == 0) {
+//		if (linal::determinant(A) == 0) {
+		if (std::fabs(linal::determinant(A)) < 0.1) {
 			return { false, PdeVector::Zeros(), PdeVector::Zeros() };
 		}
 		

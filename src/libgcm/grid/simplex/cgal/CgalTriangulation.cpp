@@ -12,6 +12,14 @@ CgalTriangulation(const Task& task) : Base(task) {
 	static_assert(DIMENSIONALITY == Base::DIMENSIONALITY, "");
 	rescale(task.simplexGrid.scale);
 	
+//	for (auto it  = this->allCellsBegin(); it != this->allCellsEnd(); ++it) {
+//		if (isInfinite(it)) { continue; }
+//		GridId id = it->info().getGridId();
+//		if (id != 1 /*&& !Base::isDegenerate(it, 0.5)*/) {
+//			it->info().setGridId(4);
+//		}
+//	}
+	
 	int disconnectedCellsSetsCaseCounter = 1;
 	int iterationsCounter = 0;
 	while (disconnectedCellsSetsCaseCounter > 0 && ++iterationsCounter < 4) {
@@ -66,11 +74,10 @@ clearFromDisconnectedCellSets(VertexHandle vh) {
 	const std::list<CellHandle> listAllCells = this->allIncidentCells(vh);
 	std::set<GridId> uniqueMaterials;
 	for (const CellHandle c : listAllCells) {
-		assert_true(c->has_vertex(vh));
 		if (isInfinite(c)) { return false; }
 		uniqueMaterials.insert(c->info().getGridId());
 	}
-	if (uniqueMaterials.size() == 1) { return false; }
+	if (uniqueMaterials.size() != 2) { return false; }
 	
 	std::set<CellHandle> allCells(listAllCells.begin(), listAllCells.end());
 	typedef std::multiset<ConnectedCellsSet> Multiset;
@@ -86,14 +93,12 @@ clearFromDisconnectedCellSets(VertexHandle vh) {
 		allCells = difference;
 	}
 	
-	ConnectedCellsSet emptySpaceKey(CellInfo::EmptySpaceFlag);
-	const bool disconnectedSetsFoundInEmptySpace =
-			connectedCellsSets.count(emptySpaceKey) > 1;
-	ConnectedCellsSet materialKey(*uniqueMaterials.begin());
-	const bool disconnectedSetsFoundInMaterial =
-			connectedCellsSets.count(materialKey) > 1;
+	ConnectedCellsSet m1Key(*uniqueMaterials.rbegin());
+	const bool disconnectedSetsFoundInM1 = connectedCellsSets.count(m1Key) > 1;
+	ConnectedCellsSet m2Key(*uniqueMaterials.begin());
+	const bool disconnectedSetsFoundInM2 = connectedCellsSets.count(m2Key) > 1;
 	const bool disconnectedSetsFound =
-			disconnectedSetsFoundInEmptySpace || disconnectedSetsFoundInMaterial;
+			disconnectedSetsFoundInM1 || disconnectedSetsFoundInM2;
 	
 	auto removeDSC = [&](const ConnectedCellsSet idToRemove, const GridId idToInsert) {
 		const std::pair<Iter, Iter> range = connectedCellsSets.equal_range(idToRemove);
@@ -112,10 +117,10 @@ clearFromDisconnectedCellSets(VertexHandle vh) {
 		}
 	};
 	
-	if (disconnectedSetsFoundInEmptySpace) {
-		removeDSC(emptySpaceKey, materialKey.id);
-	} else if (disconnectedSetsFoundInMaterial) {
-		removeDSC(materialKey, emptySpaceKey.id);
+	if (disconnectedSetsFoundInM1) {
+		removeDSC(m1Key, m2Key.id);
+	} else if (disconnectedSetsFoundInM2) {
+		removeDSC(m2Key, m1Key.id);
 	}
 	
 	return disconnectedSetsFound;

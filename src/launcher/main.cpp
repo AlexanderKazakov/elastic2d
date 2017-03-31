@@ -64,6 +64,11 @@ int main(int argc, char** argv) {
 
 Task parseTaskContact2D() {
 	Task task;
+	const real phi = 0;
+	task.calculationBasis = {
+			cos(phi), -sin(phi),
+			sin(phi),  cos(phi),
+	};
 	
 	task.globalSettings.dimensionality = 2;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;

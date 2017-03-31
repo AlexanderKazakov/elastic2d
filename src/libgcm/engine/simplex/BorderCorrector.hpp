@@ -90,8 +90,8 @@ protected:
 			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) const {
 		const auto M = B * Omega;
 		// TODO - here should be more consistent degeneracy conditions
-		if (linal::determinant(M) == 0) {
-//		if (std::fabs(linal::determinant(M)) < 1e-3) {
+//		if (linal::determinant(M) == 0) {
+		if (std::fabs(linal::determinant(M)) < 0.1) {
 			return { false, PdeVector::Zeros() };
 		}
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
