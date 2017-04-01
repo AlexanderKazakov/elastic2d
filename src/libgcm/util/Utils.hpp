@@ -60,6 +60,23 @@ public:
 	
 	
 	/**
+	 * Any (random choice) element from the given set 
+	 * (except the specified one) can be returned as answer.
+	 */
+	template<typename T>
+	static T chooseRandomElementExceptSpecified(
+			std::set<T> elements, const T& noChooseMe) {
+		elements.erase(noChooseMe);
+		int I = int(randomReal(0, (1 - EQUALITY_TOLERANCE) * (real)elements.size()));
+		auto iter = elements.begin();
+		for (int i = 0; i < I; i++) {
+			++iter;
+		}
+		return *iter;
+	}
+	
+	
+	/**
 	 * Check is the container has the value
 	 */
 	template<typename TContainer, typename TValue>

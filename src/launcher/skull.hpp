@@ -151,9 +151,9 @@ inline Task skullAcoustic() {
 	};
 	
 	task.borderConditions = {
-//		fixedBorder,
-		freeBorder,
-		source
+		fixedBorder,
+//		freeBorder,
+//		source
 	};
 	
 	return task;

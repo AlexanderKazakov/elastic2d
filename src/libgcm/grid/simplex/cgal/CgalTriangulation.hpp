@@ -74,8 +74,6 @@ public:
 	CgalTriangulation(const Task& task);
 	virtual ~CgalTriangulation() { }
 	
-	bool clearFromDisconnectedCellSets(VertexHandle vh);
-	
 	
 	/** Read-only access to points coordinates */
 	static RealD coordsD(const VertexHandle vh) {
@@ -201,7 +199,94 @@ private:
 		}
 	}
 	
+	/**
+	 * A bad cases is possible when in some vertex of the triangulation
+	 * cells of the same material(id) are not neighbors of each other.
+	 * This is demonstrated on picture for material A: A(3) is not connected
+	 * with A(1) and A(2). Thus, for material A we have two so called
+	 * "disconnected cells sets" (and one cells set for B and for C):
+	 *    \       /       
+	 *     \  B  /        
+	 *      \   /  A(1)   
+	 *       \ /________  
+	 *  A(3) /|\          
+	 *      / | \  A(2)   
+	 *     /  |  \        
+	 *    / C | C \       
+	 * For such cases, the border normal for material A is meaningless.
+	 * All stuff below is dedicated to clear the triangulation from such cases.
+	 */
+	bool clearFromDisconnectedCellSets(VertexHandle vh);
 	
+	/// auxiliary structure for cleaning from "disconnected cells sets"
+	struct ConnectedCellsSet {
+		ConnectedCellsSet(const GridId gridId) : centerVertex(NULL), id(gridId) { }
+		
+		ConnectedCellsSet(VertexHandle v, CellHandle c) :
+				centerVertex(v), id(c->info().getGridId()) {
+			tryToInsert(c);
+		}
+		
+		void tryToInsert(CellHandle c) {
+			if (c->has_vertex(centerVertex) && c->info().getGridId() == id) {
+				if (set.insert(c).second) {
+					for (int i = 0; i < CELL_POINTS_NUMBER; i++) {
+						tryToInsert(c->neighbor(i));
+					}
+				}
+			}
+		}
+		
+		bool operator<(const ConnectedCellsSet& other) const {
+			return this->id < other.id;
+		}
+		
+		size_t size() const { return set.size(); }
+		
+		const VertexHandle centerVertex;
+		const GridId id;
+		std::set<CellHandle> set;
+	};
+	
+	typedef std::multiset<ConnectedCellsSet> CCSMultiset;
+	
+	/// Find all connected cells sets around the vertex
+	CCSMultiset constructCCSMultiset(const VertexHandle vh) const {
+		const std::list<CellHandle> listAllCells = this->allIncidentCells(vh);
+		std::set<CellHandle> allCells(listAllCells.begin(), listAllCells.end());
+		CCSMultiset ans;
+		while (!allCells.empty()) {
+			ConnectedCellsSet newSet(vh, *allCells.begin());
+			ans.insert(newSet);
+			std::set<CellHandle> difference; // == allCells \ newSet
+			std::set_difference(allCells.begin(), allCells.end(),
+					newSet.set.begin(), newSet.set.end(),
+					std::inserter(difference, difference.begin()));
+			allCells = difference;
+		}
+		return ans;
+	}
+	
+	/// replace all (except the largest one) connected cells sets with idToRemove
+	/// with cells sets with idToInsert (by changing ids of the cells)
+	void removeDCS(const GridId idToRemove, const GridId idToInsert,
+			const CCSMultiset& connectedCellsSets) {
+		const auto range =
+				connectedCellsSets.equal_range(ConnectedCellsSet(idToRemove));
+		auto largestSet = range.first;
+		for (auto it = range.first; it != range.second; ++it) {
+			if (largestSet->size() < it->size()) {
+				largestSet = it;
+			}
+		}
+		for (auto it = range.first; it != range.second; ++it) {
+			if (it != largestSet) {
+				for (CellHandle c : it->set) if (!isInfinite(c)) {
+					c->info().setGridId(idToInsert);
+				}
+			}
+		}
+	}
 };
 
 
