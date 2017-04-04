@@ -11,6 +11,17 @@ using namespace gcm;
 using namespace gcm::linal;
 
 
+TEST(Linal, concatenate) {
+	Matrix22 A({1, 2, 3, 4});
+	Matrix22 B({5, 6, 7, 8});
+	ASSERT_EQ((Matrix<4, 2>({1, 2, 3, 4, 5, 6, 7, 8})), concatenateVertically(A, B));
+	ASSERT_EQ((Matrix<2, 4>({1, 2, 5, 6, 3, 4, 7, 8})), concatenateHorizontally(A, B));
+	Real2 c = {9, 0};
+	ASSERT_EQ((Matrix<2, 3>({1, 2, 9, 3, 4, 0})), concatenateHorizontally(A, c));
+	ASSERT_EQ((Matrix<3, 2>({1, 2, 3, 4, 9, 0})), concatenateVertically(A, transpose(c)));
+}
+
+
 TEST(Linal, minMax) {
 	ASSERT_EQ(1, linal::min(1, 2, 3, 4));
 	ASSERT_EQ(4, linal::max(1, 2, 3, 4));

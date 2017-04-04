@@ -54,6 +54,48 @@ transpose(const MatrixBase<TM, TN, TElement, Diagonal, TContainer>& m) {
 
 
 /**
+ * Join two matrices horizontally (C = [A, B] in matlab notation)
+ */
+template<int TM, int TN1, int TN2,
+         typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<TM, TN1+TN2, TElement, NonSymmetric, TContainer>
+concatenateHorizontally(
+		const MatrixBase<TM, TN1, TElement, NonSymmetric, TContainer>& A,
+		const MatrixBase<TM, TN2, TElement, NonSymmetric, TContainer>& B) {
+	MatrixBase<TM, TN1+TN2, TElement, NonSymmetric, TContainer> C;
+	for (int j = 0; j < TN1; j++) {
+		C.setColumn(j, A.getColumn(j));
+	}
+	for (int j = 0; j < TN2; j++) {
+		C.setColumn(j + TN1, B.getColumn(j));
+	}
+	return C;
+}
+
+
+/**
+ * Join two matrices vertically (C = [A; B] in matlab notation)
+ */
+template<int TM1, int TM2, int TN,
+         typename TElement,
+         template<int, typename> class TContainer>
+MatrixBase<TM1+TM2, TN, TElement, NonSymmetric, TContainer>
+concatenateVertically(
+		const MatrixBase<TM1, TN, TElement, NonSymmetric, TContainer>& A,
+		const MatrixBase<TM2, TN, TElement, NonSymmetric, TContainer>& B) {
+	MatrixBase<TM1+TM2, TN, TElement, NonSymmetric, TContainer> C;
+	for (int i = 0; i < TM1; i++) {
+		C.setRow(i, A.getRow(i));
+	}
+	for (int i = 0; i < TM2; i++) {
+		C.setRow(i + TM1, B.getRow(i));
+	}
+	return C;
+}
+
+
+/**
  * Invert 1x1 matrix
  */
 template<typename TElement,
