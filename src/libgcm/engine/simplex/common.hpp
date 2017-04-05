@@ -165,6 +165,84 @@ typename Model::OuterMatrix getColumnsFromGcmMatrices(
 }
 
 
+/** Result of calculateOuterWaveCorrection for border nodes */
+template<typename PdeVector>
+struct CorrectionResultBorder {
+	bool isSuccessful;
+	PdeVector value;
+};
+
+/**
+ * General expression of linear border condition is:
+ *     B * u = b,
+ * where u is pde-vector and B is border matrix.
+ * Given with inner-calculated pde vector, we correct them
+ * with outer waves combination (Omega) in order to satisfy border condition.
+ * But this is not always possible due to degeneracies
+ * @see BorderCondition
+ */
+template<typename PdeVector,
+		typename MatrixOmega, typename MatrixB, typename VectorB>
+CorrectionResultBorder<PdeVector>
+calculateOuterWaveCorrection(const PdeVector& u,
+		const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
+	const auto M = B * Omega;
+	// TODO - here should be more consistent degeneracy conditions
+//	if (linal::determinant(M) == 0) {
+	if (std::fabs(linal::determinant(M)) < 0.1) {
+		return { false, PdeVector::Zeros() };
+	}
+	const auto alpha = linal::solveLinearSystem(M, b - B * u);
+	return { true, Omega * alpha };
+}
+
+
+/** Result of calculateOuterWaveCorrection for contact nodes */
+template<typename PdeVector>
+struct CorrectionResultContact {
+	bool isSuccessful;
+	PdeVector valueA, valueB;
+};
+
+/**
+ * General expression of linear contact condition is:
+ *     B1_A * u_A = B1_B * u_B,
+ *     B2_A * u_A = B2_B * u_B,
+ * where u is pde-vector and B is border matrices.
+ * Given with inner-calculated pde vectors, we correct them
+ * with outer waves combination (Omega) in order to satisfy contact condition.
+ * But this is not always possible due to degeneracies
+ * @see BorderCorrector
+ */
+template<typename PdeVector, typename MatrixOmega, typename MatrixB>
+CorrectionResultContact<PdeVector>
+calculateOuterWaveCorrection(
+		const PdeVector& uA,
+		const MatrixOmega& OmegaA, const MatrixB& B1A, const MatrixB& B2A,
+		const PdeVector& uB,
+		const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
+	const auto R1 = B1A * OmegaA;
+//	if (linal::determinant(R1) == 0) {
+	if (std::fabs(linal::determinant(R1)) < 0.1) {
+		return { false, PdeVector::Zeros(), PdeVector::Zeros() };
+	}
+	const auto R = linal::invert(R1);
+	const auto p = R * (B1B * uB - B1A * uA);
+	const auto Q = R * (B1B * OmegaB);
+	
+	const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
+	const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
+//	if (linal::determinant(A) == 0) {
+	if (std::fabs(linal::determinant(A)) < 0.1) {
+		return { false, PdeVector::Zeros(), PdeVector::Zeros() };
+	}
+	
+	const auto alphaB = linal::solveLinearSystem(A, f);
+	const auto alphaA = p + Q * alphaB;
+	return { true, OmegaA * alphaA, OmegaB * alphaB };
+}
+
+
 } // namespace simplex
 } // namespace gcm
 

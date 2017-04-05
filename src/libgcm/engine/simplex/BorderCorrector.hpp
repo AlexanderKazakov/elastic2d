@@ -65,40 +65,6 @@ public:
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
 			const real timeAtNextLayer) const = 0;
-	
-	
-protected:
-	template<typename PdeVector>
-	struct CorrectionResult {
-		bool isSuccessful;
-		PdeVector value;
-	};
-	
-	/**
-	 * General expression of linear border condition is:
-	 *     B * u = b,
-	 * where u is pde-vector and B is border matrix.
-	 * Given with inner-calculated pde vector, we correct them
-	 * with outer waves combination (Omega) in order to satisfy border condition.
-	 * But this is not always possible due to degeneracies
-	 * @see BorderCondition
-	 */
-	template<typename PdeVector,
-			typename MatrixOmega, typename MatrixB, typename VectorB>
-	CorrectionResult<PdeVector>
-	calculateOuterWaveCorrection(const PdeVector& u,
-			const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) const {
-		const auto M = B * Omega;
-		// TODO - here should be more consistent degeneracy conditions
-//		if (linal::determinant(M) == 0) {
-		if (std::fabs(linal::determinant(M)) < 0.1) {
-			return { false, PdeVector::Zeros() };
-		}
-		const auto alpha = linal::solveLinearSystem(M, b - B * u);
-		return { true, Omega * alpha };
-	}
-	
-	USE_AND_INIT_LOGGER("gcm.simplex.BorderCorrector")
 };
 
 
@@ -138,7 +104,7 @@ public:
 			
 			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
 			const auto correction =
-					this->calculateOuterWaveCorrection(u, Omega, B, b);
+					calculateOuterWaveCorrection(u, Omega, B, b);
 			assert_true(correction.isSuccessful);
 			u += correction.value;
 		}
@@ -164,7 +130,7 @@ public:
 				const auto Omega = getColumnsFromGcmMatrices<Model>(
 						stage, outers, mesh->matrices(nodeBorder.iterator));
 				const auto correction =
-						this->calculateOuterWaveCorrection(u, Omega, B, b);
+						calculateOuterWaveCorrection(u, Omega, B, b);
 				if (correction.isSuccessful) {
 					u += correction.value;
 				} else {
@@ -179,9 +145,9 @@ public:
 				const auto OmegaL = getColumnsFromGcmMatrices<Model>(
 						stage, Model::LEFT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
 				const auto correctionR =
-						this->calculateOuterWaveCorrection(u, OmegaR, B, b);
+						calculateOuterWaveCorrection(u, OmegaR, B, b);
 				const auto correctionL =
-						this->calculateOuterWaveCorrection(u, OmegaL, B, b);
+						calculateOuterWaveCorrection(u, OmegaL, B, b);
 				if (correctionR.isSuccessful && correctionL.isSuccessful) {
 					u += (correctionR.value + correctionL.value) / 2;
 				} else {

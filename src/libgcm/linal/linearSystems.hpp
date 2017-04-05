@@ -17,15 +17,19 @@ template<int TN,
          template<int, typename> class TVectorContainer,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
-MatrixBase<TN, 1,
-           typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
-           NonSymmetric, TVectorContainer>
+typename std::enable_if<(TN > 3),
+		MatrixBase<TN, 1,
+				typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
+				NonSymmetric, TVectorContainer>
+		>::type
 solveLinearSystem(const MatrixBase<TN, TN,
                                    TMatrixElement,
-                                   NonSymmetric, TMatrixContainer>& A,
+                                   NonSymmetric, TMatrixContainer>& /*A*/,
                   const MatrixBase<TN, 1,
                                    TVectorElement,
-                                   NonSymmetric, TVectorContainer>& b);
+                                   NonSymmetric, TVectorContainer>& /*b*/) {
+	THROW_UNSUPPORTED("TODO");
+}
 
 
 /** 

@@ -229,12 +229,14 @@ public:
 	
 	
 	/**
-	 * Just set the values in the nodes to satisfy the given contact condition 
-	 * in local basis. I.e, we firstly convert the PDE variables to
+	 * Just set some values in the nodes to average 
+	 * in order to satisfy the given contact condition in local basis.
+	 * I.e, we firstly convert the PDE variables to
 	 * local basis, then set the its components to satisfy contact conditions,
-	 * then convert it back to global basis. Used when gcm-correction is degenerate
+	 * then convert it back to global basis.
+	 * Used when gcm-correction is degenerate and both nodes has outer invariants
 	 */
-	inline static void applyPlainContactCorrection(
+	inline static void applyPlainContactCorrectionAsAverage(
 			PdeVariables& uA, PdeVariables& uB,
 			const ContactConditions::T type, const RealD& normal) {
 		if (type != ContactConditions::T::ADHESION) {
@@ -263,6 +265,36 @@ public:
 		
 		setSigmaTo(uA, sigmaGlobalA);
 		setSigmaTo(uB, sigmaGlobalB);
+	}
+	
+	
+	/**
+	 * Just set some values in the node A equal to those one of the node B
+	 * in order to satisfy the given contact condition in local basis.
+	 * I.e, we firstly convert the PDE variables to
+	 * local basis, then set the its components to satisfy contact conditions,
+	 * then convert it back to global basis.
+	 * Used when gcm-correction is degenerate and only node A has outer invariants
+	 */
+	inline static void applyPlainContactCorrection(
+			PdeVariables& uA, const PdeVariables& uB,
+			const ContactConditions::T type, const RealD& normal) {
+		if (type != ContactConditions::T::ADHESION) {
+			THROW_UNSUPPORTED("Unsupported contact condition");
+		}
+		
+		uA.setVelocity(uB.getVelocity());
+		MatrixDD sigmaGlobalA = getSigmaFrom(uA);
+		MatrixDD sigmaGlobalB = getSigmaFrom(uB);
+		MatrixDD S = linal::createLocalBasis(normal);
+		MatrixDD S_T = linal::transpose(S);
+		MatrixDD sigmaLocalA = S_T * sigmaGlobalA * S;
+		MatrixDD sigmaLocalB = S_T * sigmaGlobalB * S;
+		RealD sigmaNormal = sigmaLocalB.getColumn(DIMENSIONALITY - 1);
+		sigmaLocalA.setColumn(DIMENSIONALITY - 1, sigmaNormal);
+		sigmaLocalA.setRow(DIMENSIONALITY - 1, sigmaNormal);
+		sigmaGlobalA = S * sigmaLocalA * S_T;
+		setSigmaTo(uA, sigmaGlobalA);
 	}
 	
 	

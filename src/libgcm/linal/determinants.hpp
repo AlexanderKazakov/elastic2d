@@ -58,6 +58,19 @@ inline real determinant(const Matrix33& m) {
 }
 
 
+/**
+ * NxN determinant (TODO)
+ */
+template<int TM,
+         typename TElement,
+         typename TSymmetry,
+         template<int, typename> class TContainer>
+typename std::enable_if<(TM > 3), TElement>::type
+determinant(const MatrixBase<TM, TM, TElement, TSymmetry, TContainer>& /*m*/) {
+	THROW_UNSUPPORTED("TODO");
+}
+
+
 }
 }
 

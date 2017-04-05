@@ -63,54 +63,6 @@ public:
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact) const = 0;
-	
-	
-protected:
-	template<typename PdeVector>
-	struct CorrectionResult {
-		bool isSuccessful;
-		PdeVector valueA, valueB;
-	};
-	
-	/**
-	 * General expression of linear contact condition is:
-	 *     B1_A * u_A = B1_B * u_B,
-	 *     B2_A * u_A = B2_B * u_B,
-	 * where u is pde-vector and B is border matrices.
-	 * Given with inner-calculated pde vectors, we correct them
-	 * with outer waves combination (Omega) in order to satisfy contact condition.
-	 * But this is not always possible due to degeneracies
-	 * @see BorderCorrector
-	 */
-	template<typename PdeVector, typename MatrixOmega, typename MatrixB>
-	CorrectionResult<PdeVector>
-	calculateOuterWaveCorrection(
-			const PdeVector& uA,
-			const MatrixOmega& OmegaA, const MatrixB& B1A, const MatrixB& B2A,
-			const PdeVector& uB,
-			const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) const {
-		const auto R1 = B1A * OmegaA;
-//		if (linal::determinant(R1) == 0) {
-		if (std::fabs(linal::determinant(R1)) < 0.1) {
-			return { false, PdeVector::Zeros(), PdeVector::Zeros() };
-		}
-		const auto R = linal::invert(R1);
-		const auto p = R * (B1B * uB - B1A * uA);
-		const auto Q = R * (B1B * OmegaB);
-		
-		const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
-		const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
-//		if (linal::determinant(A) == 0) {
-		if (std::fabs(linal::determinant(A)) < 0.1) {
-			return { false, PdeVector::Zeros(), PdeVector::Zeros() };
-		}
-		
-		const auto alphaB = linal::solveLinearSystem(A, f);
-		const auto alphaA = p + Q * alphaB;
-		return { true, OmegaA * alphaA, OmegaB * alphaB };
-	}
-	
-	USE_AND_INIT_LOGGER("gcm.simplex.ContactCorrector")
 };
 
 
@@ -160,7 +112,7 @@ public:
 			PdeVector& uA = meshA->_pdeNew(stage, nodesContact.first);
 			PdeVector& uB = meshB->_pdeNew(stage, nodesContact.second);
 			
-			const auto correction = this->calculateOuterWaveCorrection(
+			const auto correction = calculateOuterWaveCorrection(
 					uA, OmegaA, B1A, B2A,
 					uB, OmegaB, B1B, B2B);
 			assert_true(correction.isSuccessful);
@@ -197,28 +149,58 @@ public:
 						stage, outersA, meshA->matrices(nodesContact.first));
 				const auto OmegaB = getColumnsFromGcmMatrices<ModelB>(
 						stage, outersB, meshB->matrices(nodesContact.second));
-				const auto correction = this->calculateOuterWaveCorrection(
+				const auto correction = calculateOuterWaveCorrection(
 						uA, OmegaA, B1A, B2A,
 						uB, OmegaB, B1B, B2B);
 				if (correction.isSuccessful) {
 					uA += correction.valueA;
 					uB += correction.valueB;
 				} else {
+					ModelA::applyPlainContactCorrectionAsAverage(
+							uA, uB, _condition, nodesContact.normal);
+				}
+				
+			} else if (outersA.size() == 2 * OUTER_NUMBER && outersB.empty()) {
+			/// Calculate node A as border with two border conditions
+				const auto B = linal::concatenateVertically(B1A, B2A);
+				const auto b1 = B1B * uB;
+				const auto b2 = B2B * uB;
+				const auto b12 = linal::concatenateVertically(b1, b2);
+				const auto OmegaA = linal::concatenateHorizontally(
+						getColumnsFromGcmMatrices<ModelA>(stage,
+						ModelA::RIGHT_INVARIANTS, meshA->matrices(nodesContact.first)),
+						getColumnsFromGcmMatrices<ModelA>(stage,
+						ModelA::LEFT_INVARIANTS,  meshA->matrices(nodesContact.first)));
+				const auto correction = calculateOuterWaveCorrection(uA, OmegaA, B, b12);
+				if (correction.isSuccessful) {
+					uA += correction.value;
+				} else {
 					ModelA::applyPlainContactCorrection(
 							uA, uB, _condition, nodesContact.normal);
 				}
 				
-			} else if ((outersA.size() == 2 * OUTER_NUMBER && outersB.empty()) ||
-					(outersB.size() == 2 * OUTER_NUMBER && outersA.empty())) {
-			/// Double-outer case: apply correction as average from both sides
-				// TODO - here should be double-outer border case,
-				// but it requires to solve 6x6 SLE
-				ModelA::applyPlainContactCorrection(
-						uA, uB, _condition, nodesContact.normal);
+			} else if (outersB.size() == 2 * OUTER_NUMBER && outersA.empty()) {
+			/// Calculate node B as border with two border conditions
+				const auto B = linal::concatenateVertically(B1B, B2B);
+				const auto b1 = B1A * uA;
+				const auto b2 = B2A * uA;
+				const auto b12 = linal::concatenateVertically(b1, b2);
+				const auto OmegaB = linal::concatenateHorizontally(
+						getColumnsFromGcmMatrices<ModelB>(stage,
+						ModelB::RIGHT_INVARIANTS, meshB->matrices(nodesContact.second)),
+						getColumnsFromGcmMatrices<ModelB>(stage,
+						ModelB::LEFT_INVARIANTS,  meshB->matrices(nodesContact.second)));
+				const auto correction = calculateOuterWaveCorrection(uB, OmegaB, B, b12);
+				if (correction.isSuccessful) {
+					uB += correction.value;
+				} else {
+					ModelB::applyPlainContactCorrection(
+							uB, uA, _condition, nodesContact.normal);
+				}
 				
 			} else {
 //				THROW_UNSUPPORTED("TODO");
-				ModelA::applyPlainContactCorrection(
+				ModelA::applyPlainContactCorrectionAsAverage(
 						uA, uB, _condition, nodesContact.normal);
 				
 			}
