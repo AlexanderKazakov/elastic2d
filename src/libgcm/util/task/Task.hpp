@@ -201,6 +201,9 @@ struct Task {
 	
 	struct BorderCondition {
 		std::shared_ptr<Area> area;
+		/// we calculate multicontact nodes as borders, but sometimes
+		/// it can be not appropriate to apply some border conditions to them
+		bool useForMulticontactNodes = true;
 		BorderConditions::T type;
 		///< size must be equal to number of outer characteristics
 		std::vector<TimeDependency> values;

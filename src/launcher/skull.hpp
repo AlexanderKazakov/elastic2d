@@ -75,6 +75,7 @@ inline Task skullAcousticHomogeneous() {
 	Task::BorderCondition source;
 	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
+	source.useForMulticontactNodes = false;
 	real tau = 0.5;
 	real omega = 2 * M_PI / tau;
 	source.values = {
@@ -143,6 +144,7 @@ inline Task skullAcoustic() {
 	Task::BorderCondition source;
 	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
+	source.useForMulticontactNodes = false;
 	real tau = 0.5;
 	real omega = 2 * M_PI / tau;
 	source.values = {
@@ -199,6 +201,7 @@ inline Task skull() {
 	Task::BorderCondition source;
 	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
+	source.useForMulticontactNodes = false;
 	real tau = 0.5;
 	real omega = 2 * M_PI / tau;
 	source.values = {

@@ -56,6 +56,7 @@ public:
 		std::shared_ptr<BorderCorrector> borderCorrector;
 		/// used only at instantiation step, not in calculations
 		std::shared_ptr<Area> correctionArea;
+		bool useForMulticontactNodes;
 	};
 	
 	

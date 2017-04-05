@@ -74,7 +74,8 @@ createMeshes(const Task& task) {
 		
 		for (const Task::BorderCondition& condition : task.borderConditions) {
 			Border border;
-			border.correctionArea = condition.area;	
+			border.correctionArea = condition.area;
+			border.useForMulticontactNodes = condition.useForMulticontactNodes;
 			border.borderCorrector = BorderCorrectorFactory<Grid>::create(
 					gcmType,
 					condition,
@@ -264,24 +265,23 @@ template<int Dimensionality,
 void Engine<Dimensionality, TriangulationT>::
 addBorderNode(const VertexHandle vh, const GridId gridId) {
 	assert_ne(gridId, EmptySpaceFlag);
-	
 	std::shared_ptr<Mesh> mesh = getBody(gridId).mesh;
 	Iterator iter = mesh->localVertexIndex(vh);
+	const bool isMulticontact = mesh->borderNormal(iter) == RealD::Zeros();
 	
 	// for a concrete node, not more than one border condition can be applied
 	Border* chosenBorder = nullptr;
 	for (Border& border : getBody(gridId).borders) {
-		if (border.correctionArea->contains(mesh->coords(iter))) {
+		if ( border.correctionArea->contains(mesh->coords(iter)) &&
+				(!isMulticontact || border.useForMulticontactNodes) ) {
 			chosenBorder = &border;
 		}
 	}
 	if (chosenBorder == nullptr) { return; }
 	
 	RealD normal = mesh->commonNormal(iter);
-	if (normal != RealD::Zeros()) {
-		chosenBorder->borderNodes.push_back({ iter, normal });
-	}
-	
+	assert_true(normal != RealD::Zeros());
+	chosenBorder->borderNodes.push_back({ iter, normal });
 }
 
 
