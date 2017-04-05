@@ -199,6 +199,15 @@ private:
 		}
 	}
 	
+	
+	/**
+	 * A bad cases is possible when some cell of the triangulation
+	 * has no neighbors with the same material id. The function is for
+	 * replacement such cells materials with most common neighbor materials
+	 */
+	int correctHangedCells();
+	
+	
 	/**
 	 * A bad cases is possible when in some vertex of the triangulation
 	 * cells of the same material(id) are not neighbors of each other.

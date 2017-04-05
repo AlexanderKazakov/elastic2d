@@ -6,10 +6,10 @@ using namespace gcm;
 
 inline Task skullCommon() {
 	Task task;
-	task.calculationBasis = {
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1};
+//	task.calculationBasis = {
+//			1, 0, 0,
+//			0, 1, 0,
+//			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
@@ -22,8 +22,6 @@ inline Task skullCommon() {
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
 	task.simplexGrid.fileName = "meshes/coarse/ball.out";
-//	task.simplexGrid.fileName = "meshes/coarse/ball_homogeneous.out";
-//	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
@@ -44,6 +42,9 @@ inline Task skullCommon() {
 
 inline Task skullAcousticHomogeneous() {
 	Task task = skullCommon();
+	task.simplexGrid.fileName = "meshes/coarse/ball_homogeneous.out";
+//	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
+	
 	
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
@@ -83,9 +84,9 @@ inline Task skullAcousticHomogeneous() {
 	};
 	
 	task.borderConditions = {
-		fixedBorder,
-//		freeBorder,
-//		source
+//		fixedBorder,
+		freeBorder,
+		source
 	};
 	
 	return task;
@@ -151,9 +152,9 @@ inline Task skullAcoustic() {
 	};
 	
 	task.borderConditions = {
-		fixedBorder,
-//		freeBorder,
-//		source
+//		fixedBorder,
+		freeBorder,
+		source
 	};
 	
 	return task;

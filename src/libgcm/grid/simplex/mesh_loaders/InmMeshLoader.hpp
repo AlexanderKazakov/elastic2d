@@ -35,7 +35,6 @@ public:
 	 */
 	template<typename Triangulation>
 	static void load(const std::string fileName, Triangulation& triangulation) {
-		
 		typedef typename Triangulation::Vertex_handle  VertexHandle;
 		typedef typename Triangulation::Cell_handle    CellHandle;
 		
@@ -91,9 +90,6 @@ public:
 		real missedCellsRatio = (real) missedCellsCount / (real) materials.size();
 		LOG_INFO("Total number of missed cells: " << missedCellsCount
 				<< ", percentage: " << missedCellsRatio * 100 << "%");
-		
-		
-//		correctHangedCells(triangulation);
 	}
 	
 	
@@ -115,43 +111,6 @@ public:
 	
 	
 private:
-	
-	template<typename Triangulation>
-	static void correctHangedCells(Triangulation& triangulation) {
-	/// change material flag for cells which neighbors 
-	/// all have a different material
-		
-		size_t emptyHangsCounter = 0, otherHangsCounter = 0;
-		USE_AND_INIT_LOGGER("InmMeshLoader")
-		LOG_INFO("Start replacing hanged cells ...");
-		
-		for (auto cell =  triangulation.finite_cells_begin();
-				  cell != triangulation.finite_cells_end(); ++cell) {
-			
-			size_t cellMaterialFlag = cell->info().getGridId();
-			size_t neighbor0MaterialFlag = cell->neighbor(0)->info().getGridId();
-			size_t neighbor1MaterialFlag = cell->neighbor(1)->info().getGridId();
-			size_t neighbor2MaterialFlag = cell->neighbor(2)->info().getGridId();
-			size_t neighbor3MaterialFlag = cell->neighbor(3)->info().getGridId();
-			
-			if ( neighbor0MaterialFlag != cellMaterialFlag &&
-				 neighbor0MaterialFlag == neighbor1MaterialFlag &&
-				 neighbor0MaterialFlag == neighbor2MaterialFlag &&
-				 neighbor0MaterialFlag == neighbor3MaterialFlag ) {
-			// if all four neighbors have the same material different from the cell one
-				
-				if (cellMaterialFlag == EmptyMaterialFlag) { ++emptyHangsCounter; }
-				else { ++otherHangsCounter; }
-				
-				cell->info().setGridId(neighbor0MaterialFlag); // set material from neighbors
-			}
-		}
-		
-		LOG_INFO("Replaced " << emptyHangsCounter << " single empty cells and "
-				<< otherHangsCounter << " single non-empty cells");
-	}
-	
-	
 	static void readPoints(std::ifstream& input, std::vector<Real3>& points) {
 		std::string numberOfPointsStr;
 		std::getline(input, numberOfPointsStr);
