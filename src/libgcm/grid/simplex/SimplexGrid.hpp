@@ -219,6 +219,11 @@ public:
 		return averageSpatialStep;
 	}
 	
+	/** Minimal height among all simplices (can be zero!) */
+	real getMinimalHeight() const {
+		return minimalSpatialStep;
+	}
+	
 	
 	/** Read-only access to points coordinates in DIMENSIONALITY space */
 	RealD coordsD(const Iterator& it) const {

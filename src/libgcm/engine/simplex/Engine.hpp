@@ -78,8 +78,9 @@ protected:
 		/// minimal among all bodies
 		real minimalTimeStep = std::numeric_limits<real>::max();
 		for (const Body& body : bodies) {
-			real bodyTimeStep = CourantNumber *
-					body.mesh->getAverageHeight() /
+			real h = (body.mesh->getAverageHeight() +
+			          body.mesh->getMinimalHeight()) / 2;
+			real bodyTimeStep = CourantNumber * h /
 					body.mesh->getMaximalEigenvalue();
 			if (bodyTimeStep < minimalTimeStep) {
 				minimalTimeStep = bodyTimeStep;
@@ -196,7 +197,7 @@ private:
 	void changeCalculationBasis() {
 		if (!calculationBasis.createNewRandomAtEachTimeStep) { return; }
 		calculationBasis.basis = linal::randomBasis(calculationBasis.basis);
-		LOG_INFO("New calculation basis:" << calculationBasis.basis);
+//		LOG_INFO("New calculation basis:" << calculationBasis.basis);
 		for (const Body& body : bodies) {
 			body.mesh->setInnerCalculationBasis(calculationBasis.basis);
 		}

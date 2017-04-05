@@ -6,24 +6,24 @@ using namespace gcm;
 
 inline Task skullCommon() {
 	Task task;
-//	task.calculationBasis = {
-//			1, 0, 0,
-//			0, 1, 0,
-//			0, 0, 1};
+	task.calculationBasis = {
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.CourantNumber = 1;
-//	task.globalSettings.numberOfSnaps = 1000;
-//	task.globalSettings.stepsPerSnap = 5;
-	task.globalSettings.numberOfSnaps = 50;
-	task.globalSettings.stepsPerSnap = 5;
+	task.globalSettings.numberOfSnaps = 1000;
+	task.globalSettings.stepsPerSnap = 10;
+//	task.globalSettings.numberOfSnaps = 50;
+//	task.globalSettings.stepsPerSnap = 10;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/ball.out";
+//	task.simplexGrid.fileName = "meshes/coarse/ball.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
-//	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
@@ -99,10 +99,10 @@ inline Task skullAcoustic() {
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-//			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-//			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-
+			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			
 //			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 //			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 //			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},

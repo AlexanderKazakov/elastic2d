@@ -33,7 +33,7 @@ TEST(Engine, ZeroInitialization) {
 	task.globalSettings.CourantNumber = 1;
 	task.globalSettings.numberOfSnaps = 10;
 	task.globalSettings.stepsPerSnap = 1;
-	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
+//	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	
 	task.bodies = {{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
 	task.simplexGrid.spatialStep = 1.15;

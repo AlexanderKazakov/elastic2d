@@ -30,7 +30,7 @@ TEST(Engine, AdhesionContact) {
 	Task task;
 	task.globalSettings.dimensionality = 2;
 	task.globalSettings.gridId = Grids::T::CUBIC;
-	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
+//	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.numberOfSnaps = 70;
 	task.globalSettings.CourantNumber = 0.9;
 	task.globalSettings.verboseTimeSteps = false;
