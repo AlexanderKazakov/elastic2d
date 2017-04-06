@@ -1085,8 +1085,8 @@ TEST(Linal, cross_verification) {
 		ASSERT_EQ(transpose(A) * B, transposeMultiply(A, B));
 		ASSERT_NEAR(determinant(B) * determinant(A), 
 		            determinant(C), EQUALITY_TOLERANCE  * fabs(determinant(C)));
-		auto C1 = GslUtils::invert(C);
-		ASSERT_TRUE(approximatelyEqual(GslUtils::invert(B) * GslUtils::invert(A), C1));
+		auto C1 = gsl_utils::invert(C);
+		ASSERT_TRUE(approximatelyEqual(gsl_utils::invert(B) * gsl_utils::invert(A), C1));
 		ASSERT_TRUE(approximatelyEqual(identity(C), C * C1, 10000 * EQUALITY_TOLERANCE));
 		ASSERT_TRUE(approximatelyEqual(identity(C), C1 * C, 10000 * EQUALITY_TOLERANCE));
 		ASSERT_EQ(A * D1, A * D);
