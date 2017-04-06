@@ -21,9 +21,9 @@ inline Task skullCommon() {
 //	task.globalSettings.stepsPerSnap = 10;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-//	task.simplexGrid.fileName = "meshes/coarse/ball.out";
+	task.simplexGrid.fileName = "meshes/coarse/ball.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
-	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+//	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
 //	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
@@ -163,15 +163,15 @@ inline Task skullAcoustic() {
 }
 
 
-inline Task skull() {
+inline Task skullElastic() {
 	Task task = skullCommon();
 	
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{2, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+//			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+//			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 	};
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;

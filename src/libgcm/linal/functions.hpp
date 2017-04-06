@@ -135,6 +135,19 @@ invert(const MatrixBase<3, 3, TElement, NonSymmetric, TContainer>& m) {
 
 
 /**
+ * Invert NxN matrix (only for N > 3) by GSL library
+ */
+template<int N,
+         typename TSymmetry,
+         template<int, typename> class TContainer>
+typename std::enable_if<(N > 3),
+		MatrixBase<N, N, real, TSymmetry, TContainer>>::type
+invert(const MatrixBase<N, N, real, TSymmetry, TContainer>& m) {
+	return gsl_utils::invert(m);
+}
+
+
+/**
  * Invert diagonal matrix
  */
 template<int TM, int TN,

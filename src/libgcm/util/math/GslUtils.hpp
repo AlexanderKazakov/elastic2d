@@ -6,7 +6,8 @@
 #include <gsl/gsl_poly.h>
 
 #include <libgcm/util/infrastructure/infrastructure.hpp>
-#include <libgcm/linal/linal.hpp>
+#include <libgcm/linal/Matrix.hpp>
+
 
 namespace gcm {
 namespace gsl_utils {
@@ -159,7 +160,7 @@ solveLinearSystem(
  * \f$   x^3 + p(0) * x^2 + p(1) * x + p(2)   $\f.
  * The first root is unique, the next two can be equal, or all three are equal.
  */
-static Real3 solveThirdOrderPolynomial(const Real3 p) {
+inline linal::Vector<3> solveThirdOrderPolynomial(const linal::Vector<3> p) {
 	double x1 = 0, x2 = 0, x3 = 0;
 	int numberOfRoots = gsl_poly_solve_cubic(p(0), p(1), p(2), &x1, &x2, &x3);
 	

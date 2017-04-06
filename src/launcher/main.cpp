@@ -32,7 +32,8 @@ int main(int argc, char** argv) {
 	else if (taskId == "cubic2d"   ) { task = parseTask2d();     }
 	else if (taskId == "cubic3d"   ) { task = parseTask3d();     }
 	else if (taskId == "acoustic"  ) { task = parseTaskCubicAcoustic(); }
-	else if (taskId == "skull"     ) { task = skullAcoustic(); }
+	else if (taskId == "skullAcs"  ) { task = skullAcoustic(); }
+	else if (taskId == "skullEls"  ) { task = skullElastic(); }
 	else if (taskId == "skullHomo" ) { task = skullAcousticHomogeneous(); }
 	else if (taskId == "contact"   ) { task = parseTaskContact2D(); }
 	else if (taskId == "tmp"       ) { task = parseTaskTmp(); }

@@ -9,26 +9,26 @@ namespace gcm {
 namespace linal {
 
 /** 
- * Solve SLE \f$ \matrix{A} * \vec{x} = \vec{b} \f$ with TNxTN 
- * non-symmetric matrix, TN > 3.
+ * Solve SLE \f$ \matrix{A} * \vec{x} = \vec{b} \f$
+ * with NxN non-symmetric matrix (only for N > 3)
  */
-template<int TN,
+template<int N,
          typename TVectorElement,
          template<int, typename> class TVectorContainer,
          typename TMatrixElement,
          template<int, typename> class TMatrixContainer>
-typename std::enable_if<(TN > 3),
-		MatrixBase<TN, 1,
+typename std::enable_if<(N > 3),
+		MatrixBase<N, 1,
 				typename std::remove_cv<decltype(TVectorElement() / TMatrixElement())>::type,
 				NonSymmetric, TVectorContainer>
 		>::type
-solveLinearSystem(const MatrixBase<TN, TN,
+solveLinearSystem(const MatrixBase<N, N,
                                    TMatrixElement,
-                                   NonSymmetric, TMatrixContainer>& /*A*/,
-                  const MatrixBase<TN, 1,
+                                   NonSymmetric, TMatrixContainer>& A,
+                  const MatrixBase<N, 1,
                                    TVectorElement,
-                                   NonSymmetric, TVectorContainer>& /*b*/) {
-	THROW_UNSUPPORTED("TODO");
+                                   NonSymmetric, TVectorContainer>& b) {
+	return gsl_utils::solveLinearSystem(A, b);
 }
 
 

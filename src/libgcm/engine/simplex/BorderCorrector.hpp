@@ -160,7 +160,9 @@ public:
 						borderCondition.type, nodeBorder.normal, b);
 				
 			} else {
-				THROW_UNSUPPORTED("TODO");
+//				THROW_UNSUPPORTED("TODO");
+				Model::applyPlainBorderCorrection(u,
+						borderCondition.type, nodeBorder.normal, b);
 				
 			}
 		}

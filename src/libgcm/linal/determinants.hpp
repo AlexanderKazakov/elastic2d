@@ -2,6 +2,7 @@
 #define LIBGCM_LINAL_DETERMINANT_HPP
 
 #include <libgcm/linal/Matrix.hpp>
+#include <libgcm/util/math/GslUtils.hpp>
 
 namespace gcm {
 namespace linal {
@@ -59,15 +60,14 @@ inline real determinant(const Matrix33& m) {
 
 
 /**
- * NxN determinant (TODO)
+ * NxN (only for N > 3) determinant for real numbers by GSL library
  */
-template<int TM,
-         typename TElement,
+template<int N,
          typename TSymmetry,
          template<int, typename> class TContainer>
-typename std::enable_if<(TM > 3), TElement>::type
-determinant(const MatrixBase<TM, TM, TElement, TSymmetry, TContainer>& /*m*/) {
-	THROW_UNSUPPORTED("TODO");
+typename std::enable_if<(N > 3), real>::type
+determinant(const MatrixBase<N, N, real, TSymmetry, TContainer>& m) {
+	return gsl_utils::determinant(m);
 }
 
 
