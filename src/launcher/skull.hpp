@@ -23,8 +23,8 @@ inline Task skullCommon() {
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
 //	task.simplexGrid.fileName = "meshes/coarse/ball.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
-	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
-//	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
+//	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
+	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
@@ -33,7 +33,7 @@ inline Task skullCommon() {
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 1;
 	pressure.area = std::make_shared<SphereArea>(1, Real3({0, 7.5, 142}));
-	task.initialCondition.quantities.push_back(pressure);
+//	task.initialCondition.quantities.push_back(pressure);
 	
 	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
 	return task;
