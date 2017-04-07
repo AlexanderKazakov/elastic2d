@@ -163,15 +163,15 @@ inline Task skullAcoustic() {
 }
 
 
-inline Task skull() {
+inline Task skullElastic() {
 	Task task = skullCommon();
 	
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{2, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
-			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+//			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
-			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+//			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 	};
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;

@@ -205,7 +205,7 @@ constructRotated(
 	
 	for (int stage = 0; stage < 3; stage++) {
 		auto& mat = m->m[stage];
-		const auto squaredEigenvalues = GslUtils::solveThirdOrderPolynomial(
+		const auto squaredEigenvalues = gsl_utils::solveThirdOrderPolynomial(
 				constructEigenvaluesPolynomial(m, stage));
 		
 		// s1-waves, s2-waves, p-waves
