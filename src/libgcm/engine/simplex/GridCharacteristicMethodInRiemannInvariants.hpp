@@ -61,26 +61,37 @@ public:
 			const real timeStep, AbstractGrid& mesh_) override {
 		Mesh& mesh = dynamic_cast<Mesh&>(mesh_);
 		
-		/// calculate inner waves of contact nodes
-		for (auto iter = mesh.contactBegin(); iter < mesh.contactEnd(); ++iter) {
-			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
+		auto calculate = [&](const Iterator iter) {
+			const GcmMatrices& gcmMatrices = *mesh.matrices(iter);
 			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(nextPdeLayerIndex, *iter) = interpolateValuesAround(
+			mesh._pdeNew(nextPdeLayerIndex, iter) = interpolateValuesAround(
 					nextPdeLayerIndex,
-					s, mesh, direction, *iter,
-					Base::crossingPoints(*iter, s, timeStep, mesh), false);
-			mesh._waveIndices(*iter) = outerInvariants;
-		}
+					s, mesh, direction, iter,
+					Base::crossingPoints(iter, s, timeStep, mesh), false);
+			
+			if (outerInvariants != Model::RIGHT_INVARIANTS &&
+					outerInvariants != Model::LEFT_INVARIANTS &&
+					outerInvariants.size() != 2 * Model::OUTER_NUMBER &&
+					!outerInvariants.empty()) {
+				if (!Utils::intersection(outerInvariants, Model::RIGHT_INVARIANTS).empty()) {
+					outerInvariants = Utils::summ(outerInvariants, Model::RIGHT_INVARIANTS);
+				}
+				if (!Utils::intersection(outerInvariants, Model::LEFT_INVARIANTS).empty()) {
+					outerInvariants = Utils::summ(outerInvariants, Model::LEFT_INVARIANTS);
+				}
+				for (int i : outerInvariants) {
+					mesh._pdeNew(nextPdeLayerIndex, iter)(i) = 0;
+				}
+			}
+			
+			mesh._waveIndices(iter) = outerInvariants;
+		};
 		
-		/// calculate inner waves of border nodes
+		for (auto iter = mesh.contactBegin(); iter < mesh.contactEnd(); ++iter) {
+			calculate(*iter);
+		}
 		for (auto iter = mesh.borderBegin(); iter < mesh.borderEnd(); ++iter) {
-			const GcmMatrices& gcmMatrices = *mesh.matrices(*iter);
-			const RealD direction = gcmMatrices.basis.getColumn(s);
-			mesh._pdeNew(nextPdeLayerIndex, *iter) = interpolateValuesAround(
-					nextPdeLayerIndex,
-					s, mesh, direction, *iter,
-					Base::crossingPoints(*iter, s, timeStep, mesh), false);
-			mesh._waveIndices(*iter) = outerInvariants;
+			calculate(*iter);
 		}
 	}
 	

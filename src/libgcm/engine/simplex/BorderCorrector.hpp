@@ -155,12 +155,8 @@ public:
 							borderCondition.type, nodeBorder.normal, b);
 				}
 				
-			} else if (outers.empty()) {
-				Model::applyPlainBorderCorrection(u,
-						borderCondition.type, nodeBorder.normal, b);
-				
 			} else {
-//				THROW_UNSUPPORTED("TODO");
+				assert_true(outers.empty());
 				Model::applyPlainBorderCorrection(u,
 						borderCondition.type, nodeBorder.normal, b);
 				

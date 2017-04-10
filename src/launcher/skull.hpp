@@ -6,19 +6,19 @@ using namespace gcm;
 
 inline Task skullCommon() {
 	Task task;
-	task.calculationBasis = {
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1};
+//	task.calculationBasis = {
+//			1, 0, 0,
+//			0, 1, 0,
+//			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.CourantNumber = 1;
-	task.globalSettings.numberOfSnaps = 1000;
-	task.globalSettings.stepsPerSnap = 10;
-//	task.globalSettings.numberOfSnaps = 50;
+//	task.globalSettings.numberOfSnaps = 1000;
 //	task.globalSettings.stepsPerSnap = 10;
+	task.globalSettings.numberOfSnaps = 50;
+	task.globalSettings.stepsPerSnap = 10;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
 	task.simplexGrid.fileName = "meshes/coarse/ball.out";
@@ -158,6 +158,50 @@ inline Task skullAcoustic() {
 		freeBorder,
 		source
 	};
+	
+	return task;
+}
+
+
+inline Task skullElasticHomogeneous() {
+	Task task = skullCommon();
+	task.simplexGrid.fileName = "meshes/coarse/ball_homogeneous.out";
+//	task.simplexGrid.fileName = "meshes/coarse/skull-homogeneous.out";
+	
+	task.bodies = {
+			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+	};
+	
+	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;
+	
+	auto connectiveTissue = std::make_shared<IsotropicMaterial>(0.916,  1.415, 0.236, 0, 0, 1, 1.585);
+	task.materialConditions.byBodies.bodyMaterialMap = {
+			{1, connectiveTissue},
+	};
+	
+	Task::BorderCondition freeBorder;
+	freeBorder.area = std::make_shared<AxisAlignedBoxArea>(
+			Real3({-100, -100, 132}), Real3({100, 100, 1000}));
+	freeBorder.type = BorderConditions::T::FIXED_FORCE;
+	freeBorder.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; },
+		[] (real) { return 0; }
+	};
+	Task::BorderCondition source;
+	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
+	source.type = BorderConditions::T::FIXED_FORCE;
+	source.useForMulticontactNodes = false;
+	real tau = 0.5;
+	real omega = 2 * M_PI / tau;
+	source.values = {
+		[] (real) { return 0; },
+		[] (real) { return 0; },
+		[=] (real t) {
+			t -= 2 * tau;
+			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
+	};
+	task.borderConditions = {freeBorder, source};
 	
 	return task;
 }

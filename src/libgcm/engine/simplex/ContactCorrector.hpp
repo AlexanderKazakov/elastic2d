@@ -142,8 +142,7 @@ public:
 			PdeVariables& uA = meshA->_pdeVarsNew(nextPdeLayerIndex, nodesContact.first);
 			PdeVariables& uB = meshB->_pdeVarsNew(nextPdeLayerIndex, nodesContact.second);
 			
-			if ((outersA == ModelA::RIGHT_INVARIANTS && outersB == ModelB::LEFT_INVARIANTS) ||
-				(outersB == ModelB::RIGHT_INVARIANTS && outersA == ModelA::LEFT_INVARIANTS)) {
+			if (outersA.size() == OUTER_NUMBER && outersB.size() == OUTER_NUMBER) {
 			/// Normal case for contact corrector
 				const auto OmegaA = getColumnsFromGcmMatrices<ModelA>(
 						stage, outersA, meshA->matrices(nodesContact.first));
@@ -198,8 +197,33 @@ public:
 							uB, uA, _condition, nodesContact.normal);
 				}
 				
+			} else if (outersA.size() == 2 * OUTER_NUMBER &&
+			           outersB.size() == 2 * OUTER_NUMBER) {
+			/// Apply correction as average of two possible corrections
+				const auto OmegaA1 = getColumnsFromGcmMatrices<ModelA>(
+						stage, ModelA::RIGHT_INVARIANTS, meshA->matrices(nodesContact.first));
+				const auto OmegaB1 = getColumnsFromGcmMatrices<ModelB>(
+						stage, ModelB::LEFT_INVARIANTS, meshB->matrices(nodesContact.second));
+				const auto correction1 = calculateOuterWaveCorrection(
+						uA, OmegaA1, B1A, B2A,
+						uB, OmegaB1, B1B, B2B);
+				const auto OmegaA2 = getColumnsFromGcmMatrices<ModelA>(
+						stage, ModelA::LEFT_INVARIANTS, meshA->matrices(nodesContact.first));
+				const auto OmegaB2 = getColumnsFromGcmMatrices<ModelB>(
+						stage, ModelB::RIGHT_INVARIANTS, meshB->matrices(nodesContact.second));
+				const auto correction2 = calculateOuterWaveCorrection(
+						uA, OmegaA2, B1A, B2A,
+						uB, OmegaB2, B1B, B2B);
+				if (correction1.isSuccessful && correction2.isSuccessful) {
+					uA += (correction1.valueA + correction2.valueA) / 2;
+					uA += (correction1.valueB + correction2.valueB) / 2;
+				} else {
+					ModelA::applyPlainContactCorrectionAsAverage(
+							uA, uB, _condition, nodesContact.normal);
+				}
+				
 			} else {
-//				THROW_UNSUPPORTED("TODO");
+				assert_true(outersA.empty() && outersB.empty());
 				ModelA::applyPlainContactCorrectionAsAverage(
 						uA, uB, _condition, nodesContact.normal);
 				
@@ -263,6 +287,14 @@ public:
 		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
 		assert_true(meshB);
 		
+		for (const NodesContact& nodesContact : nodesInContact) {
+			matchInnersAndOuters(
+					meshA->_waveIndices(nodesContact.first),
+					meshB->_waveIndices(nodesContact.second),
+					meshA->_pdeNew(nextPdeLayerIndex, nodesContact.first),
+					meshB->_pdeNew(nextPdeLayerIndex, nodesContact.second));
+		}
+		
 		convertToPdeVariables(nextPdeLayerIndex, stage, meshA, meshB, nodesInContact);
 		pdeCorrector.applyInGlobalBasis(nextPdeLayerIndex, stage, a, b, nodesInContact);
 		convertToRiemannInvariants(nextPdeLayerIndex, stage, meshA, meshB, nodesInContact);
@@ -272,6 +304,38 @@ public:
 private:
 	const ContactCorrectorInPdeVectors<ModelA, MaterialA, ModelB, MaterialB,
 			TGrid, ContactMatrixCreator> pdeCorrector;
+	
+	
+	void matchInnersAndOuters(WaveIndices& outersA, WaveIndices& outersB,
+			PdeVector& a, PdeVector& b) const {
+		const size_t N = (outersA.size() + outersB.size()) / OUTER_NUMBER;
+		if (N % 2 == 0) {
+			return;
+		} else if (N == 3) {
+			outersA = outersB = Utils::summ(
+					ModelA::LEFT_INVARIANTS, ModelA::RIGHT_INVARIANTS);
+		} else { 
+			assert_eq(1, N);
+			if (outersA.empty()) {
+				if (outersB == ModelB::LEFT_INVARIANTS) {
+					outersA = ModelA::RIGHT_INVARIANTS;
+				} else {
+					assert_true(outersB == ModelB::RIGHT_INVARIANTS);
+					outersA = ModelA::LEFT_INVARIANTS;
+				}
+			} else {
+				assert_true(outersB.empty());
+				if (outersA == ModelA::LEFT_INVARIANTS) {
+					outersB = ModelB::RIGHT_INVARIANTS;
+				} else {
+					assert_true(outersA == ModelA::RIGHT_INVARIANTS);
+					outersB = ModelB::LEFT_INVARIANTS;
+				}
+			}
+		}
+		for (int i : outersA) { a(i) = 0; }
+		for (int i : outersB) { b(i) = 0; }
+	}
 	
 	
 	void convertToPdeVariables(const int nextPdeLayerIndex, const int stage,

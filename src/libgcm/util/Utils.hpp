@@ -128,6 +128,33 @@ public:
 		return (size_t)(p.first - begin);
 	}
 	
+	
+	/// @group Logical operations on SORTED ranges @{
+	template<typename T>
+	static T difference(const T& a, const T& b) {
+		T ans;
+		std::set_difference(a.begin(), a.end(), b.begin(), b.end(),
+				std::inserter(ans, ans.begin()));
+		return ans;
+	}
+	
+	template<typename T>
+	static T summ(const T& a, const T& b) {
+		T ans;
+		std::set_union(a.begin(), a.end(), b.begin(), b.end(),
+				std::inserter(ans, ans.begin()));
+		return ans;
+	}
+	
+	template<typename T>
+	static T intersection(const T& a, const T& b) {
+		T ans;
+		std::set_intersection(a.begin(), a.end(), b.begin(), b.end(),
+				std::inserter(ans, ans.begin()));
+		return ans;
+	}
+	/// @}
+	
 };
 
 

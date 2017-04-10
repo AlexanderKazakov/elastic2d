@@ -267,11 +267,7 @@ private:
 		while (!allCells.empty()) {
 			ConnectedCellsSet newSet(vh, *allCells.begin());
 			ans.insert(newSet);
-			std::set<CellHandle> difference; // == allCells \ newSet
-			std::set_difference(allCells.begin(), allCells.end(),
-					newSet.set.begin(), newSet.set.end(),
-					std::inserter(difference, difference.begin()));
-			allCells = difference;
+			allCells = Utils::difference(allCells, newSet.set);
 		}
 		return ans;
 	}
