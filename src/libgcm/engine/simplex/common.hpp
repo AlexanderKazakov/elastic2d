@@ -168,8 +168,9 @@ typename Model::OuterMatrix getColumnsFromGcmMatrices(
 /** Result of calculateOuterWaveCorrection for border nodes */
 template<typename PdeVector>
 struct CorrectionResultBorder {
-	bool isSuccessful;
-	PdeVector value;
+	real determinantFabs = 0;
+	bool isSuccessful = false;
+	PdeVector value = PdeVector::Zeros();
 };
 
 /**
@@ -185,21 +186,26 @@ template<typename PdeVector,
 		typename MatrixOmega, typename MatrixB, typename VectorB>
 CorrectionResultBorder<PdeVector>
 calculateOuterWaveCorrection(const PdeVector& u,
-		const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
+		const MatrixOmega& Omega, const MatrixB& B, const VectorB& b,
+		const real minimalValidDeterminantFabs) {
 	const auto M = B * Omega;
-	// TODO - here should be more consistent degeneracy conditions
-//	if (linal::determinant(M) == 0) {
-	if (std::fabs(linal::determinant(M)) < 0.1) {
-		return { false, PdeVector::Zeros() };
+	CorrectionResultBorder<PdeVector> ans;
+	ans.determinantFabs = std::fabs(linal::determinant(M));
+	ans.isSuccessful = ans.determinantFabs > minimalValidDeterminantFabs;
+	if (ans.isSuccessful) {
+		const auto alpha = linal::solveLinearSystem(M, b - B * u);
+		ans.value = static_cast<PdeVector&&>(Omega * alpha);
+	} else {
+		ans.value = static_cast<PdeVector&&>(PdeVector::Zeros());
 	}
-	const auto alpha = linal::solveLinearSystem(M, b - B * u);
-	return { true, Omega * alpha };
+	return ans;
 }
 
 
 /** Result of calculateOuterWaveCorrection for contact nodes */
 template<typename PdeVector>
 struct CorrectionResultContact {
+	real determinantFabs1 = 0, determinantFabs2 = 0;
 	bool isSuccessful;
 	PdeVector valueA, valueB;
 };
@@ -220,26 +226,37 @@ calculateOuterWaveCorrection(
 		const PdeVector& uA,
 		const MatrixOmega& OmegaA, const MatrixB& B1A, const MatrixB& B2A,
 		const PdeVector& uB,
-		const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
+		const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B,
+		const real minimalValidDeterminantFabs1,
+		const real minimalValidDeterminantFabs2) {
 	const auto R1 = B1A * OmegaA;
-//	if (linal::determinant(R1) == 0) {
-	if (std::fabs(linal::determinant(R1)) < 0.1) {
-		return { false, PdeVector::Zeros(), PdeVector::Zeros() };
+	CorrectionResultContact<PdeVector> ans;
+	ans.determinantFabs1 = std::fabs(linal::determinant(R1));
+	ans.isSuccessful = ans.determinantFabs1 > minimalValidDeterminantFabs1;
+	if (!ans.isSuccessful) {
+		ans.valueA = static_cast<PdeVector&&>(PdeVector::Zeros());
+		ans.valueB = static_cast<PdeVector&&>(PdeVector::Zeros());
+		return ans;
 	}
+	
 	const auto R = linal::invert(R1);
 	const auto p = R * (B1B * uB - B1A * uA);
 	const auto Q = R * (B1B * OmegaB);
-	
 	const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
 	const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
-//	if (linal::determinant(A) == 0) {
-	if (std::fabs(linal::determinant(A)) < 0.1) {
-		return { false, PdeVector::Zeros(), PdeVector::Zeros() };
+	ans.determinantFabs2 = std::fabs(linal::determinant(A));
+	ans.isSuccessful = ans.determinantFabs2 > minimalValidDeterminantFabs2;
+	if (!ans.isSuccessful) {
+		ans.valueA = static_cast<PdeVector&&>(PdeVector::Zeros());
+		ans.valueB = static_cast<PdeVector&&>(PdeVector::Zeros());
+		return ans;
 	}
 	
 	const auto alphaB = linal::solveLinearSystem(A, f);
 	const auto alphaA = p + Q * alphaB;
-	return { true, OmegaA * alphaA, OmegaB * alphaB };
+	ans.valueA = static_cast<PdeVector&&>(OmegaA * alphaA);
+	ans.valueB = static_cast<PdeVector&&>(OmegaB * alphaB);
+	return ans;
 }
 
 

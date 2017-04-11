@@ -103,8 +103,7 @@ public:
 			const auto B = BorderMatrixCreator::create(nodeBorder.normal);
 			
 			PdeVector& u = mesh->_pdeNew(stage, nodeBorder.iterator);
-			const auto correction =
-					calculateOuterWaveCorrection(u, Omega, B, b);
+			const auto correction = calculateOuterWaveCorrection(u, Omega, B, b, 0);
 			assert_true(correction.isSuccessful);
 			u += correction.value;
 		}
@@ -116,9 +115,14 @@ public:
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
 			const real timeAtNextLayer) const override {
+		if (borderNodes.empty()) { return; }
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
 		assert_true(mesh);
+		
 		const auto b = borderCondition.b(timeAtNextLayer);
+		static constexpr real EPS = 0.2;
+		const real minValidDeterminantFabs = EPS * getMaximalPossibleDeterminant(
+				*mesh, borderNodes.front(), stage);
 		
 		for (const NodeBorder& nodeBorder: borderNodes) {
 			const WaveIndices outers = mesh->waveIndices(nodeBorder.iterator);
@@ -129,8 +133,8 @@ public:
 			/// Normal case for border corrector
 				const auto Omega = getColumnsFromGcmMatrices<Model>(
 						stage, outers, mesh->matrices(nodeBorder.iterator));
-				const auto correction =
-						calculateOuterWaveCorrection(u, Omega, B, b);
+				const auto correction = calculateOuterWaveCorrection(
+						u, Omega, B, b, minValidDeterminantFabs);
 				if (correction.isSuccessful) {
 					u += correction.value;
 				} else {
@@ -144,10 +148,10 @@ public:
 						stage, Model::RIGHT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
 				const auto OmegaL = getColumnsFromGcmMatrices<Model>(
 						stage, Model::LEFT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
-				const auto correctionR =
-						calculateOuterWaveCorrection(u, OmegaR, B, b);
-				const auto correctionL =
-						calculateOuterWaveCorrection(u, OmegaL, B, b);
+				const auto correctionR = calculateOuterWaveCorrection(
+						u, OmegaR, B, b, minValidDeterminantFabs);
+				const auto correctionL = calculateOuterWaveCorrection(
+						u, OmegaL, B, b, minValidDeterminantFabs);
 				if (correctionR.isSuccessful && correctionL.isSuccessful) {
 					u += (correctionR.value + correctionL.value) / 2;
 				} else {
@@ -167,6 +171,21 @@ public:
 	
 private:
 	const BorderCondition<Model> borderCondition;
+	
+	real getMaximalPossibleDeterminant(
+			const Mesh& mesh, const NodeBorder& node, const int s) const {
+		auto matrix = mesh.matrices(node.iterator);
+		const auto Omega = getColumnsFromGcmMatrices<Model>(
+				s, Model::RIGHT_INVARIANTS, matrix);
+		/// maximal determinant appears when calculation direction is equal to normal
+		const auto B = BorderMatrixCreator::create(matrix->basis.getColumn(s));
+		const auto b = borderCondition.b(0);
+		PdeVector tmp;
+		auto correction = calculateOuterWaveCorrection(tmp, Omega, B, b, 0);
+		assert_true(correction.isSuccessful);
+		assert_gt(correction.determinantFabs, 0);
+		return correction.determinantFabs;
+	}
 };
 
 

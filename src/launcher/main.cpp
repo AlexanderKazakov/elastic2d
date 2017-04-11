@@ -542,12 +542,10 @@ inline Task parseTaskTmp() {
 
 Task parseTaskCube() {
 	Task task;
-	task.calculationBasis = {
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1};
-//	linal::createLocalBasis(linal::normalize(Real3({1, 1, 1})));
-//	task.calculationBasis = 
+//	task.calculationBasis = {
+//			1, 0, 0,
+//			0, 1, 0,
+//			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;

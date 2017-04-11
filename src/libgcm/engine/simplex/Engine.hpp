@@ -79,8 +79,9 @@ protected:
 		/// minimal among all bodies
 		real minimalTimeStep = std::numeric_limits<real>::max();
 		for (const Body& body : bodies) {
-			real h = (body.mesh->getAverageHeight() +
-			          body.mesh->getMinimalHeight()) / 2;
+//			real h = (body.mesh->getAverageHeight() +
+//			          body.mesh->getMinimalHeight()) / 2;
+			real h = body.mesh->getAverageHeight();
 			real bodyTimeStep = CourantNumber * h /
 					body.mesh->getMaximalEigenvalue();
 			if (bodyTimeStep < minimalTimeStep) {
