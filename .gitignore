@@ -1,4 +1,6 @@
 *.vtu
+*.swp
+*.pyc
 *.gch
 *.vts
 *.vtk
