@@ -65,6 +65,16 @@ public:
 			std::shared_ptr<AbstractMesh<TGrid>> grid,
 			std::list<NodeBorder> borderNodes,
 			const real timeAtNextLayer) const = 0;
+	
+	/**
+	 * Just set the values in nodes to those ones they should have 
+	 * from boundary conditions. Used in order to establish 
+	 * compatibility of initial and boundary conditions.
+	 */
+	virtual void applyPlainCorrection(
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real currentTime) const = 0;
 };
 
 
@@ -120,7 +130,7 @@ public:
 		assert_true(mesh);
 		
 		const auto b = borderCondition.b(timeAtNextLayer);
-		static constexpr real EPS = 0.2;
+		static constexpr real EPS = 1e-13; //EQUALITY_TOLERANCE;
 		const real minValidDeterminantFabs = EPS * getMaximalPossibleDeterminant(
 				*mesh, borderNodes.front(), stage);
 		
@@ -165,6 +175,20 @@ public:
 						borderCondition.type, nodeBorder.normal, b);
 				
 			}
+		}
+	}
+	
+	virtual void applyPlainCorrection(
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real currentTime) const override {
+		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(grid);
+		assert_true(mesh);
+		const auto b = borderCondition.b(currentTime);
+		for (const NodeBorder& nodeBorder: borderNodes) {
+			PdeVariables& u = mesh->_pdeVars(nodeBorder.iterator);
+			Model::applyPlainBorderCorrection(u,
+					borderCondition.type, nodeBorder.normal, b);
 		}
 	}
 	
@@ -232,6 +256,14 @@ public:
 		pdeCorrector.applyInGlobalBasis(
 				nextPdeLayerIndex, stage, grid, borderNodes, timeAtNextLayer);
 		convertToRiemannInvariants(nextPdeLayerIndex, stage, mesh, borderNodes);
+	}
+	
+	virtual void applyPlainCorrection(
+			std::shared_ptr<AbstractMesh<TGrid>> grid,
+			std::list<NodeBorder> borderNodes,
+			const real currentTime) const override {
+		/// @note PDE/Riemann convertion is not performed!
+		pdeCorrector.applyPlainCorrection(grid, borderNodes, currentTime);
 	}
 	
 	

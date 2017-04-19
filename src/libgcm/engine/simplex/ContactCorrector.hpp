@@ -63,6 +63,16 @@ public:
 			std::shared_ptr<AbstractMesh<TGrid>> a,
 			std::shared_ptr<AbstractMesh<TGrid>> b,
 			std::list<NodesContact> nodesInContact) const = 0;
+	
+	/**
+	 * Just set the values in nodes to those ones they should have 
+	 * from contact conditions. Used in order to establish 
+	 * compatibility of initial and boundary conditions.
+	 */
+	virtual void applyPlainCorrection(
+			std::shared_ptr<AbstractMesh<TGrid>> a,
+			std::shared_ptr<AbstractMesh<TGrid>> b,
+			std::list<NodesContact> nodesInContact) const = 0;
 };
 
 
@@ -132,7 +142,7 @@ public:
 		assert_true(meshA);
 		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
 		assert_true(meshB);
-		static constexpr real EPS = 0.2;
+		static constexpr real EPS = 1e-13; //EQUALITY_TOLERANCE;
 		
 		const std::pair<real, real> maxDets = getMaximalPossibleDeterminants(
 				*meshA, *meshB, nodesInContact.front(), stage);
@@ -246,6 +256,22 @@ public:
 		}
 	}
 	
+	virtual void applyPlainCorrection(
+			std::shared_ptr<AbstractMesh<TGrid>> a,
+			std::shared_ptr<AbstractMesh<TGrid>> b,
+			std::list<NodesContact> nodesInContact) const override {
+		std::shared_ptr<MeshA> meshA = std::dynamic_pointer_cast<MeshA>(a);
+		assert_true(meshA);
+		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
+		assert_true(meshB);
+		for (const NodesContact& nodesContact : nodesInContact) {
+			PdeVariables& uA = meshA->_pdeVars(nodesContact.first);
+			PdeVariables& uB = meshB->_pdeVars(nodesContact.second);
+			ModelA::applyPlainContactCorrectionAsAverage(
+					uA, uB, _condition, nodesContact.normal);
+		}
+	}
+	
 	
 private:
 	const ContactConditions::T _condition;
@@ -342,6 +368,14 @@ public:
 		convertToPdeVariables(nextPdeLayerIndex, stage, meshA, meshB, nodesInContact);
 		pdeCorrector.applyInGlobalBasis(nextPdeLayerIndex, stage, a, b, nodesInContact);
 		convertToRiemannInvariants(nextPdeLayerIndex, stage, meshA, meshB, nodesInContact);
+	}
+	
+	virtual void applyPlainCorrection(
+			std::shared_ptr<AbstractMesh<TGrid>> a,
+			std::shared_ptr<AbstractMesh<TGrid>> b,
+			std::list<NodesContact> nodesInContact) const override {
+		/// @note PDE/Riemann convertion is not performed!
+		pdeCorrector.applyPlainCorrection(a, b, nodesInContact);
 	}
 	
 	

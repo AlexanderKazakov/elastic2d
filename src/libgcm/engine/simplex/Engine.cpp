@@ -33,7 +33,6 @@ Engine(const Task& task) :
 				<< contact.first.second << " number of contact nodes = "
 				<< contact.second.nodesInContact.size());
 	}
-	
 	LOG_INFO("Found borders (except non-reflection cases):");
 	for (const Body& body : bodies) {
 		for (size_t i = 0; i < body.borders.size(); i++) {
@@ -43,6 +42,7 @@ Engine(const Task& task) :
 					<< body.borders[i].borderNodes.size());
 		}
 	}
+	applyPlainBorderContactCorrection(Clock::Time());
 	
 	afterConstruction(task);
 }
@@ -186,6 +186,28 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 			
 		default:
 			THROW_BAD_CONFIG("Unknown border calculation mode");
+	}
+}
+
+
+template<int Dimensionality,
+         template<int, typename, typename> class TriangulationT>
+void Engine<Dimensionality, TriangulationT>::
+applyPlainBorderContactCorrection(const real currentTime) {
+/// Establish compatibility between initial and boundary conditions
+	for (const auto& contact : contacts) {
+		contact.second.contactCorrector->applyPlainCorrection(
+				getBody(contact.first.first).mesh,
+				getBody(contact.first.second).mesh,
+				contact.second.nodesInContact);
+	}
+	for (const Body& body : bodies) {
+		for (const Border& border : body.borders) {
+			border.borderCorrector->applyPlainCorrection(
+					body.mesh,
+					border.borderNodes,
+					currentTime);
+		}
 	}
 }
 
