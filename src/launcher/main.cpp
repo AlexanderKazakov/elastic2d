@@ -17,7 +17,7 @@ Task parseTask3d();
 Task parseTaskCubicAcoustic();
 Task parseTaskContact2D();
 Task parseTaskTmp();
-Task parseTaskCube();
+Task parseTaskCube(const bool acs);
 
 int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
@@ -34,10 +34,12 @@ int main(int argc, char** argv) {
 	else if (taskId == "acoustic"  ) { task = parseTaskCubicAcoustic(); }
 	else if (taskId == "skullAcs"  ) { task = skullAcoustic(); }
 	else if (taskId == "skullEls"  ) { task = skullElastic(); }
-	else if (taskId == "skullHomo" ) { task = skullElasticHomogeneous(); }
+	else if (taskId == "skullAcsH" ) { task = skullAcousticHomogeneous(); }
+	else if (taskId == "skullElsH" ) { task = skullElasticHomogeneous(); }
 	else if (taskId == "contact"   ) { task = parseTaskContact2D(); }
 	else if (taskId == "tmp"       ) { task = parseTaskTmp(); }
-	else if (taskId == "cube"      ) { task = parseTaskCube(); }
+	else if (taskId == "cubeAcs"   ) { task = parseTaskCube(true); }
+	else if (taskId == "cubeEls"   ) { task = parseTaskCube(false); }
 	else if (taskId == "ndi"       ) { task = ndi(); }
 	else if (taskId == "tor"       ) { task = torAcoustic(); }
 	else if (taskId == "titan"     ) { task = titan(); }
@@ -540,18 +542,22 @@ inline Task parseTaskTmp() {
 
 
 
-Task parseTaskCube() {
+Task parseTaskCube(const bool acs) {
 	Task task;
-//	task.calculationBasis = {
-//			1, 0, 0,
-//			0, 1, 0,
-//			0, 0, 1};
+	task.calculationBasis = {
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = {Snapshotters::T::VTK};
-	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
-//	task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
+	
+	if (acs) {
+		task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}}};
+	} else {
+		task.bodies = {{0, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}}};
+	}
 	
 	const int N = 2;
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::CGAL_MESHER;
@@ -562,6 +568,7 @@ Task parseTaskCube() {
 	real rho = 4;
 	real lambda = 2;
 	real mu = 1;
+	if (acs) { lambda = lambda + 2 * mu; mu = 0; }
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
 	const auto material = std::make_shared<IsotropicMaterial>(rho, lambda, mu, 1, 1);
 	task.materialConditions.byBodies.bodyMaterialMap = {
@@ -581,31 +588,43 @@ Task parseTaskCube() {
 	Task::BorderCondition borderConditionAll;
 	borderConditionAll.area = std::make_shared<InfiniteArea>();
 	borderConditionAll.type = BorderConditions::T::FIXED_FORCE;
-	borderConditionAll.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
-	};
+	if (acs) {
+		borderConditionAll.values = {
+			[] (real) { return 0; },
+		};
+	} else {
+		borderConditionAll.values = {
+			[] (real) { return 0; },
+			[] (real) { return 0; },
+			[] (real) { return 0; }
+		};
+	}
 	
 	Task::BorderCondition borderConditionLeft;
 	borderConditionLeft.area = std::make_shared<AxisAlignedBoxArea>(
 			Real3({-10, -10, -10}), Real3({0.01, 10, 10}));
 	borderConditionLeft.type = BorderConditions::T::FIXED_FORCE;
-	borderConditionLeft.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real t) { return (t < 0.5) ? -1 : 0; }
-	};
+	if (acs) {
+		borderConditionLeft.values = {
+			[] (real t) { return (t < 0.25) ? 1 : 0; }
+		};
+	} else {
+		borderConditionLeft.values = {
+			[] (real) { return 0; },
+			[] (real) { return 0; },
+			[] (real t) { return (t < 0.25) ? -1 : 0; }
+		};
+	}
 	
-	Task::BorderCondition borderConditionRight;
-	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
-			Real3({0.99, -10, -10}), Real3({10, 10, 10}));
-	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
-	borderConditionRight.values = {
-		[] (real) { return 0; },
-		[] (real) { return 0; },
-		[] (real) { return 0; }
-	};
+//	Task::BorderCondition borderConditionRight;
+//	borderConditionRight.area = std::make_shared<AxisAlignedBoxArea>(
+//			Real3({0.99, -10, -10}), Real3({10, 10, 10}));
+//	borderConditionRight.type = BorderConditions::T::FIXED_VELOCITY;
+//	borderConditionRight.values = {
+//		[] (real) { return 0; },
+//		[] (real) { return 0; },
+//		[] (real) { return 0; }
+//	};
 	
 	task.borderConditions = {borderConditionAll,
 	                         borderConditionLeft,

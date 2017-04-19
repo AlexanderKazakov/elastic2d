@@ -142,7 +142,7 @@ public:
 		assert_true(meshA);
 		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
 		assert_true(meshB);
-		static constexpr real EPS = 1e-13; //EQUALITY_TOLERANCE;
+		static constexpr real EPS = 0; //1e-13;
 		
 		const std::pair<real, real> maxDets = getMaximalPossibleDeterminants(
 				*meshA, *meshB, nodesInContact.front(), stage);
@@ -218,8 +218,7 @@ public:
 							uB, uA, _condition, nodesContact.normal);
 				}
 				
-			} else if (outersA.size() == 2 * OUTER_NUMBER &&
-			           outersB.size() == 2 * OUTER_NUMBER) {
+			} else {
 			/// Apply correction as average of two possible corrections
 				const auto OmegaA1 = getColumnsFromGcmMatrices<ModelA>(
 						stage, ModelA::RIGHT_INVARIANTS, meshA->matrices(nodesContact.first));
@@ -246,11 +245,6 @@ public:
 					ModelA::applyPlainContactCorrectionAsAverage(
 							uA, uB, _condition, nodesContact.normal);
 				}
-				
-			} else {
-				assert_true(outersA.empty() && outersB.empty());
-				ModelA::applyPlainContactCorrectionAsAverage(
-						uA, uB, _condition, nodesContact.normal);
 				
 			}
 		}
@@ -411,8 +405,8 @@ private:
 				}
 			}
 		}
-		for (int i : outersA) { a(i) = 0; }
-		for (int i : outersB) { b(i) = 0; }
+//		for (int i : outersA) { a(i) = 0; }
+//		for (int i : outersB) { b(i) = 0; }
 	}
 	
 	

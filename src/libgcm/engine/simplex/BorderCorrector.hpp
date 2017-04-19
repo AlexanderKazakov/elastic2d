@@ -130,7 +130,7 @@ public:
 		assert_true(mesh);
 		
 		const auto b = borderCondition.b(timeAtNextLayer);
-		static constexpr real EPS = 1e-13; //EQUALITY_TOLERANCE;
+		static constexpr real EPS = 0; //1e-13;
 		const real minValidDeterminantFabs = EPS * getMaximalPossibleDeterminant(
 				*mesh, borderNodes.front(), stage);
 		
@@ -152,8 +152,9 @@ public:
 							borderCondition.type, nodeBorder.normal, b);
 				}
 				
-			} else if (outers.size() == 2 * OUTER_NUMBER) {
-			/// Double-outer case: apply correction as average from both sides
+			} else {
+			/// Double-outer case or fully inner case:
+			/// apply correction as average from both sides
 				const auto OmegaR = getColumnsFromGcmMatrices<Model>(
 						stage, Model::RIGHT_INVARIANTS, mesh->matrices(nodeBorder.iterator));
 				const auto OmegaL = getColumnsFromGcmMatrices<Model>(
@@ -168,12 +169,6 @@ public:
 					Model::applyPlainBorderCorrection(u,
 							borderCondition.type, nodeBorder.normal, b);
 				}
-				
-			} else {
-				assert_true(outers.empty());
-				Model::applyPlainBorderCorrection(u,
-						borderCondition.type, nodeBorder.normal, b);
-				
 			}
 		}
 	}

@@ -97,6 +97,7 @@ void Engine<Dimensionality, TriangulationT>::
 nextTimeStep() {
 	changeCalculationBasis();
 	
+	applyPlainBorderContactCorrection(Clock::Time() + Clock::TimeStep());
 	for (int stage = 0; stage < Dimensionality; stage++) {
 		gcmStage(stage, Clock::Time(), Clock::TimeStep());
 	}
@@ -193,8 +194,9 @@ correctContactsAndBorders(const int stage, const real timeAtNextLayer) {
 template<int Dimensionality,
          template<int, typename, typename> class TriangulationT>
 void Engine<Dimensionality, TriangulationT>::
-applyPlainBorderContactCorrection(const real currentTime) {
-/// Establish compatibility between initial and boundary conditions
+applyPlainBorderContactCorrection(const real timeForBorderCondition) {
+/// Just set some values in border and contact nodes to the values they should
+/// have according to border and contact conditions
 	for (const auto& contact : contacts) {
 		contact.second.contactCorrector->applyPlainCorrection(
 				getBody(contact.first.first).mesh,
@@ -206,7 +208,7 @@ applyPlainBorderContactCorrection(const real currentTime) {
 			border.borderCorrector->applyPlainCorrection(
 					body.mesh,
 					border.borderNodes,
-					currentTime);
+					timeForBorderCondition);
 		}
 	}
 }
