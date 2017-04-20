@@ -124,7 +124,8 @@ public:
 			
 			const auto correction = calculateOuterWaveCorrection(
 					uA, OmegaA, B1A, B2A,
-					uB, OmegaB, B1B, B2B);
+					uB, OmegaB, B1B, B2B, 0, 0);
+			assert_true(correction.isSuccessful);
 			uA += correction.valueA;
 			uB += correction.valueB;
 		}
@@ -141,6 +142,12 @@ public:
 		assert_true(meshA);
 		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
 		assert_true(meshB);
+		static constexpr real EPS = 0; //1e-13;
+		
+		const std::pair<real, real> maxDets = getMaximalPossibleDeterminants(
+				*meshA, *meshB, nodesInContact.front(), stage);
+		const real minValidDeterminantFabs1 = EPS * maxDets.first;
+		const real minValidDeterminantFabs2 = EPS * maxDets.second;
 		
 		for (const NodesContact& nodesContact : nodesInContact) {
 			const WaveIndices outersA = meshA->waveIndices(nodesContact.first);
@@ -160,31 +167,56 @@ public:
 						stage, outersB, meshB->matrices(nodesContact.second));
 				const auto correction = calculateOuterWaveCorrection(
 						uA, OmegaA, B1A, B2A,
-						uB, OmegaB, B1B, B2B);
-				uA += correction.valueA;
-				uB += correction.valueB;
+						uB, OmegaB, B1B, B2B,
+						minValidDeterminantFabs1,
+						minValidDeterminantFabs2);
+				if (correction.isSuccessful) {
+					uA += correction.valueA;
+					uB += correction.valueB;
+				} else {
+					ModelA::applyPlainContactCorrectionAsAverage(
+							uA, uB, _condition, nodesContact.normal);
+				}
 				
 			} else if (outersA.size() == 2 * OUTER_NUMBER && outersB.empty()) {
 			/// Calculate node A as border with two border conditions
 				const auto B = linal::concatenateVertically(B1A, B2A);
-				const auto bB = linal::concatenateVertically(B1B * uB, B2B * uB);
+				const auto b1 = B1B * uB;
+				const auto b2 = B2B * uB;
+				const auto b12 = linal::concatenateVertically(b1, b2);
 				const auto OmegaA = linal::concatenateHorizontally(
 						getColumnsFromGcmMatrices<ModelA>(stage,
 						ModelA::RIGHT_INVARIANTS, meshA->matrices(nodesContact.first)),
 						getColumnsFromGcmMatrices<ModelA>(stage,
 						ModelA::LEFT_INVARIANTS,  meshA->matrices(nodesContact.first)));
-				uA += calculateOuterWaveCorrection(uA, OmegaA, B, bB).value;
+				const auto correction = calculateOuterWaveCorrection(
+						uA, OmegaA, B, b12, minValidDeterminantFabs1);
+				if (correction.isSuccessful) {
+					uA += correction.value;
+				} else {
+					ModelA::applyPlainContactCorrection(
+							uA, uB, _condition, nodesContact.normal);
+				}
 				
 			} else if (outersB.size() == 2 * OUTER_NUMBER && outersA.empty()) {
 			/// Calculate node B as border with two border conditions
 				const auto B = linal::concatenateVertically(B1B, B2B);
-				const auto bA = linal::concatenateVertically(B1A * uA, B2A * uA);
+				const auto b1 = B1A * uA;
+				const auto b2 = B2A * uA;
+				const auto b12 = linal::concatenateVertically(b1, b2);
 				const auto OmegaB = linal::concatenateHorizontally(
 						getColumnsFromGcmMatrices<ModelB>(stage,
 						ModelB::RIGHT_INVARIANTS, meshB->matrices(nodesContact.second)),
 						getColumnsFromGcmMatrices<ModelB>(stage,
 						ModelB::LEFT_INVARIANTS,  meshB->matrices(nodesContact.second)));
-				uB += calculateOuterWaveCorrection(uB, OmegaB, B, bA).value;
+				const auto correction = calculateOuterWaveCorrection(
+						uB, OmegaB, B, b12, minValidDeterminantFabs1);
+				if (correction.isSuccessful) {
+					uB += correction.value;
+				} else {
+					ModelB::applyPlainContactCorrection(
+							uB, uA, _condition, nodesContact.normal);
+				}
 				
 			} else {
 			/// Apply correction as average of two possible corrections
@@ -194,16 +226,25 @@ public:
 						stage, ModelB::LEFT_INVARIANTS, meshB->matrices(nodesContact.second));
 				const auto correction1 = calculateOuterWaveCorrection(
 						uA, OmegaA1, B1A, B2A,
-						uB, OmegaB1, B1B, B2B);
+						uB, OmegaB1, B1B, B2B,
+						minValidDeterminantFabs1,
+						minValidDeterminantFabs2);
 				const auto OmegaA2 = getColumnsFromGcmMatrices<ModelA>(
 						stage, ModelA::LEFT_INVARIANTS, meshA->matrices(nodesContact.first));
 				const auto OmegaB2 = getColumnsFromGcmMatrices<ModelB>(
 						stage, ModelB::RIGHT_INVARIANTS, meshB->matrices(nodesContact.second));
 				const auto correction2 = calculateOuterWaveCorrection(
 						uA, OmegaA2, B1A, B2A,
-						uB, OmegaB2, B1B, B2B);
-				uA += (correction1.valueA + correction2.valueA) / 2;
-				uB += (correction1.valueB + correction2.valueB) / 2;
+						uB, OmegaB2, B1B, B2B,
+						minValidDeterminantFabs1,
+						minValidDeterminantFabs2);
+				if (correction1.isSuccessful && correction2.isSuccessful) {
+					uA += (correction1.valueA + correction2.valueA) / 2;
+					uB += (correction1.valueB + correction2.valueB) / 2;
+				} else {
+					ModelA::applyPlainContactCorrectionAsAverage(
+							uA, uB, _condition, nodesContact.normal);
+				}
 				
 			}
 		}
@@ -228,6 +269,35 @@ public:
 	
 private:
 	const ContactConditions::T _condition;
+	
+	std::pair<real, real> getMaximalPossibleDeterminants(
+			const MeshA& meshA, const MeshB& meshB,
+			const NodesContact& nodes, const int s) const {
+		const auto matrixA = meshA.matrices(nodes.first);
+		const auto matrixB = meshB.matrices(nodes.second);
+		const auto directionA = matrixA->basis.getColumn(s);
+		assert_true(directionA == matrixB->basis.getColumn(s));
+		
+		const auto OmegaA = getColumnsFromGcmMatrices<ModelA>(
+				s, ModelA::LEFT_INVARIANTS, matrixA);
+		const auto OmegaB = getColumnsFromGcmMatrices<ModelB>(
+				s, ModelB::RIGHT_INVARIANTS, matrixB);
+		
+		/// maximal determinant appears when calculation direction is equal to normal
+		const auto B1A = ContactMatrixCreator::createB1A(directionA);
+		const auto B1B = ContactMatrixCreator::createB1B(directionA);
+		const auto B2A = ContactMatrixCreator::createB2A(directionA);
+		const auto B2B = ContactMatrixCreator::createB2B(directionA);
+		
+		PdeVector tmpA, tmpB;
+		const auto correction = calculateOuterWaveCorrection(
+				tmpA, OmegaA, B1A, B2A,
+				tmpB, OmegaB, B1B, B2B, 0, 0);
+		assert_true(correction.isSuccessful);
+		assert_gt(correction.determinantFabs1, 0);
+		assert_gt(correction.determinantFabs2, 0);
+		return {correction.determinantFabs1, correction.determinantFabs2};
+	}
 };
 
 
@@ -309,7 +379,7 @@ private:
 	
 	
 	void matchInnersAndOuters(WaveIndices& outersA, WaveIndices& outersB,
-			PdeVector& /*a*/, PdeVector& /*b*/) const {
+			PdeVector& a, PdeVector& b) const {
 		const size_t N = (outersA.size() + outersB.size()) / OUTER_NUMBER;
 		if (N % 2 == 0) {
 			return;
