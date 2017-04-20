@@ -169,7 +169,6 @@ typename Model::OuterMatrix getColumnsFromGcmMatrices(
 template<typename PdeVector>
 struct CorrectionResultBorder {
 	real determinantFabs = 0;
-	bool isSuccessful = false;
 	PdeVector value = PdeVector::Zeros();
 };
 
@@ -186,13 +185,11 @@ template<typename PdeVector,
 		typename MatrixOmega, typename MatrixB, typename VectorB>
 CorrectionResultBorder<PdeVector>
 calculateOuterWaveCorrection(const PdeVector& u,
-		const MatrixOmega& Omega, const MatrixB& B, const VectorB& b,
-		const real minimalValidDeterminantFabs) {
+		const MatrixOmega& Omega, const MatrixB& B, const VectorB& b) {
 	const auto M = B * Omega;
 	CorrectionResultBorder<PdeVector> ans;
 	ans.determinantFabs = std::fabs(linal::determinant(M));
-	ans.isSuccessful = ans.determinantFabs > minimalValidDeterminantFabs;
-	if (ans.isSuccessful) {
+	if (ans.determinantFabs != 0) {
 		const auto alpha = linal::solveLinearSystem(M, b - B * u);
 		ans.value = static_cast<PdeVector&&>(Omega * alpha);
 	} else {
@@ -206,8 +203,7 @@ calculateOuterWaveCorrection(const PdeVector& u,
 template<typename PdeVector>
 struct CorrectionResultContact {
 	real determinantFabs1 = 0, determinantFabs2 = 0;
-	bool isSuccessful;
-	PdeVector valueA, valueB;
+	PdeVector valueA = PdeVector::Zeros(), valueB = PdeVector::Zeros();
 };
 
 /**
@@ -226,14 +222,11 @@ calculateOuterWaveCorrection(
 		const PdeVector& uA,
 		const MatrixOmega& OmegaA, const MatrixB& B1A, const MatrixB& B2A,
 		const PdeVector& uB,
-		const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B,
-		const real minimalValidDeterminantFabs1,
-		const real minimalValidDeterminantFabs2) {
+		const MatrixOmega& OmegaB, const MatrixB& B1B, const MatrixB& B2B) {
 	const auto R1 = B1A * OmegaA;
 	CorrectionResultContact<PdeVector> ans;
 	ans.determinantFabs1 = std::fabs(linal::determinant(R1));
-	ans.isSuccessful = ans.determinantFabs1 > minimalValidDeterminantFabs1;
-	if (!ans.isSuccessful) {
+	if (ans.determinantFabs1 == 0) {
 		ans.valueA = static_cast<PdeVector&&>(PdeVector::Zeros());
 		ans.valueB = static_cast<PdeVector&&>(PdeVector::Zeros());
 		return ans;
@@ -245,8 +238,7 @@ calculateOuterWaveCorrection(
 	const auto A = (B2B * OmegaB) - ((B2A * OmegaA) * Q);
 	const auto f = ((B2A * OmegaA) * p) + (B2A * uA) - (B2B * uB);
 	ans.determinantFabs2 = std::fabs(linal::determinant(A));
-	ans.isSuccessful = ans.determinantFabs2 > minimalValidDeterminantFabs2;
-	if (!ans.isSuccessful) {
+	if (ans.determinantFabs2 == 0) {
 		ans.valueA = static_cast<PdeVector&&>(PdeVector::Zeros());
 		ans.valueB = static_cast<PdeVector&&>(PdeVector::Zeros());
 		return ans;
