@@ -35,6 +35,7 @@ public:
 	
 	Snapshotter(const Task& task) {
 		stepsPerSnap = task.globalSettings.stepsPerSnap;
+		outDir = task.globalSettings.outputDirectory;
 	}
 	virtual ~Snapshotter() { }
 	
@@ -57,15 +58,19 @@ protected:
 				SNAP + StringUtils::toString(step, NUMBER_OF_DIGITS_IN_SNAP) : "";
 		std::string core = CORE + 
 				StringUtils::toString(Mpi::Rank(), NUMBER_OF_DIGITS_IN_CORE);
+		std::string snapsDir = SNAPSHOTS;
+		if (outDir != "") {
+			snapsDir = snapsDir + SLASH + outDir;
+		}
 		
-		return SNAPSHOTS + SLASH + folder + SLASH +
+		return snapsDir + SLASH + folder + SLASH +
 				mesh + core + snap + DOT + fileExtension;
 	}
 	
 	
 private:
 	int stepsPerSnap = 1;
-	
+	std::string outDir = "";
 };
 
 

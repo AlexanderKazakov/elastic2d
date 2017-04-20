@@ -24,7 +24,8 @@ int main(int argc, char** argv) {
 	USE_AND_INIT_LOGGER("gcm.main");
 	
 	std::string taskId;
-	getopt_wrapper(argc, argv, taskId);
+	std::string outputDirectory;
+	getopt_wrapper(argc, argv, taskId, outputDirectory);
 	
 	Task task;
 	if      (taskId == "cgal2d"    ) { task = parseTaskCgal2d(); }
@@ -47,13 +48,14 @@ int main(int argc, char** argv) {
 		LOG_FATAL("Invalid task file");
 		return -1;
 	}
+	task.globalSettings.outputDirectory = outputDirectory;
 	
 	try {
 		auto t1 = std::chrono::high_resolution_clock::now();
 		createEngine(task)->run();
 		auto t2 = std::chrono::high_resolution_clock::now();
 		SUPPRESS_WUNUSED(t1); SUPPRESS_WUNUSED(t2);
-
+		
 		LOG_INFO("Time of calculation, microseconds = " << 
 			std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
 	} catch (Exception e) {

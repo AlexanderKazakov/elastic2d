@@ -46,6 +46,8 @@ struct Task {
 		bool forceSequence = false;
 		/// List of snapshotters to use
 		std::vector<Snapshotters::T> snapshottersId;
+		/// Name of the folder to write snapshots into relative to ./snapshots/
+		std::string outputDirectory = "";
 		/// Number in Courant–Friedrichs–Lewy condition
 		real CourantNumber = 0;
 		/// Number of snapshots to make in calculations
