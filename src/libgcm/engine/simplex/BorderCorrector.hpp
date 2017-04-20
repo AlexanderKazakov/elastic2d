@@ -130,7 +130,7 @@ public:
 		assert_true(mesh);
 		
 		const auto b = borderCondition.b(timeAtNextLayer);
-		static constexpr real EPS = 0; //1e-13;
+		static constexpr real EPS = 1e-13;
 		const real minValidDeterminantFabs = EPS * getMaximalPossibleDeterminant(
 				*mesh, borderNodes.front(), stage);
 		
