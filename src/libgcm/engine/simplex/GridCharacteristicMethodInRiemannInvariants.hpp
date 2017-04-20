@@ -178,7 +178,7 @@ private:
 				if (canInterpolateInSpaceTime) {
 					u = interpolateInSpaceTime(s, mesh, it, shift, t, nextPdeLayerIndex, k);
 				} else {
-					u = interpolateInSpaceTimeForBorder(s, mesh, it, shift, t, nextPdeLayerIndex, k);
+					outerInvariants.push_back(k);
 				}
 				
 			} else if (t.n == t.N - 2) {
@@ -186,7 +186,7 @@ private:
 				if (canInterpolateInSpaceTime) {
 					u = interpolateInSpaceTime1D(s, mesh, it, shift, t, nextPdeLayerIndex, k);
 				} else {
-					u = interpolateInSpaceTime1DForBorder(s, mesh, it, shift, t, nextPdeLayerIndex, k);
+					outerInvariants.push_back(k);
 				}
 				
 			}
@@ -249,15 +249,6 @@ private:
 				mesh.pdeNew(nextPdeLayerIndex, borderEdge(0))(k),
 				mesh.pdeNew(nextPdeLayerIndex, borderEdge(1))(k));
 	}
-	static inline
-	RiemannInvariant interpolateInSpaceTimeForBorder(const int /*s*/, const Mesh& mesh, 
-			const Iterator& it, const Real2& shift, const Cell& borderEdge,
-			const int /*nextPdeLayerIndex*/, const int k) {
-		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
-				mesh.coordsD(borderEdge(0)), mesh.coordsD(borderEdge(1)),
-				mesh.pde(borderEdge(0))(k), mesh.pde(borderEdge(1))(k),
-				mesh.pde(borderEdge(0))(k), mesh.pde(borderEdge(1))(k));
-	}
 	
 	
 	/**
@@ -278,18 +269,6 @@ private:
 				mesh.pdeNew(nextPdeLayerIndex, borderFace(1))(k),
 				mesh.pdeNew(nextPdeLayerIndex, borderFace(2))(k));
 	}
-	static inline
-	RiemannInvariant interpolateInSpaceTimeForBorder(const int /*s*/, const Mesh& mesh, 
-			const Iterator& it, const Real3& shift, const Cell& borderFace,
-			const int /*nextPdeLayerIndex*/, const int k) {
-		return Base::interpolateInSpaceTime(shift, mesh.coordsD(it),
-				mesh.coordsD(borderFace(0)), mesh.coordsD(borderFace(1)),
-				mesh.coordsD(borderFace(2)),
-				mesh.pde(borderFace(0))(k), mesh.pde(borderFace(1))(k),
-				mesh.pde(borderFace(2))(k),
-				mesh.pde(borderFace(0))(k), mesh.pde(borderFace(1))(k),
-				mesh.pde(borderFace(2))(k));
-	}
 	
 	
 	/**
@@ -306,12 +285,6 @@ private:
 				mesh.pde(borderVertex(0))(k),
 				mesh.pdeNew(nextPdeLayerIndex, borderVertex(0))(k));
 	}
-	static inline
-	RiemannInvariant interpolateInSpaceTime1DForBorder(const int /*s*/, const Mesh& mesh, 
-			const Iterator& /*it*/, const Real2& /*shift*/, const Cell& borderVertex,
-			const int /*nextPdeLayerIndex*/, const int k) {
-		return mesh.pde(borderVertex(0))(k);
-	}
 	
 	
 	/**
@@ -321,12 +294,6 @@ private:
 	 */
 	static inline
 	RiemannInvariant interpolateInSpaceTime1D(const int /*s*/, const Mesh& /*mesh*/, 
-			const Iterator& /*it*/, const Real3& /*shift*/,
-			const Cell& /*borderVertex*/, const int /*nextPdeLayerIndex*/, const int /*k*/) {
-		THROW_UNSUPPORTED("This did not occur ever before");
-	}
-	static inline
-	RiemannInvariant interpolateInSpaceTime1DForBorder(const int /*s*/, const Mesh& /*mesh*/, 
 			const Iterator& /*it*/, const Real3& /*shift*/,
 			const Cell& /*borderVertex*/, const int /*nextPdeLayerIndex*/, const int /*k*/) {
 		THROW_UNSUPPORTED("This did not occur ever before");
