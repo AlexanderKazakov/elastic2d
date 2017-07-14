@@ -79,9 +79,9 @@ public:
 				if (!Utils::intersection(outerInvariants, Model::LEFT_INVARIANTS).empty()) {
 					outerInvariants = Utils::summ(outerInvariants, Model::LEFT_INVARIANTS);
 				}
-//				for (int i : outerInvariants) {
-//					mesh._pdeNew(nextPdeLayerIndex, iter)(i) = 0;
-//				}
+				for (int i : outerInvariants) {
+					mesh._pdeNew(nextPdeLayerIndex, iter)(i) = 0;
+				}
 			}
 			
 			mesh._waveIndices(iter) = outerInvariants;

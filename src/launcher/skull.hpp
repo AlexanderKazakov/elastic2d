@@ -6,25 +6,25 @@ using namespace gcm;
 
 inline Task skullCommon() {
 	Task task;
-	task.calculationBasis = {
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1};
+//	task.calculationBasis = {
+//			1, 0, 0,
+//			0, 1, 0,
+//			0, 0, 1};
 	
 	task.globalSettings.dimensionality = 3;
 	task.globalSettings.gridId = Grids::T::SIMPLEX;
 	task.globalSettings.snapshottersId = { Snapshotters::T::VTK };
 	task.globalSettings.CourantNumber = 1;
-//	task.globalSettings.numberOfSnaps = 1000;
-//	task.globalSettings.stepsPerSnap = 10;
-	task.globalSettings.numberOfSnaps = 50;
-	task.globalSettings.stepsPerSnap = 5;
+	task.globalSettings.numberOfSnaps = 1000;
+	task.globalSettings.stepsPerSnap = 10;
+//	task.globalSettings.numberOfSnaps = 50;
+//	task.globalSettings.stepsPerSnap = 5;
 	
 	task.simplexGrid.mesher = Task::SimplexGrid::Mesher::INM_MESHER;
-	task.simplexGrid.fileName = "meshes/coarse/ball.out";
+//	task.simplexGrid.fileName = "meshes/coarse/ball.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-aneurysm.out";
 //	task.simplexGrid.fileName = "meshes/coarse/mesh-coarse.out";
-//	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
+	task.simplexGrid.fileName = "meshes/refined/mesh-refined.out";
 	task.simplexGrid.scale = 10;
 	
 	task.materialConditions.type = Task::MaterialCondition::Type::BY_BODIES;
@@ -33,7 +33,7 @@ inline Task skullCommon() {
 	pressure.physicalQuantity = PhysicalQuantities::T::PRESSURE;
 	pressure.value = 1;
 	pressure.area = std::make_shared<SphereArea>(1, Real3({0, 7.5, 142}));
-	task.initialCondition.quantities.push_back(pressure);
+//	task.initialCondition.quantities.push_back(pressure);
 	
 	task.vtkSnapshotter.quantitiesToSnap = { PhysicalQuantities::T::PRESSURE };
 	return task;
@@ -100,9 +100,9 @@ inline Task skullAcoustic() {
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-//			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
-//			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {}}},
 			
 //			{1, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
 //			{2, {Materials::T::ISOTROPIC, Models::T::ACOUSTIC, {Odes::T::MAXWELL_VISCOSITY}}},
@@ -213,9 +213,9 @@ inline Task skullElastic() {
 	task.bodies = {
 			{1, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{2, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
-//			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{3, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 			{4, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
-//			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
+			{5, {Materials::T::ISOTROPIC, Models::T::ELASTIC, {}}},
 	};
 	
 	task.contactCondition.defaultCondition = ContactConditions::T::ADHESION;
@@ -243,7 +243,7 @@ inline Task skullElastic() {
 		[] (real) { return 0; }
 	};
 	Task::BorderCondition source;
-	source.area = std::make_shared<SphereArea>(2, Real3({-7, 3, 146.5}));
+	source.area = std::make_shared<SphereArea>(2, Real3({7, 3, 146.5}));
 	source.type = BorderConditions::T::FIXED_FORCE;
 	source.useForMulticontactNodes = false;
 	real tau = 0.5;
@@ -253,9 +253,19 @@ inline Task skullElastic() {
 		[] (real) { return 0; },
 		[=] (real t) {
 			t -= 2 * tau;
-			return sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
+			return -sin(omega * t) * exp(-t*t / ( 2 * tau*tau)); }
 	};
 	task.borderConditions = {freeBorder, source};
 	
+	task.vtkSnapshotter.quantitiesToSnap = {
+		PhysicalQuantities::T::PRESSURE,
+		PhysicalQuantities::T::Sxx,
+		PhysicalQuantities::T::Sxy,
+		PhysicalQuantities::T::Sxz,
+		PhysicalQuantities::T::Syy,
+		PhysicalQuantities::T::Syz,
+		PhysicalQuantities::T::Szz
+	};
+
 	return task;
 }

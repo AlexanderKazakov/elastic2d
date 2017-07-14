@@ -142,8 +142,8 @@ public:
 		assert_true(meshA);
 		std::shared_ptr<MeshB> meshB = std::dynamic_pointer_cast<MeshB>(b);
 		assert_true(meshB);
-		static constexpr real EPS = 1e-13;
-		
+
+		static constexpr real EPS = 1e-3; //EQUALITY_TOLERANCE;
 		const std::pair<real, real> maxDets = getMaximalPossibleDeterminants(
 				*meshA, *meshB, nodesInContact.front(), stage);
 		const real minValidDeterminantFabs1 = EPS * maxDets.first;
@@ -379,7 +379,7 @@ private:
 	
 	
 	void matchInnersAndOuters(WaveIndices& outersA, WaveIndices& outersB,
-			PdeVector& /*a*/, PdeVector& /*b*/) const {
+			PdeVector& a, PdeVector& b) const {
 		const size_t N = (outersA.size() + outersB.size()) / OUTER_NUMBER;
 		if (N % 2 == 0) {
 			return;
@@ -405,8 +405,8 @@ private:
 				}
 			}
 		}
-//		for (int i : outersA) { a(i) = 0; }
-//		for (int i : outersB) { b(i) = 0; }
+		for (int i : outersA) { a(i) = 0; }
+		for (int i : outersB) { b(i) = 0; }
 	}
 	
 	
