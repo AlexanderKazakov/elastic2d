@@ -26,24 +26,26 @@ def BOmega(x):
 def acsBOmega(x):
 	return np.array([[x]]).transpose()
 
-def plotBOmega(fBOmega, marker, name):
-	step = 0.01
+def plotBOmega(fBOmega, color, name):
+	step = 0.001
 	x = np.arange(step / 4, 1 + step / 4, step)
 	BO = fBOmega(x)
 	abs_det = np.abs(np.linalg.det(BO))
 	max_det = abs_det[-1]
-	plt.plot(x, abs_det / max_det, 'r' + marker, label = '$|det| / det_{max}$ ' + name)
-	plt.plot(x, np.linalg.cond(BO) / 1000, 'b' + marker, label = '$\\mu / 1000$ ' + name)
-	plt.plot(x, 1 / np.linalg.norm(BO, axis = (1, 2), ord = -2) / 1000, 'm' + marker, label = '$norm_{-2} / 1000$ ' + name)
+	plt.plot(x, abs_det / max_det, color + '-', label = '$|det| / |det|_{max}$ - ' + name)
+	plt.plot(x, np.linalg.cond(BO) / 1000, color + ':', label = '$\\mu / 1000$ - ' + name)
+	#plt.plot(x, 1 / np.linalg.norm(BO, axis = (1, 2), ord = -2) / 1000, color + ':', label = '$norm_{-2} / 1000$ - ' + name)
 
 
-plotBOmega(BOmega, '-', '(elastic3d)')
-plotBOmega(acsBOmega, ':', '(acoustic)')
+plotBOmega(BOmega, 'r', 'elastic-3d')
+plotBOmega(acsBOmega, 'b', 'acoustic')
 
-plt.xlabel('$(\\vec{n} \\cdot \\vec{p})$')
+plt.xlabel('$(\\vec{n} \\cdot \\vec{l})$', fontsize="xx-large")
 plt.grid()
-plt.legend()
 plt.xlim(xmin = 0)
+plt.xlim(xmax = 1)
 plt.ylim(ymin = 0)
+plt.ylim(ymax = 1)
+plt.legend(fontsize="xx-large")
 plt.show()
 
