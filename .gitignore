@@ -38,3 +38,5 @@ meshes/refined/*
 *.jpeg
 *.avi
 *.aux
+cmake-build-*
+
