@@ -9,6 +9,7 @@ savefilenamepng="$savefoldername/png/$filenameforreport.png"
 savefilenametxt="$savefoldername/txt/$filenameforreport.txt"
 mkdir -p  tools/ndi/sim/png tools/ndi/sim/txt
 
+# nodesPerMm = 10 for appropriate testing quality, = 20 for report quality
 nodesPerMm=$2
 numSteps=$[75*$nodesPerMm]
 filename=$(printf "snapshots/detector/mesh1core00snap%04d.txt" "$numSteps")
